@@ -8,12 +8,24 @@ import (
 	"sort"
 )
 
+func newJsonNode(n interface{}) JsonNode {
+	switch t := n.(type) {
+	case map[string]interface{}:
+		return JsonStruct(t)
+	case []interface{}:
+		return JsonList(t)
+	case float64:
+		return JsonNumber(t)
+	default:
+		panic(fmt.Sprintf("Unexpected type %v", t))
+	}
+}
+
 type JsonNode interface {
 	diff(b JsonNode, path Path) Diff
 	equals(b JsonNode) bool
 }
 
-// type jsonList []interface{}
 type JsonNumber float64
 
 func (n1 JsonNumber) equals(n JsonNode) bool {
@@ -40,6 +52,63 @@ func (n1 JsonNumber) diff(n JsonNode, path Path) Diff {
 	return append(d, e)
 }
 
+type JsonList []interface{}
+
+func (l1 JsonList) equals(n JsonNode) bool {
+	l2, ok := n.(JsonList)
+	if !ok {
+		return false
+	}
+	if len(l1) != len(l2) {
+		return false
+	}
+	return reflect.DeepEqual(l1, l2)
+}
+
+func (l1 JsonList) diff(n JsonNode, path Path) Diff {
+	d := make(Diff, 0)
+	l2, ok := n.(JsonList)
+	if !ok {
+		// Different types
+		e := DiffElement{
+			Path:     path.clone(),
+			OldValue: l1,
+			NewValue: n,
+		}
+		return append(d, e)
+	}
+	maxLen := len(l1)
+	if len(l1) < len(l2) {
+		maxLen = len(l2)
+	}
+	for i := maxLen - 1; i >= 0; i-- {
+		l1Has := i < len(l1)
+		l2Has := i < len(l2)
+		subPath := append(path.clone(), i)
+		if l1Has && l2Has {
+			subDiff := newJsonNode(l1[i]).diff(newJsonNode(l2[i]), subPath)
+			d = append(d, subDiff...)
+		}
+		if l1Has && !l2Has {
+			e := DiffElement{
+				Path:     subPath,
+				OldValue: newJsonNode(l1[i]),
+				NewValue: nil,
+			}
+			d = append(d, e)
+		}
+		if !l1Has && l2Has {
+			e := DiffElement{
+				Path:     subPath,
+				OldValue: nil,
+				NewValue: newJsonNode(l2[i]),
+			}
+			d = append(d, e)
+		}
+	}
+	return d
+}
+
 type JsonStruct map[string]interface{}
 
 func (s1 JsonStruct) equals(n JsonNode) bool {
@@ -51,19 +120,6 @@ func (s1 JsonStruct) equals(n JsonNode) bool {
 		return false
 	}
 	return reflect.DeepEqual(s1, s2)
-}
-
-func newJsonNode(n interface{}) JsonNode {
-	switch t := n.(type) {
-	case map[string]interface{}:
-		return JsonStruct(t)
-	// case []interface{}:
-	// 	return jsonList(t)
-	case float64:
-		return JsonNumber(t)
-	default:
-		panic(fmt.Sprintf("Unexpected type %v", t))
-	}
 }
 
 func (s1 JsonStruct) diff(n JsonNode, path Path) Diff {

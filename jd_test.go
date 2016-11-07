@@ -65,6 +65,20 @@ func TestDiff(t *testing.T) {
 		Diff{
 			DiffElement{Path{"a", "b"}, JsonNumber(1.0), nil},
 			DiffElement{Path{"a", "c"}, nil, JsonNumber(2.0)}})
+	checkDiff(t, `{"a":[1,2]}`, `{"a":[2,1]}`,
+		Diff{
+			DiffElement{Path{"a", 1}, JsonNumber(2.0), JsonNumber(1.0)},
+			DiffElement{Path{"a", 0}, JsonNumber(1.0), JsonNumber(2.0)}})
+	checkDiff(t, `{"a":[1]}`, `{"a":[1,2]}`,
+		Diff{DiffElement{Path{"a", 1}, nil, JsonNumber(2.0)}})
+	checkDiff(t, `{"a":[1,2]}`, `{"a":[1]}`,
+		Diff{DiffElement{Path{"a", 1}, JsonNumber(2.0), nil}})
+	checkDiff(t, `{"a":[1,2]}`, `{"a":[3,4]}`,
+		Diff{
+			DiffElement{Path{"a", 1}, JsonNumber(2.0), JsonNumber(4.0)},
+			DiffElement{Path{"a", 0}, JsonNumber(1.0), JsonNumber(3.0)}})
+	checkDiff(t, `{"a":[{"b":1}]}`, `{"a":[{"b":2}]}`,
+		Diff{DiffElement{Path{"a", 0, "b"}, JsonNumber(1.0), JsonNumber(2.0)}})
 }
 
 func checkDiff(t *testing.T, a, b string, diff Diff) {
