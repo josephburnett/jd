@@ -17,6 +17,8 @@ func newJsonNode(n interface{}) JsonNode {
 		return JsonList(t)
 	case float64:
 		return JsonNumber(t)
+	case string:
+		return JsonString(t)
 	default:
 		panic(fmt.Sprintf("Unexpected type %v", t))
 	}
