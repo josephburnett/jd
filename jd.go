@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"sort"
 )
 
 type JsonNode interface {
@@ -77,8 +78,18 @@ func (s1 JsonStruct) diff(n JsonNode, path Path) Diff {
 		}
 		return append(d, e)
 	}
-	for k1, n1 := range s1 {
-		v1 := newJsonNode(n1)
+	s1Keys := make([]string, 0, len(s1))
+	for k := range s1 {
+		s1Keys = append(s1Keys, k)
+	}
+	sort.Strings(s1Keys)
+	s2Keys := make([]string, 0, len(s2))
+	for k := range s2 {
+		s2Keys = append(s2Keys, k)
+	}
+	sort.Strings(s2Keys)
+	for _, k1 := range s1Keys {
+		v1 := newJsonNode(s1[k1])
 		if n2, ok := s2[k1]; ok {
 			// Both keys are present
 			v2 := newJsonNode(n2)
@@ -94,8 +105,8 @@ func (s1 JsonStruct) diff(n JsonNode, path Path) Diff {
 			d = append(d, e)
 		}
 	}
-	for k2, n2 := range s2 {
-		v2 := newJsonNode(n2)
+	for _, k2 := range s2Keys {
+		v2 := newJsonNode(s2[k2])
 		if _, ok := s1[k2]; !ok {
 			// S1 missing key
 			e := DiffElement{
