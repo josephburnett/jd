@@ -55,16 +55,15 @@ func checkNotEqual(t *testing.T, a, b string) {
 
 func TestDiff(t *testing.T) {
 	checkDiff(t, `{"a":1}`, `{"a":2}`,
-		[]diffElement{
-			diffElement{
-				path:     path{"a"},
-				oldValue: jsonNumber(1.0),
-				newValue: jsonNumber(2.0),
-			},
-		})
+		Diff{DiffElement{Path{"a"}, JsonNumber(1.0), JsonNumber(2.0)}})
+	checkDiff(t, `{"a":1}`, `{}`,
+		Diff{DiffElement{Path{"a"}, JsonNumber(1.0), nil}})
+	checkDiff(t, `{}`, `{"a":2}`,
+		Diff{DiffElement{Path{"a"}, nil, JsonNumber(2.0)}})
+	checkDiff(t, `{"a":1}`, `{"a":1}`, Diff{})
 }
 
-func checkDiff(t *testing.T, a, b string, diff []diffElement) {
+func checkDiff(t *testing.T, a, b string, diff Diff) {
 	jsonA, err := unmarshal([]byte(a))
 	if err != nil {
 		t.Error(err.Error())
@@ -73,9 +72,9 @@ func checkDiff(t *testing.T, a, b string, diff []diffElement) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	path := make([]pathElement, 0)
+	path := make(Path, 0)
 	d := jsonA.diff(jsonB, path)
 	if !reflect.DeepEqual(d, diff) {
-		t.Errorf("!reflect.DeepEqual(d, diff). d was %v. diff was %v.", d, diff)
+		t.Errorf("reflect.DeepEqual(%v, %v) == false. Want true.", d, diff)
 	}
 }

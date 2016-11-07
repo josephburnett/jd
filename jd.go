@@ -7,16 +7,16 @@ import (
 	"reflect"
 )
 
-type jsonNode interface {
-	diff(b jsonNode, path path) []diffElement
-	equals(b jsonNode) bool
+type JsonNode interface {
+	diff(b JsonNode, path Path) Diff
+	equals(b JsonNode) bool
 }
 
 // type jsonList []interface{}
-type jsonNumber float64
+type JsonNumber float64
 
-func (n1 jsonNumber) equals(n jsonNode) bool {
-	n2, ok := n.(jsonNumber)
+func (n1 JsonNumber) equals(n JsonNode) bool {
+	n2, ok := n.(JsonNumber)
 	if !ok {
 		return false
 	}
@@ -26,23 +26,23 @@ func (n1 jsonNumber) equals(n jsonNode) bool {
 	return true
 }
 
-func (n1 jsonNumber) diff(n jsonNode, path path) []diffElement {
-	d := make([]diffElement, 0)
+func (n1 JsonNumber) diff(n JsonNode, path Path) Diff {
+	d := make(Diff, 0)
 	if n1.equals(n) {
 		return d
 	}
-	e := diffElement{
-		path:     path.clone(),
-		oldValue: n1,
-		newValue: n,
+	e := DiffElement{
+		Path:     path.clone(),
+		OldValue: n1,
+		NewValue: n,
 	}
 	return append(d, e)
 }
 
-type jsonStruct map[string]interface{}
+type JsonStruct map[string]interface{}
 
-func (s1 jsonStruct) equals(n jsonNode) bool {
-	s2, ok := n.(jsonStruct)
+func (s1 JsonStruct) equals(n JsonNode) bool {
+	s2, ok := n.(JsonStruct)
 	if !ok {
 		return false
 	}
@@ -52,28 +52,28 @@ func (s1 jsonStruct) equals(n jsonNode) bool {
 	return reflect.DeepEqual(s1, s2)
 }
 
-func newJsonNode(n interface{}) jsonNode {
+func newJsonNode(n interface{}) JsonNode {
 	switch t := n.(type) {
 	case map[string]interface{}:
-		return jsonStruct(t)
+		return JsonStruct(t)
 	// case []interface{}:
 	// 	return jsonList(t)
 	case float64:
-		return jsonNumber(t)
+		return JsonNumber(t)
 	default:
 		panic(fmt.Sprintf("Unexpected type %v", t))
 	}
 }
 
-func (s1 jsonStruct) diff(n jsonNode, path path) []diffElement {
-	d := make([]diffElement, 0)
-	s2, ok := n.(jsonStruct)
+func (s1 JsonStruct) diff(n JsonNode, path Path) Diff {
+	d := make(Diff, 0)
+	s2, ok := n.(JsonStruct)
 	if !ok {
 		// Different types
-		e := diffElement{
-			path:     path.clone(),
-			oldValue: s1,
-			newValue: n,
+		e := DiffElement{
+			Path:     path.clone(),
+			OldValue: s1,
+			NewValue: n,
 		}
 		return append(d, e)
 	}
@@ -86,10 +86,10 @@ func (s1 jsonStruct) diff(n jsonNode, path path) []diffElement {
 			d = append(d, subDiff...)
 		} else {
 			// S2 missing key
-			e := diffElement{
-				path:     append(path.clone(), k1),
-				oldValue: v1,
-				newValue: nil,
+			e := DiffElement{
+				Path:     append(path.clone(), k1),
+				OldValue: v1,
+				NewValue: nil,
 			}
 			d = append(d, e)
 		}
@@ -98,10 +98,10 @@ func (s1 jsonStruct) diff(n jsonNode, path path) []diffElement {
 		v2 := newJsonNode(n2)
 		if _, ok := s1[k2]; !ok {
 			// S1 missing key
-			e := diffElement{
-				path:     append(path.clone(), k2),
-				oldValue: nil,
-				newValue: v2,
+			e := DiffElement{
+				Path:     append(path.clone(), k2),
+				OldValue: nil,
+				NewValue: v2,
 			}
 			d = append(d, e)
 		}
@@ -109,22 +109,23 @@ func (s1 jsonStruct) diff(n jsonNode, path path) []diffElement {
 	return d
 }
 
-type pathElement interface{}
-type path []pathElement
+type PathElement interface{}
+type Path []PathElement
 
-type diffElement struct {
-	path     path
-	oldValue jsonNode
-	newValue jsonNode
+type DiffElement struct {
+	Path     Path
+	OldValue JsonNode
+	NewValue JsonNode
 }
+type Diff []DiffElement
 
-func (p1 path) clone() path {
-	p2 := make(path, len(p1), len(p1)+1)
+func (p1 Path) clone() Path {
+	p2 := make(Path, len(p1), len(p1)+1)
 	copy(p2, p1)
 	return p2
 }
 
-func readFile(filename string) (jsonNode, error) {
+func readFile(filename string) (JsonNode, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -132,8 +133,8 @@ func readFile(filename string) (jsonNode, error) {
 	return unmarshal(bytes)
 }
 
-func unmarshal(bytes []byte) (jsonNode, error) {
-	node := make(jsonStruct)
+func unmarshal(bytes []byte) (JsonNode, error) {
+	node := make(JsonStruct)
 	err := json.Unmarshal(bytes, &node)
 	if err != nil {
 		return nil, err
