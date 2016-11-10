@@ -1,9 +1,11 @@
 package jd
 
-type JsonNumber float64
+type jsonNumber float64
 
-func (n1 JsonNumber) equals(n JsonNode) bool {
-	n2, ok := n.(JsonNumber)
+var _ JsonNode = jsonNumber(0)
+
+func (n1 jsonNumber) Equals(n JsonNode) bool {
+	n2, ok := n.(jsonNumber)
 	if !ok {
 		return false
 	}
@@ -13,9 +15,13 @@ func (n1 JsonNumber) equals(n JsonNode) bool {
 	return true
 }
 
-func (n1 JsonNumber) diff(n JsonNode, path Path) Diff {
+func (n1 jsonNumber) Diff(n JsonNode) Diff {
+	return n1.diff(n, Path{})
+}
+
+func (n1 jsonNumber) diff(n JsonNode, path Path) Diff {
 	d := make(Diff, 0)
-	if n1.equals(n) {
+	if n1.Equals(n) {
 		return d
 	}
 	e := DiffElement{

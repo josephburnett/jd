@@ -1,18 +1,24 @@
 package jd
 
-type JsonString string
+type jsonString string
 
-func (s1 JsonString) equals(n JsonNode) bool {
-	s2, ok := n.(JsonString)
+var _ JsonNode = jsonString("")
+
+func (s1 jsonString) Equals(n JsonNode) bool {
+	s2, ok := n.(jsonString)
 	if !ok {
 		return false
 	}
 	return s1 == s2
 }
 
-func (s1 JsonString) diff(n JsonNode, path Path) Diff {
+func (s1 jsonString) Diff(n JsonNode) Diff {
+	return s1.diff(n, Path{})
+}
+
+func (s1 jsonString) diff(n JsonNode, path Path) Diff {
 	d := make(Diff, 0)
-	if s1.equals(n) {
+	if s1.Equals(n) {
 		return d
 	}
 	e := DiffElement{

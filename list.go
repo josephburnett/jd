@@ -4,10 +4,12 @@ import (
 	"reflect"
 )
 
-type JsonList []interface{}
+type jsonList []JsonNode
 
-func (l1 JsonList) equals(n JsonNode) bool {
-	l2, ok := n.(JsonList)
+var _ JsonNode = jsonList(nil)
+
+func (l1 jsonList) Equals(n JsonNode) bool {
+	l2, ok := n.(jsonList)
 	if !ok {
 		return false
 	}
@@ -17,9 +19,13 @@ func (l1 JsonList) equals(n JsonNode) bool {
 	return reflect.DeepEqual(l1, l2)
 }
 
-func (l1 JsonList) diff(n JsonNode, path Path) Diff {
+func (l1 jsonList) Diff(n JsonNode) Diff {
+	return l1.diff(n, Path{})
+}
+
+func (l1 jsonList) diff(n JsonNode, path Path) Diff {
 	d := make(Diff, 0)
-	l2, ok := n.(JsonList)
+	l2, ok := n.(jsonList)
 	if !ok {
 		// Different types
 		e := DiffElement{
@@ -38,13 +44,14 @@ func (l1 JsonList) diff(n JsonNode, path Path) Diff {
 		l2Has := i < len(l2)
 		subPath := append(path.clone(), i)
 		if l1Has && l2Has {
-			subDiff := newJsonNode(l1[i]).diff(newJsonNode(l2[i]), subPath)
+			subDiff := l1[i].diff(l2[i], subPath)
 			d = append(d, subDiff...)
 		}
 		if l1Has && !l2Has {
+
 			e := DiffElement{
 				Path:     subPath,
-				OldValue: newJsonNode(l1[i]),
+				OldValue: l1[i],
 				NewValue: nil,
 			}
 			d = append(d, e)
@@ -53,7 +60,7 @@ func (l1 JsonList) diff(n JsonNode, path Path) Diff {
 			e := DiffElement{
 				Path:     subPath,
 				OldValue: nil,
-				NewValue: newJsonNode(l2[i]),
+				NewValue: l2[i],
 			}
 			d = append(d, e)
 		}

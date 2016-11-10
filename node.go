@@ -1,25 +1,47 @@
 package jd
 
 import (
+	"errors"
 	"fmt"
 )
 
 type JsonNode interface {
-	diff(b JsonNode, path Path) Diff
-	equals(b JsonNode) bool
+	Equals(n JsonNode) bool
+	Diff(n JsonNode) Diff
+	diff(n JsonNode, p Path) Diff
 }
 
-func newJsonNode(n interface{}) JsonNode {
+func NewJsonNode(n interface{}) (JsonNode, error) {
 	switch t := n.(type) {
 	case map[string]interface{}:
-		return JsonStruct(t)
+		m := make(jsonStruct)
+		for k, v := range t {
+			if _, ok := v.(JsonNode); !ok {
+				e, err := NewJsonNode(v)
+				if err != nil {
+					return nil, err
+				}
+				m[k] = e
+			}
+		}
+		return m, nil
 	case []interface{}:
-		return JsonList(t)
+		l := make(jsonList, len(t))
+		for i, v := range t {
+			if _, ok := v.(JsonNode); !ok {
+				e, err := NewJsonNode(v)
+				if err != nil {
+					return nil, err
+				}
+				l[i] = e
+			}
+		}
+		return l, nil
 	case float64:
-		return JsonNumber(t)
+		return jsonNumber(t), nil
 	case string:
-		return JsonString(t)
+		return jsonString(t), nil
 	default:
-		panic(fmt.Sprintf("Unexpected type %v", t))
+		return nil, errors.New(fmt.Sprintf("Unsupported type %v", t))
 	}
 }

@@ -5,10 +5,12 @@ import (
 	"sort"
 )
 
-type JsonStruct map[string]interface{}
+type jsonStruct map[string]JsonNode
 
-func (s1 JsonStruct) equals(n JsonNode) bool {
-	s2, ok := n.(JsonStruct)
+var _ JsonNode = jsonStruct(nil)
+
+func (s1 jsonStruct) Equals(n JsonNode) bool {
+	s2, ok := n.(jsonStruct)
 	if !ok {
 		return false
 	}
@@ -18,9 +20,13 @@ func (s1 JsonStruct) equals(n JsonNode) bool {
 	return reflect.DeepEqual(s1, s2)
 }
 
-func (s1 JsonStruct) diff(n JsonNode, path Path) Diff {
+func (s1 jsonStruct) Diff(n JsonNode) Diff {
+	return s1.diff(n, Path{})
+}
+
+func (s1 jsonStruct) diff(n JsonNode, path Path) Diff {
 	d := make(Diff, 0)
-	s2, ok := n.(JsonStruct)
+	s2, ok := n.(jsonStruct)
 	if !ok {
 		// Different types
 		e := DiffElement{
@@ -41,10 +47,9 @@ func (s1 JsonStruct) diff(n JsonNode, path Path) Diff {
 	}
 	sort.Strings(s2Keys)
 	for _, k1 := range s1Keys {
-		v1 := newJsonNode(s1[k1])
-		if n2, ok := s2[k1]; ok {
+		v1 := s1[k1]
+		if v2, ok := s2[k1]; ok {
 			// Both keys are present
-			v2 := newJsonNode(n2)
 			subDiff := v1.diff(v2, append(path.clone(), k1))
 			d = append(d, subDiff...)
 		} else {
@@ -58,7 +63,7 @@ func (s1 JsonStruct) diff(n JsonNode, path Path) Diff {
 		}
 	}
 	for _, k2 := range s2Keys {
-		v2 := newJsonNode(s2[k2])
+		v2 := s2[k2]
 		if _, ok := s1[k2]; !ok {
 			// S1 missing key
 			e := DiffElement{
