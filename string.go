@@ -4,6 +4,10 @@ type jsonString string
 
 var _ JsonNode = jsonString("")
 
+func (s jsonString) Json() string {
+	return renderJson(s)
+}
+
 func (s1 jsonString) Equals(n JsonNode) bool {
 	s2, ok := n.(jsonString)
 	if !ok {

@@ -1,11 +1,13 @@
 package jd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 )
 
 type JsonNode interface {
+	Json() string
 	Equals(n JsonNode) bool
 	Diff(n JsonNode) Diff
 	diff(n JsonNode, p Path) Diff
@@ -44,4 +46,11 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 	default:
 		return nil, errors.New(fmt.Sprintf("Unsupported type %v", t))
 	}
+}
+
+func renderJson(n JsonNode) string {
+	s, _ := json.Marshal(n)
+	// Errors are ignored because JsonNode types are
+	// private and known to marshal without error.
+	return string(s)
 }

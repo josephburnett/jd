@@ -8,6 +8,10 @@ type jsonList []JsonNode
 
 var _ JsonNode = jsonList(nil)
 
+func (l jsonList) Json() string {
+	return renderJson(l)
+}
+
 func (l1 jsonList) Equals(n JsonNode) bool {
 	l2, ok := n.(jsonList)
 	if !ok {

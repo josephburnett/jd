@@ -9,6 +9,10 @@ type jsonStruct map[string]JsonNode
 
 var _ JsonNode = jsonStruct(nil)
 
+func (s jsonStruct) Json() string {
+	return renderJson(s)
+}
+
 func (s1 jsonStruct) Equals(n JsonNode) bool {
 	s2, ok := n.(jsonStruct)
 	if !ok {

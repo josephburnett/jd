@@ -4,6 +4,10 @@ type jsonNumber float64
 
 var _ JsonNode = jsonNumber(0)
 
+func (n jsonNumber) Json() string {
+	return renderJson(n)
+}
+
 func (n1 jsonNumber) Equals(n JsonNode) bool {
 	n2, ok := n.(jsonNumber)
 	if !ok {
