@@ -6,11 +6,22 @@ import (
 
 func TestPatch(t *testing.T) {
 	checkPatch(t,
-		`{"a":{"b":1}}`,
-		`{"a":{"c":2}}`,
+		`{"a":1}`,
+		`{"a":2}`,
 		`@ ["a"]`,
-		`- {"b":1}`,
-		`+ {"c":2}`)
+		`- 1`,
+		`+ 2`)
+	checkPatch(t,
+		`1`,
+		`2`,
+		`@ []`,
+		`- 1`,
+		`+ 2`)
+	checkPatch(t,
+		`{"a":1}`,
+		`{}`,
+		`@ ["a"]`,
+		`- 1`)
 }
 
 func checkPatch(t *testing.T, a, e string, diffLines ...string) {
