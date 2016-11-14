@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestListEqual(t *testing.T) {
+func TestArrayEqual(t *testing.T) {
 	checkEqual(t, `[]`, `[]`)
 	checkEqual(t, `[1,2,3]`, `[1,2,3]`)
 	checkEqual(t, `[[]]`, `[[]]`)
@@ -12,7 +12,7 @@ func TestListEqual(t *testing.T) {
 	checkEqual(t, `[{"a":[]}]`, `[{"a":[]}]`)
 }
 
-func TestListNotEqual(t *testing.T) {
+func TestArrayNotEqual(t *testing.T) {
 	checkNotEqual(t, `[]`, `0`)
 	checkNotEqual(t, `[]`, `{}`)
 	checkNotEqual(t, `[]`, `[[]]`)
