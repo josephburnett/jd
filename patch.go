@@ -32,7 +32,7 @@ func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue Js
 	// Recursive case
 	switch pe := pathAhead[0].(type) {
 	case string:
-		s, ok := n.(jsonStruct)
+		s, ok := n.(jsonObject)
 		if !ok {
 			return nil, fmt.Errorf(
 				"Found %v at %v. Expected JSON struct.",
@@ -40,7 +40,7 @@ func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue Js
 		}
 		nextNode, ok := s[pe]
 		if !ok {
-			nextNode = emptyNode{}
+			nextNode = voidNode{}
 		}
 		patchedNode, err := patchInternal(nextNode, append(pathBehind, pe), pathAhead[1:], oldValue, newValue)
 		if err != nil {
@@ -49,14 +49,14 @@ func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue Js
 		s[pe] = patchedNode
 		return s, nil
 	case float64:
-		s, ok := n.(jsonList)
+		s, ok := n.(jsonArray)
 		if !ok {
 			return nil, fmt.Errorf(
 				"Found %v at %v. Expected JSON list.",
 				n.Json(), pathBehind)
 		}
 		i := int(pe)
-		var nextNode JsonNode = emptyNode{}
+		var nextNode JsonNode = voidNode{}
 		if len(s) > i {
 			nextNode = s[i]
 		}

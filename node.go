@@ -17,7 +17,7 @@ type JsonNode interface {
 func NewJsonNode(n interface{}) (JsonNode, error) {
 	switch t := n.(type) {
 	case map[string]interface{}:
-		m := make(jsonStruct)
+		m := make(jsonObject)
 		for k, v := range t {
 			if _, ok := v.(JsonNode); !ok {
 				e, err := NewJsonNode(v)
@@ -29,7 +29,7 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 		}
 		return m, nil
 	case []interface{}:
-		l := make(jsonList, len(t))
+		l := make(jsonArray, len(t))
 		for i, v := range t {
 			if _, ok := v.(JsonNode); !ok {
 				e, err := NewJsonNode(v)

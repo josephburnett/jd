@@ -1,27 +1,27 @@
 package jd
 
-type emptyNode struct{}
+type voidNode struct{}
 
-var _ JsonNode = emptyNode{}
+var _ JsonNode = voidNode{}
 
-func (e emptyNode) Json() string {
+func (e voidNode) Json() string {
 	return ""
 }
 
-func (e emptyNode) Equals(n JsonNode) bool {
+func (e voidNode) Equals(n JsonNode) bool {
 	switch n.(type) {
-	case emptyNode:
+	case voidNode:
 		return true
 	default:
 		return false
 	}
 }
 
-func (e emptyNode) Diff(n JsonNode) Diff {
+func (e voidNode) Diff(n JsonNode) Diff {
 	return e.diff(n, Path{})
 }
 
-func (e emptyNode) diff(n JsonNode, p Path) Diff {
+func (e voidNode) diff(n JsonNode, p Path) Diff {
 	de := DiffElement{
 		Path:     p,
 		OldValue: e,
@@ -30,6 +30,6 @@ func (e emptyNode) diff(n JsonNode, p Path) Diff {
 	return Diff{de}
 }
 
-func (e emptyNode) Patch(d Diff) (JsonNode, error) {
+func (e voidNode) Patch(d Diff) (JsonNode, error) {
 	return patch(e, d)
 }

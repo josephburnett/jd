@@ -10,8 +10,8 @@ func TestReadDiff(t *testing.T) {
 		Diff{
 			DiffElement{
 				Path:     Path{"a"},
-				OldValue: jsonStruct{"b": jsonNumber(1)},
-				NewValue: jsonStruct{"c": jsonNumber(2)},
+				OldValue: jsonObject{"b": jsonNumber(1)},
+				NewValue: jsonObject{"c": jsonNumber(2)},
 			},
 		},
 		`@ ["a"]`,

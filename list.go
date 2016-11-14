@@ -4,16 +4,16 @@ import (
 	"reflect"
 )
 
-type jsonList []JsonNode
+type jsonArray []JsonNode
 
-var _ JsonNode = jsonList(nil)
+var _ JsonNode = jsonArray(nil)
 
-func (l jsonList) Json() string {
+func (l jsonArray) Json() string {
 	return renderJson(l)
 }
 
-func (l1 jsonList) Equals(n JsonNode) bool {
-	l2, ok := n.(jsonList)
+func (l1 jsonArray) Equals(n JsonNode) bool {
+	l2, ok := n.(jsonArray)
 	if !ok {
 		return false
 	}
@@ -23,13 +23,13 @@ func (l1 jsonList) Equals(n JsonNode) bool {
 	return reflect.DeepEqual(l1, l2)
 }
 
-func (l1 jsonList) Diff(n JsonNode) Diff {
+func (l1 jsonArray) Diff(n JsonNode) Diff {
 	return l1.diff(n, Path{})
 }
 
-func (l1 jsonList) diff(n JsonNode, path Path) Diff {
+func (l1 jsonArray) diff(n JsonNode, path Path) Diff {
 	d := make(Diff, 0)
-	l2, ok := n.(jsonList)
+	l2, ok := n.(jsonArray)
 	if !ok {
 		// Different types
 		e := DiffElement{
@@ -72,6 +72,6 @@ func (l1 jsonList) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (l jsonList) Patch(d Diff) (JsonNode, error) {
+func (l jsonArray) Patch(d Diff) (JsonNode, error) {
 	return patch(l, d)
 }

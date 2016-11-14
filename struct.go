@@ -5,16 +5,16 @@ import (
 	"sort"
 )
 
-type jsonStruct map[string]JsonNode
+type jsonObject map[string]JsonNode
 
-var _ JsonNode = jsonStruct(nil)
+var _ JsonNode = jsonObject(nil)
 
-func (s jsonStruct) Json() string {
+func (s jsonObject) Json() string {
 	return renderJson(s)
 }
 
-func (s1 jsonStruct) Equals(n JsonNode) bool {
-	s2, ok := n.(jsonStruct)
+func (s1 jsonObject) Equals(n JsonNode) bool {
+	s2, ok := n.(jsonObject)
 	if !ok {
 		return false
 	}
@@ -24,13 +24,13 @@ func (s1 jsonStruct) Equals(n JsonNode) bool {
 	return reflect.DeepEqual(s1, s2)
 }
 
-func (s1 jsonStruct) Diff(n JsonNode) Diff {
+func (s1 jsonObject) Diff(n JsonNode) Diff {
 	return s1.diff(n, Path{})
 }
 
-func (s1 jsonStruct) diff(n JsonNode, path Path) Diff {
+func (s1 jsonObject) diff(n JsonNode, path Path) Diff {
 	d := make(Diff, 0)
-	s2, ok := n.(jsonStruct)
+	s2, ok := n.(jsonObject)
 	if !ok {
 		// Different types
 		e := DiffElement{
@@ -81,6 +81,6 @@ func (s1 jsonStruct) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (s jsonStruct) Patch(d Diff) (JsonNode, error) {
+func (s jsonObject) Patch(d Diff) (JsonNode, error) {
 	return patch(s, d)
 }
