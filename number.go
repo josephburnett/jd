@@ -35,3 +35,7 @@ func (n1 jsonNumber) diff(n JsonNode, path Path) Diff {
 	}
 	return append(d, e)
 }
+
+func (n jsonNumber) Patch(d Diff) (JsonNode, error) {
+	return patch(n, d)
+}

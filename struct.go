@@ -80,3 +80,7 @@ func (s1 jsonStruct) diff(n JsonNode, path Path) Diff {
 	}
 	return d
 }
+
+func (s jsonStruct) Patch(d Diff) (JsonNode, error) {
+	return patch(s, d)
+}

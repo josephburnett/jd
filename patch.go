@@ -4,7 +4,18 @@ import (
 	"fmt"
 )
 
-func patch(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+func patch(n JsonNode, d Diff) (JsonNode, error) {
+	var err error
+	for _, de := range d {
+		n, err = patchInternal(n, Path{}, de.Path, de.OldValue, de.NewValue)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return n, nil
+}
+
+func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
 	if oldValue == nil && newValue == nil {
 		return nil, fmt.Errorf(
 			"Invalid diff element. No old or new value provided.")
@@ -31,7 +42,7 @@ func patch(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue JsonNode) 
 		if !ok {
 			nextNode = emptyNode{}
 		}
-		patchedNode, err := patch(nextNode, append(pathBehind, pe), pathAhead[1:], oldValue, newValue)
+		patchedNode, err := patchInternal(nextNode, append(pathBehind, pe), pathAhead[1:], oldValue, newValue)
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +60,7 @@ func patch(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue JsonNode) 
 		if len(s) > i {
 			nextNode = s[i]
 		}
-		patchedNode, err := patch(nextNode, append(pathBehind, pe), pathAhead[1:], oldValue, newValue)
+		patchedNode, err := patchInternal(nextNode, append(pathBehind, pe), pathAhead[1:], oldValue, newValue)
 		if err != nil {
 			return nil, err
 		}

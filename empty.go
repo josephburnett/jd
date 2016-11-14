@@ -29,3 +29,7 @@ func (e emptyNode) diff(n JsonNode, p Path) Diff {
 	}
 	return Diff{de}
 }
+
+func (e emptyNode) Patch(d Diff) (JsonNode, error) {
+	return patch(e, d)
+}

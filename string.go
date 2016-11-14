@@ -32,3 +32,7 @@ func (s1 jsonString) diff(n JsonNode, path Path) Diff {
 	}
 	return append(d, e)
 }
+
+func (s jsonString) Patch(d Diff) (JsonNode, error) {
+	return patch(s, d)
+}

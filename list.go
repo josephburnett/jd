@@ -71,3 +71,7 @@ func (l1 jsonList) diff(n JsonNode, path Path) Diff {
 	}
 	return d
 }
+
+func (l jsonList) Patch(d Diff) (JsonNode, error) {
+	return patch(l, d)
+}

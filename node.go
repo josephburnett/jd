@@ -11,6 +11,7 @@ type JsonNode interface {
 	Equals(n JsonNode) bool
 	Diff(n JsonNode) Diff
 	diff(n JsonNode, p Path) Diff
+	Patch(d Diff) (JsonNode, error)
 }
 
 func NewJsonNode(n interface{}) (JsonNode, error) {
