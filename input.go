@@ -20,12 +20,12 @@ func ReadJsonString(s string) (JsonNode, error) {
 }
 
 func unmarshal(bytes []byte) (JsonNode, error) {
-	m := make(map[string]interface{})
-	err := json.Unmarshal(bytes, &m)
+	var v interface{}
+	err := json.Unmarshal(bytes, &v)
 	if err != nil {
 		return nil, err
 	}
-	n, err := NewJsonNode(m)
+	n, err := NewJsonNode(v)
 	if err != nil {
 		return nil, err
 	}
