@@ -44,6 +44,8 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 		return jsonNumber(t), nil
 	case string:
 		return jsonString(t), nil
+	case bool:
+		return jsonBool(t), nil
 	default:
 		return nil, errors.New(fmt.Sprintf("Unsupported type %v", t))
 	}
