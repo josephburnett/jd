@@ -22,6 +22,12 @@ func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue Js
 	}
 	// Base case
 	if len(pathAhead) == 0 {
+		if _, ok := n.(voidNode); !ok && oldValue == nil {
+			// Failure to insert into non-void.
+			return nil, fmt.Errorf(
+				"Found %v at %v. Expected nothing.",
+				n.Json(), pathBehind)
+		}
 		if oldValue != nil && !n.Equals(oldValue) {
 			return nil, fmt.Errorf(
 				"Found %v at %v. Expected %v.",
