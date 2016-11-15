@@ -36,12 +36,41 @@ func TestObjectDiff(t *testing.T) {
 		`- 1`,
 		`@ ["a"]`,
 		`+ 2`)
+	checkDiff(t, `{"a":{"b":{}}}`, `{"a":{"b":{"c":1},"d":2}}`,
+		`@ ["a","b","c"]`,
+		`+ 1`,
+		`@ ["a","d"]`,
+		`+ 2`)
 }
 
 func testObjectPatch(t *testing.T) {
-
+	checkPatch(t, `{}`, `{}`)
+	checkPatch(t, `{"a":1}`, `{"a":1}`)
+	checkPatch(t, `{"a":1}`, `{"a":2}`,
+		`@ ["a"]`,
+		`- 1`,
+		`+ 2`)
+	checkPatch(t, `{"":1}`, `{"":1}`)
+	checkPatch(t, `{"":1}`, `{"a":2}`,
+		`@ [""]`,
+		`- 1`,
+		`@ ["a"]`,
+		`+ 2`)
+	checkPatch(t, `{"a":{"b":{}}}`, `{"a":{"b":{"c":1},"d":2}}`,
+		`@ ["a","b","c"]`,
+		`+ 1`,
+		`@ ["a","d"]`,
+		`+ 2`)
 }
 
 func testObjectPatchError(t *testing.T) {
-
+	checkPatchError(t, `{}`,
+		`@ ["a"]`,
+		`- 1`)
+	checkPatchError(t, `{"a":1}`,
+		`@ ["a"]`,
+		`+ 2`)
+	checkPatchError(t, `{"a":1}`,
+		`@ ["a"]`,
+		`+ 1`)
 }
