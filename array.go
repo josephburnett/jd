@@ -46,7 +46,7 @@ func (l1 jsonArray) diff(n JsonNode, path Path) Diff {
 	for i := maxLen - 1; i >= 0; i-- {
 		l1Has := i < len(l1)
 		l2Has := i < len(l2)
-		subPath := append(path.clone(), i)
+		subPath := append(path.clone(), float64(i))
 		if l1Has && l2Has {
 			subDiff := l1[i].diff(l2[i], subPath)
 			d = append(d, subDiff...)

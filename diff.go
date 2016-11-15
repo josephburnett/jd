@@ -11,11 +11,11 @@ type DiffElement struct {
 	NewValue JsonNode
 }
 
-func (d DiffElement) Render() (string, error) {
+func (d DiffElement) Render() string {
 	b := bytes.NewBuffer(nil)
 	pathJson, err := json.Marshal(d.Path)
 	if err != nil {
-		return "", err
+		panic(err)
 	}
 	b.WriteString("@ ")
 	b.Write(pathJson)
@@ -23,7 +23,7 @@ func (d DiffElement) Render() (string, error) {
 	if d.OldValue != nil {
 		oldValueJson, err := json.Marshal(d.OldValue)
 		if err != nil {
-			return "", err
+			panic(err)
 		}
 		b.WriteString("- ")
 		b.Write(oldValueJson)
@@ -32,25 +32,21 @@ func (d DiffElement) Render() (string, error) {
 	if d.NewValue != nil {
 		newValueJson, err := json.Marshal(d.NewValue)
 		if err != nil {
-			return "", err
+			panic(err)
 		}
 		b.WriteString("+ ")
 		b.Write(newValueJson)
 		b.WriteString("\n")
 	}
-	return b.String(), nil
+	return b.String()
 }
 
 type Diff []DiffElement
 
-func (d Diff) Render() (string, error) {
+func (d Diff) Render() string {
 	b := bytes.NewBuffer(nil)
 	for _, element := range d {
-		elementString, err := element.Render()
-		if err != nil {
-			return "", err
-		}
-		b.WriteString(elementString)
+		b.WriteString(element.Render())
 	}
-	return b.String(), nil
+	return b.String()
 }

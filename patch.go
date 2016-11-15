@@ -48,8 +48,10 @@ func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue Js
 			return nil, err
 		}
 		if patchedNode == nil {
+			// Deletion of a pair.
 			delete(s, pe)
 		} else {
+			// Addition or replacement of a pair.
 			s[pe] = patchedNode
 		}
 		return s, nil
@@ -70,7 +72,30 @@ func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue Js
 		if err != nil {
 			return nil, err
 		}
-		s[int(pe)] = patchedNode
+		if patchedNode == nil {
+			if i != len(s)-1 {
+				return nil, fmt.Errorf(
+					"Removal of non-terminal element of array.")
+			}
+			// Deletion of an element.
+			s = s[:len(s)-1]
+		} else {
+			if i > len(s) {
+				return nil, fmt.Errorf(
+					"Addition of non-terminal element of array.")
+			}
+			if i == len(s) {
+				// Addition of an element.
+				s = append(s, patchedNode)
+			} else {
+				// Replacement of an element.
+				if oldValue == nil {
+					return nil, fmt.Errorf(
+						"Overwrite of an unknown value.")
+				}
+				s[int(pe)] = patchedNode
+			}
+		}
 		return s, nil
 	default:
 		panic(fmt.Sprintf("Invalid path element %v", pe))
