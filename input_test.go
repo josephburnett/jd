@@ -92,6 +92,9 @@ func TestReadDiffError(t *testing.T) {
 		`@ ["a"]`,
 		`- 1`,
 		`@ ["b"]`)
+	checkReadDiffError(t,
+		`@ `,
+		`- 1`)
 }
 
 func checkReadDiff(t *testing.T, d Diff, diffLines ...string) {

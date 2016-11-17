@@ -32,12 +32,16 @@ func (e voidNode) Diff(n JsonNode) Diff {
 }
 
 func (e voidNode) diff(n JsonNode, p Path) Diff {
+	d := make(Diff, 0)
+	if n.Equals(e) {
+		return d
+	}
 	de := DiffElement{
 		Path:     p,
 		OldValue: e,
 		NewValue: n,
 	}
-	return Diff{de}
+	return append(d, de)
 }
 
 func (e voidNode) Patch(d Diff) (JsonNode, error) {
