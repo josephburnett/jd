@@ -33,3 +33,23 @@ func TestNumberDiff(t *testing.T) {
 		`@ []`,
 		`- 0`)
 }
+
+func TestNumberPatch(t *testing.T) {
+	checkPatch(t, `0`, `0`)
+	checkPatch(t, `0`, `1`,
+		`@ []`,
+		`- 0`,
+		`+ 1`)
+	checkPatch(t, `0`, ``,
+		`@ []`,
+		`- 0`)
+}
+
+func TestNumberPatchError(t *testing.T) {
+	checkPatchError(t, `0`,
+		`@ []`,
+		`- 1`)
+	checkPatchError(t, ``,
+		`@ []`,
+		`- 0`)
+}
