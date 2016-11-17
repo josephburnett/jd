@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/josephburnett/jd"
+	jd "github.com/josephburnett/jd/lib"
 )
 
 var patch = flag.Bool("p", false, "Patch mode")
