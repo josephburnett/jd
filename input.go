@@ -20,6 +20,9 @@ func ReadJsonString(s string) (JsonNode, error) {
 }
 
 func unmarshal(bytes []byte) (JsonNode, error) {
+	if strings.TrimSpace(string(bytes)) == "" {
+		return voidNode{}, nil
+	}
 	var v interface{}
 	err := json.Unmarshal(bytes, &v)
 	if err != nil {
@@ -52,7 +55,6 @@ func readDiff(s string) (Diff, error) {
 		AT   = iota
 		OLD  = iota
 		NEW  = iota
-		p
 	)
 	var de DiffElement
 	var state = INIT
@@ -88,7 +90,11 @@ func readDiff(s string) (Diff, error) {
 			if err != nil {
 				return errorAt(i, "Invalid path. %v", err.Error())
 			}
-			de = DiffElement{Path: p}
+			de = DiffElement{
+				Path:     p,
+				OldValue: voidNode{},
+				NewValue: voidNode{},
+			}
 			state = AT
 		case "-":
 			v, err := ReadJsonString(dl[1:])

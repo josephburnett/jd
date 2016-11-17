@@ -61,7 +61,7 @@ func (s1 jsonObject) diff(n JsonNode, path Path) Diff {
 			e := DiffElement{
 				Path:     append(path.clone(), k1),
 				OldValue: v1,
-				NewValue: nil,
+				NewValue: voidNode{},
 			}
 			d = append(d, e)
 		}
@@ -72,7 +72,7 @@ func (s1 jsonObject) diff(n JsonNode, path Path) Diff {
 			// S1 missing key
 			e := DiffElement{
 				Path:     append(path.clone(), k2),
-				OldValue: nil,
+				OldValue: voidNode{},
 				NewValue: v2,
 			}
 			d = append(d, e)

@@ -20,7 +20,7 @@ func (d DiffElement) Render() string {
 	b.WriteString("@ ")
 	b.Write(pathJson)
 	b.WriteString("\n")
-	if d.OldValue != nil {
+	if !isVoid(d.OldValue) {
 		oldValueJson, err := json.Marshal(d.OldValue)
 		if err != nil {
 			panic(err)
@@ -29,7 +29,7 @@ func (d DiffElement) Render() string {
 		b.Write(oldValueJson)
 		b.WriteString("\n")
 	}
-	if d.NewValue != nil {
+	if !isVoid(d.NewValue) {
 		newValueJson, err := json.Marshal(d.NewValue)
 		if err != nil {
 			panic(err)

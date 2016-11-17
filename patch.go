@@ -16,19 +16,19 @@ func patch(n JsonNode, d Diff) (JsonNode, error) {
 }
 
 func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
-	if oldValue == nil && newValue == nil {
+	if isVoid(oldValue) && isVoid(newValue) {
 		return nil, fmt.Errorf(
 			"Invalid diff element. No old or new value provided.")
 	}
 	// Base case
 	if len(pathAhead) == 0 {
-		if _, ok := n.(voidNode); !ok && oldValue == nil {
+		if _, ok := n.(voidNode); !ok && isVoid(oldValue) {
 			// Failure to insert into non-void.
 			return nil, fmt.Errorf(
 				"Found %v at %v. Expected nothing.",
 				n.Json(), pathBehind)
 		}
-		if oldValue != nil && !n.Equals(oldValue) {
+		if !isVoid(oldValue) && !n.Equals(oldValue) {
 			return nil, fmt.Errorf(
 				"Found %v at %v. Expected %v.",
 				n.Json(), pathBehind, oldValue.Json())
@@ -53,7 +53,7 @@ func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue Js
 		if err != nil {
 			return nil, err
 		}
-		if patchedNode == nil {
+		if isVoid(patchedNode) {
 			// Deletion of a pair.
 			delete(s, pe)
 		} else {
@@ -74,11 +74,12 @@ func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue Js
 		if len(s) > i {
 			nextNode = s[i]
 		}
+
 		patchedNode, err := patchInternal(nextNode, append(pathBehind, pe), pathAhead[1:], oldValue, newValue)
 		if err != nil {
 			return nil, err
 		}
-		if patchedNode == nil {
+		if isVoid(patchedNode) {
 			if i != len(s)-1 {
 				return nil, fmt.Errorf(
 					"Removal of non-terminal element of array.")
@@ -95,7 +96,7 @@ func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue Js
 				s = append(s, patchedNode)
 			} else {
 				// Replacement of an element.
-				if oldValue == nil {
+				if isVoid(oldValue) {
 					return nil, fmt.Errorf(
 						"Overwrite of an unknown value.")
 				}

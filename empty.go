@@ -17,6 +17,16 @@ func (e voidNode) Equals(n JsonNode) bool {
 	}
 }
 
+func isVoid(n JsonNode) bool {
+	if n == nil {
+		return false
+	}
+	if _, ok := n.(voidNode); ok {
+		return true
+	}
+	return false
+}
+
 func (e voidNode) Diff(n JsonNode) Diff {
 	return e.diff(n, Path{})
 }

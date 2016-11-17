@@ -52,18 +52,17 @@ func (l1 jsonArray) diff(n JsonNode, path Path) Diff {
 			d = append(d, subDiff...)
 		}
 		if l1Has && !l2Has {
-
 			e := DiffElement{
 				Path:     subPath,
 				OldValue: l1[i],
-				NewValue: nil,
+				NewValue: voidNode{},
 			}
 			d = append(d, e)
 		}
 		if !l1Has && l2Has {
 			e := DiffElement{
 				Path:     subPath,
-				OldValue: nil,
+				OldValue: voidNode{},
 				NewValue: l2[i],
 			}
 			d = append(d, e)
