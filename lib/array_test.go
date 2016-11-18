@@ -31,6 +31,9 @@ func TestArrayDiff(t *testing.T) {
 	checkDiff(t, `[1]`, `[]`,
 		`@ [0]`,
 		`- 1`)
+	checkDiff(t, `[[]]`, `[[1]]`,
+		`@ [0, 0]`,
+		`+ 1`)
 	checkDiff(t, `[1]`, `[2]`,
 		`@ [0]`,
 		`- 1`,
@@ -64,6 +67,9 @@ func TestArrayPatch(t *testing.T) {
 	checkPatch(t, `[1]`, `[]`,
 		`@ [0]`,
 		`- 1`)
+	checkPatch(t, `[[]]`, `[[1]]`,
+		`@ [0, 0]`,
+		`+ 1`)
 	checkPatch(t, `[1]`, `[2]`,
 		`@ [0]`,
 		`- 1`,

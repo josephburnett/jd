@@ -96,11 +96,7 @@ func patchInternal(n JsonNode, pathBehind, pathAhead Path, oldValue, newValue Js
 				s = append(s, patchedNode)
 			} else {
 				// Replacement of an element.
-				if isVoid(oldValue) {
-					return nil, fmt.Errorf(
-						"Overwrite of an unknown value.")
-				}
-				s[int(pe)] = patchedNode
+				s[i] = patchedNode
 			}
 		}
 		return s, nil

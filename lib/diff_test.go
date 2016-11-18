@@ -1,7 +1,6 @@
 package jd
 
 import (
-	"reflect"
 	"testing"
 )
 
