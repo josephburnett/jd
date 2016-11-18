@@ -1,5 +1,7 @@
 # jd -- JSON diff and patch
 
+## Command line usage
+
 `go get github.com/josephburnett/jd`
 
 ```
@@ -15,4 +17,35 @@ Examples:
   jd a.json b.json
   cat b.json | jd a.json
   jd a.json b.json > patch; jd patch a.json
+```
+
+## Diff language
+
+### EBNF
+
+```
+diff         = { diff element } ;
+diff element = path line, add | replace | remove ;
+path line    = path header, path, "\n" ;
+path header  = "@" ;
+path         = "[", { path element }, "]" ;
+path element = json string | json number ;
+add          = add line ;
+replace      = remove line, add line ;
+remove       = remove line ;
+add line     = "+", json value, "\n" ;
+remove line  = "-", json value, "\n" ;
+```
+
+### Examples
+
+```
+@ ["a"]
+- 1
++ 2
+```
+
+```
+@ [2]
++ {"foo":"bar"}
 ```
