@@ -29,21 +29,24 @@ Examples:
 `go get github.com/josephburnett/jd`
 
 ```Go
+import (
+	"fmt"
+	jd "github.com/josephburnett/jd/lib"
+)
+
 func ExampleJsonNode_Diff() {
-	a, _ := ReadJsonString(`{"foo":"bar"}`)
-	b, _ := ReadJsonString(`{"foo":"baz"}`)
+	a, _ := jd.ReadJsonString(`{"foo":"bar"}`)
+	b, _ := jd.ReadJsonString(`{"foo":"baz"}`)
 	fmt.Print(a.Diff(b).Render())
 	// Output:
 	// @ ["foo"]
 	// - "bar"
 	// + "baz"
 }
-```
 
-```Go
 func ExampleJsonNode_Patch() {
-	a, _ := ReadJsonString(`["foo"]`)
-	diff, _ := ReadDiffString(`` +
+	a, _ := jd.ReadJsonString(`["foo"]`)
+	diff, _ := jd.ReadDiffString(`` +
 		`@ [1]` + "\n" +
 		`+ "bar"` + "\n")
 	b, _ := a.Patch(diff)
