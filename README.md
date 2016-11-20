@@ -1,4 +1,4 @@
-# jd -- JSON diff and patch
+# JSON diff and patch
 
 `jd` is a commandline utility and Go library for diffing and patching JSON values.
 
@@ -56,24 +56,24 @@ func ExampleJsonNode_Patch() {
 
 ### EBNF
 
-```
+```EBNF
 Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' )* ']' '\n' ( '+' | '-' ( 'JSON Value' '\n' '+' )? ) 'JSON Value' '\n' )*
 ```
 
 ### Examples
 
-```
+```JSON
 @ ["a"]
 - 1
 + 2
 ```
 
-```
+```JSON
 @ [2]
 + {"foo":"bar"}
 ```
 
-```
+```JSON
 @ ["Movies",67,"Title"]
 - "Dr. Strangelove"
 + "Dr. Evil Love"
