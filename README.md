@@ -4,7 +4,7 @@
 
 ## Command line usage
 
-Download [latest release](https://github.com/josephburnett/jd/releases) or `go get github.com/josephburnett/jd`
+Download [latest release](https://github.com/josephburnett/jd/releases/latest) or `go get github.com/josephburnett/jd`
 
 ```
 Usage: jd [OPTION]... FILE1 [FILE2]
