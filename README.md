@@ -10,18 +10,21 @@ Download [latest release](https://github.com/josephburnett/jd/releases) or `go g
 Usage: jd [OPTION]... FILE1 [FILE2]
 Diff and patch JSON files.
 
+Prints the diff of FILE1 and FILE2 to STDOUT.
 When FILE2 is omitted the second input is read from STDIN.
+When patching (-p) FILE1 is a diff.
 
 Options:
-  -p  Apply patch FILE1 to FILE2 or STDIN.
+  -p        Apply patch FILE1 to FILE2 or STDIN.
+  -o=FILE3  Write to FILE3 instead of STDOUT.
 
 Examples:
   jd a.json b.json
   cat b.json | jd a.json
-  jd a.json b.json > patch; jd patch a.json
+  jd -o patch a.json b.json; jd patch a.json
 ```
 
-## Libarary usage
+## Library usage
 
 `go get github.com/josephburnett/jd`
 
