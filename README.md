@@ -21,20 +21,12 @@ Examples:
 
 ## Diff language
 
+![Railroad diagram of EBNF](/ebnf.png)
+
 ### EBNF
 
 ```
-diff         = { diff element } ;
-diff element = path line, add | replace | remove ;
-path line    = path header, path, "\n" ;
-path header  = "@" ;
-path         = "[", { path element }, "]" ;
-path element = json string | json number ;
-add          = add line ;
-replace      = remove line, add line ;
-remove       = remove line ;
-add line     = "+", json value, "\n" ;
-remove line  = "-", json value, "\n" ;
+Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' )* ']' '\n' ( '+' | '-' ( 'JSON Value' '\n' '+' )? ) 'JSON Value' '\n' )*
 ```
 
 ### Examples
@@ -48,4 +40,15 @@ remove line  = "-", json value, "\n" ;
 ```
 @ [2]
 + {"foo":"bar"}
+```
+
+```
+@ ["Movies",67,"Title"]
+- "Dr. Strangelove"
++ "Dr. Evil Love"
+@ ["Movies",67,"Actors","Dr. Strangelove"]
+- "Peter Sellers"
++ "Mike Myers"
+@ ["Movies",102]
++ {"Title":"Austin Powers","Actors":{"Austin Powers":"Mike Myers"}}
 ```
