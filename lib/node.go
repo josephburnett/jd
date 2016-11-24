@@ -12,10 +12,10 @@ type JsonNode interface {
 	Diff(n JsonNode) Diff
 	diff(n JsonNode, p Path) Diff
 	Patch(d Diff) (JsonNode, error)
-	hash(h hash.Hash)
+	// hash(h hash.Hash)
 }
 
-func NewJsonNode(n interface{}) (JsonNode, error) {
+func NewJsonNode(n interface{}, options ...option) (JsonNode, error) {
 	switch t := n.(type) {
 	case map[string]interface{}:
 		m := make(jsonObject)

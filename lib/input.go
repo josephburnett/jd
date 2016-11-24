@@ -7,13 +7,14 @@ import (
 	"strings"
 )
 
-type Option int
+type option string
 
 const (
-	ARRAY_SET Option = iota
+	ARRAY_BAG option = "array_bag"
+	ARRAY_SET option = "array_set"
 )
 
-func ReadJsonFile(filename string, options ...Option) (JsonNode, error) {
+func ReadJsonFile(filename string, options ...option) (JsonNode, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -21,7 +22,7 @@ func ReadJsonFile(filename string, options ...Option) (JsonNode, error) {
 	return unmarshal(bytes)
 }
 
-func ReadJsonString(s string, options ...Option) (JsonNode, error) {
+func ReadJsonString(s string, options ...option) (JsonNode, error) {
 	return unmarshal([]byte(s))
 }
 
@@ -41,7 +42,7 @@ func unmarshal(bytes []byte) (JsonNode, error) {
 	return n, nil
 }
 
-func ReadDiffFile(filename string, options ...Option) (Diff, error) {
+func ReadDiffFile(filename string, options ...option) (Diff, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -49,7 +50,7 @@ func ReadDiffFile(filename string, options ...Option) (Diff, error) {
 	return readDiff(string(bytes))
 }
 
-func ReadDiffString(s string, options ...Option) (Diff, error) {
+func ReadDiffString(s string, options ...option) (Diff, error) {
 	return readDiff(s)
 }
 
