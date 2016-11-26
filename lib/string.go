@@ -1,5 +1,9 @@
 package jd
 
+import (
+	"fmt"
+)
+
 type jsonString string
 
 var _ JsonNode = jsonString("")
@@ -34,5 +38,17 @@ func (s1 jsonString) diff(n JsonNode, path Path) Diff {
 }
 
 func (s jsonString) Patch(d Diff) (JsonNode, error) {
-	return patch(s, d)
+	return patchAll(s, d)
+}
+
+func (s jsonString) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+	if len(pathAhead) != 0 {
+		return patchErrExpectColl(s, pathBehind[0])
+	}
+	if !s.Equals(oldValue) {
+		return nil, fmt.Errorf(
+			"Found %v at %v. Expected %v.",
+			s.Json(), pathBehind, oldValue.Json())
+	}
+	return newValue, nil
 }

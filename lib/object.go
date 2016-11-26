@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 )
@@ -82,5 +83,39 @@ func (s1 jsonObject) diff(n JsonNode, path Path) Diff {
 }
 
 func (s jsonObject) Patch(d Diff) (JsonNode, error) {
-	return patch(s, d)
+	return patchAll(s, d)
+}
+
+func (o jsonObject) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+	// Base case
+	if len(pathAhead) == 0 {
+		if !o.Equals(oldValue) {
+			return nil, fmt.Errorf(
+				"Found %v at %v. Expected %v.",
+				o.Json(), pathBehind, oldValue.Json())
+		}
+	}
+	// Recursive case
+	pe, ok := pathAhead[0].(string)
+	if !ok {
+		return nil, fmt.Errorf(
+			"Found %v at %v. Expected JSON object.",
+			o.Json(), pathBehind)
+	}
+	nextNode, ok := o[pe]
+	if !ok {
+		nextNode = voidNode{}
+	}
+	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValue, newValue)
+	if err != nil {
+		return nil, err
+	}
+	if isVoid(patchedNode) {
+		// Delete a pair
+		delete(o, pe)
+	} else {
+		// Add or replace a pair
+		o[pe] = patchedNode
+	}
+	return o, nil
 }

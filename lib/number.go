@@ -1,5 +1,9 @@
 package jd
 
+import (
+	"fmt"
+)
+
 type jsonNumber float64
 
 var _ JsonNode = jsonNumber(0)
@@ -37,5 +41,17 @@ func (n1 jsonNumber) diff(n JsonNode, path Path) Diff {
 }
 
 func (n jsonNumber) Patch(d Diff) (JsonNode, error) {
-	return patch(n, d)
+	return patchAll(n, d)
+}
+
+func (n jsonNumber) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+	if len(pathAhead) != 0 {
+		return patchErrExpectColl(n, pathAhead[0])
+	}
+	if !n.Equals(oldValue) {
+		return nil, fmt.Errorf(
+			"Found %v at %v. Expected %v.",
+			n.Json(), pathBehind, oldValue.Json())
+	}
+	return newValue, nil
 }

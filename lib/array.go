@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -72,5 +73,52 @@ func (l1 jsonArray) diff(n JsonNode, path Path) Diff {
 }
 
 func (l jsonArray) Patch(d Diff) (JsonNode, error) {
-	return patch(l, d)
+	return patchAll(l, d)
+}
+
+func (a jsonArray) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+	// Base case
+	if len(pathAhead) == 0 {
+		if !a.Equals(oldValue) {
+			return nil, fmt.Errorf(
+				"Found %v at %v. Expected %v.",
+				a.Json(), pathBehind, oldValue.Json())
+		}
+		return newValue, nil
+	}
+	// Recursive case
+	pe, ok := pathAhead[0].(float64)
+	if !ok {
+		return nil, fmt.Errorf(
+			"Invalid path element %v. Expected float64.",
+			pathAhead[0])
+	}
+	i := int(pe)
+	var nextNode JsonNode = voidNode{}
+	if len(a) > i {
+		nextNode = a[i]
+	}
+	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValue, newValue)
+	if err != nil {
+		return nil, err
+	}
+	if isVoid(patchedNode) {
+		if i != len(a)-1 {
+			return nil, fmt.Errorf(
+				"Removal of a non-terminal element of an array.")
+		}
+		// Delete an element
+		return a[:len(a)-1], nil
+	}
+	if i > len(a) {
+		return nil, fmt.Errorf(
+			"Addition beyond the terminal elemtn of an array.")
+	}
+	if i == len(a) {
+		// Add an element
+		return append(a, patchedNode), nil
+	}
+	// Replace an element
+	a[i] = patchedNode
+	return a, nil
 }

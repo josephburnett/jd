@@ -1,5 +1,9 @@
 package jd
 
+import (
+	"fmt"
+)
+
 type jsonBool bool
 
 var _ JsonNode = jsonBool(true)
@@ -34,5 +38,17 @@ func (b jsonBool) diff(n JsonNode, path Path) Diff {
 }
 
 func (b jsonBool) Patch(d Diff) (JsonNode, error) {
-	return patch(b, d)
+	return patchAll(b, d)
+}
+
+func (b jsonBool) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+	if len(pathAhead) != 0 {
+		return patchErrExpectColl(b, pathAhead[0])
+	}
+	if !b.Equals(oldValue) {
+		return nil, fmt.Errorf(
+			"Found %v at %v. Expected %v.",
+			b.Json(), pathBehind, oldValue.Json())
+	}
+	return newValue, nil
 }
