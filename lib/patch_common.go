@@ -30,3 +30,9 @@ func patchErrExpectColl(n JsonNode, pe interface{}) (JsonNode, error) {
 	}
 
 }
+
+func patchErrExpectValue(want, found JsonNode, path Path) (JsonNode, error) {
+	return nil, fmt.Errorf(
+		"Found %v at %v. Expected %v.",
+		found.Json(), path, want.Json())
+}

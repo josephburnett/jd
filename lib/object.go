@@ -90,9 +90,7 @@ func (o jsonObject) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNod
 	// Base case
 	if len(pathAhead) == 0 {
 		if !o.Equals(oldValue) {
-			return nil, fmt.Errorf(
-				"Found %v at %v. Expected %v.",
-				o.Json(), pathBehind, oldValue.Json())
+			return patchErrExpectValue(oldValue, o, pathBehind)
 		}
 	}
 	// Recursive case

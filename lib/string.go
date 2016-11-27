@@ -1,9 +1,5 @@
 package jd
 
-import (
-	"fmt"
-)
-
 type jsonString string
 
 var _ JsonNode = jsonString("")
@@ -46,9 +42,7 @@ func (s jsonString) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNod
 		return patchErrExpectColl(s, pathBehind[0])
 	}
 	if !s.Equals(oldValue) {
-		return nil, fmt.Errorf(
-			"Found %v at %v. Expected %v.",
-			s.Json(), pathBehind, oldValue.Json())
+		return patchErrExpectValue(oldValue, s, pathBehind)
 	}
 	return newValue, nil
 }

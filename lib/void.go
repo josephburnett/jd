@@ -1,9 +1,5 @@
 package jd
 
-import (
-	"fmt"
-)
-
 type voidNode struct{}
 
 var _ JsonNode = voidNode{}
@@ -57,9 +53,7 @@ func (v voidNode) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode)
 		return patchErrExpectColl(v, pathBehind[0])
 	}
 	if !v.Equals(oldValue) {
-		return nil, fmt.Errorf(
-			"Found %v at %v. Expected %v.",
-			v.Json(), pathBehind, oldValue.Json())
+		return patchErrExpectValue(oldValue, v, pathBehind)
 	}
 	return newValue, nil
 }

@@ -1,9 +1,5 @@
 package jd
 
-import (
-	"fmt"
-)
-
 type jsonBool bool
 
 var _ JsonNode = jsonBool(true)
@@ -46,9 +42,7 @@ func (b jsonBool) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode)
 		return patchErrExpectColl(b, pathAhead[0])
 	}
 	if !b.Equals(oldValue) {
-		return nil, fmt.Errorf(
-			"Found %v at %v. Expected %v.",
-			b.Json(), pathBehind, oldValue.Json())
+		return patchErrExpectValue(oldValue, b, pathBehind)
 	}
 	return newValue, nil
 }

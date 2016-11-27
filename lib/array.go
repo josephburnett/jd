@@ -80,9 +80,7 @@ func (a jsonArray) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode
 	// Base case
 	if len(pathAhead) == 0 {
 		if !a.Equals(oldValue) {
-			return nil, fmt.Errorf(
-				"Found %v at %v. Expected %v.",
-				a.Json(), pathBehind, oldValue.Json())
+			return patchErrExpectValue(oldValue, a, pathBehind)
 		}
 		return newValue, nil
 	}
