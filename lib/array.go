@@ -9,62 +9,62 @@ type jsonArray []JsonNode
 
 var _ JsonNode = jsonArray(nil)
 
-func (l jsonArray) Json() string {
-	return renderJson(l)
+func (a jsonArray) Json() string {
+	return renderJson(a)
 }
 
-func (l1 jsonArray) Equals(n JsonNode) bool {
-	l2, ok := n.(jsonArray)
+func (a1 jsonArray) Equals(n JsonNode) bool {
+	a2, ok := n.(jsonArray)
 	if !ok {
 		return false
 	}
-	if len(l1) != len(l2) {
+	if len(a1) != len(a2) {
 		return false
 	}
-	return reflect.DeepEqual(l1, l2)
+	return reflect.DeepEqual(a1, a2)
 }
 
-func (l1 jsonArray) Diff(n JsonNode) Diff {
-	return l1.diff(n, Path{})
+func (a jsonArray) Diff(n JsonNode) Diff {
+	return a.diff(n, Path{})
 }
 
-func (l1 jsonArray) diff(n JsonNode, path Path) Diff {
+func (a1 jsonArray) diff(n JsonNode, path Path) Diff {
 	d := make(Diff, 0)
-	l2, ok := n.(jsonArray)
+	a2, ok := n.(jsonArray)
 	if !ok {
 		// Different types
 		e := DiffElement{
 			Path:     path.clone(),
-			OldValue: l1,
+			OldValue: a1,
 			NewValue: n,
 		}
 		return append(d, e)
 	}
-	maxLen := len(l1)
-	if len(l1) < len(l2) {
-		maxLen = len(l2)
+	maxLen := len(a1)
+	if len(a1) < len(a2) {
+		maxLen = len(a2)
 	}
 	for i := maxLen - 1; i >= 0; i-- {
-		l1Has := i < len(l1)
-		l2Has := i < len(l2)
+		a1Has := i < len(a1)
+		a2Has := i < len(a2)
 		subPath := append(path.clone(), float64(i))
-		if l1Has && l2Has {
-			subDiff := l1[i].diff(l2[i], subPath)
+		if a1Has && a2Has {
+			subDiff := a1[i].diff(a2[i], subPath)
 			d = append(d, subDiff...)
 		}
-		if l1Has && !l2Has {
+		if a1Has && !a2Has {
 			e := DiffElement{
 				Path:     subPath,
-				OldValue: l1[i],
+				OldValue: a1[i],
 				NewValue: voidNode{},
 			}
 			d = append(d, e)
 		}
-		if !l1Has && l2Has {
+		if !a1Has && a2Has {
 			e := DiffElement{
 				Path:     subPath,
 				OldValue: voidNode{},
-				NewValue: l2[i],
+				NewValue: a2[i],
 			}
 			d = append(d, e)
 		}
@@ -72,8 +72,8 @@ func (l1 jsonArray) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (l jsonArray) Patch(d Diff) (JsonNode, error) {
-	return patchAll(l, d)
+func (a jsonArray) Patch(d Diff) (JsonNode, error) {
+	return patchAll(a, d)
 }
 
 func (a jsonArray) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {

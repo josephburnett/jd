@@ -12,8 +12,8 @@ func (n jsonNull) Json() string {
 	return renderJson(nil)
 }
 
-func (n jsonNull) Equals(o JsonNode) bool {
-	switch o.(type) {
+func (n jsonNull) Equals(node JsonNode) bool {
+	switch node.(type) {
 	case jsonNull:
 		return true
 	default:
@@ -21,19 +21,19 @@ func (n jsonNull) Equals(o JsonNode) bool {
 	}
 }
 
-func (n jsonNull) Diff(o JsonNode) Diff {
-	return n.diff(o, Path{})
+func (n jsonNull) Diff(node JsonNode) Diff {
+	return n.diff(node, Path{})
 }
 
-func (n jsonNull) diff(o JsonNode, path Path) Diff {
+func (n jsonNull) diff(node JsonNode, path Path) Diff {
 	d := make(Diff, 0)
-	if n.Equals(o) {
+	if n.Equals(node) {
 		return d
 	}
 	e := DiffElement{
 		Path:     path.clone(),
 		OldValue: n,
-		NewValue: o,
+		NewValue: node,
 	}
 	return append(d, e)
 }

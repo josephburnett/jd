@@ -20,8 +20,8 @@ func (s1 jsonString) Equals(n JsonNode) bool {
 	return s1 == s2
 }
 
-func (s1 jsonString) Diff(n JsonNode) Diff {
-	return s1.diff(n, Path{})
+func (s jsonString) Diff(n JsonNode) Diff {
+	return s.diff(n, Path{})
 }
 
 func (s1 jsonString) diff(n JsonNode, path Path) Diff {
