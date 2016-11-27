@@ -26,6 +26,15 @@ func TestArrayNotEqual(t *testing.T) {
 	checkNotEqual(t, `[1,2,3]`, `[3,2,1]`)
 }
 
+func TestArrayHash(t *testing.T) {
+	checkHash(t, `[]`, `[]`, true)
+	checkHash(t, `[1]`, `[]`, false)
+	checkHash(t, `[1]`, `[1]`, true)
+	checkHash(t, `[1]`, `[2]`, false)
+	checkHash(t, `[[1]]`, `[[1]]`, true)
+	checkHash(t, `[[1]]`, `[[[1]]]`, false)
+}
+
 func TestArrayDiff(t *testing.T) {
 	checkDiff(t, `[]`, `[]`)
 	checkDiff(t, `[1]`, `[]`,

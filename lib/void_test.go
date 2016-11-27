@@ -20,6 +20,11 @@ func TestVoidNotEqual(t *testing.T) {
 	checkNotEqual(t, ``, `{}`)
 }
 
+func TestVoidHash(t *testing.T) {
+	checkHash(t, ``, ``, true)
+	checkHash(t, ``, `null`, false)
+}
+
 func TestVoidDiff(t *testing.T) {
 	checkDiff(t, ``, ``)
 	checkDiff(t, ``, `1`,

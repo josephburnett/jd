@@ -16,6 +16,14 @@ func (b1 jsonBool) Equals(n JsonNode) bool {
 	return b1 == b2
 }
 
+func (b jsonBool) hashCode() [8]byte {
+	if b {
+		return [8]byte{0x24, 0x6B, 0xE3, 0xE4, 0xAF, 0x59, 0xDC, 0x1C} // Random bytes
+	} else {
+		return [8]byte{0xC6, 0x38, 0x77, 0xD1, 0x0A, 0x7E, 0x1F, 0xBF} // Random bytes
+	}
+}
+
 func (b jsonBool) Diff(n JsonNode) Diff {
 	return b.diff(n, Path{})
 }

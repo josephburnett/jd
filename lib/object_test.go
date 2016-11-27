@@ -23,6 +23,14 @@ func TestObjectNotEqual(t *testing.T) {
 	checkNotEqual(t, `{"a":"b"}`, `{"a":"c"}`)
 }
 
+func TestObjectHash(t *testing.T) {
+	checkHash(t, `{}`, `{}`, true)
+	checkHash(t, `{"a":1}`, `{"a":1}`, true)
+	checkHash(t, `{"a":1}`, `{"a":2}`, false)
+	checkHash(t, `{"a":1}`, `{"b":1}`, false)
+	checkHash(t, `{"a":1,"b":2}`, `{"b":2,"a":1}`, true)
+}
+
 func TestObjectDiff(t *testing.T) {
 	checkDiff(t, `{}`, `{}`)
 	checkDiff(t, `{"a":1}`, `{"a":1}`)

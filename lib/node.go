@@ -9,11 +9,11 @@ import (
 type JsonNode interface {
 	Json() string
 	Equals(n JsonNode) bool
+	hashCode() [8]byte
 	Diff(n JsonNode) Diff
 	diff(n JsonNode, p Path) Diff
 	Patch(d Diff) (JsonNode, error)
 	patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error)
-	// hash(h hash.Hash)
 }
 
 func NewJsonNode(n interface{}, options ...option) (JsonNode, error) {

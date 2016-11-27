@@ -1,5 +1,10 @@
 package jd
 
+import (
+	"bytes"
+	"encoding/binary"
+)
+
 type jsonNumber float64
 
 var _ JsonNode = jsonNumber(0)
@@ -17,6 +22,13 @@ func (n1 jsonNumber) Equals(node JsonNode) bool {
 		return false
 	}
 	return true
+}
+
+func (n jsonNumber) hashCode() [8]byte {
+	a := make([]byte, 0, 8)
+	b := bytes.NewBuffer(a)
+	binary.Write(b, binary.LittleEndian, n)
+	return hash(b.Bytes())
 }
 
 func (n jsonNumber) Diff(node JsonNode) Diff {

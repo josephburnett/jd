@@ -23,6 +23,13 @@ func TestStringNotEqual(t *testing.T) {
 	checkNotEqual(t, `""`, `0`)
 }
 
+func TestStringHash(t *testing.T) {
+	checkHash(t, `""`, `""`, true)
+	checkHash(t, `"abc"`, `"abc"`, true)
+	checkHash(t, `""`, `" "`, false)
+	checkHash(t, `"abc"`, `"123"`, false)
+}
+
 func TestStringDiff(t *testing.T) {
 	checkDiff(t, `""`, `""`)
 	checkDiff(t, `""`, `1`,

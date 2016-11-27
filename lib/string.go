@@ -16,6 +16,10 @@ func (s1 jsonString) Equals(n JsonNode) bool {
 	return s1 == s2
 }
 
+func (s jsonString) hashCode() [8]byte {
+	return hash([]byte(s))
+}
+
 func (s jsonString) Diff(n JsonNode) Diff {
 	return s.diff(n, Path{})
 }

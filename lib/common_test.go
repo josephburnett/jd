@@ -56,6 +56,27 @@ func checkNotEqual(t *testing.T, a, b string) {
 	}
 }
 
+func checkHash(t *testing.T, a, b string, wantSame bool) {
+	nodeA, err := unmarshal([]byte(a))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	nodeB, err := unmarshal([]byte(b))
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	hashA := nodeA.hashCode()
+	hashB := nodeB.hashCode()
+	if wantSame && hashA != hashB {
+		t.Errorf("%v.hashCode = %v. %v.hashCode = %v. Want the same.",
+			a, hashA, b, hashB)
+	}
+	if !wantSame && hashA == hashB {
+		t.Errorf("%v.hashCode = %v. %v.hashCode = %v. Want the different.",
+			a, hashA, b, hashB)
+	}
+}
+
 func checkDiff(t *testing.T, a, b string, diffLines ...string) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {

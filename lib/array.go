@@ -24,6 +24,15 @@ func (a1 jsonArray) Equals(n JsonNode) bool {
 	return reflect.DeepEqual(a1, a2)
 }
 
+func (a jsonArray) hashCode() [8]byte {
+	b := make([]byte, 0, len(a)*8)
+	for _, el := range a {
+		h := el.hashCode()
+		b = append(b, h[:]...)
+	}
+	return hash(b)
+}
+
 func (a jsonArray) Diff(n JsonNode) Diff {
 	return a.diff(n, Path{})
 }

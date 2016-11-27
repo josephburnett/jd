@@ -18,6 +18,11 @@ func TestNullNotEqual(t *testing.T) {
 	checkNotEqual(t, `null`, `{}`)
 }
 
+func TestNullHash(t *testing.T) {
+	checkHash(t, `null`, `null`, true)
+	checkHash(t, `null`, ``, false)
+}
+
 func TestNullDiff(t *testing.T) {
 	checkDiff(t, `null`, `null`)
 	checkDiff(t, `null`, ``,

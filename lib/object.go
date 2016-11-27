@@ -25,6 +25,22 @@ func (o1 jsonObject) Equals(n JsonNode) bool {
 	return reflect.DeepEqual(o1, o2)
 }
 
+func (o jsonObject) hashCode() [8]byte {
+	keys := make([]string, 0, len(o))
+	for k := range o {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	a := make([]byte, 0, len(o)*16)
+	for _, k := range keys {
+		keyHash := hash([]byte(k))
+		a = append(a, keyHash[:]...)
+		valueHash := o[k].hashCode()
+		a = append(a, valueHash[:]...)
+	}
+	return hash(a)
+}
+
 func (o jsonObject) Diff(n JsonNode) Diff {
 	return o.diff(n, Path{})
 }

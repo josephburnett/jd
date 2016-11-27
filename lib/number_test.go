@@ -23,6 +23,13 @@ func TestNumberNotEqual(t *testing.T) {
 	checkNotEqual(t, `1234`, `1235`)
 }
 
+func TestNumberHash(t *testing.T) {
+	checkHash(t, `0`, `0`, true)
+	checkHash(t, `0`, `1`, false)
+	checkHash(t, `1.0`, `1`, true)
+	checkHash(t, `0.1`, `0.01`, false)
+}
+
 func TestNumberDiff(t *testing.T) {
 	checkDiff(t, `0`, `0`)
 	checkDiff(t, `0`, `1`,

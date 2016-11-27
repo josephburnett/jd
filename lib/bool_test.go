@@ -21,6 +21,12 @@ func TestBoolNotEqual(t *testing.T) {
 	checkNotEqual(t, `true`, `"true"`)
 }
 
+func TestBoolHash(t *testing.T) {
+	checkHash(t, `true`, `true`, true)
+	checkHash(t, `false`, `false`, true)
+	checkHash(t, `true`, `false`, false)
+}
+
 func TestBoolDiff(t *testing.T) {
 	checkDiff(t, `true`, `true`)
 	checkDiff(t, `false`, `false`)

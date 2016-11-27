@@ -27,6 +27,10 @@ func (v voidNode) Equals(n JsonNode) bool {
 	}
 }
 
+func (v voidNode) hashCode() [8]byte {
+	return hash([]byte{0xF3, 0x97, 0x6B, 0x21, 0x91, 0x26, 0x8D, 0x96}) // Random bytes
+}
+
 func (v voidNode) Diff(n JsonNode) Diff {
 	return v.diff(n, Path{})
 }
