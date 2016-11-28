@@ -14,6 +14,15 @@ const (
 	ARRAY_SET option = "array_set"
 )
 
+func checkOption(want option, options ...option) bool {
+	for _, o := range options {
+		if o == want {
+			return true
+		}
+	}
+	return false
+}
+
 func ReadJsonFile(filename string, options ...option) (JsonNode, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -26,7 +35,7 @@ func ReadJsonString(s string, options ...option) (JsonNode, error) {
 	return unmarshal([]byte(s))
 }
 
-func unmarshal(bytes []byte) (JsonNode, error) {
+func unmarshal(bytes []byte, options ...option) (JsonNode, error) {
 	if strings.TrimSpace(string(bytes)) == "" {
 		return voidNode{}, nil
 	}
@@ -35,7 +44,7 @@ func unmarshal(bytes []byte) (JsonNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	n, err := NewJsonNode(v)
+	n, err := NewJsonNode(v, options...)
 	if err != nil {
 		return nil, err
 	}

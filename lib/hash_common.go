@@ -1,7 +1,9 @@
 package jd
 
 import (
+	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"hash/fnv"
 )
 
@@ -11,4 +13,26 @@ func hash(input []byte) [8]byte {
 	var a [8]byte
 	binary.LittleEndian.PutUint64(a[:], h.Sum64())
 	return a
+}
+
+type hashCodes [][8]byte
+
+func (h hashCodes) Len() int {
+	return len(h)
+}
+
+func (h hashCodes) Less(i, j int) bool {
+	if bytes.Compare(h[i][:], h[j][:]) == -1 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (h hashCodes) Swap(i, j int) {
+	h[j], h[i] = h[i], h[j]
+}
+
+func hashString(h [8]byte) string {
+	return "#" + hex.EncodeToString(h[:])
 }

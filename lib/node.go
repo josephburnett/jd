@@ -22,7 +22,7 @@ func NewJsonNode(n interface{}, options ...option) (JsonNode, error) {
 		m := make(jsonObject)
 		for k, v := range t {
 			if _, ok := v.(JsonNode); !ok {
-				e, err := NewJsonNode(v)
+				e, err := NewJsonNode(v, options...)
 				if err != nil {
 					return nil, err
 				}
@@ -34,12 +34,15 @@ func NewJsonNode(n interface{}, options ...option) (JsonNode, error) {
 		l := make(jsonArray, len(t))
 		for i, v := range t {
 			if _, ok := v.(JsonNode); !ok {
-				e, err := NewJsonNode(v)
+				e, err := NewJsonNode(v, options...)
 				if err != nil {
 					return nil, err
 				}
 				l[i] = e
 			}
+		}
+		if checkOption(ARRAY_BAG, options...) {
+			return jsonArrayBag(l), nil
 		}
 		return l, nil
 	case float64:

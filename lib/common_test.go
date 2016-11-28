@@ -16,35 +16,35 @@ func checkJson(t *testing.T, a, b string) {
 	}
 }
 
-func checkEqual(t *testing.T, a, b string) {
-	nodeA, err := unmarshal([]byte(a))
+func checkEqual(t *testing.T, a, b string, options ...option) {
+	nodeA, err := unmarshal([]byte(a), options...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	nodeB, err := unmarshal([]byte(b))
+	nodeB, err := unmarshal([]byte(b), options...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	if !nodeA.Equals(nodeB) {
-		t.Errorf("nodeA.Equals(nodeB) == false. Want true.")
+		t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
 	if !nodeB.Equals(nodeA) {
-		t.Errorf("nodeB.Equals(nodeA) == false. Want true.")
+		t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
 	if !nodeA.Equals(nodeA) {
-		t.Errorf("nodeA.Equals(nodeA) == false. Want true.")
+		t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
 	if !nodeB.Equals(nodeB) {
-		t.Errorf("nodeB.Equals(nodeB) == false. Want true.")
+		t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
 }
 
-func checkNotEqual(t *testing.T, a, b string) {
-	nodeA, err := unmarshal([]byte(a))
+func checkNotEqual(t *testing.T, a, b string, options ...option) {
+	nodeA, err := unmarshal([]byte(a), options...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	nodeB, err := unmarshal([]byte(b))
+	nodeB, err := unmarshal([]byte(b), options...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
