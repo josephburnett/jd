@@ -41,8 +41,8 @@ func NewJsonNode(n interface{}, options ...option) (JsonNode, error) {
 				l[i] = e
 			}
 		}
-		if checkOption(ARRAY_BAG, options...) {
-			return jsonArrayBag(l), nil
+		if checkOption(MULTISET, options...) {
+			return jsonMultiset(l), nil
 		}
 		return l, nil
 	case float64:

@@ -4,16 +4,16 @@ import (
 	"sort"
 )
 
-type jsonArrayBag jsonArray
+type jsonMultiset jsonArray
 
-var _ JsonNode = jsonArrayBag(nil)
+var _ JsonNode = jsonMultiset(nil)
 
-func (a jsonArrayBag) Json() string {
+func (a jsonMultiset) Json() string {
 	return renderJson(a)
 }
 
-func (a1 jsonArrayBag) Equals(n JsonNode) bool {
-	a2, ok := n.(jsonArrayBag)
+func (a1 jsonMultiset) Equals(n JsonNode) bool {
+	a2, ok := n.(jsonMultiset)
 	if !ok {
 		return false
 	}
@@ -27,7 +27,7 @@ func (a1 jsonArrayBag) Equals(n JsonNode) bool {
 	}
 }
 
-func (a jsonArrayBag) hashCode() [8]byte {
+func (a jsonMultiset) hashCode() [8]byte {
 	h := make(hashCodes, 0, len(a))
 	for _, v := range a {
 		h = append(h, v.hashCode())
@@ -40,13 +40,13 @@ func (a jsonArrayBag) hashCode() [8]byte {
 	return hash(b)
 }
 
-func (a jsonArrayBag) Diff(n JsonNode) Diff {
+func (a jsonMultiset) Diff(n JsonNode) Diff {
 	return a.diff(n, Path{})
 }
 
-func (a1 jsonArrayBag) diff(n JsonNode, path Path) Diff {
+func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 	d := make(Diff, 0)
-	a2, ok := n.(jsonArrayBag)
+	a2, ok := n.(jsonMultiset)
 	if !ok {
 		// Different types
 		e := DiffElement{
@@ -77,7 +77,7 @@ func (a1 jsonArrayBag) diff(n JsonNode, path Path) Diff {
 		}
 		removed := a1Count - a2Count
 		if removed > 0 {
-			subPath := append(path.clone(), hashString(hc))
+			subPath := append(path.clone(), multisetString(hc))
 			for i := 0; i < removed; i++ {
 				e := DiffElement{
 					Path:     subPath,
@@ -95,7 +95,7 @@ func (a1 jsonArrayBag) diff(n JsonNode, path Path) Diff {
 		}
 		added := a2Count - a1Count
 		if added > 0 {
-			subPath := append(path.clone(), hashString(hc))
+			subPath := append(path.clone(), multisetString(hc))
 			for i := 0; i < added; i++ {
 				e := DiffElement{
 					Path:     subPath,
@@ -109,10 +109,10 @@ func (a1 jsonArrayBag) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (a jsonArrayBag) Patch(d Diff) (JsonNode, error) {
+func (a jsonMultiset) Patch(d Diff) (JsonNode, error) {
 	return patchAll(a, d)
 }
 
-func (a jsonArrayBag) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
 	return nil, nil
 }

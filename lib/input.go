@@ -10,8 +10,8 @@ import (
 type option string
 
 const (
-	ARRAY_BAG option = "array_bag"
-	ARRAY_SET option = "array_set"
+	MULTISET option = "multiset"
+	SET      option = "set"
 )
 
 func checkOption(want option, options ...option) bool {
@@ -28,11 +28,11 @@ func ReadJsonFile(filename string, options ...option) (JsonNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	return unmarshal(bytes)
+	return unmarshal(bytes, options...)
 }
 
 func ReadJsonString(s string, options ...option) (JsonNode, error) {
-	return unmarshal([]byte(s))
+	return unmarshal([]byte(s), options...)
 }
 
 func unmarshal(bytes []byte, options ...option) (JsonNode, error) {

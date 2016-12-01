@@ -33,6 +33,6 @@ func (h hashCodes) Swap(i, j int) {
 	h[j], h[i] = h[i], h[j]
 }
 
-func hashString(h [8]byte) string {
-	return "#" + hex.EncodeToString(h[:])
+func multisetString(h [8]byte) string {
+	return "multiset:" + hex.EncodeToString(h[:])
 }

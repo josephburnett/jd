@@ -78,11 +78,19 @@ func checkHash(t *testing.T, a, b string, wantSame bool) {
 }
 
 func checkDiff(t *testing.T, a, b string, diffLines ...string) {
-	nodeA, err := ReadJsonString(a)
+	checkDiffOption(t, "", a, b, diffLines...)
+}
+
+func checkDiffOption(t *testing.T, o option, a, b string, diffLines ...string) {
+	options := make([]option, 0)
+	if o != "" {
+		options = append(options, o)
+	}
+	nodeA, err := ReadJsonString(a, options...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	nodeB, err := ReadJsonString(b)
+	nodeB, err := ReadJsonString(b, options...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
