@@ -56,27 +56,38 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 		}
 		return append(d, e)
 	}
-	a1HashCodes := make(map[[8]byte]int)
+	a1Counts := make(map[[8]byte]int)
 	a1Map := make(map[[8]byte]JsonNode)
 	for _, v := range a1 {
 		hc := v.hashCode()
-		a1HashCodes[hc]++
+		a1Counts[hc]++
 		a1Map[hc] = v
 	}
-	a2HashCodes := make(map[[8]byte]int)
+	a2Counts := make(map[[8]byte]int)
 	a2Map := make(map[[8]byte]JsonNode)
 	for _, v := range a2 {
 		hc := v.hashCode()
-		a2HashCodes[hc]++
+		a2Counts[hc]++
 		a2Map[hc] = v
 	}
 	e := DiffElement{
 		Path:      append(path.clone(), map[string]interface{}{}),
-		OldValues: []JsonNode{},
-		NewValues: []JsonNode{},
+		OldValues: nodeList(),
+		NewValues: nodeList(),
 	}
-	for hc, a1Count := range a1HashCodes {
-		a2Count, ok := a2HashCodes[hc]
+	a1Hashes := make(hashCodes, 0)
+	for hc := range a1Counts {
+		a1Hashes = append(a1Hashes, hc)
+	}
+	sort.Sort(a1Hashes)
+	a2Hashes := make(hashCodes, 0)
+	for hc := range a2Counts {
+		a2Hashes = append(a2Hashes, hc)
+	}
+	sort.Sort(a2Hashes)
+	for _, hc := range a1Hashes {
+		a1Count := a1Counts[hc]
+		a2Count, ok := a2Counts[hc]
 		if !ok {
 			a2Count = 0
 		}
@@ -87,8 +98,9 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 			}
 		}
 	}
-	for hc, a2Count := range a2HashCodes {
-		a1Count, ok := a1HashCodes[hc]
+	for _, hc := range a2Hashes {
+		a2Count := a2Counts[hc]
+		a1Count, ok := a1Counts[hc]
 		if !ok {
 			a1Count = 0
 		}

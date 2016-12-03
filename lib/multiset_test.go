@@ -32,6 +32,7 @@ func TestMultisetDiff(t *testing.T) {
 	checkDiffOption(t, MULTISET, `[1]`, `[1,2]`,
 		`@ [{}]`,
 		`+ 2`)
+	checkDiffOption(t, MULTISET, `[1,2]`, `[1,2]`)
 	checkDiffOption(t, MULTISET, `[1]`, `[1,2,2]`,
 		`@ [{}]`,
 		`+ 2`,
@@ -50,8 +51,14 @@ func TestMultisetDiff(t *testing.T) {
 		`+ {"a":2}`)
 	checkDiffOption(t, MULTISET, `["foo","foo","bar"]`, `["baz"]`,
 		`@ [{}]`,
-		`- "foo"`,
-		`- "foo"`,
 		`- "bar"`,
+		`- "foo"`,
+		`- "foo"`,
+		`+ "baz"`)
+	checkDiffOption(t, MULTISET, `["foo"]`, `["bar","baz","bar"]`,
+		`@ [{}]`,
+		`- "foo"`,
+		`+ "bar"`,
+		`+ "bar"`,
 		`+ "baz"`)
 }
