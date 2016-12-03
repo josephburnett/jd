@@ -6,9 +6,9 @@ import (
 )
 
 type DiffElement struct {
-	Path     Path
-	OldValue JsonNode
-	NewValue JsonNode
+	Path      Path
+	OldValues []JsonNode
+	NewValues []JsonNode
 }
 
 func (d DiffElement) Render() string {
@@ -20,23 +20,27 @@ func (d DiffElement) Render() string {
 	b.WriteString("@ ")
 	b.Write(pathJson)
 	b.WriteString("\n")
-	if !isVoid(d.OldValue) {
-		oldValueJson, err := json.Marshal(d.OldValue)
-		if err != nil {
-			panic(err)
+	for _, oldValue := range d.OldValues {
+		if !isVoid(oldValue) {
+			oldValueJson, err := json.Marshal(oldValue)
+			if err != nil {
+				panic(err)
+			}
+			b.WriteString("- ")
+			b.Write(oldValueJson)
+			b.WriteString("\n")
 		}
-		b.WriteString("- ")
-		b.Write(oldValueJson)
-		b.WriteString("\n")
 	}
-	if !isVoid(d.NewValue) {
-		newValueJson, err := json.Marshal(d.NewValue)
-		if err != nil {
-			panic(err)
+	for _, newValue := range d.NewValues {
+		if !isVoid(newValue) {
+			newValueJson, err := json.Marshal(newValue)
+			if err != nil {
+				panic(err)
+			}
+			b.WriteString("+ ")
+			b.Write(newValueJson)
+			b.WriteString("\n")
 		}
-		b.WriteString("+ ")
-		b.Write(newValueJson)
-		b.WriteString("\n")
 	}
 	return b.String()
 }

@@ -50,9 +50,9 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 	if !ok {
 		// Different types
 		e := DiffElement{
-			Path:     path.clone(),
-			OldValue: a1,
-			NewValue: n,
+			Path:      path.clone(),
+			OldValues: []JsonNode{a1},
+			NewValues: []JsonNode{n},
 		}
 		return append(d, e)
 	}
@@ -70,6 +70,11 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 		a2HashCodes[hc]++
 		a2Map[hc] = v
 	}
+	e := DiffElement{
+		Path:      append(path.clone(), map[string]interface{}{}),
+		OldValues: []JsonNode{},
+		NewValues: []JsonNode{},
+	}
 	for hc, a1Count := range a1HashCodes {
 		a2Count, ok := a2HashCodes[hc]
 		if !ok {
@@ -77,14 +82,8 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 		}
 		removed := a1Count - a2Count
 		if removed > 0 {
-			subPath := append(path.clone(), multisetString(hc))
 			for i := 0; i < removed; i++ {
-				e := DiffElement{
-					Path:     subPath,
-					OldValue: a1Map[hc],
-					NewValue: voidNode{},
-				}
-				d = append(d, e)
+				e.OldValues = append(e.OldValues, a1Map[hc])
 			}
 		}
 	}
@@ -95,16 +94,13 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 		}
 		added := a2Count - a1Count
 		if added > 0 {
-			subPath := append(path.clone(), multisetString(hc))
 			for i := 0; i < added; i++ {
-				e := DiffElement{
-					Path:     subPath,
-					OldValue: voidNode{},
-					NewValue: a2Map[hc],
-				}
-				d = append(d, e)
+				e.NewValues = append(e.NewValues, a2Map[hc])
 			}
 		}
+	}
+	if len(e.OldValues) > 0 || len(e.NewValues) > 0 {
+		d = append(d, e)
 	}
 	return d
 }
@@ -113,6 +109,6 @@ func (a jsonMultiset) Patch(d Diff) (JsonNode, error) {
 	return patchAll(a, d)
 }
 
-func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
 	return nil, nil
 }

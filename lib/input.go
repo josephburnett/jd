@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"strings"
 )
 
@@ -81,7 +82,7 @@ func readDiff(s string) (Diff, error) {
 		header := dl[:1]
 		// Validate state transistion.
 		switch state {
-		case INIT, NEW:
+		case INIT:
 			if header != "@" {
 				return errorAt(i, "Unexpected %c. Expecteding @.", dl[0])
 			}
@@ -90,8 +91,12 @@ func readDiff(s string) (Diff, error) {
 				return errorAt(i, "Unexpected %c. Expecting - or +.", dl[0])
 			}
 		case OLD:
-			if header != "@" && header != "+" {
+			if header != "@" && header != "-" && header != "+" {
 				return errorAt(i, "Unexpected %c. Expecting + or @.", dl[0])
+			}
+		case NEW:
+			if header != "+" && header != "@" {
+				return errorAt(i, "Unexpected %c. Expecteding + or @.", dl[0])
 			}
 		}
 		// Process line.
@@ -99,6 +104,10 @@ func readDiff(s string) (Diff, error) {
 		case "@":
 			if state != INIT {
 				// Save the previous diff element.
+				errString := checkDiffElement(de)
+				if errString != "" {
+					return errorAt(i, errString)
+				}
 				diff = append(diff, de)
 			}
 			p := Path{}
@@ -107,9 +116,9 @@ func readDiff(s string) (Diff, error) {
 				return errorAt(i, "Invalid path. %v", err.Error())
 			}
 			de = DiffElement{
-				Path:     p,
-				OldValue: voidNode{},
-				NewValue: voidNode{},
+				Path:      p,
+				OldValues: []JsonNode{},
+				NewValues: []JsonNode{},
 			}
 			state = AT
 		case "-":
@@ -117,14 +126,14 @@ func readDiff(s string) (Diff, error) {
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}
-			de.OldValue = v
+			de.OldValues = append(de.OldValues, v)
 			state = OLD
 		case "+":
 			v, err := ReadJsonString(dl[1:])
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}
-			de.NewValue = v
+			de.NewValues = append(de.NewValues, v)
 			state = NEW
 		default:
 			errorAt(i, "Unexpected %v.", dl[0])
@@ -137,9 +146,23 @@ func readDiff(s string) (Diff, error) {
 	if state != INIT {
 		// Save the last diff element.
 		// Empty string diff is valid so state could be INIT
+		errString := checkDiffElement(de)
+		if errString != "" {
+			return errorAt(len(diffLines), errString)
+		}
 		diff = append(diff, de)
 	}
 	return diff, nil
+}
+
+func checkDiffElement(de DiffElement) string {
+	if len(de.NewValues) > 1 || len(de.OldValues) > 1 {
+		// Must be a set.
+		if len(de.Path) == 0 || !reflect.DeepEqual(de.Path[0], map[string]interface{}{}) {
+			return "Expected path to end with {} for sets."
+		}
+	}
+	return ""
 }
 
 func errorAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {

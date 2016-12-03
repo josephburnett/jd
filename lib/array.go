@@ -43,9 +43,9 @@ func (a1 jsonArray) diff(n JsonNode, path Path) Diff {
 	if !ok {
 		// Different types
 		e := DiffElement{
-			Path:     path.clone(),
-			OldValue: a1,
-			NewValue: n,
+			Path:      path.clone(),
+			OldValues: nodeList(a1),
+			NewValues: nodeList(n),
 		}
 		return append(d, e)
 	}
@@ -63,17 +63,17 @@ func (a1 jsonArray) diff(n JsonNode, path Path) Diff {
 		}
 		if a1Has && !a2Has {
 			e := DiffElement{
-				Path:     subPath,
-				OldValue: a1[i],
-				NewValue: voidNode{},
+				Path:      subPath,
+				OldValues: nodeList(a1[i]),
+				NewValues: nodeList(),
 			}
 			d = append(d, e)
 		}
 		if !a1Has && a2Has {
 			e := DiffElement{
-				Path:     subPath,
-				OldValue: voidNode{},
-				NewValue: a2[i],
+				Path:      subPath,
+				OldValues: nodeList(),
+				NewValues: nodeList(a2[i]),
 			}
 			d = append(d, e)
 		}
@@ -85,7 +85,12 @@ func (a jsonArray) Patch(d Diff) (JsonNode, error) {
 	return patchAll(a, d)
 }
 
-func (a jsonArray) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+func (a jsonArray) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+	if len(oldValues) > 1 || len(newValues) > 1 {
+		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
+	}
+	oldValue := singleValue(oldValues)
+	newValue := singleValue(newValues)
 	// Base case
 	if len(pathAhead) == 0 {
 		if !a.Equals(oldValue) {
@@ -105,7 +110,7 @@ func (a jsonArray) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode
 	if len(a) > i {
 		nextNode = a[i]
 	}
-	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValue, newValue)
+	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValues, newValues)
 	if err != nil {
 		return nil, err
 	}

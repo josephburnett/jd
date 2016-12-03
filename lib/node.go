@@ -13,7 +13,7 @@ type JsonNode interface {
 	Diff(n JsonNode) Diff
 	diff(n JsonNode, p Path) Diff
 	Patch(d Diff) (JsonNode, error)
-	patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error)
+	patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error)
 }
 
 func NewJsonNode(n interface{}, options ...option) (JsonNode, error) {
@@ -56,6 +56,17 @@ func NewJsonNode(n interface{}, options ...option) (JsonNode, error) {
 	default:
 		return nil, errors.New(fmt.Sprintf("Unsupported type %v", t))
 	}
+}
+
+func nodeList(n ...JsonNode) []JsonNode {
+	l := []JsonNode{}
+	if len(n) == 0 {
+		return l
+	}
+	if n[0].Equals(voidNode{}) {
+		return l
+	}
+	return append(l, n...)
 }
 
 func renderJson(n JsonNode) string {

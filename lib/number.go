@@ -41,9 +41,9 @@ func (n jsonNumber) diff(node JsonNode, path Path) Diff {
 		return d
 	}
 	e := DiffElement{
-		Path:     path.clone(),
-		OldValue: n,
-		NewValue: node,
+		Path:      path.clone(),
+		OldValues: nodeList(n),
+		NewValues: nodeList(node),
 	}
 	return append(d, e)
 }
@@ -52,10 +52,15 @@ func (n jsonNumber) Patch(d Diff) (JsonNode, error) {
 	return patchAll(n, d)
 }
 
-func (n jsonNumber) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+func (n jsonNumber) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(n, pathAhead[0])
 	}
+	if len(oldValues) > 1 || len(newValues) > 1 {
+		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
+	}
+	oldValue := singleValue(oldValues)
+	newValue := singleValue(newValues)
 	if !n.Equals(oldValue) {
 		return patchErrExpectValue(oldValue, n, pathBehind)
 	}

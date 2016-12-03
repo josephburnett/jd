@@ -3,7 +3,6 @@ package jd
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"hash/fnv"
 )
 
@@ -31,8 +30,4 @@ func (h hashCodes) Less(i, j int) bool {
 
 func (h hashCodes) Swap(i, j int) {
 	h[j], h[i] = h[i], h[j]
-}
-
-func multisetString(h [8]byte) string {
-	return "multiset:" + hex.EncodeToString(h[:])
 }

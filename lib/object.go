@@ -51,9 +51,9 @@ func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
 	if !ok {
 		// Different types
 		e := DiffElement{
-			Path:     path.clone(),
-			OldValue: o1,
-			NewValue: n,
+			Path:      path.clone(),
+			OldValues: []JsonNode{o1},
+			NewValues: []JsonNode{n},
 		}
 		return append(d, e)
 	}
@@ -76,9 +76,9 @@ func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
 		} else {
 			// O2 missing key
 			e := DiffElement{
-				Path:     append(path.clone(), k1),
-				OldValue: v1,
-				NewValue: voidNode{},
+				Path:      append(path.clone(), k1),
+				OldValues: nodeList(v1),
+				NewValues: nodeList(),
 			}
 			d = append(d, e)
 		}
@@ -88,9 +88,9 @@ func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
 		if _, ok := o1[k2]; !ok {
 			// O1 missing key
 			e := DiffElement{
-				Path:     append(path.clone(), k2),
-				OldValue: voidNode{},
-				NewValue: v2,
+				Path:      append(path.clone(), k2),
+				OldValues: nodeList(),
+				NewValues: nodeList(v2),
 			}
 			d = append(d, e)
 		}
@@ -102,7 +102,11 @@ func (o jsonObject) Patch(d Diff) (JsonNode, error) {
 	return patchAll(o, d)
 }
 
-func (o jsonObject) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+func (o jsonObject) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+	if len(oldValues) > 1 || len(newValues) > 1 {
+		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
+	}
+	oldValue := singleValue(oldValues)
 	// Base case
 	if len(pathAhead) == 0 {
 		if !o.Equals(oldValue) {
@@ -120,7 +124,7 @@ func (o jsonObject) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNod
 	if !ok {
 		nextNode = voidNode{}
 	}
-	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValue, newValue)
+	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValues, newValues)
 	if err != nil {
 		return nil, err
 	}

@@ -30,11 +30,28 @@ func TestMultisetNotEquals(t *testing.T) {
 func TestMultisetDiff(t *testing.T) {
 	checkDiffOption(t, MULTISET, `[]`, `[]`)
 	checkDiffOption(t, MULTISET, `[1]`, `[1,2]`,
-		`@ ["multiset:85a61a283238c8a8"]`,
+		`@ [{}]`,
 		`+ 2`)
 	checkDiffOption(t, MULTISET, `[1]`, `[1,2,2]`,
-		`@ ["multiset:85a61a283238c8a8"]`,
+		`@ [{}]`,
 		`+ 2`,
-		`@ ["multiset:85a61a283238c8a8"]`,
 		`+ 2`)
+	checkDiffOption(t, MULTISET, `[1,2,3]`, `[1,3]`,
+		`@ [{}]`,
+		`- 2`)
+	checkDiffOption(t, MULTISET, `[{"a":1}]`, `[{"a":2}]`,
+		`@ [{}]`,
+		`- {"a":1}`,
+		`+ {"a":2}`)
+	checkDiffOption(t, MULTISET, `[{"a":1},{"a":1}]`, `[{"a":2}]`,
+		`@ [{}]`,
+		`- {"a":1}`,
+		`- {"a":1}`,
+		`+ {"a":2}`)
+	checkDiffOption(t, MULTISET, `["foo","foo","bar"]`, `["baz"]`,
+		`@ [{}]`,
+		`- "foo"`,
+		`- "foo"`,
+		`- "bar"`,
+		`+ "baz"`)
 }

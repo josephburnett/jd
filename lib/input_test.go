@@ -30,9 +30,9 @@ func TestReadDiff(t *testing.T) {
 	checkReadDiff(t,
 		Diff{
 			DiffElement{
-				Path:     Path{"a"},
-				OldValue: jsonNumber(1),
-				NewValue: jsonNumber(2),
+				Path:      Path{"a"},
+				OldValues: []JsonNode{jsonNumber(1)},
+				NewValues: []JsonNode{jsonNumber(2)},
 			},
 		},
 		`@ ["a"]`,
@@ -41,9 +41,9 @@ func TestReadDiff(t *testing.T) {
 	checkReadDiff(t,
 		Diff{
 			DiffElement{
-				Path:     Path{"a", 1.0, "b"},
-				OldValue: jsonNumber(1),
-				NewValue: jsonNumber(2),
+				Path:      Path{"a", 1.0, "b"},
+				OldValues: []JsonNode{jsonNumber(1)},
+				NewValues: []JsonNode{jsonNumber(2)},
 			},
 		},
 		`@ ["a", 1, "b"]`,
@@ -52,14 +52,14 @@ func TestReadDiff(t *testing.T) {
 	checkReadDiff(t,
 		Diff{
 			DiffElement{
-				Path:     Path{},
-				OldValue: jsonNumber(1),
-				NewValue: jsonNumber(2),
+				Path:      Path{},
+				OldValues: []JsonNode{jsonNumber(1)},
+				NewValues: []JsonNode{jsonNumber(2)},
 			},
 			DiffElement{
-				Path:     Path{},
-				OldValue: jsonNumber(2),
-				NewValue: jsonNumber(3),
+				Path:      Path{},
+				OldValues: []JsonNode{jsonNumber(2)},
+				NewValues: []JsonNode{jsonNumber(3)},
 			},
 		},
 		`@ []`,

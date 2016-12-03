@@ -41,9 +41,9 @@ func (v voidNode) diff(n JsonNode, p Path) Diff {
 		return d
 	}
 	de := DiffElement{
-		Path:     p,
-		OldValue: v,
-		NewValue: n,
+		Path:      p,
+		OldValues: nodeList(v),
+		NewValues: nodeList(n),
 	}
 	return append(d, de)
 }
@@ -52,10 +52,15 @@ func (v voidNode) Patch(d Diff) (JsonNode, error) {
 	return patchAll(v, d)
 }
 
-func (v voidNode) patch(pathBehind, pathAhead Path, oldValue, newValue JsonNode) (JsonNode, error) {
+func (v voidNode) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(v, pathBehind[0])
 	}
+	if len(oldValues) > 1 || len(newValues) > 1 {
+		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
+	}
+	oldValue := singleValue(oldValues)
+	newValue := singleValue(newValues)
 	if !v.Equals(oldValue) {
 		return patchErrExpectValue(oldValue, v, pathBehind)
 	}
