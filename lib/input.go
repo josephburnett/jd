@@ -57,14 +57,14 @@ func ReadDiffFile(filename string, options ...option) (Diff, error) {
 	if err != nil {
 		return nil, err
 	}
-	return readDiff(string(bytes))
+	return readDiff(string(bytes), options...)
 }
 
 func ReadDiffString(s string, options ...option) (Diff, error) {
-	return readDiff(s)
+	return readDiff(s, options...)
 }
 
-func readDiff(s string) (Diff, error) {
+func readDiff(s string, options ...option) (Diff, error) {
 	diff := Diff{}
 	diffLines := strings.Split(s, "\n")
 	const (
@@ -122,14 +122,14 @@ func readDiff(s string) (Diff, error) {
 			}
 			state = AT
 		case "-":
-			v, err := ReadJsonString(dl[1:])
+			v, err := ReadJsonString(dl[1:], options...)
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}
 			de.OldValues = append(de.OldValues, v)
 			state = OLD
 		case "+":
-			v, err := ReadJsonString(dl[1:])
+			v, err := ReadJsonString(dl[1:], options...)
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}

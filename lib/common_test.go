@@ -99,7 +99,7 @@ func checkDiffOption(t *testing.T, o option, a, b string, diffLines ...string) {
 		diff += dl + "\n"
 	}
 	d := nodeA.Diff(nodeB)
-	expectedDiff, err := ReadDiffString(diff)
+	expectedDiff, err := ReadDiffString(diff, o)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -109,19 +109,23 @@ func checkDiffOption(t *testing.T, o option, a, b string, diffLines ...string) {
 }
 
 func checkPatch(t *testing.T, a, e string, diffLines ...string) {
+	checkPatchOption(t, "", a, e, diffLines...)
+}
+
+func checkPatchOption(t *testing.T, o option, a, e string, diffLines ...string) {
 	diffString := ""
 	for _, dl := range diffLines {
 		diffString += dl + "\n"
 	}
-	initial, err := ReadJsonString(a)
+	initial, err := ReadJsonString(a, o)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	diff, err := ReadDiffString(diffString)
+	diff, err := ReadDiffString(diffString, o)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	expect, err := ReadJsonString(e)
+	expect, err := ReadJsonString(e, o)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -136,6 +140,10 @@ func checkPatch(t *testing.T, a, e string, diffLines ...string) {
 }
 
 func checkPatchError(t *testing.T, a string, diffLines ...string) {
+	checkPatchErrorOption(t, "", a, diffLines...)
+}
+
+func checkPatchErrorOption(t *testing.T, o option, a string, diffLines ...string) {
 	diffString := ""
 	for _, dl := range diffLines {
 		diffString += dl + "\n"
@@ -144,7 +152,7 @@ func checkPatchError(t *testing.T, a string, diffLines ...string) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	diff, err := ReadDiffString(diffString)
+	diff, err := ReadDiffString(diffString, o)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

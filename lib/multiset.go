@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -122,5 +123,66 @@ func (a jsonMultiset) Patch(d Diff) (JsonNode, error) {
 }
 
 func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
-	return nil, nil
+	// Base case
+	if len(pathAhead) == 0 {
+		if len(oldValues) > 1 || len(newValues) > 1 {
+			return patchErrNonSetDiff(oldValues, newValues, pathBehind)
+		}
+		oldValue := singleValue(oldValues)
+		newValue := singleValue(newValues)
+		if !a.Equals(oldValue) {
+			return patchErrExpectValue(oldValue, a, pathBehind)
+		}
+		return newValue, nil
+	}
+	// Unrolled recursive case
+	pe, ok := pathAhead[0].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf(
+			"Invalid path element %v. Expected map[string]interface{}.",
+			pathAhead[0])
+	}
+	if len(pe) != 0 {
+		return nil, fmt.Errorf(
+			"Invalid path element %v. Expected empty object.",
+			pathAhead[0])
+	}
+	aCounts := make(map[[8]byte]int)
+	aMap := make(map[[8]byte]JsonNode)
+	for _, v := range a {
+		hc := v.hashCode()
+		aCounts[hc]++
+		aMap[hc] = v
+	}
+	for _, v := range oldValues {
+		hc := v.hashCode()
+		aCounts[hc]--
+		aMap[hc] = v
+	}
+	for hc, count := range aCounts {
+		if count < 0 {
+			return nil, fmt.Errorf(
+				"Invalid diff. Expected %v at %v but found nothing.",
+				aMap[hc], pathBehind)
+		}
+	}
+	for _, v := range newValues {
+		hc := v.hashCode()
+		aCounts[hc]++
+		aMap[hc] = v
+	}
+	aHashes := make(hashCodes, 0)
+	for hc := range aCounts {
+		if aCounts[hc] > 0 {
+			for i := 0; i < aCounts[hc]; i++ {
+				aHashes = append(aHashes, hc)
+			}
+		}
+	}
+	sort.Sort(aHashes)
+	newValue := make(jsonMultiset, 0)
+	for _, hc := range aHashes {
+		newValue = append(newValue, aMap[hc])
+	}
+	return newValue, nil
 }

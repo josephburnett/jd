@@ -107,11 +107,13 @@ func (o jsonObject) patch(pathBehind, pathAhead Path, oldValues, newValues []Jso
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}
 	oldValue := singleValue(oldValues)
+	newValue := singleValue(newValues)
 	// Base case
 	if len(pathAhead) == 0 {
 		if !o.Equals(oldValue) {
 			return patchErrExpectValue(oldValue, o, pathBehind)
 		}
+		return newValue, nil
 	}
 	// Recursive case
 	pe, ok := pathAhead[0].(string)
