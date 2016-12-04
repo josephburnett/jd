@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -120,5 +121,56 @@ func (s jsonSet) Patch(d Diff) (JsonNode, error) {
 }
 
 func (s jsonSet) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
-	return nil, nil
+	// Base case
+	if len(pathAhead) == 0 {
+		if len(oldValues) > 1 || len(newValues) > 1 {
+			return patchErrNonSetDiff(oldValues, newValues, pathBehind)
+		}
+		oldValue := singleValue(oldValues)
+		newValue := singleValue(newValues)
+		if !s.Equals(oldValue) {
+			return patchErrExpectValue(oldValue, s, pathBehind)
+		}
+		return newValue, nil
+	}
+	// Unrolled recursive case
+	pe, ok := pathAhead[0].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf(
+			"Invalid path element %v. Expected map[string]interface{}.",
+			pathAhead[0])
+	}
+	if len(pe) != 0 {
+		return nil, fmt.Errorf(
+			"Invalid path element %v. Expected empty object.",
+			pathAhead[0])
+	}
+	aMap := make(map[[8]byte]JsonNode)
+	for _, v := range s {
+		hc := v.hashCode()
+		aMap[hc] = v
+	}
+	for _, v := range oldValues {
+		hc := v.hashCode()
+		if _, ok := aMap[hc]; !ok {
+			return nil, fmt.Errorf(
+				"Invalid diff. Expected %v at %v bug found nothing.",
+				v.Json(), pathBehind)
+		}
+		delete(aMap, hc)
+	}
+	for _, v := range newValues {
+		hc := v.hashCode()
+		aMap[hc] = v
+	}
+	hashes := make(hashCodes, 0, len(aMap))
+	for hc := range aMap {
+		hashes = append(hashes, hc)
+	}
+	sort.Sort(hashes)
+	newValue := make(jsonSet, 0, len(aMap))
+	for _, hc := range hashes {
+		newValue = append(newValue, aMap[hc])
+	}
+	return newValue, nil
 }

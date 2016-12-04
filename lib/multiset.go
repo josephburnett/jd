@@ -163,7 +163,7 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []J
 		if count < 0 {
 			return nil, fmt.Errorf(
 				"Invalid diff. Expected %v at %v but found nothing.",
-				aMap[hc], pathBehind)
+				aMap[hc].Json(), pathBehind)
 		}
 	}
 	for _, v := range newValues {

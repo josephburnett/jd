@@ -66,3 +66,63 @@ func TestSetDiff(t *testing.T) {
 		`- {}`,
 		`+ []`)
 }
+
+func TestSetPatch(t *testing.T) {
+	checkPatchOption(t, SET, `[]`, `[]`)
+	checkPatchOption(t, SET, `[1]`, `[1,2]`,
+		`@ [{}]`,
+		`+ 2`)
+	checkPatchOption(t, SET, `[1,2]`, `[1,2]`)
+	checkPatchOption(t, SET, `[1]`, `[1,2,2]`,
+		`@ [{}]`,
+		`+ 2`)
+	checkPatchOption(t, SET, `[1,2,3]`, `[1,3]`,
+		`@ [{}]`,
+		`- 2`)
+	checkPatchOption(t, SET, `[{"a":1}]`, `[{"a":2}]`,
+		`@ [{}]`,
+		`- {"a":1}`,
+		`+ {"a":2}`)
+	checkPatchOption(t, SET, `[{"a":1},{"a":1}]`, `[{"a":2}]`,
+		`@ [{}]`,
+		`- {"a":1}`,
+		`+ {"a":2}`)
+	checkPatchOption(t, SET, `["foo","foo","bar"]`, `["baz"]`,
+		`@ [{}]`,
+		`- "bar"`,
+		`- "foo"`,
+		`+ "baz"`)
+	checkPatchOption(t, SET, `["foo"]`, `["bar","baz","bar"]`,
+		`@ [{}]`,
+		`- "foo"`,
+		`+ "bar"`,
+		`+ "baz"`)
+	checkPatchOption(t, SET, `{}`, `[]`,
+		`@ []`,
+		`- {}`,
+		`+ []`)
+}
+
+func TestSetPatchError(t *testing.T) {
+	checkPatchErrorOption(t, SET, `[]`,
+		`@ [{}]`,
+		`- 1`)
+	checkPatchErrorOption(t, SET, `[1]`,
+		`@ [{}]`,
+		`- 1`,
+		`- 1`)
+	checkPatchErrorOption(t, SET, `[]`,
+		`@ [{}]`,
+		`- 1`,
+		`+ 1`)
+	checkPatchErrorOption(t, SET, `[]`,
+		`@ []`,
+		`- {}`)
+	checkPatchErrorOption(t, SET, `[]`,
+		`@ [{}]`,
+		`+ 1`,
+		`+ 1`,
+		`@ [{}]`,
+		`- 1`,
+		`- 1`)
+}
