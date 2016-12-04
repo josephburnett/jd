@@ -13,6 +13,8 @@ import (
 
 var patch = flag.Bool("p", false, "Patch mode")
 var output = flag.String("o", "", "Output file")
+var set = flag.Bool("set", false, "Arrays as sets")
+var mset = flag.Bool("mset", false, "Arrays as multisets")
 
 func main() {
 	flag.Parse()
@@ -47,11 +49,14 @@ func printUsageAndExit() {
 		`Options:`,
 		`  -p        Apply patch FILE1 to FILE2 or STDIN.`,
 		`  -o=FILE3  Write to FILE3 instead of STDOUT.`,
+		`  -set      Treat arrays as sets.`,
+		`  -mset     Treat arrays as multisets (bags).`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,
 		`  cat b.json | jd a.json`,
 		`  jd -o patch a.json b.json; jd patch a.json`,
+		`  jd -set a.json b.json`,
 		``,
 	} {
 		fmt.Println(line)
@@ -60,11 +65,11 @@ func printUsageAndExit() {
 }
 
 func diffJson(a, b string) {
-	aNode, err := jd.ReadJsonString(a)
+	aNode, err := readJsonString(a)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	bNode, err := jd.ReadJsonString(b)
+	bNode, err := readJsonString(b)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -77,11 +82,11 @@ func diffJson(a, b string) {
 }
 
 func patchJson(p, a string) {
-	diff, err := jd.ReadDiffString(p)
+	diff, err := readDiffString(p)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	aNode, err := jd.ReadJsonString(a)
+	aNode, err := readJsonString(a)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -94,6 +99,26 @@ func patchJson(p, a string) {
 	} else {
 		ioutil.WriteFile(*output, []byte(bNode.Json()), 0644)
 	}
+}
+
+func readJsonString(s string) (jd.JsonNode, error) {
+	if *set {
+		return jd.ReadJsonString(s, jd.SET)
+	}
+	if *mset {
+		return jd.ReadJsonString(s, jd.MULTISET)
+	}
+	return jd.ReadJsonString(s)
+}
+
+func readDiffString(s string) (jd.Diff, error) {
+	if *set {
+		return jd.ReadDiffString(s, jd.SET)
+	}
+	if *mset {
+		return jd.ReadDiffString(s, jd.MULTISET)
+	}
+	return jd.ReadDiffString(s)
 }
 
 func readFile(filename string) string {
