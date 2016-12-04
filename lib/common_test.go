@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func checkJson(t *testing.T, a, b string) {
-	nodeA, err := ReadJsonString(a)
+func checkJson(t *testing.T, a, b string, options ...option) {
+	nodeA, err := ReadJsonString(a, options...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

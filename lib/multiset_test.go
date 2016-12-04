@@ -5,10 +5,11 @@ import (
 )
 
 func TestMultisetJson(t *testing.T) {
-	checkJson(t, `[]`, `[]`)
-	checkJson(t, ` [ ] `, `[]`)
-	checkJson(t, `[1,2,3]`, `[1,2,3]`)
-	checkJson(t, ` [1, 2, 3] `, `[1,2,3]`)
+	checkJson(t, `[]`, `[]`, MULTISET)
+	checkJson(t, ` [ ] `, `[]`, MULTISET)
+	checkJson(t, `[1,2,3]`, `[1,2,3]`, MULTISET)
+	checkJson(t, ` [1, 2, 3] `, `[1,2,3]`, MULTISET)
+	checkJson(t, `[1,1,1]`, `[1,1,1]`, MULTISET)
 }
 
 func TestMultisetEquals(t *testing.T) {
@@ -61,6 +62,10 @@ func TestMultisetDiff(t *testing.T) {
 		`+ "bar"`,
 		`+ "bar"`,
 		`+ "baz"`)
+	checkDiffOption(t, MULTISET, `{}`, `[]`,
+		`@ []`,
+		`- {}`,
+		`+ []`)
 }
 
 func TestMultisetPatch(t *testing.T) {

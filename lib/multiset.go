@@ -52,8 +52,8 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 		// Different types
 		e := DiffElement{
 			Path:      path.clone(),
-			OldValues: []JsonNode{a1},
-			NewValues: []JsonNode{n},
+			OldValues: nodeList(a1),
+			NewValues: nodeList(n),
 		}
 		return append(d, e)
 	}
