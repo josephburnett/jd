@@ -63,6 +63,16 @@ func ExampleJsonNode_Patch() {
 
 ![Railroad diagram of EBNF](/ebnf.png)
 
+- A diff is zero or more sections
+- Sections start with a `@` header and the path to a node
+- A path is a JSON list of zero or more elements accessing collections
+- A JSON number element (e.g. `0`) accesses an array
+- A JSON string element (e.g. `"foo"`) accesses an object
+- An empty JSON object element (`{}`) accesses an array as a set or multiset
+- After the path is one or more removals or additions, removals first
+- Removals start with `-` and then the JSON value to be removed
+- Additions start with `+` and then the JSON value to added
+
 ### EBNF
 
 ```EBNF
@@ -91,4 +101,11 @@ Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' | 'Empty JSON Object' )* ']' 
 + "Mike Myers"
 @ ["Movies",102]
 + {"Title":"Austin Powers","Actors":{"Austin Powers":"Mike Myers"}}
+```
+
+```JSON
+@ ["Movies",67,"Tags",{}]
+- "Romance"
++ "Action"
++ "Comedy"
 ```
