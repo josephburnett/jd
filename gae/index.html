@@ -1,0 +1,17 @@
+<html>
+	<head>
+	</head>
+	<body>
+		<form method="POST">
+			<input type="submit" value="diff"></input>
+			<input type="submit" value="patch"></input>
+			<p>{{.Error}}</p>
+			<h2>A</h2>
+			<textarea name="a" rows="10" cols="80">{{.A}}</textarea>
+			<h2>B</h2>
+			<textarea name="b" rows="10" cols="80">{{.B}}</textarea>
+			<h2>diff</h2>
+			<textarea name="diff" rows="10" cols="80">{{.Diff}}</textarea>
+		</form>
+	</body>
+</html>
