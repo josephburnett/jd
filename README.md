@@ -2,6 +2,10 @@
 
 `jd` is a commandline utility and Go library for diffing and patching JSON values.
 
+## Try it out
+
+https://jd-tool.appspot.com
+
 ## Command line usage
 
 Download [latest release](https://github.com/josephburnett/jd/releases/latest) or `go get github.com/josephburnett/jd`
