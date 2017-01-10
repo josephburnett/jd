@@ -6,13 +6,13 @@
 			<input type="radio" name="mode" value="diff"{{if eq .Mode "diff"}} checked="checked"{{end}}>diff</input>
 			<input type="radio" name="mode" value="patch"{{if eq .Mode "patch"}} checked="checked"{{end}}>patch</input>
 			<input type="submit" value="Go"></input>
-			<h2>A</h2>
+			<h2>a.json</h2>
 			{{if .NodeAError}}<p>{{.NodeAError}}</p>{{end}}
 			<textarea name="a" rows="10" cols="80">{{.InputA}}</textarea>
-			<h2>B</h2>
+			<h2>b.json</h2>
 			{{if .NodeBError}}<p>{{.NodeBError}}</p>{{end}}
 			<textarea name="b" rows="10" cols="80">{{.InputB}}</textarea>
-			<h2>diff</h2>
+			<h2>output</h2>
 			{{if .DiffError}}<p>{{.DiffError}}</p>{{end}}
 			<textarea name="diff" rows="10" cols="80">{{.InputDiff}}</textarea>
 		</form>
