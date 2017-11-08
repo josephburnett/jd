@@ -110,10 +110,12 @@ func patchJson(p, a string) {
 	var err error
 	var diff jd.Diff
 	switch *format {
+	case "json":
+		err = json.Unmarshal([]byte(p), &diff)
 	case "native":
 		diff, err = readDiffString(p)
 	default:
-		err = errors.New("Supported formats are json (TODO) or native")
+		err = errors.New("Supported formats are json or native")
 	}
 	if err != nil {
 		log.Fatalf(err.Error())
