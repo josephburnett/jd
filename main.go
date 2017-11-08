@@ -2,8 +2,11 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,6 +16,7 @@ import (
 
 var patch = flag.Bool("p", false, "Patch mode")
 var output = flag.String("o", "", "Output file")
+var format = flag.String("f", "native", "Output format")
 var set = flag.Bool("set", false, "Arrays as sets")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
 
@@ -49,6 +53,7 @@ func printUsageAndExit() {
 		`Options:`,
 		`  -p        Apply patch FILE1 to FILE2 or STDIN.`,
 		`  -o=FILE3  Write to FILE3 instead of STDOUT.`,
+		`  -f=FORMAT Use FORMAT [json|native] to write the output.`,
 		`  -set      Treat arrays as sets.`,
 		`  -mset     Treat arrays as multisets (bags).`,
 		``,
@@ -74,15 +79,42 @@ func diffJson(a, b string) {
 		log.Fatalf(err.Error())
 	}
 	diff := aNode.Diff(bNode)
+	var out io.WriteCloser
 	if *output == "" {
-		fmt.Print(diff.Render())
+		out = os.Stdout
 	} else {
-		ioutil.WriteFile(*output, []byte(diff.Render()), 0644)
+		out, err = os.OpenFile(*output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+	}
+	switch *format {
+	case "json":
+		outd, err := json.Marshal(diff)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+		out.Write(outd)
+		io.WriteString(out, "\n")
+	case "native":
+		io.WriteString(out, diff.Render())
+	default:
+		log.Fatalf("Supported formats are json or native")
+	}
+	if *output != "" {
+		out.Close()
 	}
 }
 
 func patchJson(p, a string) {
-	diff, err := readDiffString(p)
+	var err error
+	var diff jd.Diff
+	switch *format {
+	case "native":
+		diff, err = readDiffString(p)
+	default:
+		err = errors.New("Supported formats are json (TODO) or native")
+	}
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

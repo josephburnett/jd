@@ -6,9 +6,9 @@ import (
 )
 
 type DiffElement struct {
-	Path      Path
-	OldValues []JsonNode
-	NewValues []JsonNode
+	Path      Path       `json:"path"`
+	OldValues []JsonNode `json:"old"`
+	NewValues []JsonNode `json:"new"`
 }
 
 func (d DiffElement) Render() string {
