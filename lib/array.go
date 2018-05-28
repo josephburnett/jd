@@ -53,7 +53,7 @@ func (a1 jsonArray) diff(n JsonNode, path Path) Diff {
 	if len(a1) < len(a2) {
 		maxLen = len(a2)
 	}
-	for i := maxLen - 1; i >= 0; i-- {
+	for i := 0; i < maxLen; i++ {
 		a1Has := i < len(a1)
 		a2Has := i < len(a2)
 		subPath := append(path.clone(), float64(i))
@@ -124,7 +124,7 @@ func (a jsonArray) patch(pathBehind, pathAhead Path, oldValues, newValues []Json
 	}
 	if i > len(a) {
 		return nil, fmt.Errorf(
-			"Addition beyond the terminal elemtn of an array.")
+			"Addition beyond the terminal element of an array.")
 	}
 	if i == len(a) {
 		// Add an element

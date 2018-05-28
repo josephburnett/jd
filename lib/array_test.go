@@ -69,6 +69,13 @@ func TestArrayDiff(t *testing.T) {
 		`@ [1]`,
 		`- 2`,
 		`+ null`)
+	checkDiff(t, "[]", "[3,4,5]",
+		"@ [0]",
+		"+ 3",
+		"@ [1]",
+		"+ 4",
+		"@ [2]",
+		"+ 5")
 }
 
 func TestArrayPatch(t *testing.T) {
@@ -105,6 +112,13 @@ func TestArrayPatch(t *testing.T) {
 		`@ [1]`,
 		`- 2`,
 		`+ null`)
+	checkPatch(t, "[]", "[3,4,5]",
+		"@ [0]",
+		"+ 3",
+		"@ [1]",
+		"+ 4",
+		"@ [2]",
+		"+ 5")
 }
 
 func TestArrayPatchError(t *testing.T) {
