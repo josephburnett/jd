@@ -11,7 +11,7 @@ type DiffElement struct {
 	NewValues []JsonNode
 }
 
-func (d DiffElement) Render() string {
+func (d DiffElement) Render(pretty bool) string {
 	b := bytes.NewBuffer(nil)
 	pathJson, err := json.Marshal(d.Path)
 	if err != nil {
@@ -27,7 +27,12 @@ func (d DiffElement) Render() string {
 				panic(err)
 			}
 			b.WriteString("- ")
-			b.Write(oldValueJson)
+			if pretty {
+				tabbedJson, _ := json.MarshalIndent(oldValue, "", "\t")
+				b.Write(tabbedJson)
+			} else {
+				b.Write(oldValueJson)
+			}
 			b.WriteString("\n")
 		}
 	}
@@ -38,7 +43,12 @@ func (d DiffElement) Render() string {
 				panic(err)
 			}
 			b.WriteString("+ ")
-			b.Write(newValueJson)
+			if pretty {
+				tabbedJson, _ := json.MarshalIndent(newValue, "", "\t")
+				b.Write(tabbedJson)
+			} else {
+				b.Write(newValueJson)
+			}
 			b.WriteString("\n")
 		}
 	}
@@ -47,10 +57,10 @@ func (d DiffElement) Render() string {
 
 type Diff []DiffElement
 
-func (d Diff) Render() string {
+func (d Diff) Render(pretty bool) string {
 	b := bytes.NewBuffer(nil)
 	for _, element := range d {
-		b.WriteString(element.Render())
+		b.WriteString(element.Render(pretty))
 	}
 	return b.String()
 }
