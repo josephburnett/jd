@@ -56,6 +56,16 @@ func NewJsonNode(n interface{}, options ...option) (JsonNode, error) {
 		return jsonBool(t), nil
 	case nil:
 		return jsonNull{}, nil
+	case json.Number:
+		i, err := t.Int64()
+		if err == nil {
+			return jsonInt(i), nil
+		}
+		f, err := t.Float64()
+		if err != nil {
+			return nil, err
+		}
+		return jsonNumber(f), nil
 	default:
 		return nil, errors.New(fmt.Sprintf("Unsupported type %v", t))
 	}

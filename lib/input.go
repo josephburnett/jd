@@ -41,8 +41,9 @@ func unmarshal(bytes []byte, options ...option) (JsonNode, error) {
 		return voidNode{}, nil
 	}
 	var v interface{}
-	err := json.Unmarshal(bytes, &v)
-	if err != nil {
+	d := json.NewDecoder(strings.NewReader(string(bytes)))
+	d.UseNumber()
+	if err := d.Decode(&v); err != nil {
 		return nil, err
 	}
 	n, err := NewJsonNode(v, options...)

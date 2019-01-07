@@ -12,7 +12,6 @@ func TestObjectJson(t *testing.T) {
 
 func TestObjectEqual(t *testing.T) {
 	checkEqual(t, `{"a":1}`, `{"a":1}`)
-	checkEqual(t, `{"a":1}`, `{"a":1.0}`)
 	checkEqual(t, `{"a":[1,2]}`, `{"a":[1,2]}`)
 	checkEqual(t, `{"a":"b"}`, `{"a":"b"}`)
 }

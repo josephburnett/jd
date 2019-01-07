@@ -11,7 +11,7 @@ func TestUnmarshal(t *testing.T) {
 	checkUnmarshal(t, `true`, jsonBool(true))
 	checkUnmarshal(t, `"a"`, jsonString("a"))
 	checkUnmarshal(t, `1.0`, jsonNumber(1.0))
-	checkUnmarshal(t, `1`, jsonNumber(1.0))
+	checkUnmarshal(t, `1`, jsonInt(1))
 	checkUnmarshal(t, `{}`, jsonObject{})
 	checkUnmarshal(t, `[]`, jsonArray{})
 }
@@ -31,8 +31,8 @@ func TestReadDiff(t *testing.T) {
 		Diff{
 			DiffElement{
 				Path:      Path{"a"},
-				OldValues: []JsonNode{jsonNumber(1)},
-				NewValues: []JsonNode{jsonNumber(2)},
+				OldValues: []JsonNode{jsonInt(1)},
+				NewValues: []JsonNode{jsonInt(2)},
 			},
 		},
 		`@ ["a"]`,
@@ -46,20 +46,20 @@ func TestReadDiff(t *testing.T) {
 				NewValues: []JsonNode{jsonNumber(2)},
 			},
 		},
-		`@ ["a", 1, "b"]`,
-		`- 1`,
-		`+ 2`)
+		`@ ["a", 1.0, "b"]`,
+		`- 1.0`,
+		`+ 2.0`)
 	checkReadDiff(t,
 		Diff{
 			DiffElement{
 				Path:      Path{},
-				OldValues: []JsonNode{jsonNumber(1)},
-				NewValues: []JsonNode{jsonNumber(2)},
+				OldValues: []JsonNode{jsonInt(1)},
+				NewValues: []JsonNode{jsonInt(2)},
 			},
 			DiffElement{
 				Path:      Path{},
-				OldValues: []JsonNode{jsonNumber(2)},
-				NewValues: []JsonNode{jsonNumber(3)},
+				OldValues: []JsonNode{jsonInt(2)},
+				NewValues: []JsonNode{jsonInt(3)},
 			},
 		},
 		`@ []`,
