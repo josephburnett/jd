@@ -22,6 +22,14 @@ func TestDiffAndPatch(t *testing.T) {
 		`[{"a":2},{"a":3,"b":4},{"c":5}]`)
 }
 
+func TestDiffAndPatchSet(t *testing.T) {
+	checkDiffAndPatchSuccessSet(t,
+		`{"a":{"b" : ["3", "4" ],"c" : ["2", "1"]}}`,
+		`{"a":{"b" : ["3", "4", "5", "6"],"c" : ["2", "1"]}}`,
+		`{"a":{"b" : ["3", "4" ],"c" : ["2", "1"]}}`,
+		`{"a":{"b" : ["3", "4", "5", "6"],"c" : ["2", "1"]}}`)
+}
+
 func TestDiffAndPatchError(t *testing.T) {
 	checkDiffAndPatchError(t,
 		`{"a":1}`,
@@ -41,6 +49,13 @@ func TestDiffAndPatchError(t *testing.T) {
 		`2`)
 }
 
+func checkDiffAndPatchSuccessSet(t *testing.T, a, b, c, expect string) {
+	err := checkDiffAndPatch(t, a, b, c, expect, SET)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
+
 func checkDiffAndPatchSuccess(t *testing.T, a, b, c, expect string) {
 	err := checkDiffAndPatch(t, a, b, c, expect)
 	if err != nil {
@@ -55,25 +70,25 @@ func checkDiffAndPatchError(t *testing.T, a, b, c string) {
 	}
 }
 
-func checkDiffAndPatch(t *testing.T, a, b, c, expect string) error {
-	nodeA, err := ReadJsonString(a)
+func checkDiffAndPatch(t *testing.T, a, b, c, expect string, options ...option) error {
+	nodeA, err := ReadJsonString(a, options...)
 	if err != nil {
 		return err
 	}
-	nodeB, err := ReadJsonString(b)
+	nodeB, err := ReadJsonString(b, options...)
 	if err != nil {
 		return err
 	}
-	nodeC, err := ReadJsonString(c)
+	nodeC, err := ReadJsonString(c, options...)
 	if err != nil {
 		return err
 	}
-	expectNode, err := ReadJsonString(expect)
+	expectNode, err := ReadJsonString(expect, options...)
 	if err != nil {
 		return err
 	}
 	diffString := nodeA.Diff(nodeB).Render()
-	diff, err := ReadDiffString(diffString)
+	diff, err := ReadDiffString(diffString, options...)
 	if err != nil {
 		return err
 	}

@@ -111,6 +111,7 @@ func readDiff(s string, options ...option) (Diff, error) {
 				diff = append(diff, de)
 			}
 			p := Path{}
+			//print(dl[1:], "\n")
 			err := json.Unmarshal([]byte(dl[1:]), &p)
 			if err != nil {
 				return errorAt(i, "Invalid path. %v", err.Error())
@@ -158,7 +159,12 @@ func readDiff(s string, options ...option) (Diff, error) {
 func checkDiffElement(de DiffElement) string {
 	if len(de.NewValues) > 1 || len(de.OldValues) > 1 {
 		// Must be a set.
-		if len(de.Path) == 0 || !reflect.DeepEqual(de.Path[0], map[string]interface{}{}) {
+		if len(de.Path) == 0 {
+			//print("Empty path\n")
+		} else {
+			//print(de.Path[0])
+		}
+		if len(de.Path) == 0 || !reflect.DeepEqual(de.Path[len(de.Path)-1], map[string]interface{}{}) {
 			return "Expected path to end with {} for sets."
 		}
 	}
