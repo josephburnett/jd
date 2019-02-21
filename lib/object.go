@@ -2,7 +2,6 @@ package jd
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 )
 
@@ -22,7 +21,18 @@ func (o1 jsonObject) Equals(n JsonNode) bool {
 	if len(o1) != len(o2) {
 		return false
 	}
-	return reflect.DeepEqual(o1, o2)
+
+	for key1, val1 := range o1 {
+		val2, ok := o2[key1]
+		if !ok {
+			return false
+		}
+		ret := val1.Equals(val2)
+		if !ret {
+			return false
+		}
+	}
+	return true
 }
 
 func (o jsonObject) hashCode() [8]byte {
@@ -103,13 +113,13 @@ func (o jsonObject) Patch(d Diff) (JsonNode, error) {
 }
 
 func (o jsonObject) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
-	if len(oldValues) > 1 || len(newValues) > 1 {
+	if (len(pathAhead) == 0) && (len(oldValues) > 1 || len(newValues) > 1) {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}
-	oldValue := singleValue(oldValues)
-	newValue := singleValue(newValues)
 	// Base case
 	if len(pathAhead) == 0 {
+		oldValue := singleValue(oldValues)
+		newValue := singleValue(newValues)
 		if !o.Equals(oldValue) {
 			return patchErrExpectValue(oldValue, o, pathBehind)
 		}
