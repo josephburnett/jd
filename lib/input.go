@@ -159,11 +159,6 @@ func readDiff(s string, options ...option) (Diff, error) {
 func checkDiffElement(de DiffElement) string {
 	if len(de.NewValues) > 1 || len(de.OldValues) > 1 {
 		// Must be a set.
-		if len(de.Path) == 0 {
-			//print("Empty path\n")
-		} else {
-			//print(de.Path[0])
-		}
 		if len(de.Path) == 0 || !reflect.DeepEqual(de.Path[len(de.Path)-1], map[string]interface{}{}) {
 			return "Expected path to end with {} for sets."
 		}
