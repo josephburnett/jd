@@ -111,7 +111,6 @@ func readDiff(s string, options ...option) (Diff, error) {
 				diff = append(diff, de)
 			}
 			p := Path{}
-			//print(dl[1:], "\n")
 			err := json.Unmarshal([]byte(dl[1:]), &p)
 			if err != nil {
 				return errorAt(i, "Invalid path. %v", err.Error())
