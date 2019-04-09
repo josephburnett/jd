@@ -15,6 +15,7 @@ var patch = flag.Bool("p", false, "Patch mode")
 var output = flag.String("o", "", "Output file")
 var set = flag.Bool("set", false, "Arrays as sets")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
+var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
 
 func main() {
 	flag.Parse()
