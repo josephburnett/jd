@@ -19,14 +19,18 @@ type JsonNode interface {
 func NewJsonNode(n interface{}, options ...option) (JsonNode, error) {
 	switch t := n.(type) {
 	case map[string]interface{}:
-		m := make(jsonObject)
+		m := jsonObject{
+			properties: make(map[string]JsonNode),
+			// TODO: get keys from options.
+			idKeys: make([]string, 0),
+		}
 		for k, v := range t {
 			if _, ok := v.(JsonNode); !ok {
 				e, err := NewJsonNode(v, options...)
 				if err != nil {
 					return nil, err
 				}
-				m[k] = e
+				m.properties[k] = e
 			}
 		}
 		return m, nil

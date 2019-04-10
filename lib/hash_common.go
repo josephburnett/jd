@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"hash/fnv"
+	"sort"
 )
 
 func hash(input []byte) [8]byte {
@@ -30,4 +31,13 @@ func (h hashCodes) Less(i, j int) bool {
 
 func (h hashCodes) Swap(i, j int) {
 	h[j], h[i] = h[i], h[j]
+}
+
+func (h hashCodes) combine() [8]byte {
+	sort.Sort(h)
+	b := make([]byte, 0, len(h)*8)
+	for _, hc := range h {
+		b = append(b, hc[:]...)
+	}
+	return hash(b)
 }

@@ -49,16 +49,11 @@ func (s jsonSet) hashCode() [8]byte {
 	for hc := range sMap {
 		hashes = append(hashes, hc)
 	}
-	sort.Sort(hashes)
-	b := make([]byte, 0, len(hashes)*8)
-	for _, hc := range hashes {
-		b = append(b, hc[:]...)
-	}
-	return hash(b)
+	return hashes.combine()
 }
 
-func (s jsonSet) Diff(n JsonNode) Diff {
-	return s.diff(n, Path{})
+func (s jsonSet) Diff(j JsonNode) Diff {
+	return s.diff(j, Path{})
 }
 
 func (s1 jsonSet) diff(n JsonNode, path Path) Diff {
@@ -75,12 +70,22 @@ func (s1 jsonSet) diff(n JsonNode, path Path) Diff {
 	}
 	s1Map := make(map[[8]byte]JsonNode)
 	for _, v := range s1 {
-		hc := v.hashCode()
+		var hc [8]byte
+		if o, ok := v.(jsonObject); ok {
+			hc = o.ident()
+		} else {
+			hc = v.hashCode()
+		}
 		s1Map[hc] = v
 	}
 	s2Map := make(map[[8]byte]JsonNode)
 	for _, v := range s2 {
-		hc := v.hashCode()
+		var hc [8]byte
+		if o, ok := v.(jsonObject); ok {
+			hc = o.ident()
+		} else {
+			hc = v.hashCode()
+		}
 		s2Map[hc] = v
 	}
 	s1Hashes := make(hashCodes, 0)
@@ -99,15 +104,27 @@ func (s1 jsonSet) diff(n JsonNode, path Path) Diff {
 		NewValues: nodeList(),
 	}
 	for _, hc := range s1Hashes {
-		_, ok := s2Map[hc]
+		n2, ok := s2Map[hc]
 		if !ok {
 			e.OldValues = append(e.OldValues, s1Map[hc])
 		}
+		if o2, ok := n2.(jsonObject); ok {
+			// Objects with the same identity may have changed.
+			if o2.hashCode() != s1Map[hc].hashCode() {
+				e.OldValues = append(e.OldValues, s1Map[hc])
+			}
+		}
 	}
 	for _, hc := range s2Hashes {
-		_, ok := s1Map[hc]
+		n1, ok := s1Map[hc]
 		if !ok {
 			e.NewValues = append(e.NewValues, s2Map[hc])
+		}
+		if o1, ok := n1.(jsonObject); ok {
+			// Objects with the same identity may have changed.
+			if o1.hashCode() != s2Map[hc].hashCode() {
+				e.NewValues = append(e.NewValues, s2Map[hc])
+			}
 		}
 	}
 	if len(e.OldValues) > 0 || len(e.NewValues) > 0 {
