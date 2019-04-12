@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	jd "github.com/josephburnett/jd/lib"
 )
@@ -19,6 +20,10 @@ var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
 
 func main() {
 	flag.Parse()
+	options, err := parseOptions()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 	var a, b string
 	switch len(flag.Args()) {
 	case 1:
@@ -31,10 +36,33 @@ func main() {
 		printUsageAndExit()
 	}
 	if *patch {
-		patchJson(a, b)
+		patchJson(a, b, options)
 	} else {
-		diffJson(a, b)
+		diffJson(a, b, options)
 	}
+}
+
+func parseOptions() ([]jd.Option, error) {
+	options := make([]jd.Option, 0)
+	if *set {
+		options = append(options, jd.SET)
+	}
+	if *mset {
+		options = append(options, jd.MULTISET)
+	}
+	if *setkeys != "" {
+		keys := make([]string, 0)
+		ks := strings.Split(*setkeys, ",")
+		for _, k := range ks {
+			trimmed := strings.TrimSpace(k)
+			if trimmed == "" {
+				return nil, fmt.Errorf("Invalid set key: %v", k)
+			}
+			keys = append(keys, trimmed)
+		}
+		options = append(options, jd.SetkeysOption(keys))
+	}
+	return options, nil
 }
 
 func printUsageAndExit() {
@@ -65,12 +93,12 @@ func printUsageAndExit() {
 	os.Exit(1)
 }
 
-func diffJson(a, b string) {
-	aNode, err := readJsonString(a)
+func diffJson(a, b string, options []jd.Option) {
+	aNode, err := jd.ReadJsonString(a, options...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	bNode, err := readJsonString(b)
+	bNode, err := jd.ReadJsonString(b, options...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -82,12 +110,12 @@ func diffJson(a, b string) {
 	}
 }
 
-func patchJson(p, a string) {
-	diff, err := readDiffString(p)
+func patchJson(p, a string, options []jd.Option) {
+	diff, err := jd.ReadDiffString(p, options...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	aNode, err := readJsonString(a)
+	aNode, err := jd.ReadJsonString(a, options...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -100,26 +128,6 @@ func patchJson(p, a string) {
 	} else {
 		ioutil.WriteFile(*output, []byte(bNode.Json()), 0644)
 	}
-}
-
-func readJsonString(s string) (jd.JsonNode, error) {
-	if *set {
-		return jd.ReadJsonString(s, jd.SET)
-	}
-	if *mset {
-		return jd.ReadJsonString(s, jd.MULTISET)
-	}
-	return jd.ReadJsonString(s)
-}
-
-func readDiffString(s string) (jd.Diff, error) {
-	if *set {
-		return jd.ReadDiffString(s, jd.SET)
-	}
-	if *mset {
-		return jd.ReadDiffString(s, jd.MULTISET)
-	}
-	return jd.ReadDiffString(s)
 }
 
 func readFile(filename string) string {
