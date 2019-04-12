@@ -16,7 +16,7 @@ type JsonNode interface {
 	patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error)
 }
 
-func NewJsonNode(n interface{}, options ...option) (JsonNode, error) {
+func NewJsonNode(n interface{}, options ...Option) (JsonNode, error) {
 	switch t := n.(type) {
 	case map[string]interface{}:
 		m := jsonObject{

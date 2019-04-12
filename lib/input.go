@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type option interface {
+type Option interface {
 	is_option()
 }
 
@@ -23,11 +23,15 @@ func (setOption) is_option()      {}
 func (setkeysOption) is_option()  {}
 
 var (
-	MULTISET option = multisetOption{}
-	SET      option = setOption{}
+	MULTISET Option = multisetOption{}
+	SET      Option = setOption{}
 )
 
-func checkOption(want option, options ...option) bool {
+func SetkeysOption(keys []string) Option {
+	return setkeysOption{keys}
+}
+
+func checkOption(want Option, options ...Option) bool {
 	for _, o := range options {
 		if o == want {
 			return true
@@ -36,7 +40,7 @@ func checkOption(want option, options ...option) bool {
 	return false
 }
 
-func ReadJsonFile(filename string, options ...option) (JsonNode, error) {
+func ReadJsonFile(filename string, options ...Option) (JsonNode, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -44,11 +48,11 @@ func ReadJsonFile(filename string, options ...option) (JsonNode, error) {
 	return unmarshal(bytes, options...)
 }
 
-func ReadJsonString(s string, options ...option) (JsonNode, error) {
+func ReadJsonString(s string, options ...Option) (JsonNode, error) {
 	return unmarshal([]byte(s), options...)
 }
 
-func unmarshal(bytes []byte, options ...option) (JsonNode, error) {
+func unmarshal(bytes []byte, options ...Option) (JsonNode, error) {
 	if strings.TrimSpace(string(bytes)) == "" {
 		return voidNode{}, nil
 	}
@@ -64,7 +68,7 @@ func unmarshal(bytes []byte, options ...option) (JsonNode, error) {
 	return n, nil
 }
 
-func ReadDiffFile(filename string, options ...option) (Diff, error) {
+func ReadDiffFile(filename string, options ...Option) (Diff, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -72,11 +76,11 @@ func ReadDiffFile(filename string, options ...option) (Diff, error) {
 	return readDiff(string(bytes), options...)
 }
 
-func ReadDiffString(s string, options ...option) (Diff, error) {
+func ReadDiffString(s string, options ...Option) (Diff, error) {
 	return readDiff(s, options...)
 }
 
-func readDiff(s string, options ...option) (Diff, error) {
+func readDiff(s string, options ...Option) (Diff, error) {
 	diff := Diff{}
 	diffLines := strings.Split(s, "\n")
 	const (

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func checkJson(t *testing.T, a, b string, options ...option) {
+func checkJson(t *testing.T, a, b string, options ...Option) {
 	nodeA, err := ReadJsonString(a, options...)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -16,7 +16,7 @@ func checkJson(t *testing.T, a, b string, options ...option) {
 	}
 }
 
-func checkEqual(t *testing.T, a, b string, options ...option) {
+func checkEqual(t *testing.T, a, b string, options ...Option) {
 	nodeA, err := unmarshal([]byte(a), options...)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -39,7 +39,7 @@ func checkEqual(t *testing.T, a, b string, options ...option) {
 	}
 }
 
-func checkNotEqual(t *testing.T, a, b string, options ...option) {
+func checkNotEqual(t *testing.T, a, b string, options ...Option) {
 	nodeA, err := unmarshal([]byte(a), options...)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -81,8 +81,8 @@ func checkDiff(t *testing.T, a, b string, diffLines ...string) {
 	checkDiffOption(t, NONE, a, b, diffLines...)
 }
 
-func checkDiffOption(t *testing.T, o option, a, b string, diffLines ...string) {
-	options := make([]option, 0)
+func checkDiffOption(t *testing.T, o Option, a, b string, diffLines ...string) {
+	options := make([]Option, 0)
 	if o != NONE {
 		options = append(options, o)
 	}
@@ -112,7 +112,7 @@ func checkPatch(t *testing.T, a, e string, diffLines ...string) {
 	checkPatchOption(t, NONE, a, e, diffLines...)
 }
 
-func checkPatchOption(t *testing.T, o option, a, e string, diffLines ...string) {
+func checkPatchOption(t *testing.T, o Option, a, e string, diffLines ...string) {
 	diffString := ""
 	for _, dl := range diffLines {
 		diffString += dl + "\n"
@@ -143,7 +143,7 @@ func checkPatchError(t *testing.T, a string, diffLines ...string) {
 	checkPatchErrorOption(t, NONE, a, diffLines...)
 }
 
-func checkPatchErrorOption(t *testing.T, o option, a string, diffLines ...string) {
+func checkPatchErrorOption(t *testing.T, o Option, a string, diffLines ...string) {
 	diffString := ""
 	for _, dl := range diffLines {
 		diffString += dl + "\n"
@@ -169,4 +169,4 @@ type noneOption struct{}
 
 func (noneOption) is_option() {}
 
-var NONE option = noneOption{}
+var NONE Option = noneOption{}

@@ -70,7 +70,7 @@ func checkDiffAndPatchError(t *testing.T, a, b, c string) {
 	}
 }
 
-func checkDiffAndPatch(t *testing.T, a, b, c, expect string, options ...option) error {
+func checkDiffAndPatch(t *testing.T, a, b, c, expect string, options ...Option) error {
 	nodeA, err := ReadJsonString(a, options...)
 	if err != nil {
 		return err
