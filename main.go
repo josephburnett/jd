@@ -94,15 +94,15 @@ func printUsageAndExit() {
 }
 
 func diffJson(a, b string, options []jd.Option) {
-	aNode, err := jd.ReadJsonString(a, options...)
+	aNode, err := jd.ReadJsonString(a)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	bNode, err := jd.ReadJsonString(b, options...)
+	bNode, err := jd.ReadJsonString(b)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	diff := aNode.Diff(bNode)
+	diff := aNode.Diff(bNode, options)
 	if *output == "" {
 		fmt.Print(diff.Render())
 	} else {
@@ -111,15 +111,15 @@ func diffJson(a, b string, options []jd.Option) {
 }
 
 func patchJson(p, a string, options []jd.Option) {
-	diff, err := jd.ReadDiffString(p, options...)
+	diff, err := jd.ReadDiffString(p)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	aNode, err := jd.ReadJsonString(a, options...)
+	aNode, err := jd.ReadJsonString(a)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	bNode, err := aNode.Patch(diff)
+	bNode, err := aNode.Patch(diff, options)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

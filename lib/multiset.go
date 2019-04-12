@@ -41,7 +41,8 @@ func (a jsonMultiset) hashCode() [8]byte {
 	return hash(b)
 }
 
-func (a jsonMultiset) Diff(n JsonNode) Diff {
+func (a jsonMultiset) Diff(n JsonNode, options ...Option) Diff {
+	// TODO: support options
 	return a.diff(n, Path{})
 }
 
@@ -118,7 +119,8 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (a jsonMultiset) Patch(d Diff) (JsonNode, error) {
+func (a jsonMultiset) Patch(d Diff, options ...Option) (JsonNode, error) {
+	// TODO: support options
 	return patchAll(a, d)
 }
 

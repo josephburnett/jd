@@ -93,7 +93,8 @@ func (o jsonObject) pathIdent() PathElement {
 	return id
 }
 
-func (o jsonObject) Diff(n JsonNode) Diff {
+func (o jsonObject) Diff(n JsonNode, options ...Option) Diff {
+	// TODO: support options
 	return o.diff(n, Path{})
 }
 
@@ -150,7 +151,8 @@ func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (o jsonObject) Patch(d Diff) (JsonNode, error) {
+func (o jsonObject) Patch(d Diff, options ...Option) (JsonNode, error) {
+	// TODO: support options
 	return patchAll(o, d)
 }
 

@@ -21,7 +21,8 @@ func (n jsonNull) hashCode() [8]byte {
 	return hash([]byte{0xFE, 0x73, 0xAB, 0xCC, 0xE6, 0x32, 0xE0, 0x88}) // random bytes
 }
 
-func (n jsonNull) Diff(node JsonNode) Diff {
+func (n jsonNull) Diff(node JsonNode, options ...Option) Diff {
+	// TODO: support options
 	return n.diff(node, Path{})
 }
 
@@ -38,7 +39,8 @@ func (n jsonNull) diff(node JsonNode, path Path) Diff {
 	return append(d, e)
 }
 
-func (n jsonNull) Patch(d Diff) (JsonNode, error) {
+func (n jsonNull) Patch(d Diff, options ...Option) (JsonNode, error) {
+	// TODO: support options
 	return patchAll(n, d)
 }
 
