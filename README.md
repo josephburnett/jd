@@ -85,18 +85,18 @@ Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' | 'Empty JSON Object' )* ']' 
 
 ### Examples
 
-```JSON
+```DIFF
 @ ["a"]
 - 1
 + 2
 ```
 
-```JSON
+```DIFF
 @ [2]
 + {"foo":"bar"}
 ```
 
-```JSON
+```DIFF
 @ ["Movies",67,"Title"]
 - "Dr. Strangelove"
 + "Dr. Evil Love"
@@ -107,7 +107,7 @@ Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' | 'Empty JSON Object' )* ']' 
 + {"Title":"Austin Powers","Actors":{"Austin Powers":"Mike Myers"}}
 ```
 
-```JSON
+```DIFF
 @ ["Movies",67,"Tags",{}]
 - "Romance"
 + "Action"
