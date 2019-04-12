@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 )
@@ -13,7 +14,16 @@ type jsonObject struct {
 var _ JsonNode = jsonObject{}
 
 func (o jsonObject) Json() string {
-	return renderJson(o)
+	j := make(map[string]interface{})
+	for k, v := range o.properties {
+		j[k] = v
+	}
+	s, _ := json.Marshal(j)
+	return string(s)
+}
+
+func (o jsonObject) MarshalJSON() ([]byte, error) {
+	return []byte(o.Json()), nil
 }
 
 func (o1 jsonObject) Equals(n JsonNode) bool {
@@ -71,6 +81,16 @@ func (o jsonObject) ident() [8]byte {
 		return o.hashCode()
 	}
 	return hashes.combine()
+}
+
+func (o jsonObject) pathIdent() PathElement {
+	id := make(map[string]interface{})
+	for _, key := range o.idKeys {
+		if value, ok := o.properties[key]; ok {
+			id[key] = value
+		}
+	}
+	return id
 }
 
 func (o jsonObject) Diff(n JsonNode) Diff {

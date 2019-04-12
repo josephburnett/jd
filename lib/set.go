@@ -109,9 +109,9 @@ func (s1 jsonSet) diff(n JsonNode, path Path) Diff {
 			e.OldValues = append(e.OldValues, s1Map[hc])
 		} else if o2, ok := n2.(jsonObject); ok {
 			// Objects with the same identity may have changed.
-			if o2.hashCode() != s1Map[hc].hashCode() {
-				// TODO: Add identity element to path.
-				// TODO: Add recursive diff to d.
+			subDiff := o2.diff(s1Map[hc], append(path.clone(), o2.pathIdent()))
+			for _, subElement := range subDiff {
+				d = append(d, subElement)
 			}
 		}
 	}
@@ -120,10 +120,10 @@ func (s1 jsonSet) diff(n JsonNode, path Path) Diff {
 		if !ok {
 			e.NewValues = append(e.NewValues, s2Map[hc])
 		} else if o1, ok := n1.(jsonObject); ok {
-			// Objects with the same identity may have changed.
-			if o1.hashCode() != s2Map[hc].hashCode() {
-				// TODO: Add identity element to path.
-				// TODO: Add recursive diff to d.
+			// Object with the same identity may have changed.
+			subDiff := o1.diff(s2Map[hc], append(path.clone(), o1.pathIdent()))
+			for _, subElement := range subDiff {
+				d = append(d, subElement)
 			}
 		}
 	}
