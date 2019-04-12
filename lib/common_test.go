@@ -78,12 +78,12 @@ func checkHash(t *testing.T, a, b string, wantSame bool) {
 }
 
 func checkDiff(t *testing.T, a, b string, diffLines ...string) {
-	checkDiffOption(t, "", a, b, diffLines...)
+	checkDiffOption(t, NONE, a, b, diffLines...)
 }
 
 func checkDiffOption(t *testing.T, o option, a, b string, diffLines ...string) {
 	options := make([]option, 0)
-	if o != "" {
+	if o != NONE {
 		options = append(options, o)
 	}
 	nodeA, err := ReadJsonString(a, options...)
@@ -109,7 +109,7 @@ func checkDiffOption(t *testing.T, o option, a, b string, diffLines ...string) {
 }
 
 func checkPatch(t *testing.T, a, e string, diffLines ...string) {
-	checkPatchOption(t, "", a, e, diffLines...)
+	checkPatchOption(t, NONE, a, e, diffLines...)
 }
 
 func checkPatchOption(t *testing.T, o option, a, e string, diffLines ...string) {
@@ -140,7 +140,7 @@ func checkPatchOption(t *testing.T, o option, a, e string, diffLines ...string) 
 }
 
 func checkPatchError(t *testing.T, a string, diffLines ...string) {
-	checkPatchErrorOption(t, "", a, diffLines...)
+	checkPatchErrorOption(t, NONE, a, diffLines...)
 }
 
 func checkPatchErrorOption(t *testing.T, o option, a string, diffLines ...string) {
@@ -164,3 +164,9 @@ func checkPatchErrorOption(t *testing.T, o option, a string, diffLines ...string
 		t.Errorf("Expected error. Got nil.")
 	}
 }
+
+type noneOption struct{}
+
+func (noneOption) is_option() {}
+
+var NONE option = noneOption{}

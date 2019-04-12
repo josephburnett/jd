@@ -8,11 +8,23 @@ import (
 	"strings"
 )
 
-type option string
+type option interface {
+	is_option()
+}
 
-const (
-	MULTISET option = "multiset"
-	SET      option = "set"
+type multisetOption struct{}
+type setOption struct{}
+type setkeysOption struct {
+	keys []string
+}
+
+func (multisetOption) is_option() {}
+func (setOption) is_option()      {}
+func (setkeysOption) is_option()  {}
+
+var (
+	MULTISET option = multisetOption{}
+	SET      option = setOption{}
 )
 
 func checkOption(want option, options ...option) bool {
