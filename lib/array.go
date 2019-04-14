@@ -33,8 +33,8 @@ func (a jsonArray) hashCode() [8]byte {
 	return hash(b)
 }
 
-func (a jsonArray) Diff(n JsonNode, options ...Option) Diff {
-	// TODO: support options
+func (a jsonArray) Diff(n JsonNode, metadata ...Metadata) Diff {
+	// TODO: support metadata
 	return a.diff(n, Path{})
 }
 
@@ -82,8 +82,8 @@ func (a1 jsonArray) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (a jsonArray) Patch(d Diff, options ...Option) (JsonNode, error) {
-	// TODO: support options
+func (a jsonArray) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
+	// TODO: support metadata
 	return patchAll(a, d)
 }
 

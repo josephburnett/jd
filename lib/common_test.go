@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func checkJson(t *testing.T, a, b string, options ...Option) {
-	nodeA, err := ReadJsonString(a, options...)
+func checkJson(t *testing.T, a, b string, metadata ...Metadata) {
+	nodeA, err := ReadJsonString(a, metadata...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -16,12 +16,12 @@ func checkJson(t *testing.T, a, b string, options ...Option) {
 	}
 }
 
-func checkEqual(t *testing.T, a, b string, options ...Option) {
-	nodeA, err := unmarshal([]byte(a), options...)
+func checkEqual(t *testing.T, a, b string, metadata ...Metadata) {
+	nodeA, err := unmarshal([]byte(a), metadata...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	nodeB, err := unmarshal([]byte(b), options...)
+	nodeB, err := unmarshal([]byte(b), metadata...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -39,12 +39,12 @@ func checkEqual(t *testing.T, a, b string, options ...Option) {
 	}
 }
 
-func checkNotEqual(t *testing.T, a, b string, options ...Option) {
-	nodeA, err := unmarshal([]byte(a), options...)
+func checkNotEqual(t *testing.T, a, b string, metadata ...Metadata) {
+	nodeA, err := unmarshal([]byte(a), metadata...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	nodeB, err := unmarshal([]byte(b), options...)
+	nodeB, err := unmarshal([]byte(b), metadata...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -78,19 +78,19 @@ func checkHash(t *testing.T, a, b string, wantSame bool) {
 }
 
 func checkDiff(t *testing.T, a, b string, diffLines ...string) {
-	checkDiffOption(t, NONE, a, b, diffLines...)
+	checkDiffMetadata(t, NONE, a, b, diffLines...)
 }
 
-func checkDiffOption(t *testing.T, o Option, a, b string, diffLines ...string) {
-	options := make([]Option, 0)
+func checkDiffMetadata(t *testing.T, o Metadata, a, b string, diffLines ...string) {
+	metadata := make([]Metadata, 0)
 	if o != NONE {
-		options = append(options, o)
+		metadata = append(metadata, o)
 	}
-	nodeA, err := ReadJsonString(a, options...)
+	nodeA, err := ReadJsonString(a, metadata...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	nodeB, err := ReadJsonString(b, options...)
+	nodeB, err := ReadJsonString(b, metadata...)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -109,10 +109,10 @@ func checkDiffOption(t *testing.T, o Option, a, b string, diffLines ...string) {
 }
 
 func checkPatch(t *testing.T, a, e string, diffLines ...string) {
-	checkPatchOption(t, NONE, a, e, diffLines...)
+	checkPatchMetadata(t, NONE, a, e, diffLines...)
 }
 
-func checkPatchOption(t *testing.T, o Option, a, e string, diffLines ...string) {
+func checkPatchMetadata(t *testing.T, o Metadata, a, e string, diffLines ...string) {
 	diffString := ""
 	for _, dl := range diffLines {
 		diffString += dl + "\n"
@@ -140,10 +140,10 @@ func checkPatchOption(t *testing.T, o Option, a, e string, diffLines ...string) 
 }
 
 func checkPatchError(t *testing.T, a string, diffLines ...string) {
-	checkPatchErrorOption(t, NONE, a, diffLines...)
+	checkPatchErrorMetadata(t, NONE, a, diffLines...)
 }
 
-func checkPatchErrorOption(t *testing.T, o Option, a string, diffLines ...string) {
+func checkPatchErrorMetadata(t *testing.T, o Metadata, a string, diffLines ...string) {
 	diffString := ""
 	for _, dl := range diffLines {
 		diffString += dl + "\n"
@@ -165,8 +165,8 @@ func checkPatchErrorOption(t *testing.T, o Option, a string, diffLines ...string
 	}
 }
 
-type noneOption struct{}
+type noneMetadata struct{}
 
-func (noneOption) is_option() {}
+func (noneMetadata) is_metadata() {}
 
-var NONE Option = noneOption{}
+var NONE Metadata = noneMetadata{}

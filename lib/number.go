@@ -31,8 +31,8 @@ func (n jsonNumber) hashCode() [8]byte {
 	return hash(b.Bytes())
 }
 
-func (n jsonNumber) Diff(node JsonNode, options ...Option) Diff {
-	// TODO: support options
+func (n jsonNumber) Diff(node JsonNode, metadata ...Metadata) Diff {
+	// TODO: support metadata
 	return n.diff(node, Path{})
 }
 
@@ -49,8 +49,8 @@ func (n jsonNumber) diff(node JsonNode, path Path) Diff {
 	return append(d, e)
 }
 
-func (n jsonNumber) Patch(d Diff, options ...Option) (JsonNode, error) {
-	// TODO: support options
+func (n jsonNumber) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
+	// TODO: support metadata
 	return patchAll(n, d)
 }
 

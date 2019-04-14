@@ -52,8 +52,8 @@ func (s jsonSet) hashCode() [8]byte {
 	return hashes.combine()
 }
 
-func (s jsonSet) Diff(j JsonNode, options ...Option) Diff {
-	// TODO: support options
+func (s jsonSet) Diff(j JsonNode, metadata ...Metadata) Diff {
+	// TODO: support metadata
 	return s.diff(j, Path{})
 }
 
@@ -134,8 +134,8 @@ func (s1 jsonSet) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (s jsonSet) Patch(d Diff, options ...Option) (JsonNode, error) {
-	// TODO: support options
+func (s jsonSet) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
+	// TODO: support metadata
 	return patchAll(s, d)
 }
 

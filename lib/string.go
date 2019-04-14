@@ -20,8 +20,8 @@ func (s jsonString) hashCode() [8]byte {
 	return hash([]byte(s))
 }
 
-func (s jsonString) Diff(n JsonNode, options ...Option) Diff {
-	// TODO: support options
+func (s jsonString) Diff(n JsonNode, metadata ...Metadata) Diff {
+	// TODO: support metadata
 	return s.diff(n, Path{})
 }
 
@@ -38,8 +38,8 @@ func (s1 jsonString) diff(n JsonNode, path Path) Diff {
 	return append(d, e)
 }
 
-func (s jsonString) Patch(d Diff, options ...Option) (JsonNode, error) {
-	// TODO: support options
+func (s jsonString) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
+	// TODO: support metadata
 	return patchAll(s, d)
 }
 

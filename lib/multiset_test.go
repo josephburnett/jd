@@ -29,98 +29,98 @@ func TestMultisetNotEquals(t *testing.T) {
 }
 
 func TestMultisetDiff(t *testing.T) {
-	checkDiffOption(t, MULTISET, `[]`, `[]`)
-	checkDiffOption(t, MULTISET, `[1]`, `[1,2]`,
+	checkDiffMetadata(t, MULTISET, `[]`, `[]`)
+	checkDiffMetadata(t, MULTISET, `[1]`, `[1,2]`,
 		`@ [{}]`,
 		`+ 2`)
-	checkDiffOption(t, MULTISET, `[1,2]`, `[1,2]`)
-	checkDiffOption(t, MULTISET, `[1]`, `[1,2,2]`,
+	checkDiffMetadata(t, MULTISET, `[1,2]`, `[1,2]`)
+	checkDiffMetadata(t, MULTISET, `[1]`, `[1,2,2]`,
 		`@ [{}]`,
 		`+ 2`,
 		`+ 2`)
-	checkDiffOption(t, MULTISET, `[1,2,3]`, `[1,3]`,
+	checkDiffMetadata(t, MULTISET, `[1,2,3]`, `[1,3]`,
 		`@ [{}]`,
 		`- 2`)
-	checkDiffOption(t, MULTISET, `[{"a":1}]`, `[{"a":2}]`,
+	checkDiffMetadata(t, MULTISET, `[{"a":1}]`, `[{"a":2}]`,
 		`@ [{}]`,
 		`- {"a":1}`,
 		`+ {"a":2}`)
-	checkDiffOption(t, MULTISET, `[{"a":1},{"a":1}]`, `[{"a":2}]`,
+	checkDiffMetadata(t, MULTISET, `[{"a":1},{"a":1}]`, `[{"a":2}]`,
 		`@ [{}]`,
 		`- {"a":1}`,
 		`- {"a":1}`,
 		`+ {"a":2}`)
-	checkDiffOption(t, MULTISET, `["foo","foo","bar"]`, `["baz"]`,
+	checkDiffMetadata(t, MULTISET, `["foo","foo","bar"]`, `["baz"]`,
 		`@ [{}]`,
 		`- "bar"`,
 		`- "foo"`,
 		`- "foo"`,
 		`+ "baz"`)
-	checkDiffOption(t, MULTISET, `["foo"]`, `["bar","baz","bar"]`,
+	checkDiffMetadata(t, MULTISET, `["foo"]`, `["bar","baz","bar"]`,
 		`@ [{}]`,
 		`- "foo"`,
 		`+ "bar"`,
 		`+ "bar"`,
 		`+ "baz"`)
-	checkDiffOption(t, MULTISET, `{}`, `[]`,
+	checkDiffMetadata(t, MULTISET, `{}`, `[]`,
 		`@ []`,
 		`- {}`,
 		`+ []`)
 }
 
 func TestMultisetPatch(t *testing.T) {
-	checkPatchOption(t, MULTISET, `[]`, `[]`)
-	checkPatchOption(t, MULTISET, `[1]`, `[1,2]`,
+	checkPatchMetadata(t, MULTISET, `[]`, `[]`)
+	checkPatchMetadata(t, MULTISET, `[1]`, `[1,2]`,
 		`@ [{}]`,
 		`+ 2`)
-	checkPatchOption(t, MULTISET, `[1,2]`, `[1,2]`)
-	checkPatchOption(t, MULTISET, `[1]`, `[1,2,2]`,
+	checkPatchMetadata(t, MULTISET, `[1,2]`, `[1,2]`)
+	checkPatchMetadata(t, MULTISET, `[1]`, `[1,2,2]`,
 		`@ [{}]`,
 		`+ 2`,
 		`+ 2`)
-	checkPatchOption(t, MULTISET, `[1,2,3]`, `[1,3]`,
+	checkPatchMetadata(t, MULTISET, `[1,2,3]`, `[1,3]`,
 		`@ [{}]`,
 		`- 2`)
-	checkPatchOption(t, MULTISET, `[{"a":1}]`, `[{"a":2}]`,
+	checkPatchMetadata(t, MULTISET, `[{"a":1}]`, `[{"a":2}]`,
 		`@ [{}]`,
 		`- {"a":1}`,
 		`+ {"a":2}`)
-	checkPatchOption(t, MULTISET, `[{"a":1},{"a":1}]`, `[{"a":2}]`,
+	checkPatchMetadata(t, MULTISET, `[{"a":1},{"a":1}]`, `[{"a":2}]`,
 		`@ [{}]`,
 		`- {"a":1}`,
 		`- {"a":1}`,
 		`+ {"a":2}`)
-	checkPatchOption(t, MULTISET, `["foo","foo","bar"]`, `["baz"]`,
+	checkPatchMetadata(t, MULTISET, `["foo","foo","bar"]`, `["baz"]`,
 		`@ [{}]`,
 		`- "bar"`,
 		`- "foo"`,
 		`- "foo"`,
 		`+ "baz"`)
-	checkPatchOption(t, MULTISET, `["foo"]`, `["bar","baz","bar"]`,
+	checkPatchMetadata(t, MULTISET, `["foo"]`, `["bar","baz","bar"]`,
 		`@ [{}]`,
 		`- "foo"`,
 		`+ "bar"`,
 		`+ "bar"`,
 		`+ "baz"`)
-	checkPatchOption(t, MULTISET, `{}`, `[]`,
+	checkPatchMetadata(t, MULTISET, `{}`, `[]`,
 		`@ []`,
 		`- {}`,
 		`+ []`)
 }
 
 func TestMultisetPatchError(t *testing.T) {
-	checkPatchErrorOption(t, MULTISET, `[]`,
+	checkPatchErrorMetadata(t, MULTISET, `[]`,
 		`@ [{}]`,
 		`- 1`)
-	checkPatchErrorOption(t, MULTISET, `[1]`,
+	checkPatchErrorMetadata(t, MULTISET, `[1]`,
 		`@ [{}]`,
 		`- 1`,
 		`- 1`)
-	checkPatchErrorOption(t, MULTISET, `[]`,
+	checkPatchErrorMetadata(t, MULTISET, `[]`,
 		`@ [{}]`,
 		`- 1`,
 		`+ 1`)
-	checkPatchErrorOption(t, MULTISET, `[]`,
+	checkPatchErrorMetadata(t, MULTISET, `[]`,
 		`@ []`,
 		`- {}`)
 }

@@ -31,8 +31,8 @@ func (v voidNode) hashCode() [8]byte {
 	return hash([]byte{0xF3, 0x97, 0x6B, 0x21, 0x91, 0x26, 0x8D, 0x96}) // Random bytes
 }
 
-func (v voidNode) Diff(n JsonNode, options ...Option) Diff {
-	// TODO: support options
+func (v voidNode) Diff(n JsonNode, metadata ...Metadata) Diff {
+	// TODO: support metadata
 	return v.diff(n, Path{})
 }
 
@@ -49,8 +49,8 @@ func (v voidNode) diff(n JsonNode, p Path) Diff {
 	return append(d, de)
 }
 
-func (v voidNode) Patch(d Diff, options ...Option) (JsonNode, error) {
-	// TODO: support options
+func (v voidNode) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
+	// TODO: support metadata
 	return patchAll(v, d)
 }
 

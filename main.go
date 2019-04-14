@@ -20,7 +20,7 @@ var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
 
 func main() {
 	flag.Parse()
-	options, err := parseOptions()
+	metadata, err := parseMetadata()
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -36,19 +36,19 @@ func main() {
 		printUsageAndExit()
 	}
 	if *patch {
-		patchJson(a, b, options)
+		patchJson(a, b, metadata)
 	} else {
-		diffJson(a, b, options)
+		diffJson(a, b, metadata)
 	}
 }
 
-func parseOptions() ([]jd.Option, error) {
-	options := make([]jd.Option, 0)
+func parseMetadata() ([]jd.Metadata, error) {
+	metadata := make([]jd.Metadata, 0)
 	if *set {
-		options = append(options, jd.SET)
+		metadata = append(metadata, jd.SET)
 	}
 	if *mset {
-		options = append(options, jd.MULTISET)
+		metadata = append(metadata, jd.MULTISET)
 	}
 	if *setkeys != "" {
 		keys := make([]string, 0)
@@ -60,9 +60,9 @@ func parseOptions() ([]jd.Option, error) {
 			}
 			keys = append(keys, trimmed)
 		}
-		options = append(options, jd.SetkeysOption(keys))
+		metadata = append(metadata, jd.SetkeysMetadata(keys))
 	}
-	return options, nil
+	return metadata, nil
 }
 
 func printUsageAndExit() {
@@ -75,7 +75,7 @@ func printUsageAndExit() {
 		`When FILE2 is omitted the second input is read from STDIN.`,
 		`When patching (-p) FILE1 is a diff.`,
 		``,
-		`Options:`,
+		`Metadata:`,
 		`  -p        Apply patch FILE1 to FILE2 or STDIN.`,
 		`  -o=FILE3  Write to FILE3 instead of STDOUT.`,
 		`  -set      Treat arrays as sets.`,
@@ -93,18 +93,18 @@ func printUsageAndExit() {
 	os.Exit(1)
 }
 
-func diffJson(a, b string, options []jd.Option) {
-	// TODO: remove options from reading
-	aNode, err := jd.ReadJsonString(a, options...)
+func diffJson(a, b string, metadata []jd.Metadata) {
+	// TODO: remove metadata from reading
+	aNode, err := jd.ReadJsonString(a, metadata...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	// TODO: remove options from reading
-	bNode, err := jd.ReadJsonString(b, options...)
+	// TODO: remove metadata from reading
+	bNode, err := jd.ReadJsonString(b, metadata...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	diff := aNode.Diff(bNode, options...)
+	diff := aNode.Diff(bNode, metadata...)
 	if *output == "" {
 		fmt.Print(diff.Render())
 	} else {
@@ -112,17 +112,17 @@ func diffJson(a, b string, options []jd.Option) {
 	}
 }
 
-func patchJson(p, a string, options []jd.Option) {
-	diff, err := jd.ReadDiffString(p, options...)
+func patchJson(p, a string, metadata []jd.Metadata) {
+	diff, err := jd.ReadDiffString(p, metadata...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	// TODO: remove options from reading
-	aNode, err := jd.ReadJsonString(a, options...)
+	// TODO: remove metadata from reading
+	aNode, err := jd.ReadJsonString(a, metadata...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	bNode, err := aNode.Patch(diff, options...)
+	bNode, err := aNode.Patch(diff, metadata...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

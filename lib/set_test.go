@@ -32,93 +32,93 @@ func TestSetNotEquals(t *testing.T) {
 }
 
 func TestSetDiff(t *testing.T) {
-	checkDiffOption(t, SET, `[]`, `[]`)
-	checkDiffOption(t, SET, `[1]`, `[1,2]`,
+	checkDiffMetadata(t, SET, `[]`, `[]`)
+	checkDiffMetadata(t, SET, `[1]`, `[1,2]`,
 		`@ [{}]`,
 		`+ 2`)
-	checkDiffOption(t, SET, `[1,2]`, `[1,2]`)
-	checkDiffOption(t, SET, `[1]`, `[1,2,2]`,
+	checkDiffMetadata(t, SET, `[1,2]`, `[1,2]`)
+	checkDiffMetadata(t, SET, `[1]`, `[1,2,2]`,
 		`@ [{}]`,
 		`+ 2`)
-	checkDiffOption(t, SET, `[1,2,3]`, `[1,3]`,
+	checkDiffMetadata(t, SET, `[1,2,3]`, `[1,3]`,
 		`@ [{}]`,
 		`- 2`)
-	checkDiffOption(t, SET, `[{"a":1}]`, `[{"a":2}]`,
+	checkDiffMetadata(t, SET, `[{"a":1}]`, `[{"a":2}]`,
 		`@ [{}]`,
 		`- {"a":1}`,
 		`+ {"a":2}`)
-	checkDiffOption(t, SET, `[{"a":1},{"a":1}]`, `[{"a":2}]`,
+	checkDiffMetadata(t, SET, `[{"a":1},{"a":1}]`, `[{"a":2}]`,
 		`@ [{}]`,
 		`- {"a":1}`,
 		`+ {"a":2}`)
-	checkDiffOption(t, SET, `["foo","foo","bar"]`, `["baz"]`,
+	checkDiffMetadata(t, SET, `["foo","foo","bar"]`, `["baz"]`,
 		`@ [{}]`,
 		`- "bar"`,
 		`- "foo"`,
 		`+ "baz"`)
-	checkDiffOption(t, SET, `["foo"]`, `["bar","baz","bar"]`,
+	checkDiffMetadata(t, SET, `["foo"]`, `["bar","baz","bar"]`,
 		`@ [{}]`,
 		`- "foo"`,
 		`+ "bar"`,
 		`+ "baz"`)
-	checkDiffOption(t, SET, `{}`, `[]`,
+	checkDiffMetadata(t, SET, `{}`, `[]`,
 		`@ []`,
 		`- {}`,
 		`+ []`)
 }
 
 func TestSetPatch(t *testing.T) {
-	checkPatchOption(t, SET, `[]`, `[]`)
-	checkPatchOption(t, SET, `[1]`, `[1,2]`,
+	checkPatchMetadata(t, SET, `[]`, `[]`)
+	checkPatchMetadata(t, SET, `[1]`, `[1,2]`,
 		`@ [{}]`,
 		`+ 2`)
-	checkPatchOption(t, SET, `[1,2]`, `[1,2]`)
-	checkPatchOption(t, SET, `[1]`, `[1,2,2]`,
+	checkPatchMetadata(t, SET, `[1,2]`, `[1,2]`)
+	checkPatchMetadata(t, SET, `[1]`, `[1,2,2]`,
 		`@ [{}]`,
 		`+ 2`)
-	checkPatchOption(t, SET, `[1,2,3]`, `[1,3]`,
+	checkPatchMetadata(t, SET, `[1,2,3]`, `[1,3]`,
 		`@ [{}]`,
 		`- 2`)
-	checkPatchOption(t, SET, `[{"a":1}]`, `[{"a":2}]`,
+	checkPatchMetadata(t, SET, `[{"a":1}]`, `[{"a":2}]`,
 		`@ [{}]`,
 		`- {"a":1}`,
 		`+ {"a":2}`)
-	checkPatchOption(t, SET, `[{"a":1},{"a":1}]`, `[{"a":2}]`,
+	checkPatchMetadata(t, SET, `[{"a":1},{"a":1}]`, `[{"a":2}]`,
 		`@ [{}]`,
 		`- {"a":1}`,
 		`+ {"a":2}`)
-	checkPatchOption(t, SET, `["foo","foo","bar"]`, `["baz"]`,
+	checkPatchMetadata(t, SET, `["foo","foo","bar"]`, `["baz"]`,
 		`@ [{}]`,
 		`- "bar"`,
 		`- "foo"`,
 		`+ "baz"`)
-	checkPatchOption(t, SET, `["foo"]`, `["bar","baz","bar"]`,
+	checkPatchMetadata(t, SET, `["foo"]`, `["bar","baz","bar"]`,
 		`@ [{}]`,
 		`- "foo"`,
 		`+ "bar"`,
 		`+ "baz"`)
-	checkPatchOption(t, SET, `{}`, `[]`,
+	checkPatchMetadata(t, SET, `{}`, `[]`,
 		`@ []`,
 		`- {}`,
 		`+ []`)
 }
 
 func TestSetPatchError(t *testing.T) {
-	checkPatchErrorOption(t, SET, `[]`,
+	checkPatchErrorMetadata(t, SET, `[]`,
 		`@ [{}]`,
 		`- 1`)
-	checkPatchErrorOption(t, SET, `[1]`,
+	checkPatchErrorMetadata(t, SET, `[1]`,
 		`@ [{}]`,
 		`- 1`,
 		`- 1`)
-	checkPatchErrorOption(t, SET, `[]`,
+	checkPatchErrorMetadata(t, SET, `[]`,
 		`@ [{}]`,
 		`- 1`,
 		`+ 1`)
-	checkPatchErrorOption(t, SET, `[]`,
+	checkPatchErrorMetadata(t, SET, `[]`,
 		`@ []`,
 		`- {}`)
-	checkPatchErrorOption(t, SET, `[]`,
+	checkPatchErrorMetadata(t, SET, `[]`,
 		`@ [{}]`,
 		`+ 1`,
 		`+ 1`,
