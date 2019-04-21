@@ -11,12 +11,12 @@ type JsonNode interface {
 	Equals(n JsonNode) bool
 	hashCode() [8]byte
 	Diff(n JsonNode, metadata ...Metadata) Diff
-	diff(n JsonNode, p Path) Diff
+	diff(n JsonNode, p Path, metadata []Metadata) Diff
 	Patch(d Diff, metadata ...Metadata) (JsonNode, error)
-	patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error)
+	patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error)
 }
 
-func NewJsonNode(n interface{}, metadata ...Metadata) (JsonNode, error) {
+func NewJsonNode(n interface{}) (JsonNode, error) {
 	switch t := n.(type) {
 	case map[string]interface{}:
 		m := jsonObject{
@@ -26,7 +26,7 @@ func NewJsonNode(n interface{}, metadata ...Metadata) (JsonNode, error) {
 		}
 		for k, v := range t {
 			if _, ok := v.(JsonNode); !ok {
-				e, err := NewJsonNode(v, metadata...)
+				e, err := NewJsonNode(v)
 				if err != nil {
 					return nil, err
 				}
@@ -38,18 +38,12 @@ func NewJsonNode(n interface{}, metadata ...Metadata) (JsonNode, error) {
 		l := make(jsonArray, len(t))
 		for i, v := range t {
 			if _, ok := v.(JsonNode); !ok {
-				e, err := NewJsonNode(v, metadata...)
+				e, err := NewJsonNode(v)
 				if err != nil {
 					return nil, err
 				}
 				l[i] = e
 			}
-		}
-		if checkMetadata(SET, metadata...) {
-			return jsonSet(l), nil
-		}
-		if checkMetadata(MULTISET, metadata...) {
-			return jsonMultiset(l), nil
 		}
 		return l, nil
 	case float64:

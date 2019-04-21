@@ -94,13 +94,11 @@ func printUsageAndExit() {
 }
 
 func diffJson(a, b string, metadata []jd.Metadata) {
-	// TODO: remove metadata from reading
-	aNode, err := jd.ReadJsonString(a, metadata...)
+	aNode, err := jd.ReadJsonString(a)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	// TODO: remove metadata from reading
-	bNode, err := jd.ReadJsonString(b, metadata...)
+	bNode, err := jd.ReadJsonString(b)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -113,12 +111,11 @@ func diffJson(a, b string, metadata []jd.Metadata) {
 }
 
 func patchJson(p, a string, metadata []jd.Metadata) {
-	diff, err := jd.ReadDiffString(p, metadata...)
+	diff, err := jd.ReadDiffString(p)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	// TODO: remove metadata from reading
-	aNode, err := jd.ReadJsonString(a, metadata...)
+	aNode, err := jd.ReadJsonString(a)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

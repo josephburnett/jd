@@ -25,11 +25,10 @@ func (b jsonBool) hashCode() [8]byte {
 }
 
 func (b jsonBool) Diff(n JsonNode, metadata ...Metadata) Diff {
-	// TODO: support metadata
-	return b.diff(n, Path{})
+	return b.diff(n, Path{}, metadata)
 }
 
-func (b jsonBool) diff(n JsonNode, path Path) Diff {
+func (b jsonBool) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	if b.Equals(n) {
 		return d
@@ -43,11 +42,10 @@ func (b jsonBool) diff(n JsonNode, path Path) Diff {
 }
 
 func (b jsonBool) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
-	// TODO: support metadata
-	return patchAll(b, d)
+	return patchAll(b, d, metadata)
 }
 
-func (b jsonBool) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (b jsonBool) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(b, pathAhead[0])
 	}

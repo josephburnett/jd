@@ -42,11 +42,10 @@ func (a jsonMultiset) hashCode() [8]byte {
 }
 
 func (a jsonMultiset) Diff(n JsonNode, metadata ...Metadata) Diff {
-	// TODO: support metadata
-	return a.diff(n, Path{})
+	return a.diff(n, Path{}, metadata)
 }
 
-func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
+func (a1 jsonMultiset) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	a2, ok := n.(jsonMultiset)
 	if !ok {
@@ -120,11 +119,10 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 }
 
 func (a jsonMultiset) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
-	// TODO: support metadata
-	return patchAll(a, d)
+	return patchAll(a, d, metadata)
 }
 
-func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	// Base case
 	if len(pathAhead) == 0 {
 		if len(oldValues) > 1 || len(newValues) > 1 {

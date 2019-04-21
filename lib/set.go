@@ -53,11 +53,10 @@ func (s jsonSet) hashCode() [8]byte {
 }
 
 func (s jsonSet) Diff(j JsonNode, metadata ...Metadata) Diff {
-	// TODO: support metadata
-	return s.diff(j, Path{})
+	return s.diff(j, Path{}, metadata)
 }
 
-func (s1 jsonSet) diff(n JsonNode, path Path) Diff {
+func (s1 jsonSet) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	s2, ok := n.(jsonSet)
 	if !ok {
@@ -110,7 +109,7 @@ func (s1 jsonSet) diff(n JsonNode, path Path) Diff {
 			e.OldValues = append(e.OldValues, s1Map[hc])
 		} else if o2, ok := n2.(jsonObject); ok {
 			// Objects with the same identity may have changed.
-			subDiff := o2.diff(s1Map[hc], append(path.clone(), o2.pathIdent()))
+			subDiff := o2.diff(s1Map[hc], append(path.clone(), o2.pathIdent()), metadata)
 			for _, subElement := range subDiff {
 				d = append(d, subElement)
 			}
@@ -122,7 +121,7 @@ func (s1 jsonSet) diff(n JsonNode, path Path) Diff {
 			e.NewValues = append(e.NewValues, s2Map[hc])
 		} else if o1, ok := n1.(jsonObject); ok {
 			// Object with the same identity may have changed.
-			subDiff := o1.diff(s2Map[hc], append(path.clone(), o1.pathIdent()))
+			subDiff := o1.diff(s2Map[hc], append(path.clone(), o1.pathIdent()), metadata)
 			for _, subElement := range subDiff {
 				d = append(d, subElement)
 			}
@@ -135,11 +134,10 @@ func (s1 jsonSet) diff(n JsonNode, path Path) Diff {
 }
 
 func (s jsonSet) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
-	// TODO: support metadata
-	return patchAll(s, d)
+	return patchAll(s, d, metadata)
 }
 
-func (s jsonSet) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (s jsonSet) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	// Base case
 	if len(pathAhead) == 0 {
 		if len(oldValues) > 1 || len(newValues) > 1 {

@@ -94,11 +94,10 @@ func (o jsonObject) pathIdent() PathElement {
 }
 
 func (o jsonObject) Diff(n JsonNode, metadata ...Metadata) Diff {
-	// TODO: support metadata
-	return o.diff(n, Path{})
+	return o.diff(n, Path{}, metadata)
 }
 
-func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
+func (o1 jsonObject) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	o2, ok := n.(jsonObject)
 	if !ok {
@@ -124,7 +123,7 @@ func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
 		v1 := o1.properties[k1]
 		if v2, ok := o2.properties[k1]; ok {
 			// Both keys are present
-			subDiff := v1.diff(v2, append(path.clone(), k1))
+			subDiff := v1.diff(v2, append(path.clone(), k1), metadata)
 			d = append(d, subDiff...)
 		} else {
 			// O2 missing key
@@ -152,11 +151,10 @@ func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
 }
 
 func (o jsonObject) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
-	// TODO: support metadata
-	return patchAll(o, d)
+	return patchAll(o, d, metadata)
 }
 
-func (o jsonObject) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (o jsonObject) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	if (len(pathAhead) == 0) && (len(oldValues) > 1 || len(newValues) > 1) {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}
@@ -180,7 +178,7 @@ func (o jsonObject) patch(pathBehind, pathAhead Path, oldValues, newValues []Jso
 	if !ok {
 		nextNode = voidNode{}
 	}
-	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValues, newValues)
+	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValues, newValues, metadata)
 	if err != nil {
 		return nil, err
 	}
