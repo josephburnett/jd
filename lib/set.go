@@ -72,8 +72,10 @@ func (s1 jsonSet) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	for _, v := range s1 {
 		var hc [8]byte
 		if o, ok := v.(jsonObject); ok {
-			hc = o.ident()
+			// Hash objects by their identity.
+			hc = o.ident(metadata)
 		} else {
+			// Everything else by full content.
 			hc = v.hashCode()
 		}
 		s1Map[hc] = v
@@ -82,8 +84,10 @@ func (s1 jsonSet) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	for _, v := range s2 {
 		var hc [8]byte
 		if o, ok := v.(jsonObject); ok {
-			hc = o.ident()
+			// Hash objects by their identity.
+			hc = o.ident(metadata)
 		} else {
+			// Everything else by full content.
 			hc = v.hashCode()
 		}
 		s2Map[hc] = v
@@ -106,25 +110,30 @@ func (s1 jsonSet) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	for _, hc := range s1Hashes {
 		n2, ok := s2Map[hc]
 		if !ok {
+			// Deleted value.
 			e.OldValues = append(e.OldValues, s1Map[hc])
-		} else if o2, ok := n2.(jsonObject); ok {
-			// Objects with the same identity may have changed.
-			subDiff := o2.diff(s1Map[hc], append(path.clone(), o2.pathIdent()), metadata)
-			for _, subElement := range subDiff {
-				d = append(d, subElement)
+		} else {
+			// Changed value.
+			o1, isObject1 := s1Map[hc].(jsonObject)
+			o2, isObject2 := n2.(jsonObject)
+			if isObject1 && isObject2 {
+				// Sub diff objects with same identtity.
+				subDiff := o1.diff(o2, append(path.clone(), o1.pathIdent(metadata)), metadata)
+				for _, subElement := range subDiff {
+					d = append(d, subElement)
+				}
+			} else {
+				// Non-object replacement.
+				e.OldValues = append(e.OldValues, s1Map[hc])
+				e.NewValues = append(e.NewValues, n2)
 			}
 		}
 	}
 	for _, hc := range s2Hashes {
-		n1, ok := s1Map[hc]
+		_, ok := s1Map[hc]
 		if !ok {
+			// Added value.
 			e.NewValues = append(e.NewValues, s2Map[hc])
-		} else if o1, ok := n1.(jsonObject); ok {
-			// Object with the same identity may have changed.
-			subDiff := o1.diff(s2Map[hc], append(path.clone(), o1.pathIdent()), metadata)
-			for _, subElement := range subDiff {
-				d = append(d, subElement)
-			}
 		}
 	}
 	if len(e.OldValues) > 0 || len(e.NewValues) > 0 {

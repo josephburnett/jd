@@ -8,7 +8,7 @@ import (
 
 type jsonObject struct {
 	properties map[string]JsonNode
-	idKeys     []string
+	idKeys     map[string]bool
 }
 
 var _ JsonNode = jsonObject{}
@@ -66,12 +66,13 @@ func (o jsonObject) hashCode() [8]byte {
 
 // ident is the identity of the json object based on either the hash of a
 // given set of keys or the full object if no keys are present.
-func (o jsonObject) ident() [8]byte {
+func (o jsonObject) ident(metadata []Metadata) [8]byte {
+	o.addIdKeys(getSetkeysMetadata(metadata).keys)
 	if len(o.idKeys) == 0 {
 		return o.hashCode()
 	}
 	hashes := make(hashCodes, 0)
-	for _, key := range o.idKeys {
+	for key := range o.idKeys {
 		v, ok := o.properties[key]
 		if ok {
 			hashes = append(hashes, v.hashCode())
@@ -83,14 +84,21 @@ func (o jsonObject) ident() [8]byte {
 	return hashes.combine()
 }
 
-func (o jsonObject) pathIdent() PathElement {
+func (o jsonObject) pathIdent(metadata []Metadata) PathElement {
+	o.addIdKeys(getSetkeysMetadata(metadata).keys)
 	id := make(map[string]interface{})
-	for _, key := range o.idKeys {
+	for key := range o.idKeys {
 		if value, ok := o.properties[key]; ok {
 			id[key] = value
 		}
 	}
 	return id
+}
+
+func (o jsonObject) addIdKeys(keys map[string]bool) {
+	for key := range keys {
+		o.idKeys[key] = true
+	}
 }
 
 func (o jsonObject) Diff(n JsonNode, metadata ...Metadata) Diff {

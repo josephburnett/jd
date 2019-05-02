@@ -15,7 +15,7 @@ type Metadata interface {
 type multisetMetadata struct{}
 type setMetadata struct{}
 type setkeysMetadata struct {
-	keys []string
+	keys map[string]bool
 }
 
 func (multisetMetadata) is_metadata() {}
@@ -27,8 +27,14 @@ var (
 	SET      Metadata = setMetadata{}
 )
 
-func SetkeysMetadata(keys []string) Metadata {
-	return setkeysMetadata{keys}
+func SetkeysMetadata(keys ...string) Metadata {
+	m := setkeysMetadata{
+		keys: make(map[string]bool),
+	}
+	for _, key := range keys {
+		m.keys[key] = true
+	}
+	return m
 }
 
 func checkMetadata(want Metadata, metadata []Metadata) bool {
@@ -38,6 +44,15 @@ func checkMetadata(want Metadata, metadata []Metadata) bool {
 		}
 	}
 	return false
+}
+
+func getSetkeysMetadata(metadata []Metadata) *setkeysMetadata {
+	for _, o := range metadata {
+		if s, ok := o.(setkeysMetadata); ok {
+			return &s
+		}
+	}
+	return nil
 }
 
 func ReadJsonFile(filename string) (JsonNode, error) {

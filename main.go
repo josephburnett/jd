@@ -60,7 +60,7 @@ func parseMetadata() ([]jd.Metadata, error) {
 			}
 			keys = append(keys, trimmed)
 		}
-		metadata = append(metadata, jd.SetkeysMetadata(keys))
+		metadata = append(metadata, jd.SetkeysMetadata(keys...))
 	}
 	return metadata, nil
 }

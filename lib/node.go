@@ -21,8 +21,7 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 	case map[string]interface{}:
 		m := jsonObject{
 			properties: make(map[string]JsonNode),
-			// TODO: get keys from metadata.
-			idKeys: make([]string, 0),
+			idKeys:     make(map[string]bool),
 		}
 		for k, v := range t {
 			if _, ok := v.(JsonNode); !ok {
