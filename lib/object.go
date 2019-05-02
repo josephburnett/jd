@@ -67,12 +67,12 @@ func (o jsonObject) hashCode() [8]byte {
 // ident is the identity of the json object based on either the hash of a
 // given set of keys or the full object if no keys are present.
 func (o jsonObject) ident(metadata []Metadata) [8]byte {
-	o.addIdKeys(getSetkeysMetadata(metadata).keys)
-	if len(o.idKeys) == 0 {
+	keys := mergeKeys(o.idKeys, getSetkeysMetadata(metadata).keys)
+	if len(keys) == 0 {
 		return o.hashCode()
 	}
 	hashes := make(hashCodes, 0)
-	for key := range o.idKeys {
+	for key := range keys {
 		v, ok := o.properties[key]
 		if ok {
 			hashes = append(hashes, v.hashCode())
@@ -85,9 +85,9 @@ func (o jsonObject) ident(metadata []Metadata) [8]byte {
 }
 
 func (o jsonObject) pathIdent(metadata []Metadata) PathElement {
-	o.addIdKeys(getSetkeysMetadata(metadata).keys)
+	keys := mergeKeys(o.idKeys, getSetkeysMetadata(metadata).keys)
 	id := make(map[string]interface{})
-	for key := range o.idKeys {
+	for key := range keys {
 		if value, ok := o.properties[key]; ok {
 			id[key] = value
 		}
@@ -95,10 +95,15 @@ func (o jsonObject) pathIdent(metadata []Metadata) PathElement {
 	return id
 }
 
-func (o jsonObject) addIdKeys(keys map[string]bool) {
-	for key := range keys {
-		o.idKeys[key] = true
+func mergeKeys(k1, k2 map[string]bool) map[string]bool {
+	k3 := make(map[string]bool)
+	for k := range k1 {
+		k3[k] = true
 	}
+	for k := range k2 {
+		k3[k] = true
+	}
+	return k3
 }
 
 func (o jsonObject) Diff(n JsonNode, metadata ...Metadata) Diff {
