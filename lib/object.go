@@ -67,7 +67,7 @@ func (o jsonObject) hashCode() [8]byte {
 // ident is the identity of the json object based on either the hash of a
 // given set of keys or the full object if no keys are present.
 func (o jsonObject) ident(metadata []Metadata) [8]byte {
-	keys := mergeKeys(o.idKeys, getSetkeysMetadata(metadata).keys)
+	keys := getSetkeysMetadata(metadata).mergeKeys(o.idKeys)
 	if len(keys) == 0 {
 		return o.hashCode()
 	}
@@ -85,7 +85,7 @@ func (o jsonObject) ident(metadata []Metadata) [8]byte {
 }
 
 func (o jsonObject) pathIdent(metadata []Metadata) PathElement {
-	keys := mergeKeys(o.idKeys, getSetkeysMetadata(metadata).keys)
+	keys := getSetkeysMetadata(metadata).mergeKeys(o.idKeys)
 	id := make(map[string]interface{})
 	for key := range keys {
 		if value, ok := o.properties[key]; ok {
@@ -95,9 +95,13 @@ func (o jsonObject) pathIdent(metadata []Metadata) PathElement {
 	return id
 }
 
-func mergeKeys(k1, k2 map[string]bool) map[string]bool {
+func (k1 *setkeysMetadata) mergeKeys(k2 map[string]bool) map[string]bool {
+	if k1 == nil {
+		// Nothing to merge
+		return k2
+	}
 	k3 := make(map[string]bool)
-	for k := range k1 {
+	for k := range k1.keys {
 		k3[k] = true
 	}
 	for k := range k2 {

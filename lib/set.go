@@ -122,10 +122,6 @@ func (s1 jsonSet) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 				for _, subElement := range subDiff {
 					d = append(d, subElement)
 				}
-			} else {
-				// Non-object replacement.
-				e.OldValues = append(e.OldValues, s1Map[hc])
-				e.NewValues = append(e.NewValues, n2)
 			}
 		}
 	}
