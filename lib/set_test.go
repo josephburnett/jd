@@ -262,6 +262,42 @@ func TestSetDiff(t *testing.T) {
 			`@ [{"id":"foo"}, "bar"]`,
 			`+ "baz"`,
 		),
+	}, {
+		name: "find object by id among empty objects",
+		metadata: m(
+			SET,
+			SetkeysMetadata("id"),
+		),
+		a: `[{},{},{"id":"foo"},{}]`,
+		b: `[{},{"id":"foo","bar":"baz"},{},{}]`,
+		want: s(
+			`@ [{"id":"foo"}, "bar"]`,
+			`+ "baz"`,
+		),
+	}, {
+		name: "find object by multiple ids",
+		metadata: m(
+			SET,
+			SetkeysMetadata("id1", "id2"),
+		),
+		a: `[{},{"id1":"foo","id2":"zap"},{}]`,
+		b: `[{},{"id1":"foo","id2":"zap","bar":"baz"},{}]`,
+		want: s(
+			`@ [{"id1":"foo","id2":"zap"}, "bar"]`,
+			`+ "baz"`,
+		),
+	}, {
+		name: "find object by id among others",
+		metadata: m(
+			SET,
+			SetkeysMetadata("id"),
+		),
+		a: `[{"id":"foo"},{"id":"bar"}]`,
+		b: `[{"id":"foo","baz":"zap"},{"id":"bar"}]`,
+		want: s(
+			`@ [{"id":"foo"}, "baz"]`,
+			`+ "zap"`,
+		),
 	}}
 
 	for _, c := range cases {
