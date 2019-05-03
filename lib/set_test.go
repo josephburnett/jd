@@ -298,6 +298,22 @@ func TestSetDiff(t *testing.T) {
 			`@ [{"id":"foo"}, "baz"]`,
 			`+ "zap"`,
 		),
+	}, {
+		name: "two objects with different ids being exchanged",
+		metadata: m(
+			SET,
+			SetkeysMetadata("id"),
+		),
+		a: `[{"id":"foo"}]`,
+		b: `[{"id":"bar"}]`,
+		want: s(
+			// TODO: emit set keys as path metadata
+			//       e.g. `@ [["setkeys=id"],{}]`
+			//       so that diffs will be self-describing.
+			`@ [{}]`,
+			`- {"id":"foo"}`,
+			`+ {"id":"bar"}`,
+		),
 	}}
 
 	for _, c := range cases {
