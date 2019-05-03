@@ -5,48 +5,55 @@ import (
 )
 
 func TestVoidJson(t *testing.T) {
-	checkJson(t, ``, ``)
+	ctx := newTestContext(t)
+	checkJson(ctx, ``, ``)
 }
 
 func TestVoidEqual(t *testing.T) {
-	checkEqual(t, ``, ``)
-	checkEqual(t, `   `, ``)
+	ctx := newTestContext(t)
+	checkEqual(ctx, ``, ``)
+	checkEqual(ctx, `   `, ``)
 }
 
 func TestVoidNotEqual(t *testing.T) {
-	checkNotEqual(t, ``, `null`)
-	checkNotEqual(t, ``, `0`)
-	checkNotEqual(t, ``, `[]`)
-	checkNotEqual(t, ``, `{}`)
+	ctx := newTestContext(t)
+	checkNotEqual(ctx, ``, `null`)
+	checkNotEqual(ctx, ``, `0`)
+	checkNotEqual(ctx, ``, `[]`)
+	checkNotEqual(ctx, ``, `{}`)
 }
 
 func TestVoidHash(t *testing.T) {
-	checkHash(t, ``, ``, true)
-	checkHash(t, ``, `null`, false)
+	ctx := newTestContext(t)
+	checkHash(ctx, ``, ``, true)
+	checkHash(ctx, ``, `null`, false)
 }
 
 func TestVoidDiff(t *testing.T) {
-	checkDiff(t, ``, ``)
-	checkDiff(t, ``, `1`,
+	ctx := newTestContext(t)
+	checkDiff(ctx, ``, ``)
+	checkDiff(ctx, ``, `1`,
 		`@ []`,
 		`+ 1`)
-	checkDiff(t, `1`, ``,
+	checkDiff(ctx, `1`, ``,
 		`@ []`,
 		`- 1`)
 }
 
 func TestVoidPatch(t *testing.T) {
-	checkPatch(t, ``, ``)
-	checkPatch(t, ``, `1`,
+	ctx := newTestContext(t)
+	checkPatch(ctx, ``, ``)
+	checkPatch(ctx, ``, `1`,
 		`@ []`,
 		`+ 1`)
-	checkPatch(t, `1`, ``,
+	checkPatch(ctx, `1`, ``,
 		`@ []`,
 		`- 1`)
 }
 
 func TestVoidPatchError(t *testing.T) {
-	checkPatchError(t, ``,
+	ctx := newTestContext(t)
+	checkPatchError(ctx, ``,
 		`@ []`,
 		`- null`)
 }

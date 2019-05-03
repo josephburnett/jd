@@ -26,7 +26,7 @@ func (o jsonObject) MarshalJSON() ([]byte, error) {
 	return []byte(o.Json()), nil
 }
 
-func (o1 jsonObject) Equals(n JsonNode) bool {
+func (o1 jsonObject) Equals(n JsonNode, metadata ...Metadata) bool {
 	o2, ok := n.(jsonObject)
 	if !ok {
 		return false

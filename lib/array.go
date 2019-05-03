@@ -13,7 +13,7 @@ func (a jsonArray) Json() string {
 	return renderJson(a)
 }
 
-func (a1 jsonArray) Equals(n JsonNode) bool {
+func (a1 jsonArray) Equals(n JsonNode, metadata ...Metadata) bool {
 	a2, ok := n.(jsonArray)
 	if !ok {
 		return false

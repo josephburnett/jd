@@ -27,11 +27,12 @@ func (s jsonSet) Json() string {
 	return renderJson(set)
 }
 
-func (s1 jsonSet) Equals(n JsonNode) bool {
+func (s1 jsonSet) Equals(n JsonNode, metadata ...Metadata) bool {
 	s2, ok := n.(jsonSet)
 	if !ok {
 		return false
 	}
+	// TODO: use metadata to determine equality.
 	if s1.hashCode() == s2.hashCode() {
 		return true
 	} else {

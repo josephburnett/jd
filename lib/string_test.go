@@ -5,61 +5,68 @@ import (
 )
 
 func TestStringJson(t *testing.T) {
-	checkJson(t, `""`, `""`)
-	checkJson(t, ` "" `, `""`)
-	checkJson(t, `"\""`, `"\""`)
+	ctx := newTestContext(t)
+	checkJson(ctx, `""`, `""`)
+	checkJson(ctx, ` "" `, `""`)
+	checkJson(ctx, `"\""`, `"\""`)
 }
 
 func TestStringEqual(t *testing.T) {
-	checkEqual(t, `""`, `""`)
-	checkEqual(t, `"a"`, `"a"`)
-	checkEqual(t, `"123"`, `"123"`)
+	ctx := newTestContext(t)
+	checkEqual(ctx, `""`, `""`)
+	checkEqual(ctx, `"a"`, `"a"`)
+	checkEqual(ctx, `"123"`, `"123"`)
 }
 
 func TestStringNotEqual(t *testing.T) {
-	checkNotEqual(t, `""`, `"a"`)
-	checkNotEqual(t, `""`, `[]`)
-	checkNotEqual(t, `""`, `{}`)
-	checkNotEqual(t, `""`, `0`)
+	ctx := newTestContext(t)
+	checkNotEqual(ctx, `""`, `"a"`)
+	checkNotEqual(ctx, `""`, `[]`)
+	checkNotEqual(ctx, `""`, `{}`)
+	checkNotEqual(ctx, `""`, `0`)
 }
 
 func TestStringHash(t *testing.T) {
-	checkHash(t, `""`, `""`, true)
-	checkHash(t, `"abc"`, `"abc"`, true)
-	checkHash(t, `""`, `" "`, false)
-	checkHash(t, `"abc"`, `"123"`, false)
+	ctx := newTestContext(t)
+	checkHash(ctx, `""`, `""`, true)
+	checkHash(ctx, `"abc"`, `"abc"`, true)
+	checkHash(ctx, `""`, `" "`, false)
+	checkHash(ctx, `"abc"`, `"123"`, false)
 }
 
 func TestStringDiff(t *testing.T) {
-	checkDiff(t, `""`, `""`)
-	checkDiff(t, `""`, `1`,
+	ctx := newTestContext(t)
+	checkDiff(ctx, `""`, `""`)
+	checkDiff(ctx, `""`, `1`,
 		`@ []`,
 		`- ""`,
 		`+ 1`)
-	checkDiff(t, `null`, `"abc"`,
+	checkDiff(ctx, `null`, `"abc"`,
 		`@ []`,
 		`- null`,
 		`+ "abc"`)
 }
 
 func TestStringPatch(t *testing.T) {
-	checkPatch(t, `""`, `""`)
-	checkPatch(t, `""`, `1`,
+	ctx := newTestContext(t)
+	checkPatch(ctx, `""`, `""`)
+	checkPatch(ctx, `""`, `1`,
 		`@ []`,
 		`- ""`,
 		`+ 1`)
-	checkPatch(t, `null`, `"abc"`,
+	checkPatch(ctx, `null`, `"abc"`,
 		`@ []`,
 		`- null`,
 		`+ "abc"`)
 }
 
 func TestStringPatchError(t *testing.T) {
-	checkPatchError(t, `""`,
+	ctx := newTestContext(t)
+	checkPatchError(ctx, `""`,
 		`@ []`,
 		`- "a"`,
 		`+ ""`)
-	checkPatchError(t, `null`,
+	checkPatchError(ctx, `null`,
 		`@ []`,
 		`+ "a"`)
 }

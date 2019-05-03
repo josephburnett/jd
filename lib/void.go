@@ -18,7 +18,7 @@ func (v voidNode) Json() string {
 	return ""
 }
 
-func (v voidNode) Equals(n JsonNode) bool {
+func (v voidNode) Equals(n JsonNode, metadata ...Metadata) bool {
 	switch n.(type) {
 	case voidNode:
 		return true

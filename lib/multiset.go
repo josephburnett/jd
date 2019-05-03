@@ -13,7 +13,7 @@ func (a jsonMultiset) Json() string {
 	return renderJson(a)
 }
 
-func (a1 jsonMultiset) Equals(n JsonNode) bool {
+func (a1 jsonMultiset) Equals(n JsonNode, metadata ...Metadata) bool {
 	a2, ok := n.(jsonMultiset)
 	if !ok {
 		return false

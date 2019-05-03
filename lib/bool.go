@@ -8,7 +8,7 @@ func (b jsonBool) Json() string {
 	return renderJson(b)
 }
 
-func (b1 jsonBool) Equals(n JsonNode) bool {
+func (b1 jsonBool) Equals(n JsonNode, metadata ...Metadata) bool {
 	b2, ok := n.(jsonBool)
 	if !ok {
 		return false

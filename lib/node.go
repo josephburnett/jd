@@ -8,7 +8,7 @@ import (
 
 type JsonNode interface {
 	Json() string
-	Equals(n JsonNode) bool
+	Equals(n JsonNode, metadata ...Metadata) bool
 	hashCode() [8]byte
 	Diff(n JsonNode, metadata ...Metadata) Diff
 	diff(n JsonNode, p Path, metadata []Metadata) Diff

@@ -4,72 +4,78 @@ import (
 	"testing"
 )
 
+// TODO: convert array tests to table tests.
 func TestArrayJson(t *testing.T) {
-	checkJson(t, `[]`, `[]`)
-	checkJson(t, ` [ ] `, `[]`)
-	checkJson(t, `[1,2,3]`, `[1,2,3]`)
-	checkJson(t, ` [1, 2, 3] `, `[1,2,3]`)
+	ctx := newTestContext(t)
+	checkJson(ctx, `[]`, `[]`)
+	checkJson(ctx, ` [ ] `, `[]`)
+	checkJson(ctx, `[1,2,3]`, `[1,2,3]`)
+	checkJson(ctx, ` [1, 2, 3] `, `[1,2,3]`)
 }
 
 func TestArrayEqual(t *testing.T) {
-	checkEqual(t, `[]`, `[]`)
-	checkEqual(t, `[1,2,3]`, `[1,2,3]`)
-	checkEqual(t, `[[]]`, `[[]]`)
-	checkEqual(t, `[{"a":1}]`, `[{"a":1}]`)
-	checkEqual(t, `[{"a":[]}]`, `[{"a":[]}]`)
+	ctx := newTestContext(t)
+	checkEqual(ctx, `[]`, `[]`)
+	checkEqual(ctx, `[1,2,3]`, `[1,2,3]`)
+	checkEqual(ctx, `[[]]`, `[[]]`)
+	checkEqual(ctx, `[{"a":1}]`, `[{"a":1}]`)
+	checkEqual(ctx, `[{"a":[]}]`, `[{"a":[]}]`)
 }
 
 func TestArrayNotEqual(t *testing.T) {
-	checkNotEqual(t, `[]`, `0`)
-	checkNotEqual(t, `[]`, `{}`)
-	checkNotEqual(t, `[]`, `[[]]`)
-	checkNotEqual(t, `[1,2,3]`, `[3,2,1]`)
+	ctx := newTestContext(t)
+	checkNotEqual(ctx, `[]`, `0`)
+	checkNotEqual(ctx, `[]`, `{}`)
+	checkNotEqual(ctx, `[]`, `[[]]`)
+	checkNotEqual(ctx, `[1,2,3]`, `[3,2,1]`)
 }
 
 func TestArrayHash(t *testing.T) {
-	checkHash(t, `[]`, `[]`, true)
-	checkHash(t, `[1]`, `[]`, false)
-	checkHash(t, `[1]`, `[1]`, true)
-	checkHash(t, `[1]`, `[2]`, false)
-	checkHash(t, `[[1]]`, `[[1]]`, true)
-	checkHash(t, `[[1]]`, `[[[1]]]`, false)
+	ctx := newTestContext(t)
+	checkHash(ctx, `[]`, `[]`, true)
+	checkHash(ctx, `[1]`, `[]`, false)
+	checkHash(ctx, `[1]`, `[1]`, true)
+	checkHash(ctx, `[1]`, `[2]`, false)
+	checkHash(ctx, `[[1]]`, `[[1]]`, true)
+	checkHash(ctx, `[[1]]`, `[[[1]]]`, false)
 }
 
 func TestArrayDiff(t *testing.T) {
-	checkDiff(t, `[]`, `[]`)
-	checkDiff(t, `[1]`, `[]`,
+	ctx := newTestContext(t)
+	checkDiff(ctx, `[]`, `[]`)
+	checkDiff(ctx, `[1]`, `[]`,
 		`@ [0]`,
 		`- 1`)
-	checkDiff(t, `[[]]`, `[[1]]`,
+	checkDiff(ctx, `[[]]`, `[[1]]`,
 		`@ [0, 0]`,
 		`+ 1`)
-	checkDiff(t, `[1]`, `[2]`,
+	checkDiff(ctx, `[1]`, `[2]`,
 		`@ [0]`,
 		`- 1`,
 		`+ 2`)
-	checkDiff(t, `[]`, `[2]`,
+	checkDiff(ctx, `[]`, `[2]`,
 		`@ [0]`,
 		`+ 2`)
-	checkDiff(t, `[[]]`, `[{}]`,
+	checkDiff(ctx, `[[]]`, `[{}]`,
 		`@ [0]`,
 		`- []`,
 		`+ {}`)
-	checkDiff(t, `[{"a":[1]}]`, `[{"a":[2]}]`,
+	checkDiff(ctx, `[{"a":[1]}]`, `[{"a":[2]}]`,
 		`@ [0,"a",0]`,
 		`- 1`,
 		`+ 2`)
-	checkDiff(t, `[1,2,3]`, `[1,2]`,
+	checkDiff(ctx, `[1,2,3]`, `[1,2]`,
 		`@ [2]`,
 		`- 3`)
-	checkDiff(t, `[1,2,3]`, `[1,4,3]`,
+	checkDiff(ctx, `[1,2,3]`, `[1,4,3]`,
 		`@ [1]`,
 		`- 2`,
 		`+ 4`)
-	checkDiff(t, `[1,2,3]`, `[1,null,3]`,
+	checkDiff(ctx, `[1,2,3]`, `[1,null,3]`,
 		`@ [1]`,
 		`- 2`,
 		`+ null`)
-	checkDiff(t, "[]", "[3,4,5]",
+	checkDiff(ctx, "[]", "[3,4,5]",
 		"@ [0]",
 		"+ 3",
 		"@ [1]",
@@ -79,40 +85,41 @@ func TestArrayDiff(t *testing.T) {
 }
 
 func TestArrayPatch(t *testing.T) {
-	checkPatch(t, `[]`, `[]`)
-	checkPatch(t, `[1]`, `[]`,
+	ctx := newTestContext(t)
+	checkPatch(ctx, `[]`, `[]`)
+	checkPatch(ctx, `[1]`, `[]`,
 		`@ [0]`,
 		`- 1`)
-	checkPatch(t, `[[]]`, `[[1]]`,
+	checkPatch(ctx, `[[]]`, `[[1]]`,
 		`@ [0, 0]`,
 		`+ 1`)
-	checkPatch(t, `[1]`, `[2]`,
+	checkPatch(ctx, `[1]`, `[2]`,
 		`@ [0]`,
 		`- 1`,
 		`+ 2`)
-	checkPatch(t, `[]`, `[2]`,
+	checkPatch(ctx, `[]`, `[2]`,
 		`@ [0]`,
 		`+ 2`)
-	checkPatch(t, `[[]]`, `[{}]`,
+	checkPatch(ctx, `[[]]`, `[{}]`,
 		`@ [0]`,
 		`- []`,
 		`+ {}`)
-	checkPatch(t, `[{"a":[1]}]`, `[{"a":[2]}]`,
+	checkPatch(ctx, `[{"a":[1]}]`, `[{"a":[2]}]`,
 		`@ [0,"a",0]`,
 		`- 1`,
 		`+ 2`)
-	checkPatch(t, `[1,2,3]`, `[1,2]`,
+	checkPatch(ctx, `[1,2,3]`, `[1,2]`,
 		`@ [2]`,
 		`- 3`)
-	checkPatch(t, `[1,2,3]`, `[1,4,3]`,
+	checkPatch(ctx, `[1,2,3]`, `[1,4,3]`,
 		`@ [1]`,
 		`- 2`,
 		`+ 4`)
-	checkPatch(t, `[1,2,3]`, `[1,null,3]`,
+	checkPatch(ctx, `[1,2,3]`, `[1,null,3]`,
 		`@ [1]`,
 		`- 2`,
 		`+ null`)
-	checkPatch(t, "[]", "[3,4,5]",
+	checkPatch(ctx, "[]", "[3,4,5]",
 		"@ [0]",
 		"+ 3",
 		"@ [1]",
@@ -122,22 +129,23 @@ func TestArrayPatch(t *testing.T) {
 }
 
 func TestArrayPatchError(t *testing.T) {
-	checkPatchError(t, `[]`,
+	ctx := newTestContext(t)
+	checkPatchError(ctx, `[]`,
 		`@ ["a"]`,
 		`+ 1`)
-	checkPatchError(t, `[]`,
+	checkPatchError(ctx, `[]`,
 		`@ [0]`,
 		`- 1`)
-	checkPatchError(t, `[]`,
+	checkPatchError(ctx, `[]`,
 		`@ [0]`,
 		`- null`)
-	checkPatchError(t, `[1,2,3]`,
+	checkPatchError(ctx, `[1,2,3]`,
 		`@ [1]`,
 		`- 2`)
-	checkPatchError(t, `[1,2,3]`,
+	checkPatchError(ctx, `[1,2,3]`,
 		`@ [0]`,
 		`- 1`)
-	checkPatchError(t, `[1,3]`,
+	checkPatchError(ctx, `[1,3]`,
 		`@ [1]`,
 		`+ 2`)
 }

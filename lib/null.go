@@ -8,7 +8,7 @@ func (n jsonNull) Json() string {
 	return renderJson(nil)
 }
 
-func (n jsonNull) Equals(node JsonNode) bool {
+func (n jsonNull) Equals(node JsonNode, metadata ...Metadata) bool {
 	switch node.(type) {
 	case jsonNull:
 		return true

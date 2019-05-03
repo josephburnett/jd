@@ -5,58 +5,65 @@ import (
 )
 
 func TestNumberJson(t *testing.T) {
-	checkJson(t, `0`, `0`)
-	checkJson(t, `0.0`, `0`)
-	checkJson(t, `0.01`, `0.01`)
+	ctx := newTestContext(t)
+	checkJson(ctx, `0`, `0`)
+	checkJson(ctx, `0.0`, `0`)
+	checkJson(ctx, `0.01`, `0.01`)
 }
 
 func TestNumberEqual(t *testing.T) {
-	checkEqual(t, `0`, `0`)
-	checkEqual(t, `0`, `0.0`)
-	checkEqual(t, `0.0001`, `0.0001`)
-	checkEqual(t, `123`, `123`)
+	ctx := newTestContext(t)
+	checkEqual(ctx, `0`, `0`)
+	checkEqual(ctx, `0`, `0.0`)
+	checkEqual(ctx, `0.0001`, `0.0001`)
+	checkEqual(ctx, `123`, `123`)
 }
 
 func TestNumberNotEqual(t *testing.T) {
-	checkNotEqual(t, `0`, `1`)
-	checkNotEqual(t, `0`, `0.0001`)
-	checkNotEqual(t, `1234`, `1235`)
+	ctx := newTestContext(t)
+	checkNotEqual(ctx, `0`, `1`)
+	checkNotEqual(ctx, `0`, `0.0001`)
+	checkNotEqual(ctx, `1234`, `1235`)
 }
 
 func TestNumberHash(t *testing.T) {
-	checkHash(t, `0`, `0`, true)
-	checkHash(t, `0`, `1`, false)
-	checkHash(t, `1.0`, `1`, true)
-	checkHash(t, `0.1`, `0.01`, false)
+	ctx := newTestContext(t)
+	checkHash(ctx, `0`, `0`, true)
+	checkHash(ctx, `0`, `1`, false)
+	checkHash(ctx, `1.0`, `1`, true)
+	checkHash(ctx, `0.1`, `0.01`, false)
 }
 
 func TestNumberDiff(t *testing.T) {
-	checkDiff(t, `0`, `0`)
-	checkDiff(t, `0`, `1`,
+	ctx := newTestContext(t)
+	checkDiff(ctx, `0`, `0`)
+	checkDiff(ctx, `0`, `1`,
 		`@ []`,
 		`- 0`,
 		`+ 1`)
-	checkDiff(t, `0`, ``,
+	checkDiff(ctx, `0`, ``,
 		`@ []`,
 		`- 0`)
 }
 
 func TestNumberPatch(t *testing.T) {
-	checkPatch(t, `0`, `0`)
-	checkPatch(t, `0`, `1`,
+	ctx := newTestContext(t)
+	checkPatch(ctx, `0`, `0`)
+	checkPatch(ctx, `0`, `1`,
 		`@ []`,
 		`- 0`,
 		`+ 1`)
-	checkPatch(t, `0`, ``,
+	checkPatch(ctx, `0`, ``,
 		`@ []`,
 		`- 0`)
 }
 
 func TestNumberPatchError(t *testing.T) {
-	checkPatchError(t, `0`,
+	ctx := newTestContext(t)
+	checkPatchError(ctx, `0`,
 		`@ []`,
 		`- 1`)
-	checkPatchError(t, ``,
+	checkPatchError(ctx, ``,
 		`@ []`,
 		`- 0`)
 }
