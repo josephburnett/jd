@@ -155,19 +155,19 @@ func TestSetNotEquals(t *testing.T) {
 func TestSetDiff(t *testing.T) {
 	cases := []struct {
 		name     string
-		metadata Metadata
+		metadata []Metadata
 		a        string
 		b        string
 		want     []string
 	}{{
 		name:     "empty sets no diff",
-		metadata: SET,
+		metadata: m(SET),
 		a:        `[]`,
 		b:        `[]`,
 		want:     s(``),
 	}, {
 		name:     "add a number",
-		metadata: SET,
+		metadata: m(SET),
 		a:        `[1]`,
 		b:        `[1,2]`,
 		want: s(
@@ -176,13 +176,13 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:     "sets with same numbers",
-		metadata: SET,
+		metadata: m(SET),
 		a:        `[1,2]`,
 		b:        `[1,2]`,
 		want:     s(``),
 	}, {
 		name:     "add a number multiple times",
-		metadata: SET,
+		metadata: m(SET),
 		a:        `[1]`,
 		b:        `[1,2,2]`,
 		want: s(
@@ -191,7 +191,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:     "remove a number",
-		metadata: SET,
+		metadata: m(SET),
 		a:        `[1,2,3]`,
 		b:        `[1,3]`,
 		want: s(
@@ -200,7 +200,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:     "replace one object with another",
-		metadata: SET,
+		metadata: m(SET),
 		a:        `[{"a":1}]`,
 		b:        `[{"a":2}]`,
 		want: s(
@@ -210,7 +210,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:     "replace one repeated object with another",
-		metadata: SET,
+		metadata: m(SET),
 		a:        `[{"a":1},{"a":1}]`,
 		b:        `[{"a":2}]`,
 		want: s(
@@ -220,7 +220,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:     "remove two strings and add one",
-		metadata: SET,
+		metadata: m(SET),
 		a:        `["foo","foo","bar"]`,
 		b:        `["baz"]`,
 		want: s(
@@ -231,7 +231,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:     "remove one string and add two repeated",
-		metadata: SET,
+		metadata: m(SET),
 		a:        `["foo"]`,
 		b:        `["bar","baz","bar"]`,
 		want: s(
@@ -242,7 +242,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:     "remove object and add array",
-		metadata: SET,
+		metadata: m(SET),
 		a:        `{}`,
 		b:        `[]`,
 		want: s(
@@ -250,15 +250,27 @@ func TestSetDiff(t *testing.T) {
 			`- {}`,
 			`+ []`,
 		),
+	}, {
+		name: "add property to object in set",
+		metadata: m(
+			SET,
+			SetkeysMetadata("id"),
+		),
+		a: `[{"id":"foo"}]`,
+		b: `[{"id":"foo","bar":"baz"}]`,
+		want: s(
+			`@ [{"id":"foo"}, "bar"]`,
+			`+ "baz"`,
+		),
 	}}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
+				withReadMetadata(c.metadata...)
 			checkDiff(ctx, c.a, c.b, c.want...)
 			ctx = newTestContext(t).
-				withApplyMetadata(c.metadata)
+				withApplyMetadata(c.metadata...)
 			checkDiff(ctx, c.a, c.b, c.want...)
 		})
 	}

@@ -1,7 +1,6 @@
 package jd
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -96,7 +95,9 @@ func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	if !reflect.DeepEqual(d, expectedDiff) {
+	want := expectedDiff.Render()
+	got := d.Render()
+	if got != want {
 		ctx.t.Errorf("%v.Diff(%v) = %v. Want %v.", nodeA, nodeB, d, expectedDiff)
 	}
 }
@@ -152,6 +153,10 @@ func checkPatchError(ctx *testContext, a string, diffLines ...string) {
 
 func s(s ...string) []string {
 	return s
+}
+
+func m(m ...Metadata) []Metadata {
+	return m
 }
 
 type testContext struct {
