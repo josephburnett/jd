@@ -314,14 +314,20 @@ func TestSetDiff(t *testing.T) {
 			`- {"id":"foo"}`,
 			`+ {"id":"bar"}`,
 		),
+	}, {
+		name:     "set metadata applies to array in object",
+		metadata: m(SET),
+		a:        `{"a":[1,2]}`,
+		b:        `{"a":[2,1]}`,
+		want:     s(``),
 	}}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			// ctx := newTestContext(t).
+			// 	withReadMetadata(c.metadata...)
+			// checkDiff(ctx, c.a, c.b, c.want...)
 			ctx := newTestContext(t).
-				withReadMetadata(c.metadata...)
-			checkDiff(ctx, c.a, c.b, c.want...)
-			ctx = newTestContext(t).
 				withApplyMetadata(c.metadata...)
 			checkDiff(ctx, c.a, c.b, c.want...)
 		})

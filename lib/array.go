@@ -34,25 +34,25 @@ func (a jsonArray) hashCode() [8]byte {
 }
 
 func (a jsonArray) Diff(n JsonNode, metadata ...Metadata) Diff {
+	return a.diff(n, Path{}, metadata)
+}
+
+func (a1 jsonArray) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	if checkMetadata(SET, metadata) {
 		// Use set semantics.
 		if n2, ok := n.(jsonArray); ok {
 			n = jsonSet(n2)
 		}
-		return jsonSet(a).diff(n, Path{}, metadata)
+		return jsonSet(a1).diff(n, path, metadata)
 	}
 	if checkMetadata(MULTISET, metadata) {
 		// Use multiset semantics.
 		if n2, ok := n.(jsonArray); ok {
 			n = jsonMultiset(n2)
 		}
-		return jsonMultiset(a).diff(n, Path{}, metadata)
+		return jsonMultiset(a1).diff(n, path, metadata)
 	}
 	// Use list semantics.
-	return a.diff(n, Path{}, metadata)
-}
-
-func (a1 jsonArray) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	a2, ok := n.(jsonArray)
 	if !ok {

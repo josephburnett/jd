@@ -80,11 +80,11 @@ func checkHash(ctx *testContext, a, b string, wantSame bool) {
 func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
 	nodeA, err := ReadJsonString(a, ctx.readMetadata...)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Fatalf(err.Error())
 	}
 	nodeB, err := ReadJsonString(b, ctx.readMetadata...)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Fatalf(err.Error())
 	}
 	diff := ""
 	for _, dl := range diffLines {
@@ -93,7 +93,7 @@ func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
 	d := nodeA.Diff(nodeB, ctx.applyMetadata...)
 	expectedDiff, err := ReadDiffString(diff, ctx.readMetadata...)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Fatalf(err.Error())
 	}
 	want := expectedDiff.Render()
 	got := d.Render()
