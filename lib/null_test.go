@@ -5,46 +5,53 @@ import (
 )
 
 func TestNullJson(t *testing.T) {
-	checkJson(t, `null`, `null`)
+	ctx := newTestContext(t)
+	checkJson(ctx, `null`, `null`)
 }
 
 func TestNullEqual(t *testing.T) {
-	checkEqual(t, `null`, `null`)
+	ctx := newTestContext(t)
+	checkEqual(ctx, `null`, `null`)
 }
 
 func TestNullNotEqual(t *testing.T) {
-	checkNotEqual(t, `null`, `0`)
-	checkNotEqual(t, `null`, `[]`)
-	checkNotEqual(t, `null`, `{}`)
+	ctx := newTestContext(t)
+	checkNotEqual(ctx, `null`, `0`)
+	checkNotEqual(ctx, `null`, `[]`)
+	checkNotEqual(ctx, `null`, `{}`)
 }
 
 func TestNullHash(t *testing.T) {
-	checkHash(t, `null`, `null`, true)
-	checkHash(t, `null`, ``, false)
+	ctx := newTestContext(t)
+	checkHash(ctx, `null`, `null`, true)
+	checkHash(ctx, `null`, ``, false)
 }
 
 func TestNullDiff(t *testing.T) {
-	checkDiff(t, `null`, `null`)
-	checkDiff(t, `null`, ``,
+	ctx := newTestContext(t)
+	checkDiff(ctx, `null`, `null`)
+	checkDiff(ctx, `null`, ``,
 		`@ []`,
 		`- null`)
-	checkDiff(t, ``, `null`,
+	checkDiff(ctx, ``, `null`,
 		`@ []`,
 		`+ null`)
 }
 
 func TestNullPatch(t *testing.T) {
-	checkPatch(t, `null`, `null`)
-	checkPatch(t, `null`, ``,
+	ctx := newTestContext(t)
+	checkPatch(ctx, `null`, `null`)
+	checkPatch(ctx, `null`, ``,
 		`@ []`,
 		`- null`)
-	checkPatch(t, ``, `null`,
+	checkPatch(ctx, ``, `null`,
 		`@ []`,
 		`+ null`)
 }
 
 func TestNullPatchError(t *testing.T) {
-	checkPatchError(t, `null`,
+	ctx := newTestContext(t)
+	checkPatchError(ctx, `null`,
 		`@ []`,
 		`- 0`)
 }

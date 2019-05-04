@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	jd "github.com/josephburnett/jd/lib"
 )
@@ -15,9 +16,14 @@ var patch = flag.Bool("p", false, "Patch mode")
 var output = flag.String("o", "", "Output file")
 var set = flag.Bool("set", false, "Arrays as sets")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
+var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
 
 func main() {
 	flag.Parse()
+	metadata, err := parseMetadata()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 	var a, b string
 	switch len(flag.Args()) {
 	case 1:
@@ -30,10 +36,33 @@ func main() {
 		printUsageAndExit()
 	}
 	if *patch {
-		patchJson(a, b)
+		patchJson(a, b, metadata)
 	} else {
-		diffJson(a, b)
+		diffJson(a, b, metadata)
 	}
+}
+
+func parseMetadata() ([]jd.Metadata, error) {
+	metadata := make([]jd.Metadata, 0)
+	if *set {
+		metadata = append(metadata, jd.SET)
+	}
+	if *mset {
+		metadata = append(metadata, jd.MULTISET)
+	}
+	if *setkeys != "" {
+		keys := make([]string, 0)
+		ks := strings.Split(*setkeys, ",")
+		for _, k := range ks {
+			trimmed := strings.TrimSpace(k)
+			if trimmed == "" {
+				return nil, fmt.Errorf("Invalid set key: %v", k)
+			}
+			keys = append(keys, trimmed)
+		}
+		metadata = append(metadata, jd.SetkeysMetadata(keys...))
+	}
+	return metadata, nil
 }
 
 func printUsageAndExit() {
@@ -46,7 +75,7 @@ func printUsageAndExit() {
 		`When FILE2 is omitted the second input is read from STDIN.`,
 		`When patching (-p) FILE1 is a diff.`,
 		``,
-		`Options:`,
+		`Metadata:`,
 		`  -p        Apply patch FILE1 to FILE2 or STDIN.`,
 		`  -o=FILE3  Write to FILE3 instead of STDOUT.`,
 		`  -set      Treat arrays as sets.`,
@@ -64,16 +93,16 @@ func printUsageAndExit() {
 	os.Exit(1)
 }
 
-func diffJson(a, b string) {
-	aNode, err := readJsonString(a)
+func diffJson(a, b string, metadata []jd.Metadata) {
+	aNode, err := jd.ReadJsonString(a, metadata...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	bNode, err := readJsonString(b)
+	bNode, err := jd.ReadJsonString(b, metadata...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	diff := aNode.Diff(bNode)
+	diff := aNode.Diff(bNode, metadata...)
 	if *output == "" {
 		fmt.Print(diff.Render())
 	} else {
@@ -81,16 +110,16 @@ func diffJson(a, b string) {
 	}
 }
 
-func patchJson(p, a string) {
-	diff, err := readDiffString(p)
+func patchJson(p, a string, metadata []jd.Metadata) {
+	diff, err := jd.ReadDiffString(p, metadata...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	aNode, err := readJsonString(a)
+	aNode, err := jd.ReadJsonString(a, metadata...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	bNode, err := aNode.Patch(diff)
+	bNode, err := aNode.Patch(diff, metadata...)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -99,26 +128,6 @@ func patchJson(p, a string) {
 	} else {
 		ioutil.WriteFile(*output, []byte(bNode.Json()), 0644)
 	}
-}
-
-func readJsonString(s string) (jd.JsonNode, error) {
-	if *set {
-		return jd.ReadJsonString(s, jd.SET)
-	}
-	if *mset {
-		return jd.ReadJsonString(s, jd.MULTISET)
-	}
-	return jd.ReadJsonString(s)
-}
-
-func readDiffString(s string) (jd.Diff, error) {
-	if *set {
-		return jd.ReadDiffString(s, jd.SET)
-	}
-	if *mset {
-		return jd.ReadDiffString(s, jd.MULTISET)
-	}
-	return jd.ReadDiffString(s)
 }
 
 func readFile(filename string) string {

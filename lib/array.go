@@ -13,7 +13,7 @@ func (a jsonArray) Json() string {
 	return renderJson(a)
 }
 
-func (a1 jsonArray) Equals(n JsonNode) bool {
+func (a1 jsonArray) Equals(n JsonNode, metadata ...Metadata) bool {
 	a2, ok := n.(jsonArray)
 	if !ok {
 		return false
@@ -33,11 +33,26 @@ func (a jsonArray) hashCode() [8]byte {
 	return hash(b)
 }
 
-func (a jsonArray) Diff(n JsonNode) Diff {
-	return a.diff(n, Path{})
+func (a jsonArray) Diff(n JsonNode, metadata ...Metadata) Diff {
+	return a.diff(n, Path{}, metadata)
 }
 
-func (a1 jsonArray) diff(n JsonNode, path Path) Diff {
+func (a1 jsonArray) diff(n JsonNode, path Path, metadata []Metadata) Diff {
+	if checkMetadata(SET, metadata) {
+		// Use set semantics.
+		if n2, ok := n.(jsonArray); ok {
+			n = jsonSet(n2)
+		}
+		return jsonSet(a1).diff(n, path, metadata)
+	}
+	if checkMetadata(MULTISET, metadata) {
+		// Use multiset semantics.
+		if n2, ok := n.(jsonArray); ok {
+			n = jsonMultiset(n2)
+		}
+		return jsonMultiset(a1).diff(n, path, metadata)
+	}
+	// Use list semantics.
 	d := make(Diff, 0)
 	a2, ok := n.(jsonArray)
 	if !ok {
@@ -58,7 +73,7 @@ func (a1 jsonArray) diff(n JsonNode, path Path) Diff {
 		a2Has := i < len(a2)
 		subPath := append(path.clone(), float64(i))
 		if a1Has && a2Has {
-			subDiff := a1[i].diff(a2[i], subPath)
+			subDiff := a1[i].diff(a2[i], subPath, metadata)
 			d = append(d, subDiff...)
 		}
 		if a1Has && !a2Has {
@@ -81,11 +96,11 @@ func (a1 jsonArray) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (a jsonArray) Patch(d Diff) (JsonNode, error) {
-	return patchAll(a, d)
+func (a jsonArray) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
+	return patchAll(a, d, metadata)
 }
 
-func (a jsonArray) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (a jsonArray) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	if len(oldValues) > 1 || len(newValues) > 1 {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}
@@ -110,7 +125,7 @@ func (a jsonArray) patch(pathBehind, pathAhead Path, oldValues, newValues []Json
 	if len(a) > i {
 		nextNode = a[i]
 	}
-	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValues, newValues)
+	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValues, newValues, metadata)
 	if err != nil {
 		return nil, err
 	}

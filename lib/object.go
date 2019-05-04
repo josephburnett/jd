@@ -1,29 +1,42 @@
 package jd
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 )
 
-type jsonObject map[string]JsonNode
-
-var _ JsonNode = jsonObject(nil)
-
-func (o jsonObject) Json() string {
-	return renderJson(o)
+type jsonObject struct {
+	properties map[string]JsonNode
+	idKeys     map[string]bool
 }
 
-func (o1 jsonObject) Equals(n JsonNode) bool {
+var _ JsonNode = jsonObject{}
+
+func (o jsonObject) Json() string {
+	j := make(map[string]interface{})
+	for k, v := range o.properties {
+		j[k] = v
+	}
+	s, _ := json.Marshal(j)
+	return string(s)
+}
+
+func (o jsonObject) MarshalJSON() ([]byte, error) {
+	return []byte(o.Json()), nil
+}
+
+func (o1 jsonObject) Equals(n JsonNode, metadata ...Metadata) bool {
 	o2, ok := n.(jsonObject)
 	if !ok {
 		return false
 	}
-	if len(o1) != len(o2) {
+	if len(o1.properties) != len(o2.properties) {
 		return false
 	}
 
-	for key1, val1 := range o1 {
-		val2, ok := o2[key1]
+	for key1, val1 := range o1.properties {
+		val2, ok := o2.properties[key1]
 		if !ok {
 			return false
 		}
@@ -36,26 +49,72 @@ func (o1 jsonObject) Equals(n JsonNode) bool {
 }
 
 func (o jsonObject) hashCode() [8]byte {
-	keys := make([]string, 0, len(o))
-	for k := range o {
+	keys := make([]string, 0, len(o.properties))
+	for k := range o.properties {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	a := make([]byte, 0, len(o)*16)
+	a := make([]byte, 0, len(o.properties)*16)
 	for _, k := range keys {
 		keyHash := hash([]byte(k))
 		a = append(a, keyHash[:]...)
-		valueHash := o[k].hashCode()
+		valueHash := o.properties[k].hashCode()
 		a = append(a, valueHash[:]...)
 	}
 	return hash(a)
 }
 
-func (o jsonObject) Diff(n JsonNode) Diff {
-	return o.diff(n, Path{})
+// ident is the identity of the json object based on either the hash of a
+// given set of keys or the full object if no keys are present.
+func (o jsonObject) ident(metadata []Metadata) [8]byte {
+	keys := getSetkeysMetadata(metadata).mergeKeys(o.idKeys)
+	if len(keys) == 0 {
+		return o.hashCode()
+	}
+	hashes := make(hashCodes, 0)
+	for key := range keys {
+		v, ok := o.properties[key]
+		if ok {
+			hashes = append(hashes, v.hashCode())
+		}
+	}
+	if len(hashes) == 0 {
+		return o.hashCode()
+	}
+	return hashes.combine()
 }
 
-func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
+func (o jsonObject) pathIdent(metadata []Metadata) PathElement {
+	keys := getSetkeysMetadata(metadata).mergeKeys(o.idKeys)
+	id := make(map[string]interface{})
+	for key := range keys {
+		if value, ok := o.properties[key]; ok {
+			id[key] = value
+		}
+	}
+	return id
+}
+
+func (k1 *setkeysMetadata) mergeKeys(k2 map[string]bool) map[string]bool {
+	if k1 == nil {
+		// Nothing to merge
+		return k2
+	}
+	k3 := make(map[string]bool)
+	for k := range k1.keys {
+		k3[k] = true
+	}
+	for k := range k2 {
+		k3[k] = true
+	}
+	return k3
+}
+
+func (o jsonObject) Diff(n JsonNode, metadata ...Metadata) Diff {
+	return o.diff(n, Path{}, metadata)
+}
+
+func (o1 jsonObject) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	o2, ok := n.(jsonObject)
 	if !ok {
@@ -67,21 +126,21 @@ func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
 		}
 		return append(d, e)
 	}
-	o1Keys := make([]string, 0, len(o1))
-	for k := range o1 {
+	o1Keys := make([]string, 0, len(o1.properties))
+	for k := range o1.properties {
 		o1Keys = append(o1Keys, k)
 	}
 	sort.Strings(o1Keys)
-	o2Keys := make([]string, 0, len(o2))
-	for k := range o2 {
+	o2Keys := make([]string, 0, len(o2.properties))
+	for k := range o2.properties {
 		o2Keys = append(o2Keys, k)
 	}
 	sort.Strings(o2Keys)
 	for _, k1 := range o1Keys {
-		v1 := o1[k1]
-		if v2, ok := o2[k1]; ok {
+		v1 := o1.properties[k1]
+		if v2, ok := o2.properties[k1]; ok {
 			// Both keys are present
-			subDiff := v1.diff(v2, append(path.clone(), k1))
+			subDiff := v1.diff(v2, append(path.clone(), k1), metadata)
 			d = append(d, subDiff...)
 		} else {
 			// O2 missing key
@@ -94,8 +153,8 @@ func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
 		}
 	}
 	for _, k2 := range o2Keys {
-		v2 := o2[k2]
-		if _, ok := o1[k2]; !ok {
+		v2 := o2.properties[k2]
+		if _, ok := o1.properties[k2]; !ok {
 			// O1 missing key
 			e := DiffElement{
 				Path:      append(path.clone(), k2),
@@ -108,11 +167,11 @@ func (o1 jsonObject) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (o jsonObject) Patch(d Diff) (JsonNode, error) {
-	return patchAll(o, d)
+func (o jsonObject) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
+	return patchAll(o, d, metadata)
 }
 
-func (o jsonObject) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (o jsonObject) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	if (len(pathAhead) == 0) && (len(oldValues) > 1 || len(newValues) > 1) {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}
@@ -132,20 +191,20 @@ func (o jsonObject) patch(pathBehind, pathAhead Path, oldValues, newValues []Jso
 			"Found %v at %v. Expected JSON object.",
 			o.Json(), pathBehind)
 	}
-	nextNode, ok := o[pe]
+	nextNode, ok := o.properties[pe]
 	if !ok {
 		nextNode = voidNode{}
 	}
-	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValues, newValues)
+	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValues, newValues, metadata)
 	if err != nil {
 		return nil, err
 	}
 	if isVoid(patchedNode) {
 		// Delete a pair
-		delete(o, pe)
+		delete(o.properties, pe)
 	} else {
 		// Add or replace a pair
-		o[pe] = patchedNode
+		o.properties[pe] = patchedNode
 	}
 	return o, nil
 }

@@ -4,10 +4,10 @@ import (
 	"fmt"
 )
 
-func patchAll(n JsonNode, d Diff) (JsonNode, error) {
+func patchAll(n JsonNode, d Diff, metadata []Metadata) (JsonNode, error) {
 	var err error
 	for _, de := range d {
-		n, err = n.patch(Path{}, de.Path, de.OldValues, de.NewValues)
+		n, err = n.patch(Path{}, de.Path, de.OldValues, de.NewValues, metadata)
 		if err != nil {
 			return nil, err
 		}

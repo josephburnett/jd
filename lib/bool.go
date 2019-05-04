@@ -8,7 +8,7 @@ func (b jsonBool) Json() string {
 	return renderJson(b)
 }
 
-func (b1 jsonBool) Equals(n JsonNode) bool {
+func (b1 jsonBool) Equals(n JsonNode, metadata ...Metadata) bool {
 	b2, ok := n.(jsonBool)
 	if !ok {
 		return false
@@ -24,11 +24,11 @@ func (b jsonBool) hashCode() [8]byte {
 	}
 }
 
-func (b jsonBool) Diff(n JsonNode) Diff {
-	return b.diff(n, Path{})
+func (b jsonBool) Diff(n JsonNode, metadata ...Metadata) Diff {
+	return b.diff(n, Path{}, metadata)
 }
 
-func (b jsonBool) diff(n JsonNode, path Path) Diff {
+func (b jsonBool) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	if b.Equals(n) {
 		return d
@@ -41,11 +41,11 @@ func (b jsonBool) diff(n JsonNode, path Path) Diff {
 	return append(d, e)
 }
 
-func (b jsonBool) Patch(d Diff) (JsonNode, error) {
-	return patchAll(b, d)
+func (b jsonBool) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
+	return patchAll(b, d, metadata)
 }
 
-func (b jsonBool) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (b jsonBool) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(b, pathAhead[0])
 	}

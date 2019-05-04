@@ -8,15 +8,37 @@ import (
 	"strings"
 )
 
-type option string
+type Metadata interface {
+	is_metadata()
+}
 
-const (
-	MULTISET option = "multiset"
-	SET      option = "set"
+type multisetMetadata struct{}
+type setMetadata struct{}
+type setkeysMetadata struct {
+	keys map[string]bool
+}
+
+func (multisetMetadata) is_metadata() {}
+func (setMetadata) is_metadata()      {}
+func (setkeysMetadata) is_metadata()  {}
+
+var (
+	MULTISET Metadata = multisetMetadata{}
+	SET      Metadata = setMetadata{}
 )
 
-func checkOption(want option, options ...option) bool {
-	for _, o := range options {
+func SetkeysMetadata(keys ...string) Metadata {
+	m := setkeysMetadata{
+		keys: make(map[string]bool),
+	}
+	for _, key := range keys {
+		m.keys[key] = true
+	}
+	return m
+}
+
+func checkMetadata(want Metadata, metadata []Metadata) bool {
+	for _, o := range metadata {
 		if o == want {
 			return true
 		}
@@ -24,19 +46,28 @@ func checkOption(want option, options ...option) bool {
 	return false
 }
 
-func ReadJsonFile(filename string, options ...option) (JsonNode, error) {
+func getSetkeysMetadata(metadata []Metadata) *setkeysMetadata {
+	for _, o := range metadata {
+		if s, ok := o.(setkeysMetadata); ok {
+			return &s
+		}
+	}
+	return nil
+}
+
+func ReadJsonFile(filename string, metadata ...Metadata) (JsonNode, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-	return unmarshal(bytes, options...)
+	return unmarshal(bytes, metadata...)
 }
 
-func ReadJsonString(s string, options ...option) (JsonNode, error) {
-	return unmarshal([]byte(s), options...)
+func ReadJsonString(s string, metadata ...Metadata) (JsonNode, error) {
+	return unmarshal([]byte(s), metadata...)
 }
 
-func unmarshal(bytes []byte, options ...option) (JsonNode, error) {
+func unmarshal(bytes []byte, metadata ...Metadata) (JsonNode, error) {
 	if strings.TrimSpace(string(bytes)) == "" {
 		return voidNode{}, nil
 	}
@@ -45,26 +76,26 @@ func unmarshal(bytes []byte, options ...option) (JsonNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	n, err := NewJsonNode(v, options...)
+	n, err := NewJsonNode(v, metadata...)
 	if err != nil {
 		return nil, err
 	}
 	return n, nil
 }
 
-func ReadDiffFile(filename string, options ...option) (Diff, error) {
+func ReadDiffFile(filename string, metadata ...Metadata) (Diff, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-	return readDiff(string(bytes), options...)
+	return readDiff(string(bytes), metadata...)
 }
 
-func ReadDiffString(s string, options ...option) (Diff, error) {
-	return readDiff(s, options...)
+func ReadDiffString(s string, metadata ...Metadata) (Diff, error) {
+	return readDiff(s, metadata...)
 }
 
-func readDiff(s string, options ...option) (Diff, error) {
+func readDiff(s string, metadata ...Metadata) (Diff, error) {
 	diff := Diff{}
 	diffLines := strings.Split(s, "\n")
 	const (
@@ -122,14 +153,14 @@ func readDiff(s string, options ...option) (Diff, error) {
 			}
 			state = AT
 		case "-":
-			v, err := ReadJsonString(dl[1:], options...)
+			v, err := ReadJsonString(dl[1:], metadata...)
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}
 			de.OldValues = append(de.OldValues, v)
 			state = OLD
 		case "+":
-			v, err := ReadJsonString(dl[1:], options...)
+			v, err := ReadJsonString(dl[1:], metadata...)
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}

@@ -13,7 +13,7 @@ func (a jsonMultiset) Json() string {
 	return renderJson(a)
 }
 
-func (a1 jsonMultiset) Equals(n JsonNode) bool {
+func (a1 jsonMultiset) Equals(n JsonNode, metadata ...Metadata) bool {
 	a2, ok := n.(jsonMultiset)
 	if !ok {
 		return false
@@ -41,11 +41,11 @@ func (a jsonMultiset) hashCode() [8]byte {
 	return hash(b)
 }
 
-func (a jsonMultiset) Diff(n JsonNode) Diff {
-	return a.diff(n, Path{})
+func (a jsonMultiset) Diff(n JsonNode, metadata ...Metadata) Diff {
+	return a.diff(n, Path{}, metadata)
 }
 
-func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
+func (a1 jsonMultiset) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	a2, ok := n.(jsonMultiset)
 	if !ok {
@@ -118,11 +118,11 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path) Diff {
 	return d
 }
 
-func (a jsonMultiset) Patch(d Diff) (JsonNode, error) {
-	return patchAll(a, d)
+func (a jsonMultiset) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
+	return patchAll(a, d, metadata)
 }
 
-func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	// Base case
 	if len(pathAhead) == 0 {
 		if len(oldValues) > 1 || len(newValues) > 1 {

@@ -5,46 +5,52 @@ import (
 )
 
 func TestObjectJson(t *testing.T) {
-	checkJson(t, `{"a":1}`, `{"a":1}`)
-	checkJson(t, ` { "a" : 1 } `, `{"a":1}`)
-	checkJson(t, `{}`, `{}`)
+	ctx := newTestContext(t)
+	checkJson(ctx, `{"a":1}`, `{"a":1}`)
+	checkJson(ctx, ` { "a" : 1 } `, `{"a":1}`)
+	checkJson(ctx, `{}`, `{}`)
 }
 
 func TestObjectEqual(t *testing.T) {
-	checkEqual(t, `{"a":1}`, `{"a":1}`)
-	checkEqual(t, `{"a":1}`, `{"a":1.0}`)
-	checkEqual(t, `{"a":[1,2]}`, `{"a":[1,2]}`)
-	checkEqual(t, `{"a":"b"}`, `{"a":"b"}`)
+	ctx := newTestContext(t)
+	checkEqual(ctx, `{"a":1}`, `{"a":1}`)
+	checkEqual(ctx, `{"a":1}`, `{"a":1.0}`)
+	checkEqual(ctx, `{"a":[1,2]}`, `{"a":[1,2]}`)
+	checkEqual(ctx, `{"a":"b"}`, `{"a":"b"}`)
 }
 
 func TestObjectNotEqual(t *testing.T) {
-	checkNotEqual(t, `{"a":1}`, `{"b":1}`)
-	checkNotEqual(t, `{"a":[1,2]}`, `{"a":[2,1]}`)
-	checkNotEqual(t, `{"a":"b"}`, `{"a":"c"}`)
+	ctx := newTestContext(t)
+	checkNotEqual(ctx, `{"a":1}`, `{"b":1}`)
+	checkNotEqual(ctx, `{"a":[1,2]}`, `{"a":[2,1]}`)
+	checkNotEqual(ctx, `{"a":"b"}`, `{"a":"c"}`)
 }
 
+// TODO: add unit test for object identity with setkeys metadata.
 func TestObjectHash(t *testing.T) {
-	checkHash(t, `{}`, `{}`, true)
-	checkHash(t, `{"a":1}`, `{"a":1}`, true)
-	checkHash(t, `{"a":1}`, `{"a":2}`, false)
-	checkHash(t, `{"a":1}`, `{"b":1}`, false)
-	checkHash(t, `{"a":1,"b":2}`, `{"b":2,"a":1}`, true)
+	ctx := newTestContext(t)
+	checkHash(ctx, `{}`, `{}`, true)
+	checkHash(ctx, `{"a":1}`, `{"a":1}`, true)
+	checkHash(ctx, `{"a":1}`, `{"a":2}`, false)
+	checkHash(ctx, `{"a":1}`, `{"b":1}`, false)
+	checkHash(ctx, `{"a":1,"b":2}`, `{"b":2,"a":1}`, true)
 }
 
 func TestObjectDiff(t *testing.T) {
-	checkDiff(t, `{}`, `{}`)
-	checkDiff(t, `{"a":1}`, `{"a":1}`)
-	checkDiff(t, `{"a":1}`, `{"a":2}`,
+	ctx := newTestContext(t)
+	checkDiff(ctx, `{}`, `{}`)
+	checkDiff(ctx, `{"a":1}`, `{"a":1}`)
+	checkDiff(ctx, `{"a":1}`, `{"a":2}`,
 		`@ ["a"]`,
 		`- 1`,
 		`+ 2`)
-	checkDiff(t, `{"":1}`, `{"":1}`)
-	checkDiff(t, `{"":1}`, `{"a":2}`,
+	checkDiff(ctx, `{"":1}`, `{"":1}`)
+	checkDiff(ctx, `{"":1}`, `{"a":2}`,
 		`@ [""]`,
 		`- 1`,
 		`@ ["a"]`,
 		`+ 2`)
-	checkDiff(t, `{"a":{"b":{}}}`, `{"a":{"b":{"c":1},"d":2}}`,
+	checkDiff(ctx, `{"a":{"b":{}}}`, `{"a":{"b":{"c":1},"d":2}}`,
 		`@ ["a","b","c"]`,
 		`+ 1`,
 		`@ ["a","d"]`,
@@ -52,19 +58,20 @@ func TestObjectDiff(t *testing.T) {
 }
 
 func testObjectPatch(t *testing.T) {
-	checkPatch(t, `{}`, `{}`)
-	checkPatch(t, `{"a":1}`, `{"a":1}`)
-	checkPatch(t, `{"a":1}`, `{"a":2}`,
+	ctx := newTestContext(t)
+	checkPatch(ctx, `{}`, `{}`)
+	checkPatch(ctx, `{"a":1}`, `{"a":1}`)
+	checkPatch(ctx, `{"a":1}`, `{"a":2}`,
 		`@ ["a"]`,
 		`- 1`,
 		`+ 2`)
-	checkPatch(t, `{"":1}`, `{"":1}`)
-	checkPatch(t, `{"":1}`, `{"a":2}`,
+	checkPatch(ctx, `{"":1}`, `{"":1}`)
+	checkPatch(ctx, `{"":1}`, `{"a":2}`,
 		`@ [""]`,
 		`- 1`,
 		`@ ["a"]`,
 		`+ 2`)
-	checkPatch(t, `{"a":{"b":{}}}`, `{"a":{"b":{"c":1},"d":2}}`,
+	checkPatch(ctx, `{"a":{"b":{}}}`, `{"a":{"b":{"c":1},"d":2}}`,
 		`@ ["a","b","c"]`,
 		`+ 1`,
 		`@ ["a","d"]`,
@@ -72,13 +79,14 @@ func testObjectPatch(t *testing.T) {
 }
 
 func testObjectPatchError(t *testing.T) {
-	checkPatchError(t, `{}`,
+	ctx := newTestContext(t)
+	checkPatchError(ctx, `{}`,
 		`@ ["a"]`,
 		`- 1`)
-	checkPatchError(t, `{"a":1}`,
+	checkPatchError(ctx, `{"a":1}`,
 		`@ ["a"]`,
 		`+ 2`)
-	checkPatchError(t, `{"a":1}`,
+	checkPatchError(ctx, `{"a":1}`,
 		`@ ["a"]`,
 		`+ 1`)
 }

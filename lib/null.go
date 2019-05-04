@@ -8,7 +8,7 @@ func (n jsonNull) Json() string {
 	return renderJson(nil)
 }
 
-func (n jsonNull) Equals(node JsonNode) bool {
+func (n jsonNull) Equals(node JsonNode, metadata ...Metadata) bool {
 	switch node.(type) {
 	case jsonNull:
 		return true
@@ -21,11 +21,11 @@ func (n jsonNull) hashCode() [8]byte {
 	return hash([]byte{0xFE, 0x73, 0xAB, 0xCC, 0xE6, 0x32, 0xE0, 0x88}) // random bytes
 }
 
-func (n jsonNull) Diff(node JsonNode) Diff {
-	return n.diff(node, Path{})
+func (n jsonNull) Diff(node JsonNode, metadata ...Metadata) Diff {
+	return n.diff(node, Path{}, metadata)
 }
 
-func (n jsonNull) diff(node JsonNode, path Path) Diff {
+func (n jsonNull) diff(node JsonNode, path Path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	if n.Equals(node) {
 		return d
@@ -38,11 +38,11 @@ func (n jsonNull) diff(node JsonNode, path Path) Diff {
 	return append(d, e)
 }
 
-func (n jsonNull) Patch(d Diff) (JsonNode, error) {
-	return patchAll(n, d)
+func (n jsonNull) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
+	return patchAll(n, d, metadata)
 }
 
-func (n jsonNull) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (n jsonNull) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(n, pathAhead[0])
 	}
