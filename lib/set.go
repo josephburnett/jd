@@ -9,10 +9,10 @@ type jsonSet jsonArray
 
 var _ JsonNode = jsonSet(nil)
 
-func (s jsonSet) Json() string {
+func (s jsonSet) Json(metadata ...Metadata) string {
 	sMap := make(map[[8]byte]JsonNode)
 	for _, n := range s {
-		hc := n.hashCode()
+		hc := n.hashCode(metadata)
 		sMap[hc] = n
 	}
 	hashes := make(hashCodes, 0, len(sMap))
@@ -32,18 +32,18 @@ func (s1 jsonSet) Equals(n JsonNode, metadata ...Metadata) bool {
 	if !ok {
 		return false
 	}
-	// TODO: use metadata to determine equality.
-	if s1.hashCode() == s2.hashCode() {
+	if s1.hashCode(metadata) == s2.hashCode(metadata) {
 		return true
 	} else {
 		return false
 	}
 }
 
-func (s jsonSet) hashCode() [8]byte {
+func (s jsonSet) hashCode(metadata []Metadata) [8]byte {
 	sMap := make(map[[8]byte]bool)
 	for _, v := range s {
-		hc := v.hashCode()
+		v = dispatch(v, metadata)
+		hc := v.hashCode(metadata)
 		sMap[hc] = true
 	}
 	hashes := make(hashCodes, 0, len(sMap))
@@ -77,7 +77,7 @@ func (s1 jsonSet) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 			hc = o.ident(metadata)
 		} else {
 			// Everything else by full content.
-			hc = v.hashCode()
+			hc = v.hashCode(metadata)
 		}
 		s1Map[hc] = v
 	}
@@ -89,7 +89,7 @@ func (s1 jsonSet) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 			hc = o.ident(metadata)
 		} else {
 			// Everything else by full content.
-			hc = v.hashCode()
+			hc = v.hashCode(metadata)
 		}
 		s2Map[hc] = v
 	}
@@ -170,20 +170,20 @@ func (s jsonSet) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNo
 	}
 	aMap := make(map[[8]byte]JsonNode)
 	for _, v := range s {
-		hc := v.hashCode()
+		hc := v.hashCode(metadata)
 		aMap[hc] = v
 	}
 	for _, v := range oldValues {
-		hc := v.hashCode()
+		hc := v.hashCode(metadata)
 		if _, ok := aMap[hc]; !ok {
 			return nil, fmt.Errorf(
 				"Invalid diff. Expected %v at %v bug found nothing.",
-				v.Json(), pathBehind)
+				v.Json(metadata...), pathBehind)
 		}
 		delete(aMap, hc)
 	}
 	for _, v := range newValues {
-		hc := v.hashCode()
+		hc := v.hashCode(metadata)
 		aMap[hc] = v
 	}
 	hashes := make(hashCodes, 0, len(aMap))

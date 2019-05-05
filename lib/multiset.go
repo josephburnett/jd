@@ -9,7 +9,7 @@ type jsonMultiset jsonArray
 
 var _ JsonNode = jsonMultiset(nil)
 
-func (a jsonMultiset) Json() string {
+func (a jsonMultiset) Json(metadata ...Metadata) string {
 	return renderJson(a)
 }
 
@@ -21,17 +21,17 @@ func (a1 jsonMultiset) Equals(n JsonNode, metadata ...Metadata) bool {
 	if len(a1) != len(a2) {
 		return false
 	}
-	if a1.hashCode() == a2.hashCode() {
+	if a1.hashCode(metadata) == a2.hashCode(metadata) {
 		return true
 	} else {
 		return false
 	}
 }
 
-func (a jsonMultiset) hashCode() [8]byte {
+func (a jsonMultiset) hashCode(metadata []Metadata) [8]byte {
 	h := make(hashCodes, 0, len(a))
 	for _, v := range a {
-		h = append(h, v.hashCode())
+		h = append(h, v.hashCode(metadata))
 	}
 	sort.Sort(h)
 	b := make([]byte, 0, len(a)*8)
@@ -60,14 +60,14 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	a1Counts := make(map[[8]byte]int)
 	a1Map := make(map[[8]byte]JsonNode)
 	for _, v := range a1 {
-		hc := v.hashCode()
+		hc := v.hashCode(metadata)
 		a1Counts[hc]++
 		a1Map[hc] = v
 	}
 	a2Counts := make(map[[8]byte]int)
 	a2Map := make(map[[8]byte]JsonNode)
 	for _, v := range a2 {
-		hc := v.hashCode()
+		hc := v.hashCode(metadata)
 		a2Counts[hc]++
 		a2Map[hc] = v
 	}
@@ -150,12 +150,12 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []J
 	aCounts := make(map[[8]byte]int)
 	aMap := make(map[[8]byte]JsonNode)
 	for _, v := range a {
-		hc := v.hashCode()
+		hc := v.hashCode(metadata)
 		aCounts[hc]++
 		aMap[hc] = v
 	}
 	for _, v := range oldValues {
-		hc := v.hashCode()
+		hc := v.hashCode(metadata)
 		aCounts[hc]--
 		aMap[hc] = v
 	}
@@ -163,11 +163,11 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []J
 		if count < 0 {
 			return nil, fmt.Errorf(
 				"Invalid diff. Expected %v at %v but found nothing.",
-				aMap[hc].Json(), pathBehind)
+				aMap[hc].Json(metadata...), pathBehind)
 		}
 	}
 	for _, v := range newValues {
-		hc := v.hashCode()
+		hc := v.hashCode(metadata)
 		aCounts[hc]++
 		aMap[hc] = v
 	}

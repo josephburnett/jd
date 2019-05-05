@@ -4,7 +4,7 @@ type jsonNull struct{}
 
 var _ JsonNode = jsonNull{}
 
-func (n jsonNull) Json() string {
+func (n jsonNull) Json(metadata ...Metadata) string {
 	return renderJson(nil)
 }
 
@@ -17,7 +17,7 @@ func (n jsonNull) Equals(node JsonNode, metadata ...Metadata) bool {
 	}
 }
 
-func (n jsonNull) hashCode() [8]byte {
+func (n jsonNull) hashCode(metadata []Metadata) [8]byte {
 	return hash([]byte{0xFE, 0x73, 0xAB, 0xCC, 0xE6, 0x32, 0xE0, 0x88}) // random bytes
 }
 

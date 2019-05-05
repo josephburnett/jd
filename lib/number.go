@@ -9,7 +9,7 @@ type jsonNumber float64
 
 var _ JsonNode = jsonNumber(0)
 
-func (n jsonNumber) Json() string {
+func (n jsonNumber) Json(metadata ...Metadata) string {
 	return renderJson(n)
 }
 
@@ -24,7 +24,7 @@ func (n1 jsonNumber) Equals(node JsonNode, metadata ...Metadata) bool {
 	return true
 }
 
-func (n jsonNumber) hashCode() [8]byte {
+func (n jsonNumber) hashCode(metadata []Metadata) [8]byte {
 	a := make([]byte, 0, 8)
 	b := bytes.NewBuffer(a)
 	binary.Write(b, binary.LittleEndian, n)

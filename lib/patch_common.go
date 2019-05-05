@@ -30,6 +30,7 @@ func patchErrExpectColl(n JsonNode, pe interface{}) (JsonNode, error) {
 	case string:
 		return nil, fmt.Errorf(
 			"Found %v at %v. Expected JSON object.",
+			// TODO: plumb through metadata.
 			n.Json(), pe)
 	case float64:
 		return nil, fmt.Errorf(

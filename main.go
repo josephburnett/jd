@@ -124,9 +124,9 @@ func patchJson(p, a string, metadata []jd.Metadata) {
 		log.Fatalf(err.Error())
 	}
 	if *output == "" {
-		fmt.Print(bNode.Json())
+		fmt.Print(bNode.Json(metadata...))
 	} else {
-		ioutil.WriteFile(*output, []byte(bNode.Json()), 0644)
+		ioutil.WriteFile(*output, []byte(bNode.Json(metadata...)), 0644)
 	}
 }
 

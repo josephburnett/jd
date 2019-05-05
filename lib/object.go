@@ -13,7 +13,7 @@ type jsonObject struct {
 
 var _ JsonNode = jsonObject{}
 
-func (o jsonObject) Json() string {
+func (o jsonObject) Json(metadata ...Metadata) string {
 	j := make(map[string]interface{})
 	for k, v := range o.properties {
 		j[k] = v
@@ -48,7 +48,7 @@ func (o1 jsonObject) Equals(n JsonNode, metadata ...Metadata) bool {
 	return true
 }
 
-func (o jsonObject) hashCode() [8]byte {
+func (o jsonObject) hashCode(metadata []Metadata) [8]byte {
 	keys := make([]string, 0, len(o.properties))
 	for k := range o.properties {
 		keys = append(keys, k)
@@ -58,7 +58,7 @@ func (o jsonObject) hashCode() [8]byte {
 	for _, k := range keys {
 		keyHash := hash([]byte(k))
 		a = append(a, keyHash[:]...)
-		valueHash := o.properties[k].hashCode()
+		valueHash := o.properties[k].hashCode(metadata)
 		a = append(a, valueHash[:]...)
 	}
 	return hash(a)
@@ -69,17 +69,17 @@ func (o jsonObject) hashCode() [8]byte {
 func (o jsonObject) ident(metadata []Metadata) [8]byte {
 	keys := getSetkeysMetadata(metadata).mergeKeys(o.idKeys)
 	if len(keys) == 0 {
-		return o.hashCode()
+		return o.hashCode(metadata)
 	}
 	hashes := make(hashCodes, 0)
 	for key := range keys {
 		v, ok := o.properties[key]
 		if ok {
-			hashes = append(hashes, v.hashCode())
+			hashes = append(hashes, v.hashCode(metadata))
 		}
 	}
 	if len(hashes) == 0 {
-		return o.hashCode()
+		return o.hashCode(metadata)
 	}
 	return hashes.combine()
 }

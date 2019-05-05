@@ -104,10 +104,9 @@ func TestSetEquals(t *testing.T) {
 			ctx := newTestContext(t).
 				withReadMetadata(c.metadata)
 			checkEqual(ctx, c.a, c.b)
-			// TODO: implement set equals with metadata.
-			// ctx = newTestContext(t).
-			// 	withApplyMetadata(c.metadata)
-			// checkEqual(ctx, c.a, c.b)
+			ctx = newTestContext(t).
+				withApplyMetadata(c.metadata)
+			checkEqual(ctx, c.a, c.b)
 		})
 	}
 }

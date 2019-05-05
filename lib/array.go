@@ -9,11 +9,26 @@ type jsonArray []JsonNode
 
 var _ JsonNode = jsonArray(nil)
 
-func (a jsonArray) Json() string {
+func (a jsonArray) Json(metadata ...Metadata) string {
 	return renderJson(a)
 }
 
 func (a1 jsonArray) Equals(n JsonNode, metadata ...Metadata) bool {
+	if checkMetadata(SET, metadata) {
+		// Use set semantics.
+		if n2, ok := n.(jsonArray); ok {
+			n = jsonSet(n2)
+		}
+		return jsonSet(a1).Equals(n, metadata...)
+	}
+	if checkMetadata(SET, metadata) {
+		// Use set semantics.
+		if n2, ok := n.(jsonArray); ok {
+			n = jsonMultiset(n2)
+		}
+		return jsonMultiset(a1).Equals(n, metadata...)
+	}
+	// Use list semantics.
 	a2, ok := n.(jsonArray)
 	if !ok {
 		return false
@@ -24,10 +39,10 @@ func (a1 jsonArray) Equals(n JsonNode, metadata ...Metadata) bool {
 	return reflect.DeepEqual(a1, a2)
 }
 
-func (a jsonArray) hashCode() [8]byte {
+func (a jsonArray) hashCode(metadata []Metadata) [8]byte {
 	b := make([]byte, 0, len(a)*8)
 	for _, el := range a {
-		h := el.hashCode()
+		h := el.hashCode(metadata)
 		b = append(b, h[:]...)
 	}
 	return hash(b)

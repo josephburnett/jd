@@ -9,7 +9,7 @@ func checkJson(ctx *testContext, a, b string) {
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	nodeAJson := nodeA.Json()
+	nodeAJson := nodeA.Json(ctx.applyMetadata...)
 	if nodeAJson != b {
 		ctx.t.Errorf("%v.Json() = %v. Want %v.", nodeA, nodeAJson, b)
 	}
@@ -27,13 +27,13 @@ func checkEqual(ctx *testContext, a, b string) {
 	if !nodeA.Equals(nodeB, ctx.applyMetadata...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
-	if !nodeB.Equals(nodeA) {
+	if !nodeB.Equals(nodeA, ctx.applyMetadata...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
-	if !nodeA.Equals(nodeA) {
+	if !nodeA.Equals(nodeA, ctx.applyMetadata...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
-	if !nodeB.Equals(nodeB) {
+	if !nodeB.Equals(nodeB, ctx.applyMetadata...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
 }
@@ -65,8 +65,8 @@ func checkHash(ctx *testContext, a, b string, wantSame bool) {
 		ctx.t.Fatalf(err.Error())
 	}
 	// TODO: plumb metadata into hashCode and get rid of ident method.
-	hashA := nodeA.hashCode()
-	hashB := nodeB.hashCode()
+	hashA := nodeA.hashCode([]Metadata{})
+	hashB := nodeB.hashCode([]Metadata{})
 	if wantSame && hashA != hashB {
 		ctx.t.Errorf("%v.hashCode = %v. %v.hashCode = %v. Want the same.",
 			a, hashA, b, hashB)
