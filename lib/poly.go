@@ -19,7 +19,7 @@ var (
 	SET      Metadata = setMetadata{}
 )
 
-func SetkeysMetadata(keys ...string) Metadata {
+func Setkeys(keys ...string) Metadata {
 	m := setkeysMetadata{
 		keys: make(map[string]bool),
 	}

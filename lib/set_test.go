@@ -256,7 +256,7 @@ func TestSetDiff(t *testing.T) {
 		name: "add property to object in set",
 		metadata: m(
 			SET,
-			SetkeysMetadata("id"),
+			Setkeys("id"),
 		),
 		a: `[{"id":"foo"}]`,
 		b: `[{"id":"foo","bar":"baz"}]`,
@@ -268,7 +268,7 @@ func TestSetDiff(t *testing.T) {
 		name: "find object by id among empty objects",
 		metadata: m(
 			SET,
-			SetkeysMetadata("id"),
+			Setkeys("id"),
 		),
 		a: `[{},{},{"id":"foo"},{}]`,
 		b: `[{},{"id":"foo","bar":"baz"},{},{}]`,
@@ -280,7 +280,7 @@ func TestSetDiff(t *testing.T) {
 		name: "find object by multiple ids",
 		metadata: m(
 			SET,
-			SetkeysMetadata("id1", "id2"),
+			Setkeys("id1", "id2"),
 		),
 		a: `[{},{"id1":"foo","id2":"zap"},{}]`,
 		b: `[{},{"id1":"foo","id2":"zap","bar":"baz"},{}]`,
@@ -292,7 +292,7 @@ func TestSetDiff(t *testing.T) {
 		name: "find object by id among others",
 		metadata: m(
 			SET,
-			SetkeysMetadata("id"),
+			Setkeys("id"),
 		),
 		a: `[{"id":"foo"},{"id":"bar"}]`,
 		b: `[{"id":"foo","baz":"zap"},{"id":"bar"}]`,
@@ -304,7 +304,7 @@ func TestSetDiff(t *testing.T) {
 		name: "two objects with different ids being exchanged",
 		metadata: m(
 			SET,
-			SetkeysMetadata("id"),
+			Setkeys("id"),
 		),
 		a: `[{"id":"foo"}]`,
 		b: `[{"id":"bar"}]`,
