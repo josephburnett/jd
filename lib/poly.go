@@ -38,6 +38,7 @@ func dispatch(n JsonNode, metadata []Metadata) JsonNode {
 		if checkMetadata(MULTISET, metadata) {
 			return jsonMultiset(n)
 		}
+		return jsonList(n)
 	}
 	return n
 }

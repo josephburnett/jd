@@ -47,6 +47,9 @@ func TestSetJson(t *testing.T) {
 			ctx := newTestContext(t).
 				withReadMetadata(c.metadata)
 			checkJson(ctx, c.given, c.want)
+			ctx = newTestContext(t).
+				withApplyMetadata(c.metadata)
+			checkJson(ctx, c.given, c.want)
 		})
 	}
 }

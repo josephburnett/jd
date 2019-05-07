@@ -30,7 +30,7 @@ func (l1 jsonList) Equals(n JsonNode, metadata ...Metadata) bool {
 
 func (l jsonList) hashCode(metadata []Metadata) [8]byte {
 	b := make([]byte, 0, len(l)*8)
-	for _, v := range l {
+	for _, n := range l {
 		h := n.hashCode(metadata)
 		b = append(b, h[:]...)
 	}
@@ -62,8 +62,8 @@ func (a1 jsonList) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 		a2Has := i < len(a2)
 		subPath := append(path.clone(), float64(i))
 		if a1Has && a2Has {
-			n1 := dispatch(a1[i])
-			n2 := dispatch(a2[i])
+			n1 := dispatch(a1[i], metadata)
+			n2 := dispatch(a2[i], metadata)
 			subDiff := n1.diff(n2, subPath, metadata)
 			d = append(d, subDiff...)
 		}
@@ -100,8 +100,8 @@ func (l jsonList) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonN
 	newValue := singleValue(newValues)
 	// Base case
 	if len(pathAhead) == 0 {
-		if !a.Equals(oldValue) {
-			return patchErrExpectValue(oldValue, a, pathBehind)
+		if !l.Equals(oldValue) {
+			return patchErrExpectValue(oldValue, l, pathBehind)
 		}
 		return newValue, nil
 	}
@@ -114,30 +114,30 @@ func (l jsonList) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonN
 	}
 	i := int(pe)
 	var nextNode JsonNode = voidNode{}
-	if len(a) > i {
-		nextNode = a[i]
+	if len(l) > i {
+		nextNode = l[i]
 	}
 	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValues, newValues, metadata)
 	if err != nil {
 		return nil, err
 	}
 	if isVoid(patchedNode) {
-		if i != len(a)-1 {
+		if i != len(l)-1 {
 			return nil, fmt.Errorf(
 				"Removal of a non-terminal element of an array.")
 		}
 		// Delete an element
-		return a[:len(a)-1], nil
+		return l[:len(l)-1], nil
 	}
-	if i > len(a) {
+	if i > len(l) {
 		return nil, fmt.Errorf(
 			"Addition beyond the terminal element of an array.")
 	}
-	if i == len(a) {
+	if i == len(l) {
 		// Add an element
-		return append(a, patchedNode), nil
+		return append(l, patchedNode), nil
 	}
 	// Replace an element
-	a[i] = patchedNode
-	return a, nil
+	l[i] = patchedNode
+	return l, nil
 }

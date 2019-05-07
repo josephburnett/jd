@@ -7,12 +7,12 @@ type jsonArray []JsonNode
 var _ JsonNode = jsonArray(nil)
 
 func (a jsonArray) Json(metadata ...Metadata) string {
-	n := dispatch(a)
+	n := dispatch(a, metadata)
 	return n.Json(metadata...)
 }
 
 func (a1 jsonArray) Equals(n JsonNode, metadata ...Metadata) bool {
-	n1 := dispatch(a, metadata)
+	n1 := dispatch(a1, metadata)
 	n2 := dispatch(n, metadata)
 	return n1.Equals(n2, metadata...)
 }
@@ -41,5 +41,5 @@ func (a jsonArray) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
 
 func (a jsonArray) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	n := dispatch(a, metadata)
-	return a.patch(pathBehind, pathAhead, oldValues, newValues, metadata)
+	return n.patch(pathBehind, pathAhead, oldValues, newValues, metadata)
 }
