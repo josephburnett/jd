@@ -13,12 +13,8 @@ type DiffElement struct {
 
 func (d DiffElement) Render() string {
 	b := bytes.NewBuffer(nil)
-	pathJson, err := json.Marshal(d.Path)
-	if err != nil {
-		panic(err)
-	}
 	b.WriteString("@ ")
-	b.Write(pathJson)
+	b.Write(path.String())
 	b.WriteString("\n")
 	for _, oldValue := range d.OldValues {
 		if !isVoid(oldValue) {

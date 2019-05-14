@@ -60,7 +60,7 @@ func (a1 jsonList) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	for i := 0; i < maxLen; i++ {
 		a1Has := i < len(a1)
 		a2Has := i < len(a2)
-		subPath := append(path.clone(), float64(i))
+		subPath := path.appendListIndex(i)
 		if a1Has && a2Has {
 			n1 := dispatch(a1[i], metadata)
 			n2 := dispatch(a2[i], metadata)

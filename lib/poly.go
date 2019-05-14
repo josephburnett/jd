@@ -1,18 +1,41 @@
 package jd
 
+import (
+	"sort"
+	"strings"
+)
+
 type Metadata interface {
 	is_metadata()
+	string() string
 }
 
-type multisetMetadata struct{}
 type setMetadata struct{}
+type multisetMetadata struct{}
 type setkeysMetadata struct {
 	keys map[string]bool
 }
 
-func (multisetMetadata) is_metadata() {}
 func (setMetadata) is_metadata()      {}
+func (multisetMetadata) is_metadata() {}
 func (setkeysMetadata) is_metadata()  {}
+
+func (m setMetadata) string() string {
+	return "set"
+}
+
+func (m multisetMetadata) string() string {
+	return "multiset"
+}
+
+func (m setkeysMetadata) string() string {
+	ks := make([]string, len(m.keys))
+	for k := range m.keys {
+		ks = append(ks, k)
+	}
+	sort.Strings(ks)
+	return "setkeys=" + strings.Join(ks, ",")
+}
 
 var (
 	MULTISET Metadata = multisetMetadata{}
