@@ -22,27 +22,27 @@ func (n jsonNull) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (n jsonNull) Diff(node JsonNode, metadata ...Metadata) Diff {
-	return n.diff(node, Path{}, metadata)
+	return n.diff(node, nil, metadata)
 }
 
-func (n jsonNull) diff(node JsonNode, path Path, metadata []Metadata) Diff {
+func (n jsonNull) diff(node JsonNode, path path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	if n.Equals(node) {
 		return d
 	}
 	e := DiffElement{
-		Path:      path.clone(),
+		Path:      path,
 		OldValues: nodeList(n),
 		NewValues: nodeList(node),
 	}
 	return append(d, e)
 }
 
-func (n jsonNull) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
-	return patchAll(n, d, metadata)
+func (n jsonNull) Patch(d Diff) (JsonNode, error) {
+	return patchAll(n, d)
 }
 
-func (n jsonNull) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
+func (n jsonNull) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(n, pathAhead[0])
 	}

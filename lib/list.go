@@ -38,16 +38,16 @@ func (l jsonList) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (l jsonList) Diff(n JsonNode, metadata ...Metadata) Diff {
-	return l.diff(n, Path{}, metadata)
+	return l.diff(n, nil, metadata)
 }
 
-func (a1 jsonList) diff(n JsonNode, path Path, metadata []Metadata) Diff {
+func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	a2, ok := n.(jsonList)
 	if !ok {
 		// Different types
 		e := DiffElement{
-			Path:      path.clone(),
+			Path:      path,
 			OldValues: nodeList(a1),
 			NewValues: nodeList(n),
 		}
@@ -60,7 +60,7 @@ func (a1 jsonList) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	for i := 0; i < maxLen; i++ {
 		a1Has := i < len(a1)
 		a2Has := i < len(a2)
-		subPath := path.appendListIndex(i)
+		subPath := append(path, jsonNumber(i))
 		if a1Has && a2Has {
 			n1 := dispatch(a1[i], metadata)
 			n2 := dispatch(a2[i], metadata)
@@ -87,11 +87,11 @@ func (a1 jsonList) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 	return d
 }
 
-func (l jsonList) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
-	return patchAll(l, d, metadata)
+func (l jsonList) Patch(d Diff) (JsonNode, error) {
+	return patchAll(l, d)
 }
 
-func (l jsonList) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
+func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
 
 	if len(oldValues) > 1 || len(newValues) > 1 {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
@@ -106,18 +106,18 @@ func (l jsonList) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonN
 		return newValue, nil
 	}
 	// Recursive case
-	pe, ok := pathAhead[0].(float64)
+	n, metadata, rest := pathAhead.next()
+	jn, ok := n.(jsonNumber)
 	if !ok {
 		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected float64.",
-			pathAhead[0])
+			"Invalid path element %v. Expected float64.", n)
 	}
-	i := int(pe)
+	i := int(jn)
 	var nextNode JsonNode = voidNode{}
 	if len(l) > i {
 		nextNode = l[i]
 	}
-	patchedNode, err := nextNode.patch(append(pathBehind, pe), pathAhead[1:], oldValues, newValues, metadata)
+	patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues)
 	if err != nil {
 		return nil, err
 	}

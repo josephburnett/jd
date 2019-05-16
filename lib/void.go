@@ -32,10 +32,10 @@ func (v voidNode) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (v voidNode) Diff(n JsonNode, metadata ...Metadata) Diff {
-	return v.diff(n, Path{}, metadata)
+	return v.diff(n, path, metadata)
 }
 
-func (v voidNode) diff(n JsonNode, p Path, metadata []Metadata) Diff {
+func (v voidNode) diff(n JsonNode, p path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	if v.Equals(n) {
 		return d
@@ -48,11 +48,11 @@ func (v voidNode) diff(n JsonNode, p Path, metadata []Metadata) Diff {
 	return append(d, de)
 }
 
-func (v voidNode) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
-	return patchAll(v, d, metadata)
+func (v voidNode) Patch(d Diff) (JsonNode, error) {
+	return patchAll(v, d)
 }
 
-func (v voidNode) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
+func (v voidNode) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(v, pathBehind[0])
 	}

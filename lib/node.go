@@ -12,8 +12,8 @@ type JsonNode interface {
 	hashCode(metadata []Metadata) [8]byte
 	Diff(n JsonNode, metadata ...Metadata) Diff
 	diff(n JsonNode, p Path, metadata []Metadata) Diff
-	Patch(d Diff, metadata ...Metadata) (JsonNode, error)
-	patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error)
+	Patch(d Diff) (JsonNode, error)
+	patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error)
 }
 
 func NewJsonNode(n interface{}, metadata ...Metadata) (JsonNode, error) {

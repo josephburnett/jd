@@ -42,16 +42,16 @@ func (a jsonMultiset) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (a jsonMultiset) Diff(n JsonNode, metadata ...Metadata) Diff {
-	return a.diff(n, Path{}, metadata)
+	return a.diff(n, nil, metadata)
 }
 
-func (a1 jsonMultiset) diff(n JsonNode, path Path, metadata []Metadata) Diff {
+func (a1 jsonMultiset) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	a2, ok := n.(jsonMultiset)
 	if !ok {
 		// Different types
 		e := DiffElement{
-			Path:      path.clone(),
+			Path:      path,
 			OldValues: nodeList(a1),
 			NewValues: nodeList(n),
 		}
@@ -71,8 +71,10 @@ func (a1 jsonMultiset) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 		a2Counts[hc]++
 		a2Map[hc] = v
 	}
+	// TODO: cast directly to jsonObject when jsonObject drops idKeys.
+	o, _ := NewJsonNode(map[string]interface{}{})
 	e := DiffElement{
-		Path:      append(path.clone(), map[string]interface{}{}),
+		Path:      path.appendSetIndex(o.(jsonObject), metadata),
 		OldValues: nodeList(),
 		NewValues: nodeList(),
 	}
@@ -122,7 +124,7 @@ func (a jsonMultiset) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
 	return patchAll(a, d, metadata)
 }
 
-func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
+func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	// Base case
 	if len(pathAhead) == 0 {
 		if len(oldValues) > 1 || len(newValues) > 1 {
@@ -136,16 +138,15 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []J
 		return newValue, nil
 	}
 	// Unrolled recursive case
-	pe, ok := pathAhead[0].(map[string]interface{})
+	n, metadata, rest := pathAhead.next()
+	o, ok := n.(jsonObject)
 	if !ok {
 		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected map[string]interface{}.",
-			pathAhead[0])
+			"Invalid path element %v. Expected map[string]interface{}.", n)
 	}
-	if len(pe) != 0 {
+	if len(pe.properties) != 0 {
 		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected empty object.",
-			pathAhead[0])
+			"Invalid path element %v. Expected empty object.", n)
 	}
 	aCounts := make(map[[8]byte]int)
 	aMap := make(map[[8]byte]JsonNode)

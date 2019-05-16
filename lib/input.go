@@ -94,8 +94,7 @@ func readDiff(s string, metadata ...Metadata) (Diff, error) {
 				}
 				diff = append(diff, de)
 			}
-			p := Path{}
-			err := json.Unmarshal([]byte(dl[1:]), &p)
+			p, err := ReadJsonString([]byte(dl[1:]))
 			if err != nil {
 				return errorAt(i, "Invalid path. %v", err.Error())
 			}

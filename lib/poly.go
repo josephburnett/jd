@@ -34,6 +34,7 @@ func (m setkeysMetadata) string() string {
 		ks = append(ks, k)
 	}
 	sort.Strings(ks)
+	// TODO: escape commas.
 	return "setkeys=" + strings.Join(ks, ",")
 }
 

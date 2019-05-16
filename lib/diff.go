@@ -6,7 +6,7 @@ import (
 )
 
 type DiffElement struct {
-	Path      Path
+	Path      JsonNode
 	OldValues []JsonNode
 	NewValues []JsonNode
 }
@@ -14,7 +14,7 @@ type DiffElement struct {
 func (d DiffElement) Render() string {
 	b := bytes.NewBuffer(nil)
 	b.WriteString("@ ")
-	b.Write(path.String())
+	b.Write([]byte(d.Path.Json()))
 	b.WriteString("\n")
 	for _, oldValue := range d.OldValues {
 		if !isVoid(oldValue) {

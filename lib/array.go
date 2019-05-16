@@ -25,21 +25,22 @@ func (a jsonArray) hashCode(metadata []Metadata) [8]byte {
 func (a jsonArray) Diff(n JsonNode, metadata ...Metadata) Diff {
 	n1 := dispatch(a, metadata)
 	n2 := dispatch(n, metadata)
-	return n1.diff(n2, Path{}, metadata)
+	return n1.diff(n2, nil, metadata)
 }
 
-func (a jsonArray) diff(n JsonNode, path Path, metadata []Metadata) Diff {
+func (a jsonArray) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	n1 := dispatch(a, metadata)
 	n2 := dispatch(n, metadata)
 	return n1.diff(n2, path, metadata)
 }
 
-func (a jsonArray) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
-	n := dispatch(a, metadata)
-	return n.Patch(d, metadata...)
+func (a jsonArray) Patch(d Diff) (JsonNode, error) {
+	n := dispatch(a)
+	return n.Patch(d)
 }
 
-func (a jsonArray) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
+func (a jsonArray) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
+	_, metadata, _ := pathAhead.next()
 	n := dispatch(a, metadata)
 	return n.patch(pathBehind, pathAhead, oldValues, newValues, metadata)
 }

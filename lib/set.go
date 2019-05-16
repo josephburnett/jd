@@ -54,16 +54,16 @@ func (s jsonSet) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (s jsonSet) Diff(j JsonNode, metadata ...Metadata) Diff {
-	return s.diff(j, Path{}, metadata)
+	return s.diff(j, nil, metadata)
 }
 
-func (s1 jsonSet) diff(n JsonNode, path Path, metadata []Metadata) Diff {
+func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	d := make(Diff, 0)
 	s2, ok := n.(jsonSet)
 	if !ok {
 		// Different types
 		e := DiffElement{
-			Path:      path.clone(),
+			Path:      path,
 			OldValues: nodeList(s1),
 			NewValues: nodeList(n),
 		}
@@ -103,8 +103,9 @@ func (s1 jsonSet) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 		s2Hashes = append(s2Hashes, hc)
 	}
 	sort.Sort(s2Hashes)
+	o, _ := NewJsonNode(map[string]interface{}{})
 	e := DiffElement{
-		Path:      append(path.clone(), map[string]interface{}{}),
+		Path:      path.appendSetIndex(o.(jsonObject), metadata),
 		OldValues: nodeList(),
 		NewValues: nodeList(),
 	}
@@ -119,7 +120,7 @@ func (s1 jsonSet) diff(n JsonNode, path Path, metadata []Metadata) Diff {
 			o2, isObject2 := n2.(jsonObject)
 			if isObject1 && isObject2 {
 				// Sub diff objects with same identity.
-				subDiff := o1.diff(o2, append(path.clone(), o1.pathIdent(metadata)), metadata)
+				subDiff := o1.diff(o2, path.appendSetIndex(o1.pathIdent(metadata)), metadata)
 				for _, subElement := range subDiff {
 					d = append(d, subElement)
 				}
@@ -143,7 +144,7 @@ func (s jsonSet) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
 	return patchAll(s, d, metadata)
 }
 
-func (s jsonSet) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
+func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
 	// Base case
 	if len(pathAhead) == 0 {
 		if len(oldValues) > 1 || len(newValues) > 1 {
@@ -157,16 +158,15 @@ func (s jsonSet) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNo
 		return newValue, nil
 	}
 	// Unrolled recursive case
-	pe, ok := pathAhead[0].(map[string]interface{})
+	n, metadata, rest := pathAhead.next()
+	o, ok := n.(jsonObject)
 	if !ok {
 		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected map[string]interface{}.",
-			pathAhead[0])
+			"Invalid path element %v. Expected jsonObject.", n)
 	}
-	if len(pe) != 0 {
+	if len(pe.properties) != 0 {
 		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected empty object.",
-			pathAhead[0])
+			"Invalid path element %v. Expected empty object.", n)
 	}
 	aMap := make(map[[8]byte]JsonNode)
 	for _, v := range s {
@@ -177,7 +177,7 @@ func (s jsonSet) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNo
 		hc := v.hashCode(metadata)
 		if _, ok := aMap[hc]; !ok {
 			return nil, fmt.Errorf(
-				"Invalid diff. Expected %v at %v bug found nothing.",
+				"Invalid diff. Expected %v at %v but found nothing.",
 				v.Json(metadata...), pathBehind)
 		}
 		delete(aMap, hc)
