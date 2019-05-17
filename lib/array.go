@@ -35,12 +35,11 @@ func (a jsonArray) diff(n JsonNode, path path, metadata []Metadata) Diff {
 }
 
 func (a jsonArray) Patch(d Diff) (JsonNode, error) {
-	n := dispatch(a)
-	return n.Patch(d)
+	return patchAll(a, d)
 }
 
 func (a jsonArray) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
 	_, metadata, _ := pathAhead.next()
 	n := dispatch(a, metadata)
-	return n.patch(pathBehind, pathAhead, oldValues, newValues, metadata)
+	return n.patch(pathBehind, pathAhead, oldValues, newValues)
 }

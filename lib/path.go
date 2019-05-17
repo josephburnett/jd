@@ -4,7 +4,7 @@ type path []JsonNode
 
 func (p path) appendSetIndex(o jsonObject, metadata []Metadata) path {
 	// Append metadata.
-	meta := make(jsonArray)
+	meta := make(jsonArray, 0)
 	meta = append(meta, jsonString(SET.string()))
 	sk := getSetkeysMetadata(metadata)
 	if sk != nil {
@@ -17,24 +17,24 @@ func (p path) appendSetIndex(o jsonObject, metadata []Metadata) path {
 
 func (p path) next() (JsonNode, []Metadata, path) {
 	var metadata []Metadata
-	for i, n := range path {
+	for i, n := range p {
 		switch n := n.(type) {
 		case jsonArray:
 			for _, meta := range n {
 				// TODO: parse metadata cleanly.
 				if s, ok := meta.(jsonString); ok {
-					if s == SET.string() {
+					if string(s) == SET.string() {
 						metadata = append(metadata, SET)
 					}
-					if s == MULTISET.string() {
+					if string(s) == MULTISET.string() {
 						metadata = append(metadata, MULTISET)
 					}
 				}
 				// Ignore unrecognized metadata.
 			}
 		default:
-			return n, metadata, path[i:]
+			return n, metadata, p[i:]
 		}
 	}
-	return jsonVoid(nil), metadata, nil
+	return voidNode{}, metadata, nil
 }

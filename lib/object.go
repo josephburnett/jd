@@ -85,7 +85,7 @@ func (o jsonObject) ident(metadata []Metadata) [8]byte {
 	return hashes.combine()
 }
 
-func (o jsonObject) pathIdent(metadata []Metadata) pathElement {
+func (o jsonObject) pathIdent(metadata []Metadata) JsonNode {
 	keys := getSetkeysMetadata(metadata).mergeKeys(o.idKeys)
 	id := make(map[string]interface{})
 	for key := range keys {
@@ -94,7 +94,7 @@ func (o jsonObject) pathIdent(metadata []Metadata) pathElement {
 		}
 	}
 	e, _ := NewJsonNode(id)
-	return newPathElement(e, metadata...)
+	return e
 }
 
 func (k1 *setkeysMetadata) mergeKeys(k2 map[string]bool) map[string]bool {
@@ -142,12 +142,12 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
 		v1 := o1.properties[k1]
 		if v2, ok := o2.properties[k1]; ok {
 			// Both keys are present
-			subDiff := v1.diff(v2, path.appendObjectIndex(jsonString(k1)), metadata)
+			subDiff := v1.diff(v2, append(path, jsonString(k1)), metadata)
 			d = append(d, subDiff...)
 		} else {
 			// O2 missing key
 			e := DiffElement{
-				Path:      path.appendObjectIndex(jsonString(k1)),
+				Path:      append(path, jsonString(k1)),
 				OldValues: nodeList(v1),
 				NewValues: nodeList(),
 			}
@@ -159,7 +159,7 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
 		if _, ok := o1.properties[k2]; !ok {
 			// O1 missing key
 			e := DiffElement{
-				Path:      path.appendObjectIndex(jsonString(k2)),
+				Path:      append(path, jsonString(k2)),
 				OldValues: nodeList(),
 				NewValues: nodeList(v2),
 			}
@@ -187,7 +187,7 @@ func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 		return newValue, nil
 	}
 	// Recursive case
-	n, metadata, rest := pathAhead.next()
+	n, _, rest := pathAhead.next()
 	pe, ok := n.(jsonString)
 	if !ok {
 		return nil, fmt.Errorf(
@@ -198,7 +198,7 @@ func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 	if !ok {
 		nextNode = voidNode{}
 	}
-	patchedNode, err := nextNode.patch(append(pathBehind, pe), rest, oldValues, newValues, metadata)
+	patchedNode, err := nextNode.patch(append(pathBehind, pe), rest, oldValues, newValues)
 	if err != nil {
 		return nil, err
 	}

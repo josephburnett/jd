@@ -42,7 +42,7 @@ func (n jsonNull) Patch(d Diff) (JsonNode, error) {
 	return patchAll(n, d)
 }
 
-func (n jsonNull) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (n jsonNull) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(n, pathAhead[0])
 	}

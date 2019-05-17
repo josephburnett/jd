@@ -120,7 +120,7 @@ func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata) Diff {
 			o2, isObject2 := n2.(jsonObject)
 			if isObject1 && isObject2 {
 				// Sub diff objects with same identity.
-				subDiff := o1.diff(o2, path.appendSetIndex(o1.pathIdent(metadata)), metadata)
+				subDiff := o1.diff(o2, append(path, o1.pathIdent(metadata)), metadata)
 				for _, subElement := range subDiff {
 					d = append(d, subElement)
 				}
@@ -140,11 +140,11 @@ func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	return d
 }
 
-func (s jsonSet) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
-	return patchAll(s, d, metadata)
+func (s jsonSet) Patch(d Diff) (JsonNode, error) {
+	return patchAll(s, d)
 }
 
-func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
+func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
 	// Base case
 	if len(pathAhead) == 0 {
 		if len(oldValues) > 1 || len(newValues) > 1 {
@@ -158,13 +158,13 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 		return newValue, nil
 	}
 	// Unrolled recursive case
-	n, metadata, rest := pathAhead.next()
+	n, metadata, _ := pathAhead.next()
 	o, ok := n.(jsonObject)
 	if !ok {
 		return nil, fmt.Errorf(
 			"Invalid path element %v. Expected jsonObject.", n)
 	}
-	if len(pe.properties) != 0 {
+	if len(o.properties) != 0 {
 		return nil, fmt.Errorf(
 			"Invalid path element %v. Expected empty object.", n)
 	}

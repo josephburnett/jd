@@ -34,18 +34,18 @@ func (b jsonBool) diff(n JsonNode, path path, metadata []Metadata) Diff {
 		return d
 	}
 	e := DiffElement{
-		Path:      path,
+		Path:      jsonArray(path),
 		OldValues: nodeList(b),
 		NewValues: nodeList(n),
 	}
 	return append(d, e)
 }
 
-func (b jsonBool) Patch(d Diff, metadata ...Metadata) (JsonNode, error) {
-	return patchAll(b, d, metadata)
+func (b jsonBool) Patch(d Diff) (JsonNode, error) {
+	return patchAll(b, d)
 }
 
-func (b jsonBool) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, metadata []Metadata) (JsonNode, error) {
+func (b jsonBool) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(b, pathAhead[0])
 	}

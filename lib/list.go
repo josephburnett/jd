@@ -106,7 +106,7 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		return newValue, nil
 	}
 	// Recursive case
-	n, metadata, rest := pathAhead.next()
+	n, _, rest := pathAhead.next()
 	jn, ok := n.(jsonNumber)
 	if !ok {
 		return nil, fmt.Errorf(

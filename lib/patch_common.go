@@ -4,10 +4,10 @@ import (
 	"fmt"
 )
 
-func patchAll(n JsonNode, d Diff, metadata []Metadata) (JsonNode, error) {
+func patchAll(n JsonNode, d Diff) (JsonNode, error) {
 	var err error
 	for _, de := range d {
-		n, err = n.patch(Path{}, de.Path, de.OldValues, de.NewValues, metadata)
+		n, err = n.patch(nil, de.Path, de.OldValues, de.NewValues)
 		if err != nil {
 			return nil, err
 		}
@@ -42,7 +42,7 @@ func patchErrExpectColl(n JsonNode, pe interface{}) (JsonNode, error) {
 
 }
 
-func patchErrNonSetDiff(oldValues, newValues []JsonNode, path Path) (JsonNode, error) {
+func patchErrNonSetDiff(oldValues, newValues []JsonNode, path path) (JsonNode, error) {
 	if len(oldValues) > 1 {
 		return nil, fmt.Errorf(
 			"Invalid diff: Multiple removals from non-set at %v.",
@@ -54,7 +54,7 @@ func patchErrNonSetDiff(oldValues, newValues []JsonNode, path Path) (JsonNode, e
 	}
 }
 
-func patchErrExpectValue(want, found JsonNode, path Path) (JsonNode, error) {
+func patchErrExpectValue(want, found JsonNode, path path) (JsonNode, error) {
 	return nil, fmt.Errorf(
 		"Found %v at %v. Expected %v.",
 		found.Json(), path, want.Json())

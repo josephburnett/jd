@@ -94,12 +94,16 @@ func readDiff(s string, metadata ...Metadata) (Diff, error) {
 				}
 				diff = append(diff, de)
 			}
-			p, err := ReadJsonString([]byte(dl[1:]))
+			p, err := ReadJsonString(dl[1:])
 			if err != nil {
 				return errorAt(i, "Invalid path. %v", err.Error())
 			}
+			path, ok := p.(jsonArray)
+			if !ok {
+				return errorAt(i, "Invalid path. Want JSON list. Got %T.", p)
+			}
 			de = DiffElement{
-				Path:      p,
+				Path:      path,
 				OldValues: []JsonNode{},
 				NewValues: []JsonNode{},
 			}

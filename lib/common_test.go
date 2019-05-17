@@ -119,7 +119,7 @@ func checkPatch(ctx *testContext, a, e string, diffLines ...string) {
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	b, err := initial.Patch(diff, ctx.applyMetadata...)
+	b, err := initial.Patch(diff)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
@@ -142,7 +142,7 @@ func checkPatchError(ctx *testContext, a string, diffLines ...string) {
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	b, err := initial.Patch(diff, ctx.applyMetadata...)
+	b, err := initial.Patch(diff)
 	if b != nil {
 		ctx.t.Errorf("%v.Patch(%v) = %v. Want nil.", initial, diff, b)
 	}
