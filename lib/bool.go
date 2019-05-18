@@ -25,7 +25,7 @@ func (b jsonBool) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (b jsonBool) Diff(n JsonNode, metadata ...Metadata) Diff {
-	return b.diff(n, nil, metadata)
+	return b.diff(n, make(path, 0), metadata)
 }
 
 func (b jsonBool) diff(n JsonNode, path path, metadata []Metadata) Diff {

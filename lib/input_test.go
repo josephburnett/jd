@@ -1,7 +1,6 @@
 package jd
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -46,7 +45,7 @@ func TestReadDiff(t *testing.T) {
 				NewValues: []JsonNode{jsonNumber(2)},
 			},
 		},
-		`@ ["a", 1, "b"]`,
+		`@ ["a",1,"b"]`,
 		`- 1`,
 		`+ 2`)
 	checkReadDiff(t,
@@ -98,16 +97,17 @@ func TestReadDiffError(t *testing.T) {
 }
 
 func checkReadDiff(t *testing.T, d Diff, diffLines ...string) {
-	diff := ""
+	want := ""
 	for _, dl := range diffLines {
-		diff += dl + "\n"
+		want += dl + "\n"
 	}
-	actual, err := readDiff(diff)
+	actual, err := readDiff(want)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	if !reflect.DeepEqual(d, actual) {
-		t.Errorf("readDiff(%v) = %v. Want %v.", diff, actual, d)
+	got := actual.Render()
+	if got != want {
+		t.Errorf("readDiff got %v. Want %v.", got, want)
 	}
 }
 

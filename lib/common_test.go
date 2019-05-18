@@ -98,7 +98,7 @@ func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
 	want := expectedDiff.Render()
 	got := d.Render()
 	if got != want {
-		ctx.t.Errorf("%v.Diff(%v) = %v. Want %v.", nodeA, nodeB, d, expectedDiff)
+		ctx.t.Errorf("%v.Diff(%v) = %v. Want %v.", nodeA, nodeB, got, want)
 	}
 }
 

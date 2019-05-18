@@ -25,7 +25,7 @@ func (a jsonArray) hashCode(metadata []Metadata) [8]byte {
 func (a jsonArray) Diff(n JsonNode, metadata ...Metadata) Diff {
 	n1 := dispatch(a, metadata)
 	n2 := dispatch(n, metadata)
-	return n1.diff(n2, nil, metadata)
+	return n1.diff(n2, make(path, 0), metadata)
 }
 
 func (a jsonArray) diff(n JsonNode, path path, metadata []Metadata) Diff {

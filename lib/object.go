@@ -113,7 +113,7 @@ func (k1 *setkeysMetadata) mergeKeys(k2 map[string]bool) map[string]bool {
 }
 
 func (o jsonObject) Diff(n JsonNode, metadata ...Metadata) Diff {
-	return o.diff(n, nil, metadata)
+	return o.diff(n, make(path, 0), metadata)
 }
 
 func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
