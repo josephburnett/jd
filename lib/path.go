@@ -33,7 +33,7 @@ func (p path) next() (JsonNode, []Metadata, path) {
 				// Ignore unrecognized metadata.
 			}
 		default:
-			return n, metadata, p[i:]
+			return n, metadata, p[i+1:]
 		}
 	}
 	return voidNode{}, metadata, nil
