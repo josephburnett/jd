@@ -74,7 +74,7 @@ func (a1 jsonMultiset) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	// TODO: cast directly to jsonObject when jsonObject drops idKeys.
 	o, _ := NewJsonNode(map[string]interface{}{})
 	e := DiffElement{
-		Path:      path.appendSetIndex(o.(jsonObject), metadata),
+		Path:      path.appendIndex(o.(jsonObject), metadata),
 		OldValues: nodeList(),
 		NewValues: nodeList(),
 	}

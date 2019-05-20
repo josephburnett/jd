@@ -71,24 +71,24 @@ func checkDiffAndPatchError(t *testing.T, a, b, c string) {
 }
 
 func checkDiffAndPatch(t *testing.T, a, b, c, expect string, metadata ...Metadata) error {
-	nodeA, err := ReadJsonString(a, metadata...)
+	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		return err
 	}
-	nodeB, err := ReadJsonString(b, metadata...)
+	nodeB, err := ReadJsonString(b)
 	if err != nil {
 		return err
 	}
-	nodeC, err := ReadJsonString(c, metadata...)
+	nodeC, err := ReadJsonString(c)
 	if err != nil {
 		return err
 	}
-	expectNode, err := ReadJsonString(expect, metadata...)
+	expectNode, err := ReadJsonString(expect)
 	if err != nil {
 		return err
 	}
 	diffString := nodeA.Diff(nodeB).Render()
-	diff, err := ReadDiffString(diffString, metadata...)
+	diff, err := ReadDiffString(diffString)
 	if err != nil {
 		return err
 	}

@@ -45,10 +45,7 @@ func TestSetJson(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkJson(ctx, c.given, c.want)
-			ctx = newTestContext(t).
-				withApplyMetadata(c.metadata)
+				withMetadata(c.metadata)
 			checkJson(ctx, c.given, c.want)
 		})
 	}
@@ -105,10 +102,7 @@ func TestSetEquals(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkEqual(ctx, c.a, c.b)
-			ctx = newTestContext(t).
-				withApplyMetadata(c.metadata)
+				withMetadata(c.metadata)
 			checkEqual(ctx, c.a, c.b)
 		})
 	}
@@ -145,10 +139,7 @@ func TestSetNotEquals(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkNotEqual(ctx, c.a, c.b)
-			ctx = newTestContext(t).
-				withApplyMetadata(c.metadata)
+				withMetadata(c.metadata)
 			checkNotEqual(ctx, c.a, c.b)
 		})
 	}
@@ -326,11 +317,8 @@ func TestSetDiff(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			// ctx := newTestContext(t).
-			// 	withReadMetadata(c.metadata...)
-			// checkDiff(ctx, c.a, c.b, c.want...)
 			ctx := newTestContext(t).
-				withApplyMetadata(c.metadata...)
+				withMetadata(c.metadata...)
 			checkDiff(ctx, c.a, c.b, c.want...)
 		})
 	}
@@ -429,13 +417,10 @@ func TestSetPatch(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkPatch(ctx, c.given, c.want, c.patch...)
 			// TODO: implement set patch with metadata.
-			// ctx = newTestContext(t).
-			// 	withApplyMetadata(c.metadata)
-			// checkPatch(ctx, c.given, c.want, c.patch...)
+			ctx := newTestContext(t).
+				withMetadata(c.metadata)
+			checkPatch(ctx, c.given, c.want, c.patch...)
 		})
 	}
 }
@@ -488,10 +473,7 @@ func TestSetPatchError(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkPatchError(ctx, c.given, c.patch...)
-			ctx = newTestContext(t).
-				withApplyMetadata(c.metadata)
+				withMetadata(c.metadata)
 			checkPatchError(ctx, c.given, c.patch...)
 		})
 	}

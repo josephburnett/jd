@@ -40,10 +40,7 @@ func TestMultisetJson(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkJson(ctx, c.given, c.want)
-			ctx = newTestContext(t).
-				withApplyMetadata(c.metadata)
+				withMetadata(c.metadata)
 			checkJson(ctx, c.given, c.want)
 		})
 	}
@@ -89,13 +86,10 @@ func TestMultisetEquals(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkEqual(ctx, c.a, c.b)
 			// TODO: implement multiset equals with metadata
-			// ctx = newTestContext(t).
-			// 	withApplyMetadata(c.metadata)
-			// checkEqual(ctx, c.a, c.b)
+			ctx := newTestContext(t).
+				withMetadata(c.metadata)
+			checkEqual(ctx, c.a, c.b)
 		})
 	}
 }
@@ -131,10 +125,7 @@ func TestMultisetNotEquals(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkNotEqual(ctx, c.a, c.b)
-			ctx = newTestContext(t).
-				withApplyMetadata(c.metadata)
+				withMetadata(c.metadata)
 			checkNotEqual(ctx, c.a, c.b)
 		})
 	}
@@ -159,7 +150,7 @@ func TestMultisetDiff(t *testing.T) {
 		a:        `[1]`,
 		b:        `[1,2]`,
 		want: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`+ 2`,
 		),
 	}, {
@@ -174,7 +165,7 @@ func TestMultisetDiff(t *testing.T) {
 		a:        `[1]`,
 		b:        `[1,2,2]`,
 		want: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`+ 2`,
 			`+ 2`,
 		),
@@ -184,7 +175,7 @@ func TestMultisetDiff(t *testing.T) {
 		a:        `[1,2,3]`,
 		b:        `[1,3]`,
 		want: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`- 2`,
 		),
 	}, {
@@ -193,7 +184,7 @@ func TestMultisetDiff(t *testing.T) {
 		a:        `[{"a":1}]`,
 		b:        `[{"a":2}]`,
 		want: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
 		),
@@ -203,7 +194,7 @@ func TestMultisetDiff(t *testing.T) {
 		a:        `[{"a":1},{"a":1}]`,
 		b:        `[{"a":2}]`,
 		want: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`- {"a":1}`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -214,7 +205,7 @@ func TestMultisetDiff(t *testing.T) {
 		a:        `["foo","foo","bar"]`,
 		b:        `["baz"]`,
 		want: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`- "bar"`,
 			`- "foo"`,
 			`- "foo"`,
@@ -226,7 +217,7 @@ func TestMultisetDiff(t *testing.T) {
 		a:        `["foo"]`,
 		b:        `["bar","baz","bar"]`,
 		want: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`- "foo"`,
 			`+ "bar"`,
 			`+ "bar"`,
@@ -247,10 +238,7 @@ func TestMultisetDiff(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkDiff(ctx, c.a, c.b, c.want...)
-			ctx = newTestContext(t).
-				withApplyMetadata(c.metadata)
+				withMetadata(c.metadata)
 			checkDiff(ctx, c.a, c.b, c.want...)
 		})
 	}
@@ -362,13 +350,10 @@ func TestMultisetPatch(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkPatch(ctx, c.given, c.want, c.patch...)
 			// TODO: implement multiset patch with metadata
-			// ctx = newTestContext(t).
-			// 	withApplyMetadata(c.metadata)
-			// checkPatch(ctx, c.given, c.want, c.patch...)
+			ctx := newTestContext(t).
+				withMetadata(c.metadata)
+			checkPatch(ctx, c.given, c.want, c.patch...)
 		})
 	}
 }
@@ -409,10 +394,7 @@ func TestMultisetPatchError(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := newTestContext(t).
-				withReadMetadata(c.metadata)
-			checkPatchError(ctx, c.given, c.patch...)
-			ctx = newTestContext(t).
-				withApplyMetadata(c.metadata)
+				withMetadata(c.metadata)
 			checkPatchError(ctx, c.given, c.patch...)
 		})
 	}

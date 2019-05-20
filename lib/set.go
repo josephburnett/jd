@@ -105,7 +105,7 @@ func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	sort.Sort(s2Hashes)
 	o, _ := NewJsonNode(map[string]interface{}{})
 	e := DiffElement{
-		Path:      path.appendSetIndex(o.(jsonObject), metadata),
+		Path:      path.appendIndex(o.(jsonObject), metadata),
 		OldValues: nodeList(),
 		NewValues: nodeList(),
 	}

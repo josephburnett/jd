@@ -2,10 +2,15 @@ package jd
 
 type path []JsonNode
 
-func (p path) appendSetIndex(o jsonObject, metadata []Metadata) path {
+func (p path) appendIndex(o jsonObject, metadata []Metadata) path {
 	// Append metadata.
 	meta := make(jsonArray, 0)
-	meta = append(meta, jsonString(SET.string()))
+	if checkMetadata(SET, metadata) {
+		meta = append(meta, jsonString(SET.string()))
+	}
+	if checkMetadata(MULTISET, metadata) {
+		meta = append(meta, jsonString(MULTISET.string()))
+	}
 	sk := getSetkeysMetadata(metadata)
 	if sk != nil {
 		meta = append(meta, jsonString(sk.string()))

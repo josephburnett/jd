@@ -16,16 +16,12 @@ type JsonNode interface {
 	patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error)
 }
 
-func NewJsonNode(n interface{}, metadata ...Metadata) (JsonNode, error) {
+func NewJsonNode(n interface{}) (JsonNode, error) {
 	switch t := n.(type) {
 	case map[string]interface{}:
 		m := jsonObject{
 			properties: make(map[string]JsonNode),
-		}
-		if ks := getSetkeysMetadata(metadata); ks != nil {
-			m.idKeys = ks.keys
-		} else {
-			m.idKeys = make(map[string]bool)
+			idKeys:     make(map[string]bool),
 		}
 		for k, v := range t {
 			if _, ok := v.(JsonNode); !ok {
@@ -41,18 +37,12 @@ func NewJsonNode(n interface{}, metadata ...Metadata) (JsonNode, error) {
 		l := make(jsonArray, len(t))
 		for i, v := range t {
 			if _, ok := v.(JsonNode); !ok {
-				e, err := NewJsonNode(v, metadata...)
+				e, err := NewJsonNode(v)
 				if err != nil {
 					return nil, err
 				}
 				l[i] = e
 			}
-		}
-		if checkMetadata(SET, metadata) {
-			return jsonSet(l), nil
-		}
-		if checkMetadata(MULTISET, metadata) {
-			return jsonMultiset(l), nil
 		}
 		return l, nil
 	case float64:

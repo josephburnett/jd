@@ -5,68 +5,67 @@ import (
 )
 
 func checkJson(ctx *testContext, a, b string) {
-	nodeA, err := ReadJsonString(a, ctx.readMetadata...)
+	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	nodeAJson := nodeA.Json(ctx.applyMetadata...)
+	nodeAJson := nodeA.Json(ctx.metadata...)
 	if nodeAJson != b {
 		ctx.t.Errorf("%v.Json() = %v. Want %v.", nodeA, nodeAJson, b)
 	}
 }
 
 func checkEqual(ctx *testContext, a, b string) {
-	nodeA, err := unmarshal([]byte(a), ctx.readMetadata...)
+	nodeA, err := unmarshal([]byte(a))
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	nodeB, err := unmarshal([]byte(b), ctx.readMetadata...)
+	nodeB, err := unmarshal([]byte(b))
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	if !nodeA.Equals(nodeB, ctx.applyMetadata...) {
+	if !nodeA.Equals(nodeB, ctx.metadata...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
-	if !nodeB.Equals(nodeA, ctx.applyMetadata...) {
+	if !nodeB.Equals(nodeA, ctx.metadata...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
-	if !nodeA.Equals(nodeA, ctx.applyMetadata...) {
+	if !nodeA.Equals(nodeA, ctx.metadata...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
-	if !nodeB.Equals(nodeB, ctx.applyMetadata...) {
+	if !nodeB.Equals(nodeB, ctx.metadata...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
 }
 
 func checkNotEqual(ctx *testContext, a, b string, metadata ...Metadata) {
-	nodeA, err := unmarshal([]byte(a), ctx.readMetadata...)
+	nodeA, err := unmarshal([]byte(a))
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	nodeB, err := unmarshal([]byte(b), ctx.readMetadata...)
+	nodeB, err := unmarshal([]byte(b))
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	if nodeA.Equals(nodeB) {
+	if nodeA.Equals(nodeB, ctx.metadata...) {
 		ctx.t.Errorf("nodeA.Equals(nodeB) == true. Want false.")
 	}
-	if nodeB.Equals(nodeA) {
+	if nodeB.Equals(nodeA, ctx.metadata...) {
 		ctx.t.Errorf("nodeB.Equals(nodeA) == true. Want false.")
 	}
 }
 
 func checkHash(ctx *testContext, a, b string, wantSame bool) {
-	nodeA, err := unmarshal([]byte(a), ctx.readMetadata...)
+	nodeA, err := unmarshal([]byte(a))
 	if err != nil {
 		ctx.t.Fatalf(err.Error())
 	}
-	nodeB, err := unmarshal([]byte(b), ctx.readMetadata...)
+	nodeB, err := unmarshal([]byte(b))
 	if err != nil {
 		ctx.t.Fatalf(err.Error())
 	}
-	// TODO: plumb metadata into hashCode and get rid of ident method.
-	hashA := nodeA.hashCode([]Metadata{})
-	hashB := nodeB.hashCode([]Metadata{})
+	hashA := nodeA.hashCode(ctx.metadata)
+	hashB := nodeB.hashCode(ctx.metadata)
 	if wantSame && hashA != hashB {
 		ctx.t.Errorf("%v.hashCode = %v. %v.hashCode = %v. Want the same.",
 			a, hashA, b, hashB)
@@ -78,11 +77,11 @@ func checkHash(ctx *testContext, a, b string, wantSame bool) {
 }
 
 func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
-	nodeA, err := ReadJsonString(a, ctx.readMetadata...)
+	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Fatalf(err.Error())
 	}
-	nodeB, err := ReadJsonString(b, ctx.readMetadata...)
+	nodeB, err := ReadJsonString(b)
 	if err != nil {
 		ctx.t.Fatalf(err.Error())
 	}
@@ -90,8 +89,8 @@ func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
 	for _, dl := range diffLines {
 		diff += dl + "\n"
 	}
-	d := nodeA.Diff(nodeB, ctx.applyMetadata...)
-	expectedDiff, err := ReadDiffString(diff, ctx.readMetadata...)
+	d := nodeA.Diff(nodeB, ctx.metadata...)
+	expectedDiff, err := ReadDiffString(diff)
 	if err != nil {
 		ctx.t.Fatalf(err.Error())
 	}
@@ -107,15 +106,15 @@ func checkPatch(ctx *testContext, a, e string, diffLines ...string) {
 	for _, dl := range diffLines {
 		diffString += dl + "\n"
 	}
-	initial, err := ReadJsonString(a, ctx.readMetadata...)
+	initial, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	diff, err := ReadDiffString(diffString, ctx.readMetadata...)
+	diff, err := ReadDiffString(diffString)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	expect, err := ReadJsonString(e, ctx.readMetadata...)
+	expect, err := ReadJsonString(e)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
@@ -134,11 +133,11 @@ func checkPatchError(ctx *testContext, a string, diffLines ...string) {
 	for _, dl := range diffLines {
 		diffString += dl + "\n"
 	}
-	initial, err := ReadJsonString(a, ctx.readMetadata...)
+	initial, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	diff, err := ReadDiffString(diffString, ctx.readMetadata...)
+	diff, err := ReadDiffString(diffString)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
@@ -160,25 +159,18 @@ func m(m ...Metadata) []Metadata {
 }
 
 type testContext struct {
-	t             *testing.T
-	readMetadata  []Metadata
-	applyMetadata []Metadata
+	t        *testing.T
+	metadata []Metadata
 }
 
 func newTestContext(t *testing.T) *testContext {
 	return &testContext{
-		t:             t,
-		readMetadata:  make([]Metadata, 0),
-		applyMetadata: make([]Metadata, 0),
+		t:        t,
+		metadata: make([]Metadata, 0),
 	}
 }
 
-func (tc *testContext) withReadMetadata(metadata ...Metadata) *testContext {
-	tc.readMetadata = append(tc.readMetadata, metadata...)
-	return tc
-}
-
-func (tc *testContext) withApplyMetadata(metadata ...Metadata) *testContext {
-	tc.applyMetadata = append(tc.applyMetadata, metadata...)
+func (tc *testContext) withMetadata(metadata ...Metadata) *testContext {
+	tc.metadata = append(tc.metadata, metadata...)
 	return tc
 }

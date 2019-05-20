@@ -8,19 +8,19 @@ import (
 	"strings"
 )
 
-func ReadJsonFile(filename string, metadata ...Metadata) (JsonNode, error) {
+func ReadJsonFile(filename string) (JsonNode, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-	return unmarshal(bytes, metadata...)
+	return unmarshal(bytes)
 }
 
-func ReadJsonString(s string, metadata ...Metadata) (JsonNode, error) {
-	return unmarshal([]byte(s), metadata...)
+func ReadJsonString(s string) (JsonNode, error) {
+	return unmarshal([]byte(s))
 }
 
-func unmarshal(bytes []byte, metadata ...Metadata) (JsonNode, error) {
+func unmarshal(bytes []byte) (JsonNode, error) {
 	if strings.TrimSpace(string(bytes)) == "" {
 		return voidNode{}, nil
 	}
@@ -29,26 +29,26 @@ func unmarshal(bytes []byte, metadata ...Metadata) (JsonNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	n, err := NewJsonNode(v, metadata...)
+	n, err := NewJsonNode(v)
 	if err != nil {
 		return nil, err
 	}
 	return n, nil
 }
 
-func ReadDiffFile(filename string, metadata ...Metadata) (Diff, error) {
+func ReadDiffFile(filename string) (Diff, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-	return readDiff(string(bytes), metadata...)
+	return readDiff(string(bytes))
 }
 
-func ReadDiffString(s string, metadata ...Metadata) (Diff, error) {
-	return readDiff(s, metadata...)
+func ReadDiffString(s string) (Diff, error) {
+	return readDiff(s)
 }
 
-func readDiff(s string, metadata ...Metadata) (Diff, error) {
+func readDiff(s string) (Diff, error) {
 	diff := Diff{}
 	diffLines := strings.Split(s, "\n")
 	const (
@@ -109,14 +109,14 @@ func readDiff(s string, metadata ...Metadata) (Diff, error) {
 			}
 			state = AT
 		case "-":
-			v, err := ReadJsonString(dl[1:], metadata...)
+			v, err := ReadJsonString(dl[1:])
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}
 			de.OldValues = append(de.OldValues, v)
 			state = OLD
 		case "+":
-			v, err := ReadJsonString(dl[1:], metadata...)
+			v, err := ReadJsonString(dl[1:])
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}
