@@ -252,7 +252,7 @@ func TestSetDiff(t *testing.T) {
 		a: `[{"id":"foo"}]`,
 		b: `[{"id":"foo","bar":"baz"}]`,
 		want: s(
-			`@ [["set"],{"id":"foo"},"bar"]`,
+			`@ [["set","setkeys=id"],{"id":"foo"},"bar"]`,
 			`+ "baz"`,
 		),
 	}, {
@@ -264,7 +264,7 @@ func TestSetDiff(t *testing.T) {
 		a: `[{},{},{"id":"foo"},{}]`,
 		b: `[{},{"id":"foo","bar":"baz"},{},{}]`,
 		want: s(
-			`@ [["set"],{"id":"foo"},"bar"]`,
+			`@ [["set","setkeys=id"],{"id":"foo"},"bar"]`,
 			`+ "baz"`,
 		),
 	}, {
@@ -276,7 +276,7 @@ func TestSetDiff(t *testing.T) {
 		a: `[{},{"id1":"foo","id2":"zap"},{}]`,
 		b: `[{},{"id1":"foo","id2":"zap","bar":"baz"},{}]`,
 		want: s(
-			`@ [["set"],{"id1":"foo","id2":"zap"},"bar"]`,
+			`@ [["set","setkeys=id1,id2"],{"id1":"foo","id2":"zap"},"bar"]`,
 			`+ "baz"`,
 		),
 	}, {
@@ -288,7 +288,7 @@ func TestSetDiff(t *testing.T) {
 		a: `[{"id":"foo"},{"id":"bar"}]`,
 		b: `[{"id":"foo","baz":"zap"},{"id":"bar"}]`,
 		want: s(
-			`@ [["set"],{"id":"foo"},"baz"]`,
+			`@ [["set","setkeys=id"],{"id":"foo"},"baz"]`,
 			`+ "zap"`,
 		),
 	}, {
@@ -300,9 +300,6 @@ func TestSetDiff(t *testing.T) {
 		a: `[{"id":"foo"}]`,
 		b: `[{"id":"bar"}]`,
 		want: s(
-			// TODO: emit set keys as path metadata
-			//       e.g. `@ [["setkeys=id"],{}]`
-			//       so that diffs will be self-describing.
 			`@ [["set","setkeys=id"],{}]`,
 			`- {"id":"foo"}`,
 			`+ {"id":"bar"}`,
