@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"reflect"
 	"strings"
 )
 
@@ -145,7 +144,8 @@ func readDiff(s string) (Diff, error) {
 func checkDiffElement(de DiffElement) string {
 	if len(de.NewValues) > 1 || len(de.OldValues) > 1 {
 		// Must be a set.
-		if len(de.Path) == 0 || !reflect.DeepEqual(de.Path[len(de.Path)-1], map[string]interface{}{}) {
+		emptyObject, _ := NewJsonNode(map[string]interface{}{})
+		if len(de.Path) == 0 || !de.Path[len(de.Path)-1].Equals(emptyObject) {
 			return "Expected path to end with {} for sets."
 		}
 	}
