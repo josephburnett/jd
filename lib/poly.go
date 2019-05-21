@@ -29,7 +29,7 @@ func (m multisetMetadata) string() string {
 }
 
 func (m setkeysMetadata) string() string {
-	ks := make([]string, len(m.keys))
+	ks := make([]string, 0)
 	for k := range m.keys {
 		ks = append(ks, k)
 	}
