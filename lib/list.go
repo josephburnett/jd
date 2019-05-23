@@ -110,7 +110,7 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 	jn, ok := n.(jsonNumber)
 	if !ok {
 		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected float64.", n)
+			"Invalid path element %T. Expected float64.", n)
 	}
 	i := int(jn)
 	var nextNode JsonNode = voidNode{}

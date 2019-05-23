@@ -262,7 +262,7 @@ func TestMultisetPatch(t *testing.T) {
 		metadata: MULTISET,
 		given:    `[1]`,
 		patch: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`+ 2`,
 		),
 		want: `[1,2]`,
@@ -277,7 +277,7 @@ func TestMultisetPatch(t *testing.T) {
 		metadata: MULTISET,
 		given:    `[1]`,
 		patch: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`+ 2`,
 			`+ 2`,
 		),
@@ -287,7 +287,7 @@ func TestMultisetPatch(t *testing.T) {
 		metadata: MULTISET,
 		given:    `[1,2,3]`,
 		patch: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`- 2`,
 		),
 		want: `[1,3]`,
@@ -296,7 +296,7 @@ func TestMultisetPatch(t *testing.T) {
 		metadata: MULTISET,
 		given:    `[{"a":1}]`,
 		patch: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
 		),
@@ -306,7 +306,7 @@ func TestMultisetPatch(t *testing.T) {
 		metadata: MULTISET,
 		given:    `[{"a":1},{"a":1}]`,
 		patch: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`- {"a":1}`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -317,7 +317,7 @@ func TestMultisetPatch(t *testing.T) {
 		metadata: MULTISET,
 		given:    `["foo","foo","bar"]`,
 		patch: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`- "bar"`,
 			`- "foo"`,
 			`- "foo"`,
@@ -329,7 +329,7 @@ func TestMultisetPatch(t *testing.T) {
 		metadata: MULTISET,
 		given:    `["foo"]`,
 		patch: s(
-			`@ [{}]`,
+			`@ [["multiset"],{}]`,
 			`- "foo"`,
 			`+ "bar"`,
 			`+ "bar"`,

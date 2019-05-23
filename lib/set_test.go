@@ -414,7 +414,6 @@ func TestSetPatch(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			// TODO: implement set patch with metadata.
 			ctx := newTestContext(t).
 				withMetadata(c.metadata)
 			checkPatch(ctx, c.given, c.want, c.patch...)
