@@ -160,14 +160,10 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 	}
 	// Unrolled recursive case
 	n, metadata, _ := pathAhead.next()
-	o, ok := n.(jsonObject)
+	_, ok := n.(jsonObject)
 	if !ok {
 		return nil, fmt.Errorf(
 			"Invalid path element %v. Expected jsonObject.", n)
-	}
-	if len(o.properties) != 0 {
-		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected empty object.", n)
 	}
 	aMap := make(map[[8]byte]JsonNode)
 	for _, v := range s {

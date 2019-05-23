@@ -410,6 +410,15 @@ func TestSetPatch(t *testing.T) {
 			`+ []`,
 		),
 		want: `[]`,
+	}, {
+		name:     "patch object by id",
+		metadata: SET,
+		given:    `[{"id":"foo"}]`,
+		patch: s(
+			`@ [["set"],{"id":"foo"},"bar"]`,
+			`+ "baz"`,
+		),
+		want: `[{"id":"foo","bar":"baz"}]`,
 	}}
 
 	for _, c := range cases {
