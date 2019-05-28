@@ -167,20 +167,48 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 	}
 	aMap := make(map[[8]byte]JsonNode)
 	for _, v := range s {
-		hc := v.hashCode(metadata)
+		var hc [8]byte
+		if o, ok := v.(jsonObject); ok {
+			// Hash objects by their identitiy.
+			hc = o.ident(metadata)
+		} else {
+			// Everything else by full content.
+			hc = v.hashCode(metadata)
+		}
 		aMap[hc] = v
 	}
 	for _, v := range oldValues {
-		hc := v.hashCode(metadata)
-		if _, ok := aMap[hc]; !ok {
+		var hc [8]byte
+		if o, ok := v.(jsonObject); ok {
+			// Find objects by their identitiy.
+			hc = o.ident(metadata)
+		} else {
+			// Everything else by full content.
+			hc = v.hashCode(metadata)
+		}
+		toDelete, ok := aMap[hc]
+		if !ok {
 			return nil, fmt.Errorf(
 				"Invalid diff. Expected %v at %v but found nothing.",
 				v.Json(metadata...), pathBehind)
 		}
+		if !toDelete.Equals(v, metadata...) {
+			return nil, fmt.Errorf(
+				"Invalid diff. Expected %v at %v but found %v.",
+				v.Json(metadata...), pathBehind, toDelete.Json(metadata...))
+
+		}
 		delete(aMap, hc)
 	}
 	for _, v := range newValues {
-		hc := v.hashCode(metadata)
+		var hc [8]byte
+		if o, ok := v.(jsonObject); ok {
+			// Hash objects by their identitiy.
+			hc = o.ident(metadata)
+		} else {
+			// Everything else by full content.
+			hc = v.hashCode(metadata)
+		}
 		aMap[hc] = v
 	}
 	hashes := make(hashCodes, 0, len(aMap))
