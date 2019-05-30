@@ -159,12 +159,27 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 		return newValue, nil
 	}
 	// Unrolled recursive case
-	n, metadata, _ := pathAhead.next()
-	_, ok := n.(jsonObject)
+	n, metadata, rest := pathAhead.next()
+	o, ok := n.(jsonObject)
 	if !ok {
 		return nil, fmt.Errorf(
 			"Invalid path element %v. Expected jsonObject.", n)
 	}
+	if len(rest) > 0 {
+		// Recurse into a specific object.
+		lookingFor := o.ident(metadata)
+		for _, v := range s {
+			if o, ok := v.(jsonObject); ok {
+				id := o.ident(metadata)
+				if id == lookingFor {
+					v.patch(append(pathBehind, n), rest, oldValues, newValues)
+					return s, nil
+				}
+			}
+		}
+		return nil, fmt.Errorf("Invalid diff. Expected object with id %v but found none", o.Json(metadata...))
+	}
+	// Patch set
 	aMap := make(map[[8]byte]JsonNode)
 	for _, v := range s {
 		var hc [8]byte
