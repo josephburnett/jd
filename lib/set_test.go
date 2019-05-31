@@ -411,7 +411,7 @@ func TestSetPatch(t *testing.T) {
 		),
 		want: `[]`,
 	}, {
-		name:     "patch object by id",
+		name:     "patch property to object in set",
 		metadata: SET,
 		given:    `[{"id":"foo"}]`,
 		patch: s(
@@ -419,6 +419,43 @@ func TestSetPatch(t *testing.T) {
 			`+ "baz"`,
 		),
 		want: `[{"id":"foo","bar":"baz"}]`,
+	}, {
+		name:     "patch object among empty objects",
+		metadata: SET,
+		given:    `[{},{},{"id":"foo"},{}]`,
+		patch: s(
+			`@ [["set","setkeys=id"],{"id":"foo"},"bar"]`,
+			`+ "baz"`,
+		),
+		want: `[{},{"id":"foo","bar":"baz"},{},{}]`,
+	}, {
+		name:     "patch object by multiple ids",
+		metadata: SET,
+		given:    `[{},{"id1":"foo","id2":"zap"},{}]`,
+		patch: s(
+			`@ [["set","setkeys=id1,id2"],{"id1":"foo","id2":"zap"},"bar"]`,
+			`+ "baz"`,
+		),
+		want: `[{},{"id1":"foo","id2":"zap","bar":"baz"},{}]`,
+	}, {
+		name:     "patch object by id among other",
+		metadata: SET,
+		given:    `[{"id":"foo"},{"id":"bar"}]`,
+		patch: s(
+			`@ [["set","setkeys=id"],{"id":"foo"},"baz"]`,
+			`+ "zap"`,
+		),
+		want: `[{"id":"foo","baz":"zap"},{"id":"bar"}]`,
+	}, {
+		name:     "replace two objects with diffent ids",
+		metadata: SET,
+		given:    `[{"id":"foo"}]`,
+		patch: s(
+			`@ [["set","setkeys=id"],{}]`,
+			`- {"id":"foo"}`,
+			`+ {"id":"bar"}`,
+		),
+		want: `[{"id":"bar"}]`,
 	}}
 
 	for _, c := range cases {
