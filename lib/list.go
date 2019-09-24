@@ -47,7 +47,7 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	if !ok {
 		// Different types
 		e := DiffElement{
-			Path:      path,
+			Path:      path.clone(),
 			OldValues: nodeList(a1),
 			NewValues: nodeList(n),
 		}
@@ -69,7 +69,7 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata) Diff {
 		}
 		if a1Has && !a2Has {
 			e := DiffElement{
-				Path:      subPath,
+				Path:      subPath.clone(),
 				OldValues: nodeList(a1[i]),
 				NewValues: nodeList(),
 			}
@@ -77,7 +77,7 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata) Diff {
 		}
 		if !a1Has && a2Has {
 			e := DiffElement{
-				Path:      subPath,
+				Path:      subPath.clone(),
 				OldValues: nodeList(),
 				NewValues: nodeList(a2[i]),
 			}

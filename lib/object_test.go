@@ -55,6 +55,18 @@ func TestObjectDiff(t *testing.T) {
 		`+ 1`,
 		`@ ["a","d"]`,
 		`+ 2`)
+	// regression test for issue #18
+	checkDiff(ctx,
+		`{"R": [{"I": [{"T": [{"V": "t","K": "N"},{"V": "T","K": "I"}]}]}]}`,
+		`{"R": [{"I": [{"T": [{"V": "t","K": "N"},{"V": "Q","K": "C"},{"V": "T","K": "I"}]}]}]}`,
+		`@ ["R",0,"I",0,"T",1,"K"]`,
+		`- "I"`,
+		`+ "C"`,
+		`@ ["R",0,"I",0,"T",1,"V"]`,
+		`- "T"`,
+		`+ "Q"`,
+		`@ ["R",0,"I",0,"T",2]`,
+		`+ {"K":"I","V":"T"}`)
 }
 
 func testObjectPatch(t *testing.T) {

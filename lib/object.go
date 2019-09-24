@@ -122,7 +122,7 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	if !ok {
 		// Different types
 		e := DiffElement{
-			Path:      path,
+			Path:      path.clone(),
 			OldValues: []JsonNode{o1},
 			NewValues: []JsonNode{n},
 		}
@@ -147,7 +147,7 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
 		} else {
 			// O2 missing key
 			e := DiffElement{
-				Path:      append(path, jsonString(k1)),
+				Path:      append(path, jsonString(k1)).clone(),
 				OldValues: nodeList(v1),
 				NewValues: nodeList(),
 			}
@@ -159,7 +159,7 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
 		if _, ok := o1.properties[k2]; !ok {
 			// O1 missing key
 			e := DiffElement{
-				Path:      append(path, jsonString(k2)),
+				Path:      append(path, jsonString(k2)).clone(),
 				OldValues: nodeList(),
 				NewValues: nodeList(v2),
 			}

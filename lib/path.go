@@ -20,6 +20,12 @@ func (p path) appendIndex(o jsonObject, metadata []Metadata) path {
 	return append(p, o)
 }
 
+func (p path) clone() path {
+	c := make(path, len(p))
+	copy(c, p)
+	return c
+}
+
 func (p path) next() (JsonNode, []Metadata, path) {
 	var metadata []Metadata
 	for i, n := range p {

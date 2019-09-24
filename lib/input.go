@@ -97,12 +97,12 @@ func readDiff(s string) (Diff, error) {
 			if err != nil {
 				return errorAt(i, "Invalid path. %v", err.Error())
 			}
-			path, ok := p.(jsonArray)
+			pa, ok := p.(jsonArray)
 			if !ok {
 				return errorAt(i, "Invalid path. Want JSON list. Got %T.", p)
 			}
 			de = DiffElement{
-				Path:      path,
+				Path:      path(pa).clone(),
 				OldValues: []JsonNode{},
 				NewValues: []JsonNode{},
 			}

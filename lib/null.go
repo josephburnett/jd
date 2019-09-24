@@ -31,7 +31,7 @@ func (n jsonNull) diff(node JsonNode, path path, metadata []Metadata) Diff {
 		return d
 	}
 	e := DiffElement{
-		Path:      path,
+		Path:      path.clone(),
 		OldValues: nodeList(n),
 		NewValues: nodeList(node),
 	}
