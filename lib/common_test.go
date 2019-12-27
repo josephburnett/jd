@@ -90,14 +90,9 @@ func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
 		diff += dl + "\n"
 	}
 	d := nodeA.Diff(nodeB, ctx.metadata...)
-	expectedDiff, err := ReadDiffString(diff)
-	if err != nil {
-		ctx.t.Fatalf(err.Error())
-	}
-	want := expectedDiff.Render()
 	got := d.Render()
-	if got != want {
-		ctx.t.Errorf("%v.Diff(%v) = \n%v. Want %v.", nodeA, nodeB, got, want)
+	if got != diff {
+		ctx.t.Errorf("%v.Diff(%v) = \n%v. Want %v.", nodeA, nodeB, got, diff)
 	}
 }
 

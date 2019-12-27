@@ -47,7 +47,7 @@ func TestArrayDiff(t *testing.T) {
 		`@ [0]`,
 		`- 1`)
 	checkDiff(ctx, `[[]]`, `[[1]]`,
-		`@ [0, 0]`,
+		`@ [0,0]`,
 		`+ 1`)
 	checkDiff(ctx, `[1]`, `[2]`,
 		`@ [0]`,
