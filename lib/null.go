@@ -1,11 +1,11 @@
 package jd
 
-type jsonNull struct{}
+type jsonNull []byte
 
 var _ JsonNode = jsonNull{}
 
 func (n jsonNull) Json(metadata ...Metadata) string {
-	return renderJson(nil)
+	return renderJson(n)
 }
 
 func (n jsonNull) Equals(node JsonNode, metadata ...Metadata) bool {
