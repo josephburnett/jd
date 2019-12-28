@@ -143,7 +143,7 @@ func TestMultisetDiff(t *testing.T) {
 		metadata: MULTISET,
 		a:        `[]`,
 		b:        `[]`,
-		want:     s(``),
+		want:     s(),
 	}, {
 		name:     "two multisets with different numbers",
 		metadata: MULTISET,
@@ -158,7 +158,7 @@ func TestMultisetDiff(t *testing.T) {
 		metadata: MULTISET,
 		a:        `[1,2]`,
 		b:        `[1,2]`,
-		want:     s(``),
+		want:     s(),
 	}, {
 		name:     "adding two numbers",
 		metadata: MULTISET,

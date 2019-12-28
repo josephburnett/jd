@@ -157,7 +157,7 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `[]`,
 		b:        `[]`,
-		want:     s(``),
+		want:     s(),
 	}, {
 		name:     "add a number",
 		metadata: m(SET),
@@ -172,7 +172,7 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `[1,2]`,
 		b:        `[1,2]`,
-		want:     s(``),
+		want:     s(),
 	}, {
 		name:     "add a number multiple times",
 		metadata: m(SET),
@@ -309,7 +309,7 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `{"a":[1,2]}`,
 		b:        `{"a":[2,1]}`,
-		want:     s(``),
+		want:     s(),
 	}}
 
 	for _, c := range cases {
