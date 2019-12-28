@@ -19,9 +19,6 @@ func singleValue(nodes []JsonNode) JsonNode {
 	if len(nodes) == 0 {
 		return voidNode{}
 	}
-	if len(nodes) > 1 {
-		panic(fmt.Sprintf("Expected single value. Got %v.", nodes))
-	}
 	return nodes[0]
 }
 
@@ -37,7 +34,7 @@ func patchErrExpectColl(n JsonNode, pe interface{}) (JsonNode, error) {
 			"Found %v at %v. Expected JSON array.",
 			n.Json(), pe)
 	default:
-		panic(fmt.Sprintf("Invalid path element %v.", pe))
+		return nil, fmt.Errorf("Invalid path element %v.", pe)
 	}
 
 }
