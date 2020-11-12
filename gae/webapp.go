@@ -1,38 +1,42 @@
-package webapp
+package main
 
 import (
 	"html/template"
 	"net/http"
-	
+
 	jd "github.com/josephburnett/jd/lib"
 )
 
 type Mode string
 
 const (
-	DiffMode = Mode("diff")
+	DiffMode  = Mode("diff")
 	PatchMode = Mode("patch")
 )
 
 type State struct {
-	InputA string
-	NodeA jd.JsonNode
+	InputA     string
+	NodeA      jd.JsonNode
 	NodeAError error
-	InputB string
-	NodeB jd.JsonNode
+	InputB     string
+	NodeB      jd.JsonNode
 	NodeBError error
-	InputDiff string
-	Diff jd.Diff
-	DiffError error
-	Mode Mode
-	Debug string
+	InputDiff  string
+	Diff       jd.Diff
+	DiffError  error
+	Mode       Mode
+	Debug      string
 }
 
 var index *template.Template
 
 func init() {
-	http.HandleFunc("/", handler)
 	index, _ = template.ParseFiles("index.html")
+}
+
+func main() {
+	http.HandleFunc("/", handler)
+	http.ListenAndServe(":8080", nil)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +46,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		err = index.Execute(w, &State{
 			InputA: `{"foo":"bar"}`,
 			InputB: `{"foo":"baz"}`,
-			Mode: DiffMode,			
+			Mode:   DiffMode,
 		})
 	case http.MethodPost:
 		s := getState(r)
@@ -63,10 +67,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func getState(r *http.Request) *State {
 	state := &State{
-		InputA: r.FormValue("a"),
-		InputB: r.FormValue("b"),
+		InputA:    r.FormValue("a"),
+		InputB:    r.FormValue("b"),
 		InputDiff: r.FormValue("diff"),
-		Mode: Mode(r.FormValue("mode")),
+		Mode:      Mode(r.FormValue("mode")),
 	}
 	state.NodeA, state.NodeAError = jd.ReadJsonString(state.InputA)
 	switch state.Mode {
@@ -81,7 +85,7 @@ func getState(r *http.Request) *State {
 func diff(s *State) *State {
 	if s.NodeA != nil && s.NodeB != nil {
 		d := s.NodeA.Diff(s.NodeB)
-	    s.Diff = d
+		s.Diff = d
 		s.InputDiff = d.Render()
 	}
 	return s
