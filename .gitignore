@@ -22,3 +22,7 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+web/assets/wasm_exec.js
+web/assets/jd.wasm
+
