@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Go wasm</title>
+  </head>
+  <body>
+    <form>
+      <p>
+	<pre><legend id="command">jd a.json b.json</legend></pre>
+      </p>
+      <p style="width:50%;float:left">
+	<legend style="text-align:center;font-size:2em"
+		>a.json</legend>
+	<legend id="before-err"></legend>
+	<textarea id="before"
+		  rows="15"
+		  style="width:98%"
+		  ></textarea>
+      </p>
+      <p style="width:50%;float:left">
+	<legend style="text-align:center;font-size:2em"
+		>b.json</legend>
+	<legend id="after-err"></legend>
+	<textarea id="after"
+		  rows="15"
+		  style="width:98%"
+		  ></textarea>
+      </p>
+      <p style="width:100%;float:left">
+	<legend style="text-align:center;font-size:2em"
+		>diff</legend>
+	<legend id="diff-err"></legend>
+	<textarea id="diff"
+		  rows="10"
+		  style="width:99%"
+		  ></textarea>
+      </p>
+    </form>
+    <script src="wasm_exec.js"></script>
+    <!-- <script> -->
+    <!--   const go = new Go(); -->
+    <!--   WebAssembly.instantiateStreaming(fetch("jd.wasm"), go.importObject).then((result) => { -->
+    <!-- 	  go.run(result.instance); -->
+    <!--   }); -->
+    <!-- </script> -->
+  </body>
+</html>
