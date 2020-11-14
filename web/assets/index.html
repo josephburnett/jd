@@ -5,38 +5,45 @@
     <title>Go wasm</title>
   </head>
   <body>
-    <form>
-      <p>
-	<pre><legend id="command">jd a.json b.json</legend></pre>
-      </p>
-      <p style="width:50%;float:left">
-	<legend style="text-align:center;font-size:2em"
-		>a.json</legend>
-	<legend id="before-err"></legend>
-	<textarea id="before"
-		  rows="15"
-		  style="width:98%"
-		  ></textarea>
-      </p>
-      <p style="width:50%;float:left">
-	<legend style="text-align:center;font-size:2em"
-		>b.json</legend>
-	<legend id="after-err"></legend>
-	<textarea id="after"
-		  rows="15"
-		  style="width:98%"
-		  ></textarea>
-      </p>
-      <p style="width:100%;float:left">
-	<legend style="text-align:center;font-size:2em"
-		>diff</legend>
-	<legend id="diff-err"></legend>
-	<textarea id="diff"
-		  rows="10"
-		  style="width:99%"
-		  ></textarea>
-      </p>
-    </form>
+    <p>
+      <pre><legend id="command">jd a.json b.json</legend></pre>
+    </p>
+    <p style="width:50%;float:left">
+      <legend id="a-label"
+	      for="a-json"
+	      style="text-align:center;font-size:2em"
+	      >a.json</legend>
+      <textarea id="a-json"
+		rows="15"
+		style="width:98%"
+		></textarea>
+      <legend id="a-error"
+	      for="a-json"></legend>
+    </p>
+    <p style="width:50%;float:left">
+      <legend id="b-label"
+	      for="b-json"
+	      style="text-align:center;font-size:2em"
+	      >b.json</legend>
+      <textarea id="b-json"
+		rows="15"
+		style="width:98%"
+		></textarea>
+      <legend id="b-error"
+	      for="b-json"></legend>
+    </p>
+    <p style="width:100%;float:left">
+      <legend id="diff-label"
+	      style="text-align:center;font-size:2em"
+	      >diff</legend>
+      <textarea id="diff"
+		rows="10"
+		style="width:99%"
+		disabled="true"
+		></textarea>
+      <legend id="diff-error"
+	      for="diff"></legend>
+    </p>
     <script src="wasm_exec.js"></script>
     <script>
       const go = new Go();
