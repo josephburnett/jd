@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	jd "github.com/josephburnett/jd/lib"
@@ -17,9 +19,14 @@ var output = flag.String("o", "", "Output file")
 var set = flag.Bool("set", false, "Arrays as sets")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
 var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
+var port = flag.Int("port", 0, "Serve web UI on port.")
 
 func main() {
 	flag.Parse()
+	if *port != 0 {
+		serveWeb(strconv.Itoa(*port))
+		return
+	}
 	metadata, err := parseMetadata()
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -40,6 +47,13 @@ func main() {
 	} else {
 		diffJson(a, b, metadata)
 	}
+}
+
+func serveWeb(port string) error {
+	fs := http.FileServer(http.Dir("./web/assets"))
+	http.Handle("/", fs)
+	log.Printf("Listening on :%v...", port)
+	return http.ListenAndServe(":"+port, nil)
 }
 
 func parseMetadata() ([]jd.Metadata, error) {
