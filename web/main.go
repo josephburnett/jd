@@ -18,6 +18,9 @@ const (
 	diffLabelId = "diff-label"
 	diffId      = "diff"
 	diffErrorId = "diff-error"
+	arrayListId = "array-list"
+	arraySetId  = "array-set"
+	arrayMsetId = "array-mset"
 )
 
 func main() {
@@ -32,8 +35,7 @@ type app struct {
 	doc      js.Value
 	changeCh chan struct{}
 	patch    bool
-	set      bool
-	mset     bool
+	array    string
 }
 
 func newApp() (*app, error) {
@@ -51,7 +53,17 @@ func newApp() (*app, error) {
 			return nil, err
 		}
 	}
-	go a.handleInput()
+	for _, id := range []string{
+		arrayListId,
+		arraySetId,
+		arrayMsetId,
+	} {
+		err := a.watchArray(id)
+		if err != nil {
+			return nil, err
+		}
+	}
+	go a.handleChange()
 	return a, nil
 }
 
@@ -68,7 +80,23 @@ func (a *app) watchInput(id string) error {
 	return nil
 }
 
-func (a *app) handleInput() {
+func (a *app) watchArray(id string) error {
+	listener := func(_ js.Value, _ []js.Value) interface{} {
+		a.mux.Lock()
+		defer a.mux.Unlock()
+		a.array = id
+		a.changeCh <- struct{}{}
+		return nil
+	}
+	element := a.getElementById(id)
+	if element.IsNull() {
+		return fmt.Errorf("id %v not found", id)
+	}
+	element.Call("addEventListener", "change", js.FuncOf(listener))
+	return nil
+}
+
+func (a *app) handleChange() {
 	for {
 		select {
 		case <-a.changeCh:
@@ -80,6 +108,15 @@ func (a *app) handleInput() {
 func (a *app) reconcile() {
 	a.mux.Lock()
 	defer a.mux.Unlock()
+
+	metadata := []jd.Metadata{}
+	switch a.array {
+	case arraySetId:
+		metadata = append(metadata, jd.SET)
+	case arrayMsetId:
+		metadata = append(metadata, jd.MULTISET)
+	default:
+	}
 
 	var fail bool
 
@@ -106,7 +143,7 @@ func (a *app) reconcile() {
 		return
 	}
 
-	diff := aNode.Diff(bNode)
+	diff := aNode.Diff(bNode, metadata...)
 	a.setTextarea(diffId, diff.Render())
 	return
 }

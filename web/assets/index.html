@@ -44,6 +44,35 @@
       <legend id="diff-error"
 	      for="diff"></legend>
     </p>
+    <legend id="options"
+	    style="font-size:2em"
+	    >options</legend>
+    <p>
+      <legend id="options-array-label"
+	      >Treat arrays as an:</legend>
+      <div>
+	<input id="array-list"
+	       type="radio"
+	       name="array"
+	       value="list"
+	       checked>
+	<label for="array-list">ordered list</label>
+      </div>
+      <div>
+	<input id="array-set"
+	       type="radio"
+	       name="array"
+	       value="set">
+	<label for="array-set">unordered set</label>
+      </div>
+      <div>
+	<input id="array-mset"
+	       type="radio"
+	       name="array"
+	       value="mset">
+	<label for="array-mset">unordered multiset (bag)</label>
+      </div>
+    </p>
     <script src="wasm_exec.js"></script>
     <script>
       const go = new Go();
