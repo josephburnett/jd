@@ -39,7 +39,6 @@
       <textarea id="diff"
 		rows="10"
 		style="width:99%"
-		disabled="true"
 		></textarea>
       <legend id="diff-error"
 	      for="diff"></legend>
@@ -47,6 +46,23 @@
     <legend id="options"
 	    style="font-size:2em"
 	    >options</legend>
+    <p>
+      <div>
+	<input id="mode-diff"
+	       type="radio"
+	       name="mode"
+	       value="diff"
+	       checked>
+	<label for="mode-diff">diff</label>
+      </div>
+      <div>
+	<input id="mode-patch"
+	       type="radio"
+	       name="mode"
+	       value="patch">
+	<label for="mode-patch">patch</label>
+      </div>
+    </p>
     <p>
       <legend id="options-array-label"
 	      >Treat arrays as an:</legend>

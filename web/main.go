@@ -18,6 +18,8 @@ const (
 	diffLabelId = "diff-label"
 	diffId      = "diff"
 	diffErrorId = "diff-error"
+	modeDiffId  = "mode-diff"
+	modePatchId = "mode-patch"
 	arrayListId = "array-list"
 	arraySetId  = "array-set"
 	arrayMsetId = "array-mset"
@@ -34,7 +36,7 @@ type app struct {
 	mux      sync.Mutex
 	doc      js.Value
 	changeCh chan struct{}
-	patch    bool
+	mode     string
 	array    string
 }
 
@@ -42,6 +44,8 @@ func newApp() (*app, error) {
 	a := &app{
 		changeCh: make(chan struct{}, 10),
 		doc:      js.Global().Get("document"),
+		mode:     modeDiffId,
+		array:    arrayListId,
 	}
 	for _, id := range []string{
 		aJsonId,
@@ -49,6 +53,15 @@ func newApp() (*app, error) {
 		diffId,
 	} {
 		err := a.watchInput(id)
+		if err != nil {
+			return nil, err
+		}
+	}
+	for _, id := range []string{
+		modeDiffId,
+		modePatchId,
+	} {
+		err := a.watchMode(id)
 		if err != nil {
 			return nil, err
 		}
@@ -96,6 +109,22 @@ func (a *app) watchArray(id string) error {
 	return nil
 }
 
+func (a *app) watchMode(id string) error {
+	listener := func(_ js.Value, _ []js.Value) interface{} {
+		a.mux.Lock()
+		defer a.mux.Unlock()
+		a.mode = id
+		a.changeCh <- struct{}{}
+		return nil
+	}
+	element := a.getElementById(id)
+	if element.IsNull() {
+		return fmt.Errorf("id %v not found", id)
+	}
+	element.Call("addEventListener", "change", js.FuncOf(listener))
+	return nil
+}
+
 func (a *app) handleChange() {
 	for {
 		select {
@@ -109,6 +138,19 @@ func (a *app) reconcile() {
 	a.mux.Lock()
 	defer a.mux.Unlock()
 
+	aJson := a.getElementById(aJsonId)
+	bJson := a.getElementById(bJsonId)
+	diffText := a.getElementById(diffId)
+	switch a.mode {
+	case modeDiffId:
+		bJson.Set("disabled", js.ValueOf(false))
+		diffText.Set("disabled", js.ValueOf(true))
+	case modePatchId:
+		bJson.Set("disabled", js.ValueOf(true))
+		diffText.Set("disabled", js.ValueOf(false))
+	default:
+	}
+
 	metadata := []jd.Metadata{}
 	switch a.array {
 	case arraySetId:
@@ -120,7 +162,6 @@ func (a *app) reconcile() {
 
 	var fail bool
 
-	aJson := a.getElementById(aJsonId)
 	aNode, err := jd.ReadJsonString(aJson.Get("value").String())
 	if err != nil {
 		a.setLabel(aErrorId, err.Error())
@@ -129,22 +170,52 @@ func (a *app) reconcile() {
 		a.setLabel(aErrorId, "")
 	}
 
-	bJson := a.getElementById(bJsonId)
-	bNode, err := jd.ReadJsonString(bJson.Get("value").String())
-	if err != nil {
-		a.setLabel(bErrorId, err.Error())
-		fail = true
-	} else {
-		a.setLabel(bErrorId, "")
-	}
+	switch a.mode {
+	case modeDiffId:
+		bNode, err := jd.ReadJsonString(bJson.Get("value").String())
+		if err != nil {
+			a.setLabel(bErrorId, err.Error())
+			fail = true
+		} else {
+			a.setLabel(bErrorId, "")
+		}
 
-	if fail {
-		a.setTextarea(diffId, "")
-		return
-	}
+		if fail {
+			a.setTextarea(diffId, "")
+			return
+		}
 
-	diff := aNode.Diff(bNode, metadata...)
-	a.setTextarea(diffId, diff.Render())
+		diff := aNode.Diff(bNode, metadata...)
+		a.setTextarea(diffId, diff.Render())
+	case modePatchId:
+		diff, err := jd.ReadDiffString(diffText.Get("value").String())
+		if err != nil {
+			a.setLabel(diffErrorId, err.Error())
+			fail = true
+		} else {
+			a.setLabel(diffErrorId, "")
+		}
+
+		if fail {
+			a.setTextarea(bJsonId, "")
+			return
+		}
+
+		bNode, err := aNode.Patch(diff)
+		if err != nil {
+			a.setLabel(diffErrorId, err.Error())
+			fail = true
+		} else {
+			a.setLabel(diffErrorId, "")
+		}
+
+		if fail {
+			a.setTextarea(bJsonId, "")
+			return
+		}
+
+		a.setTextarea(bJsonId, bNode.Json(metadata...))
+	}
 	return
 }
 
