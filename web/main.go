@@ -9,21 +9,25 @@ import (
 )
 
 const (
-	commandId   = "command"
-	aLabelId    = "a-label"
-	aJsonId     = "a-json"
-	aErrorId    = "a-error"
-	bLabelId    = "b-label"
-	bJsonId     = "b-json"
-	bErrorId    = "b-error"
-	diffLabelId = "diff-label"
-	diffId      = "diff"
-	diffErrorId = "diff-error"
-	modeDiffId  = "mode-diff"
-	modePatchId = "mode-patch"
-	arrayListId = "array-list"
-	arraySetId  = "array-set"
-	arrayMsetId = "array-mset"
+	commandId      = "command"
+	aLabelId       = "a-label"
+	aJsonId        = "a-json"
+	aErrorId       = "a-error"
+	bLabelId       = "b-label"
+	bJsonId        = "b-json"
+	bErrorId       = "b-error"
+	diffLabelId    = "diff-label"
+	diffId         = "diff"
+	diffErrorId    = "diff-error"
+	modeDiffId     = "mode-diff"
+	modePatchId    = "mode-patch"
+	arrayListId    = "array-list"
+	arraySetId     = "array-set"
+	arrayMsetId    = "array-mset"
+	focusStyle     = "border:solid 3px #080"
+	unfocusStyle   = "border:solid 3px #aaa"
+	halfWidthStyle = "width:97%"
+	fullWidthStyle = "width:98.5%"
 )
 
 func main() {
@@ -78,6 +82,7 @@ func newApp() (*app, error) {
 		}
 	}
 	go a.handleChange()
+	a.changeCh <- struct{}{}
 	return a, nil
 }
 
@@ -168,11 +173,17 @@ func (a *app) reconcile() {
 	diffText := a.getElementById(diffId)
 	switch a.mode {
 	case modeDiffId:
+		aJson.Set("style", focusStyle+";"+halfWidthStyle)
 		bJson.Set("readonly", js.ValueOf(false))
+		bJson.Set("style", focusStyle+";"+halfWidthStyle)
 		diffText.Set("readonly", js.ValueOf(true))
+		diffText.Set("style", unfocusStyle+";"+fullWidthStyle)
 	case modePatchId:
+		aJson.Set("style", focusStyle+";"+halfWidthStyle)
 		bJson.Set("readonly", js.ValueOf(true))
+		bJson.Set("style", unfocusStyle+";"+halfWidthStyle)
 		diffText.Set("readonly", js.ValueOf(false))
+		diffText.Set("style", focusStyle+";"+fullWidthStyle)
 	default:
 	}
 
