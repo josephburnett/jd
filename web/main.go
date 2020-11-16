@@ -168,11 +168,11 @@ func (a *app) reconcile() {
 	diffText := a.getElementById(diffId)
 	switch a.mode {
 	case modeDiffId:
-		bJson.Set("disabled", js.ValueOf(false))
-		diffText.Set("disabled", js.ValueOf(true))
+		bJson.Set("readonly", js.ValueOf(false))
+		diffText.Set("readonly", js.ValueOf(true))
 	case modePatchId:
-		bJson.Set("disabled", js.ValueOf(true))
-		diffText.Set("disabled", js.ValueOf(false))
+		bJson.Set("readonly", js.ValueOf(true))
+		diffText.Set("readonly", js.ValueOf(false))
 	default:
 	}
 
