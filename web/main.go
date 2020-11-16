@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	commandId   = "command"
 	aLabelId    = "a-label"
 	aJsonId     = "a-json"
 	aErrorId    = "a-error"
@@ -138,6 +139,30 @@ func (a *app) reconcile() {
 	a.mux.Lock()
 	defer a.mux.Unlock()
 
+	// set the command label
+	command := "jd"
+	switch a.mode {
+	case modePatchId:
+		command += " -p"
+	default:
+	}
+	switch a.array {
+	case arraySetId:
+		command += " -set"
+	case arrayMsetId:
+		command += " -mset"
+	default:
+	}
+	switch a.mode {
+	case modeDiffId:
+		command += " a.json b.json"
+	case modePatchId:
+		command += " a.json diff"
+	default:
+	}
+	a.setLabel(commandId, command)
+
+	// Enable / disable inputs based on mode
 	aJson := a.getElementById(aJsonId)
 	bJson := a.getElementById(bJsonId)
 	diffText := a.getElementById(diffId)
@@ -151,6 +176,7 @@ func (a *app) reconcile() {
 	default:
 	}
 
+	// Chose array semantic metadata
 	metadata := []jd.Metadata{}
 	switch a.array {
 	case arraySetId:
@@ -162,6 +188,7 @@ func (a *app) reconcile() {
 
 	var fail bool
 
+	// Parse a.json
 	aNode, err := jd.ReadJsonString(aJson.Get("value").String())
 	if err != nil {
 		a.setLabel(aErrorId, err.Error())
@@ -172,6 +199,7 @@ func (a *app) reconcile() {
 
 	switch a.mode {
 	case modeDiffId:
+		// parse b.json
 		bNode, err := jd.ReadJsonString(bJson.Get("value").String())
 		if err != nil {
 			a.setLabel(bErrorId, err.Error())
@@ -185,9 +213,11 @@ func (a *app) reconcile() {
 			return
 		}
 
+		// produce diff
 		diff := aNode.Diff(bNode, metadata...)
 		a.setTextarea(diffId, diff.Render())
 	case modePatchId:
+		// parse diff
 		diff, err := jd.ReadDiffString(diffText.Get("value").String())
 		if err != nil {
 			a.setLabel(diffErrorId, err.Error())
@@ -201,6 +231,7 @@ func (a *app) reconcile() {
 			return
 		}
 
+		// produce b.json
 		bNode, err := aNode.Patch(diff)
 		if err != nil {
 			a.setLabel(diffErrorId, err.Error())
