@@ -25,7 +25,7 @@ const (
 	arraySetId     = "array-set"
 	arrayMsetId    = "array-mset"
 	focusStyle     = "border:solid 3px #080"
-	unfocusStyle   = "border:solid 3px #aaa"
+	unfocusStyle   = "border:solid 3px #ccc"
 	halfWidthStyle = "width:97%"
 	fullWidthStyle = "width:98.5%"
 )
