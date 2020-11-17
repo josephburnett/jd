@@ -162,7 +162,7 @@ func (a *app) reconcile() {
 	case modeDiffId:
 		command += " a.json b.json"
 	case modePatchId:
-		command += " a.json diff"
+		command += " diff a.json"
 	default:
 	}
 	a.setLabel(commandId, command)

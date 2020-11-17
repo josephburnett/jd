@@ -95,6 +95,37 @@
 	<label for="array-mset">unordered multiset (bag)</label>
       </div>
     </p>
+    <legend id="about"
+	    style="font-size:2em"
+	    >about</legend>
+    <p>
+      <b>jd</b> is a free and open-source tool for comparing
+      <a href="https://www.json.org">JSON</a> values. The output
+      (diff) is easy for humans to read and can also be used to
+      programatically modify (patch) other JSON values. It looks
+      similar to the
+      <a href="https://www.gnu.org/software/diffutils/manual/html_node/Example-Unified.html#Example-Unified">unified
+      diff format</a>. Read more about the diff
+      language <a href="https://github.com/josephburnett/jd/blob/master/README.md#diff-language">here</a>.
+    </p>
+    <p>
+      This page is a web interface for jd. Enter two JSON values in
+      the a.json and b.json fields and the output will be shown in the
+      diff field. Switch the Options to patch and the diff will be
+      applied to a.json to produce b.json. The tool runs entirely in
+      the browser and no data is sent outside the page. Its safe to
+      use.
+    </p>
+    <p>
+      jd is also available as
+      a <a href="https://github.com/josephburnett/jd/releases">commandline
+      tool</a> and
+      a <a href="https://github.com/josephburnett/jd/tree/master/lib">golang
+      library</a>. The source code is available
+      at <a href="https://github.com/josephburnett/jd">https://github.com/josephburnett/jd</a>.
+      Bug reports, questions and suggestions
+      are <a href="https://github.com/josephburnett/jd/issues">welcome</a>.
+    </p>
     <script src="wasm_exec.js"></script>
     <script>
       const go = new Go();

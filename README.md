@@ -4,7 +4,7 @@
 
 ## Try it out
 
-https://jd-tool.appspot.com
+http://play.jd-tool.io/
 
 ## Command line usage
 
