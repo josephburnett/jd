@@ -200,7 +200,7 @@ func (a *app) reconcile() {
 	var fail bool
 
 	// Parse a.json
-	aNode, err := jd.ReadJsonString(aJson.Get("value").String())
+	aNode, err := jd.ReadYamlString(aJson.Get("value").String())
 	if err != nil {
 		a.setLabel(aErrorId, err.Error())
 		fail = true
@@ -211,7 +211,7 @@ func (a *app) reconcile() {
 	switch a.mode {
 	case modeDiffId:
 		// parse b.json
-		bNode, err := jd.ReadJsonString(bJson.Get("value").String())
+		bNode, err := jd.ReadYamlString(bJson.Get("value").String())
 		if err != nil {
 			a.setLabel(bErrorId, err.Error())
 			fail = true
@@ -256,7 +256,7 @@ func (a *app) reconcile() {
 			return
 		}
 
-		a.setTextarea(bJsonId, bNode.Json(metadata...))
+		a.setTextarea(bJsonId, bNode.Yaml(metadata...))
 	}
 	return
 }
