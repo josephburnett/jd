@@ -20,6 +20,7 @@ var set = flag.Bool("set", false, "Arrays as sets")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
 var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
 var port = flag.Int("port", 0, "Serve web UI on port.")
+var yaml = flag.Bool("yaml", false, "Read and write YAML instead of JSON.")
 
 func main() {
 	flag.Parse()
@@ -42,10 +43,16 @@ func main() {
 	default:
 		printUsageAndExit()
 	}
+	patchFn := patchJson
+	diffFn := diffJson
+	if *yaml {
+		patchFn = patchYaml
+		diffFn = diffYaml
+	}
 	if *patch {
-		patchJson(a, b, metadata)
+		patchFn(a, b, metadata)
 	} else {
-		diffJson(a, b, metadata)
+		diffFn(a, b, metadata)
 	}
 }
 
@@ -94,6 +101,7 @@ func printUsageAndExit() {
 		`  -o=FILE3  Write to FILE3 instead of STDOUT.`,
 		`  -set      Treat arrays as sets.`,
 		`  -mset     Treat arrays as multisets (bags).`,
+		`  -yaml     Read and write YAML instead of JSON.`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,
@@ -124,6 +132,23 @@ func diffJson(a, b string, metadata []jd.Metadata) {
 	}
 }
 
+func diffYaml(a, b string, metadata []jd.Metadata) {
+	aNode, err := jd.ReadYamlString(a)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	bNode, err := jd.ReadYamlString(b)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	diff := aNode.Diff(bNode, metadata...)
+	if *output == "" {
+		fmt.Print(diff.Render())
+	} else {
+		ioutil.WriteFile(*output, []byte(diff.Render()), 0644)
+	}
+}
+
 func patchJson(p, a string, metadata []jd.Metadata) {
 	diff, err := jd.ReadDiffString(p)
 	if err != nil {
@@ -141,6 +166,26 @@ func patchJson(p, a string, metadata []jd.Metadata) {
 		fmt.Print(bNode.Json(metadata...))
 	} else {
 		ioutil.WriteFile(*output, []byte(bNode.Json(metadata...)), 0644)
+	}
+}
+
+func patchYaml(p, a string, metadata []jd.Metadata) {
+	diff, err := jd.ReadDiffString(p)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	aNode, err := jd.ReadYamlString(a)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	bNode, err := aNode.Patch(diff)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	if *output == "" {
+		fmt.Print(bNode.Yaml(metadata...))
+	} else {
+		ioutil.WriteFile(*output, []byte(bNode.Yaml(metadata...)), 0644)
 	}
 }
 

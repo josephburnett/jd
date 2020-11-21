@@ -18,7 +18,7 @@ type JsonNode interface {
 
 func NewJsonNode(n interface{}) (JsonNode, error) {
 	switch t := n.(type) {
-	case map[string]interface{}:
+	case map[interface{}]interface{}:
 		m := jsonObject{
 			properties: make(map[string]JsonNode),
 			idKeys:     make(map[string]bool),
@@ -29,7 +29,7 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 				if err != nil {
 					return nil, err
 				}
-				m.properties[k] = e
+				m.properties[k.(string)] = e
 			}
 		}
 		return m, nil
@@ -47,6 +47,8 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 		return l, nil
 	case float64:
 		return jsonNumber(t), nil
+	case int:
+		return jsonNumber(float64(t)), nil
 	case string:
 		return jsonString(t), nil
 	case bool:
@@ -54,7 +56,7 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 	case nil:
 		return jsonNull(nil), nil
 	default:
-		return nil, errors.New(fmt.Sprintf("Unsupported type %v", t))
+		return nil, errors.New(fmt.Sprintf("Unsupported type %T", t))
 	}
 }
 
