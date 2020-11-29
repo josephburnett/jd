@@ -43,3 +43,11 @@ func (a jsonArray) patch(pathBehind, pathAhead path, oldValues, newValues []Json
 	n := dispatch(a, metadata)
 	return n.patch(pathBehind, pathAhead, oldValues, newValues)
 }
+
+func (a jsonArray) raw(metadata []Metadata) interface{} {
+	r := make([]interface{}, len(a))
+	for i, n := range a {
+		r[i] = n.raw(metadata)
+	}
+	return r
+}

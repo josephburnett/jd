@@ -10,7 +10,7 @@ type jsonMultiset jsonArray
 var _ JsonNode = jsonMultiset(nil)
 
 func (a jsonMultiset) Json(metadata ...Metadata) string {
-	return renderJson(a)
+	return renderJson(a, metadata)
 }
 
 func (a1 jsonMultiset) Equals(n JsonNode, metadata ...Metadata) bool {
@@ -186,4 +186,8 @@ func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []J
 		newValue = append(newValue, aMap[hc])
 	}
 	return newValue, nil
+}
+
+func (a jsonMultiset) raw(metadata []Metadata) interface{} {
+	return jsonArray(a).raw(metadata)
 }

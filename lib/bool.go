@@ -5,7 +5,7 @@ type jsonBool bool
 var _ JsonNode = jsonBool(true)
 
 func (b jsonBool) Json(metadata ...Metadata) string {
-	return renderJson(b)
+	return renderJson(b, metadata)
 }
 
 func (b1 jsonBool) Equals(n JsonNode, metadata ...Metadata) bool {
@@ -58,4 +58,8 @@ func (b jsonBool) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		return patchErrExpectValue(oldValue, b, pathBehind)
 	}
 	return newValue, nil
+}
+
+func (b jsonBool) raw(metadata []Metadata) interface{} {
+	return bool(b)
 }

@@ -10,7 +10,7 @@ type jsonNumber float64
 var _ JsonNode = jsonNumber(0)
 
 func (n jsonNumber) Json(metadata ...Metadata) string {
-	return renderJson(n)
+	return renderJson(n, metadata)
 }
 
 func (n1 jsonNumber) Equals(node JsonNode, metadata ...Metadata) bool {
@@ -65,4 +65,8 @@ func (n jsonNumber) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 		return patchErrExpectValue(oldValue, n, pathBehind)
 	}
 	return newValue, nil
+}
+
+func (n jsonNumber) raw(_ []Metadata) interface{} {
+	return float64(n)
 }

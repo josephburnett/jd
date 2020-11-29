@@ -1,7 +1,6 @@
 package jd
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 )
@@ -15,12 +14,7 @@ type jsonObject struct {
 var _ JsonNode = jsonObject{}
 
 func (o jsonObject) Json(metadata ...Metadata) string {
-	j := make(map[string]interface{})
-	for k, v := range o.properties {
-		j[k] = v
-	}
-	s, _ := json.Marshal(j)
-	return string(s)
+	return renderJson(o, metadata)
 }
 
 func (o jsonObject) MarshalJSON() ([]byte, error) {
@@ -210,4 +204,12 @@ func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 		o.properties[string(pe)] = patchedNode
 	}
 	return o, nil
+}
+
+func (o jsonObject) raw(metadata []Metadata) interface{} {
+	j := make(map[string]interface{})
+	for k, v := range o.properties {
+		j[k] = v.raw(metadata)
+	}
+	return j
 }

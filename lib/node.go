@@ -14,6 +14,7 @@ type JsonNode interface {
 	diff(n JsonNode, p path, metadata []Metadata) Diff
 	Patch(d Diff) (JsonNode, error)
 	patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error)
+	raw([]Metadata) interface{}
 }
 
 func NewJsonNode(n interface{}) (JsonNode, error) {
@@ -69,8 +70,8 @@ func nodeList(n ...JsonNode) []JsonNode {
 	return append(l, n...)
 }
 
-func renderJson(n JsonNode) string {
-	s, _ := json.Marshal(n)
+func renderJson(n JsonNode, metadata []Metadata) string {
+	s, _ := json.Marshal(n.raw(metadata))
 	// Errors are ignored because JsonNode types are
 	// private and known to marshal without error.
 	return string(s)

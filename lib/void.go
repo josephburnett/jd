@@ -66,3 +66,7 @@ func (v voidNode) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 	}
 	return newValue, nil
 }
+
+func (v voidNode) raw(_ []Metadata) interface{} {
+	return nil
+}
