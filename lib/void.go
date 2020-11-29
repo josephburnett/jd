@@ -18,6 +18,14 @@ func (v voidNode) Json(metadata ...Metadata) string {
 	return ""
 }
 
+func (v voidNode) Yaml(metadata ...Metadata) string {
+	return ""
+}
+
+func (v voidNode) raw(metadata []Metadata) interface{} {
+	return ""
+}
+
 func (v voidNode) Equals(n JsonNode, metadata ...Metadata) bool {
 	switch n.(type) {
 	case voidNode:
@@ -65,8 +73,4 @@ func (v voidNode) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		return patchErrExpectValue(oldValue, v, pathBehind)
 	}
 	return newValue, nil
-}
-
-func (v voidNode) raw(_ []Metadata) interface{} {
-	return nil
 }

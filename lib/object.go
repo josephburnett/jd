@@ -14,11 +14,23 @@ type jsonObject struct {
 var _ JsonNode = jsonObject{}
 
 func (o jsonObject) Json(metadata ...Metadata) string {
-	return renderJson(o, metadata)
+	return renderJson(o.raw(metadata))
 }
 
 func (o jsonObject) MarshalJSON() ([]byte, error) {
 	return []byte(o.Json()), nil
+}
+
+func (o jsonObject) Yaml(metadata ...Metadata) string {
+	return renderYaml(o.raw(metadata))
+}
+
+func (o jsonObject) raw(metadata []Metadata) interface{} {
+	j := make(map[string]interface{})
+	for k, v := range o.properties {
+		j[k] = v.raw(metadata)
+	}
+	return j
 }
 
 func (o1 jsonObject) Equals(n JsonNode, metadata ...Metadata) bool {
@@ -204,12 +216,4 @@ func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 		o.properties[string(pe)] = patchedNode
 	}
 	return o, nil
-}
-
-func (o jsonObject) raw(metadata []Metadata) interface{} {
-	j := make(map[string]interface{})
-	for k, v := range o.properties {
-		j[k] = v.raw(metadata)
-	}
-	return j
 }

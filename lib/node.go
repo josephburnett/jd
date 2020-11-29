@@ -4,17 +4,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"gopkg.in/yaml.v2"
 )
 
 type JsonNode interface {
 	Json(metadata ...Metadata) string
+	Yaml(metadata ...Metadata) string
+	raw(metadata []Metadata) interface{}
 	Equals(n JsonNode, metadata ...Metadata) bool
 	hashCode(metadata []Metadata) [8]byte
 	Diff(n JsonNode, metadata ...Metadata) Diff
 	diff(n JsonNode, p path, metadata []Metadata) Diff
 	Patch(d Diff) (JsonNode, error)
 	patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error)
-	raw([]Metadata) interface{}
 }
 
 func NewJsonNode(n interface{}) (JsonNode, error) {
@@ -70,9 +73,18 @@ func nodeList(n ...JsonNode) []JsonNode {
 	return append(l, n...)
 }
 
-func renderJson(n JsonNode, metadata []Metadata) string {
-	s, _ := json.Marshal(n.raw(metadata))
-	// Errors are ignored because JsonNode types are
-	// private and known to marshal without error.
+func renderJson(i interface{}) string {
+	s, err := json.Marshal(i)
+	if err != nil {
+		panic(err)
+	}
+	return string(s)
+}
+
+func renderYaml(i interface{}) string {
+	s, err := yaml.Marshal(i)
+	if err != nil {
+		panic(err)
+	}
 	return string(s)
 }

@@ -5,7 +5,15 @@ type jsonString string
 var _ JsonNode = jsonString("")
 
 func (s jsonString) Json(metadata ...Metadata) string {
-	return renderJson(s, metadata)
+	return renderJson(s.raw(metadata))
+}
+
+func (s jsonString) Yaml(metadata ...Metadata) string {
+	return renderYaml(s.raw(metadata))
+}
+
+func (s jsonString) raw(_ []Metadata) interface{} {
+	return string(s)
 }
 
 func (s1 jsonString) Equals(n JsonNode, metadata ...Metadata) bool {
@@ -54,8 +62,4 @@ func (s jsonString) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 		return patchErrExpectValue(oldValue, s, pathBehind)
 	}
 	return newValue, nil
-}
-
-func (s jsonString) raw(_ []Metadata) interface{} {
-	return string(s)
 }

@@ -7,7 +7,15 @@ type jsonList []JsonNode
 var _ JsonNode = jsonList(nil)
 
 func (l jsonList) Json(metadata ...Metadata) string {
-	return renderJson(l, metadata)
+	return renderJson(l.raw(metadata))
+}
+
+func (l jsonList) Yaml(metadata ...Metadata) string {
+	return renderYaml(l.raw(metadata))
+}
+
+func (l jsonList) raw(metadata []Metadata) interface{} {
+	return jsonArray(l).raw(metadata)
 }
 
 func (l1 jsonList) Equals(n JsonNode, metadata ...Metadata) bool {
@@ -140,8 +148,4 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 	// Replace an element
 	l[i] = patchedNode
 	return l, nil
-}
-
-func (l jsonList) raw(metadata []Metadata) interface{} {
-	return jsonArray(l).raw(metadata)
 }

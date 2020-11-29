@@ -5,7 +5,15 @@ type jsonNull []byte
 var _ JsonNode = jsonNull{}
 
 func (n jsonNull) Json(metadata ...Metadata) string {
-	return renderJson(n, metadata)
+	return renderJson(n.raw(metadata))
+}
+
+func (n jsonNull) Yaml(metadata ...Metadata) string {
+	return renderJson(n.raw(metadata))
+}
+
+func (n jsonNull) raw(_ []Metadata) interface{} {
+	return nil
 }
 
 func (n jsonNull) Equals(node JsonNode, metadata ...Metadata) bool {
@@ -55,8 +63,4 @@ func (n jsonNull) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		return patchErrExpectValue(oldValue, n, pathBehind)
 	}
 	return newValue, nil
-}
-
-func (n jsonNull) raw(_ []Metadata) interface{} {
-	return nil
 }

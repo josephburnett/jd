@@ -119,7 +119,7 @@ func checkPatch(ctx *testContext, a, e string, diffLines ...string) {
 	}
 	if !expect.Equals(b, ctx.metadata...) {
 		ctx.t.Errorf("%v.Patch(%v) = %v. Want %v.",
-			a, diffLines, renderJson(b, nil), e)
+			a, diffLines, b.Json(ctx.metadata...), e)
 	}
 }
 

@@ -11,6 +11,19 @@ func (a jsonArray) Json(metadata ...Metadata) string {
 	return n.Json(metadata...)
 }
 
+func (a jsonArray) Yaml(metadata ...Metadata) string {
+	n := dispatch(a, metadata)
+	return n.Yaml(metadata...)
+}
+
+func (a jsonArray) raw(metadata []Metadata) interface{} {
+	r := make([]interface{}, len(a))
+	for i, n := range a {
+		r[i] = n.raw(metadata)
+	}
+	return r
+}
+
 func (a1 jsonArray) Equals(n JsonNode, metadata ...Metadata) bool {
 	n1 := dispatch(a1, metadata)
 	n2 := dispatch(n, metadata)
@@ -42,12 +55,4 @@ func (a jsonArray) patch(pathBehind, pathAhead path, oldValues, newValues []Json
 	_, metadata, _ := pathAhead.next()
 	n := dispatch(a, metadata)
 	return n.patch(pathBehind, pathAhead, oldValues, newValues)
-}
-
-func (a jsonArray) raw(metadata []Metadata) interface{} {
-	r := make([]interface{}, len(a))
-	for i, n := range a {
-		r[i] = n.raw(metadata)
-	}
-	return r
 }

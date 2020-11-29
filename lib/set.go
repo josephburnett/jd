@@ -10,7 +10,29 @@ type jsonSet jsonArray
 var _ JsonNode = jsonSet(nil)
 
 func (s jsonSet) Json(metadata ...Metadata) string {
-	return renderJson(s, metadata)
+	return renderJson(s.raw(metadata))
+}
+
+func (s jsonSet) Yaml(metadata ...Metadata) string {
+	return renderYaml(s.raw(metadata))
+}
+
+func (s jsonSet) raw(metadata []Metadata) interface{} {
+	sMap := make(map[[8]byte]JsonNode)
+	for _, n := range s {
+		hc := n.hashCode(metadata)
+		sMap[hc] = n
+	}
+	hashes := make(hashCodes, 0, len(sMap))
+	for hc := range sMap {
+		hashes = append(hashes, hc)
+	}
+	sort.Sort(hashes)
+	set := make([]interface{}, 0, len(sMap))
+	for _, hc := range hashes {
+		set = append(set, sMap[hc].raw(metadata))
+	}
+	return set
 }
 
 func (s1 jsonSet) Equals(n JsonNode, metadata ...Metadata) bool {
@@ -222,22 +244,4 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 		newValue = append(newValue, aMap[hc])
 	}
 	return newValue, nil
-}
-
-func (s jsonSet) raw(metadata []Metadata) interface{} {
-	sMap := make(map[[8]byte]JsonNode)
-	for _, n := range s {
-		hc := n.hashCode(metadata)
-		sMap[hc] = n
-	}
-	hashes := make(hashCodes, 0, len(sMap))
-	for hc := range sMap {
-		hashes = append(hashes, hc)
-	}
-	sort.Sort(hashes)
-	set := make([]interface{}, 0, len(sMap))
-	for _, hc := range hashes {
-		set = append(set, sMap[hc].raw(metadata))
-	}
-	return set
 }
