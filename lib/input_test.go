@@ -16,12 +16,19 @@ func TestUnmarshal(t *testing.T) {
 }
 
 func checkUnmarshal(t *testing.T, s string, n JsonNode) {
-	node, err := unmarshal([]byte(s))
+	node, err := ReadJsonString(s)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 	if !n.Equals(node) {
-		t.Errorf("unmarshal(%v) = %v. Want %v.", s, node, n)
+		t.Errorf("ReadJsonString(%v) = %v. Want %v.", s, node, n)
+	}
+	node, err = ReadYamlString(s)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	if !n.Equals(node) {
+		t.Errorf("ReadYamlString(%v) = %v. Want %v.", s, node, n)
 	}
 }
 

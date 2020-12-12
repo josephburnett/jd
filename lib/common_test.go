@@ -16,11 +16,11 @@ func checkJson(ctx *testContext, a, b string) {
 }
 
 func checkEqual(ctx *testContext, a, b string) {
-	nodeA, err := unmarshal([]byte(a))
+	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	nodeB, err := unmarshal([]byte(b))
+	nodeB, err := ReadJsonString(b)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
@@ -39,11 +39,11 @@ func checkEqual(ctx *testContext, a, b string) {
 }
 
 func checkNotEqual(ctx *testContext, a, b string, metadata ...Metadata) {
-	nodeA, err := unmarshal([]byte(a))
+	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	nodeB, err := unmarshal([]byte(b))
+	nodeB, err := ReadJsonString(b)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
@@ -56,11 +56,11 @@ func checkNotEqual(ctx *testContext, a, b string, metadata ...Metadata) {
 }
 
 func checkHash(ctx *testContext, a, b string, wantSame bool) {
-	nodeA, err := unmarshal([]byte(a))
+	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Fatalf(err.Error())
 	}
-	nodeB, err := unmarshal([]byte(b))
+	nodeB, err := ReadJsonString(b)
 	if err != nil {
 		ctx.t.Fatalf(err.Error())
 	}

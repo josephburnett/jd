@@ -30,11 +30,11 @@ func checkDiffRender(t *testing.T, a, b string, diffLines ...string) {
 	for _, dl := range diffLines {
 		diff += dl + "\n"
 	}
-	aJson, err := unmarshal([]byte(a))
+	aJson, err := ReadJsonString(a)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	bJson, err := unmarshal([]byte(b))
+	bJson, err := ReadJsonString(b)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
