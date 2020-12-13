@@ -103,7 +103,7 @@ func printUsageAndExit() {
 		`  jd -o patch a.json b.json; jd patch a.json`,
 		`  jd -set a.json b.json`,
 		``,
-		`Version: HEAD`,
+		`Version: 1.2.0`,
 		``,
 	} {
 		fmt.Println(line)
