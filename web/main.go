@@ -21,6 +21,8 @@ const (
 	diffErrorId    = "diff-error"
 	modeDiffId     = "mode-diff"
 	modePatchId    = "mode-patch"
+	formatJsonId   = "format-json"
+	formatYamlId   = "format-yaml"
 	arrayListId    = "array-list"
 	arraySetId     = "array-set"
 	arrayMsetId    = "array-mset"
@@ -42,6 +44,7 @@ type app struct {
 	doc      js.Value
 	changeCh chan struct{}
 	mode     string
+	format   string
 	array    string
 }
 
@@ -50,6 +53,7 @@ func newApp() (*app, error) {
 		changeCh: make(chan struct{}, 10),
 		doc:      js.Global().Get("document"),
 		mode:     modeDiffId,
+		format:   formatJsonId,
 		array:    arrayListId,
 	}
 	for _, id := range []string{
@@ -66,7 +70,16 @@ func newApp() (*app, error) {
 		modeDiffId,
 		modePatchId,
 	} {
-		err := a.watchMode(id)
+		err := a.watchChange(id, &a.mode)
+		if err != nil {
+			return nil, err
+		}
+	}
+	for _, id := range []string{
+		formatJsonId,
+		formatYamlId,
+	} {
+		err := a.watchChange(id, &a.format)
 		if err != nil {
 			return nil, err
 		}
@@ -76,7 +89,7 @@ func newApp() (*app, error) {
 		arraySetId,
 		arrayMsetId,
 	} {
-		err := a.watchArray(id)
+		err := a.watchChange(id, &a.array)
 		if err != nil {
 			return nil, err
 		}
@@ -99,27 +112,11 @@ func (a *app) watchInput(id string) error {
 	return nil
 }
 
-func (a *app) watchArray(id string) error {
+func (a *app) watchChange(id string, s *string) error {
 	listener := func(_ js.Value, _ []js.Value) interface{} {
 		a.mux.Lock()
 		defer a.mux.Unlock()
-		a.array = id
-		a.changeCh <- struct{}{}
-		return nil
-	}
-	element := a.getElementById(id)
-	if element.IsNull() {
-		return fmt.Errorf("id %v not found", id)
-	}
-	element.Call("addEventListener", "change", js.FuncOf(listener))
-	return nil
-}
-
-func (a *app) watchMode(id string) error {
-	listener := func(_ js.Value, _ []js.Value) interface{} {
-		a.mux.Lock()
-		defer a.mux.Unlock()
-		a.mode = id
+		*s = id
 		a.changeCh <- struct{}{}
 		return nil
 	}
@@ -144,11 +141,28 @@ func (a *app) reconcile() {
 	a.mux.Lock()
 	defer a.mux.Unlock()
 
-	// set the command label
+	a.setCommandLabel()
+	a.setInputLabels()
+	a.setInputsEnabled()
+
+	switch a.mode {
+	case modeDiffId:
+		a.printDiff()
+	case modePatchId:
+		a.printPatch()
+	}
+}
+
+func (a *app) setCommandLabel() {
 	command := "jd"
 	switch a.mode {
 	case modePatchId:
 		command += " -p"
+	default:
+	}
+	switch a.format {
+	case formatYamlId:
+		command += " -yaml"
 	default:
 	}
 	switch a.array {
@@ -166,8 +180,21 @@ func (a *app) reconcile() {
 	default:
 	}
 	a.setLabel(commandId, command)
+}
 
-	// Enable / disable inputs based on mode
+func (a *app) setInputLabels() {
+	aLabel := a.getElementById(aLabelId)
+	bLabel := a.getElementById(bLabelId)
+	if a.format == formatJsonId {
+		aLabel.Set("innerHTML", "a.json")
+		bLabel.Set("innerHTML", "b.json")
+	} else {
+		aLabel.Set("innerHTML", "a.yaml")
+		bLabel.Set("innerHTML", "b.yaml")
+	}
+}
+
+func (a *app) setInputsEnabled() {
 	aJson := a.getElementById(aJsonId)
 	bJson := a.getElementById(bJsonId)
 	diffText := a.getElementById(diffId)
@@ -186,8 +213,9 @@ func (a *app) reconcile() {
 		diffText.Set("style", focusStyle+";"+fullWidthStyle)
 	default:
 	}
+}
 
-	// Chose array semantic metadata
+func (a *app) getMetadata() []jd.Metadata {
 	metadata := []jd.Metadata{}
 	switch a.array {
 	case arraySetId:
@@ -196,69 +224,107 @@ func (a *app) reconcile() {
 		metadata = append(metadata, jd.MULTISET)
 	default:
 	}
+	return metadata
+}
 
+func (a *app) parseAndTranslate(id string) (jd.JsonNode, error) {
+	value := a.getElementById(id)
+	nodeJson, errJson := jd.ReadJsonString(value.Get("value").String())
+	nodeYaml, errYaml := jd.ReadYamlString(value.Get("value").String())
+	// Translate YAML to JSON
+	if a.format == formatJsonId && errJson != nil && errYaml == nil {
+		a.setTextarea(id, nodeYaml.Json())
+	}
+	// Translate JSON to YAML
+	if a.format == formatYamlId && errJson == nil {
+		a.setTextarea(id, nodeJson.Yaml())
+	}
+	// Return any good parsing results.
+	if errJson == nil {
+		return nodeJson, nil
+	}
+	if errYaml == nil {
+		return nodeYaml, nil
+	}
+	// Return an error relevant to the desired format.
+	if a.format == formatJsonId {
+		return nil, errJson
+	} else {
+		return nil, errYaml
+	}
+}
+
+func (a *app) printDiff() {
+	metadata := a.getMetadata()
 	var fail bool
-
-	// Parse a.json
-	aNode, err := jd.ReadJsonString(aJson.Get("value").String())
+	// Read a
+	aNode, err := a.parseAndTranslate(aJsonId)
 	if err != nil {
 		a.setLabel(aErrorId, err.Error())
 		fail = true
 	} else {
 		a.setLabel(aErrorId, "")
 	}
-
-	switch a.mode {
-	case modeDiffId:
-		// parse b.json
-		bNode, err := jd.ReadJsonString(bJson.Get("value").String())
-		if err != nil {
-			a.setLabel(bErrorId, err.Error())
-			fail = true
-		} else {
-			a.setLabel(bErrorId, "")
-		}
-
-		if fail {
-			a.setTextarea(diffId, "")
-			return
-		}
-
-		// produce diff
-		diff := aNode.Diff(bNode, metadata...)
-		a.setTextarea(diffId, diff.Render())
-	case modePatchId:
-		// parse diff
-		diff, err := jd.ReadDiffString(diffText.Get("value").String())
-		if err != nil {
-			a.setLabel(diffErrorId, err.Error())
-			fail = true
-		} else {
-			a.setLabel(diffErrorId, "")
-		}
-
-		if fail {
-			a.setTextarea(bJsonId, "")
-			return
-		}
-
-		// produce b.json
-		bNode, err := aNode.Patch(diff)
-		if err != nil {
-			a.setLabel(diffErrorId, err.Error())
-			fail = true
-		} else {
-			a.setLabel(diffErrorId, "")
-		}
-
-		if fail {
-			a.setTextarea(bJsonId, "")
-			return
-		}
-
-		a.setTextarea(bJsonId, bNode.Json(metadata...))
+	// Read b
+	bNode, err := a.parseAndTranslate(bJsonId)
+	if err != nil {
+		a.setLabel(bErrorId, err.Error())
+		fail = true
+	} else {
+		a.setLabel(bErrorId, "")
 	}
-	return
+	if fail {
+		a.setTextarea(diffId, "")
+		return
+	}
+	// Print diff
+	diff := aNode.Diff(bNode, metadata...)
+	a.setTextarea(diffId, diff.Render())
+}
+
+func (a *app) printPatch() {
+	metadata := a.getMetadata()
+	var fail bool
+	// Read a
+	aNode, err := a.parseAndTranslate(aJsonId)
+	if err != nil {
+		a.setLabel(aErrorId, err.Error())
+		fail = true
+	} else {
+		a.setLabel(aErrorId, "")
+	}
+	// Read diff
+	diffText := a.getElementById(diffId)
+	diff, err := jd.ReadDiffString(diffText.Get("value").String())
+	if err != nil {
+		a.setLabel(diffErrorId, err.Error())
+		fail = true
+	} else {
+		a.setLabel(diffErrorId, "")
+	}
+	if fail {
+		a.setTextarea(bJsonId, "")
+		return
+	}
+	// Print patch
+	bNode, err := aNode.Patch(diff)
+	if err != nil {
+		a.setLabel(diffErrorId, err.Error())
+		fail = true
+	} else {
+		a.setLabel(diffErrorId, "")
+	}
+	if fail {
+		a.setTextarea(bJsonId, "")
+		return
+	}
+	var out string
+	if a.format == formatJsonId {
+		out = bNode.Json(metadata...)
+	} else {
+		out = bNode.Yaml(metadata...)
+	}
+	a.setTextarea(bJsonId, out)
 }
 
 func (a *app) getElementById(id string) js.Value {
