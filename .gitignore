@@ -25,4 +25,4 @@ _testmain.go
 
 web/assets/wasm_exec.js
 web/assets/jd.wasm
-
+release/

@@ -1,5 +1,5 @@
-.goals = build-web deploy serve
-.PHONY : build-web deploy serve
+.goals = build-web deploy serve release
+.PHONY : build-web deploy serve release
 
 build-web :
 	cp $$GOROOT/misc/wasm/wasm_exec.js web/assets/
@@ -10,3 +10,7 @@ deploy : build-web
 
 serve : build-web
 	go run main.go -port 8080
+
+release :
+	mkdir -p release
+	go build -o release/jd main.go
