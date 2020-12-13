@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"runtime/debug"
 	"sync"
 	"syscall/js"
 
@@ -101,6 +102,7 @@ func newApp() (*app, error) {
 
 func (a *app) watchInput(id string) error {
 	listener := func(_ js.Value, _ []js.Value) interface{} {
+		defer a.catchPanic()
 		a.changeCh <- struct{}{}
 		return nil
 	}
@@ -114,6 +116,7 @@ func (a *app) watchInput(id string) error {
 
 func (a *app) watchChange(id string, s *string) error {
 	listener := func(_ js.Value, _ []js.Value) interface{} {
+		defer a.catchPanic()
 		a.mux.Lock()
 		defer a.mux.Unlock()
 		*s = id
@@ -129,6 +132,7 @@ func (a *app) watchChange(id string, s *string) error {
 }
 
 func (a *app) handleChange() {
+	defer a.catchPanic()
 	for {
 		select {
 		case <-a.changeCh:
@@ -338,3 +342,15 @@ func (a *app) setLabel(id, msg string) {
 func (a *app) setTextarea(id, text string) {
 	a.getElementById(id).Set("value", text)
 }
+
+func (a *app) catchPanic() {
+	if r := recover(); r != nil {
+		stack := string(debug.Stack())
+		msg := fmt.Sprintf("%v\n\n<pre>%q at:\n\n %v</pre>", crashMessage, r, stack)
+		value := a.getElementById("crash")
+		value.Set("innerHTML", msg)
+		panic(r)
+	}
+}
+
+const crashMessage = `Jd has crashed. Please report the following error at <a href="https://github.com/josephburnett/jd/issues">https://github.com/josephburnett/jd/issues</a>.`
