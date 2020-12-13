@@ -14,12 +14,13 @@ import (
 	jd "github.com/josephburnett/jd/lib"
 )
 
-var patch = flag.Bool("p", false, "Patch mode")
-var output = flag.String("o", "", "Output file")
-var set = flag.Bool("set", false, "Arrays as sets")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
-var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
+var output = flag.String("o", "", "Output file")
+var patch = flag.Bool("p", false, "Patch mode")
 var port = flag.Int("port", 0, "Serve web UI on port.")
+var set = flag.Bool("set", false, "Arrays as sets")
+var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
+var yaml = flag.Bool("yaml", false, "Read and write YAML")
 
 func main() {
 	flag.Parse()
@@ -43,9 +44,9 @@ func main() {
 		printUsageAndExit()
 	}
 	if *patch {
-		patchJson(a, b, metadata)
+		printPatch(a, b, metadata)
 	} else {
-		diffJson(a, b, metadata)
+		printDiff(a, b, metadata)
 	}
 }
 
@@ -89,11 +90,12 @@ func printUsageAndExit() {
 		`When FILE2 is omitted the second input is read from STDIN.`,
 		`When patching (-p) FILE1 is a diff.`,
 		``,
-		`Metadata:`,
+		`Options:`,
 		`  -p        Apply patch FILE1 to FILE2 or STDIN.`,
 		`  -o=FILE3  Write to FILE3 instead of STDOUT.`,
 		`  -set      Treat arrays as sets.`,
 		`  -mset     Treat arrays as multisets (bags).`,
+		`  -yaml     Read and write YAML instead of JSON.`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,
@@ -107,12 +109,22 @@ func printUsageAndExit() {
 	os.Exit(1)
 }
 
-func diffJson(a, b string, metadata []jd.Metadata) {
-	aNode, err := jd.ReadJsonString(a)
+func printDiff(a, b string, metadata []jd.Metadata) {
+	var aNode, bNode jd.JsonNode
+	var err error
+	if *yaml {
+		aNode, err = jd.ReadYamlString(a)
+	} else {
+		aNode, err = jd.ReadJsonString(a)
+	}
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	bNode, err := jd.ReadJsonString(b)
+	if *yaml {
+		bNode, err = jd.ReadYamlString(b)
+	} else {
+		bNode, err = jd.ReadJsonString(b)
+	}
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -124,12 +136,17 @@ func diffJson(a, b string, metadata []jd.Metadata) {
 	}
 }
 
-func patchJson(p, a string, metadata []jd.Metadata) {
+func printPatch(p, a string, metadata []jd.Metadata) {
 	diff, err := jd.ReadDiffString(p)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	aNode, err := jd.ReadJsonString(a)
+	var aNode jd.JsonNode
+	if *yaml {
+		aNode, err = jd.ReadYamlString(a)
+	} else {
+		aNode, err = jd.ReadJsonString(a)
+	}
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -137,10 +154,16 @@ func patchJson(p, a string, metadata []jd.Metadata) {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	if *output == "" {
-		fmt.Print(bNode.Json(metadata...))
+	var out string
+	if *yaml {
+		out = bNode.Yaml(metadata...)
 	} else {
-		ioutil.WriteFile(*output, []byte(bNode.Json(metadata...)), 0644)
+		out = bNode.Json(metadata...)
+	}
+	if *output == "" {
+		fmt.Print(out)
+	} else {
+		ioutil.WriteFile(*output, []byte(out), 0644)
 	}
 }
 
