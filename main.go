@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	jd "github.com/josephburnett/jd/lib"
+	"github.com/josephburnett/jd/web/serve"
 )
 
 var mset = flag.Bool("mset", false, "Arrays as multisets")
@@ -51,8 +52,7 @@ func main() {
 }
 
 func serveWeb(port string) error {
-	fs := http.FileServer(http.Dir("./web/assets"))
-	http.Handle("/", fs)
+	http.HandleFunc("/", serve.Handle)
 	log.Printf("Listening on :%v...", port)
 	return http.ListenAndServe(":"+port, nil)
 }
