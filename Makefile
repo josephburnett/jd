@@ -8,12 +8,17 @@ build-web :
 pack-web : build-web
 	go run web/pack/main.go
 
-deploy : build-web
-	gsutil -m cp -r web/assets/* gs://play.jd-tool.io
-
 serve : pack-web
 	go run main.go -port 8080
 
-release : pack-web
+test :
+	go test ./lib
+
+preflight : test pack-web
+
+deploy : preflight
+	gsutil -m cp -r web/assets/* gs://play.jd-tool.io
+
+release : preflight
 	mkdir -p release
 	go build -o release/jd main.go
