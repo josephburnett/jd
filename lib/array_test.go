@@ -17,8 +17,8 @@ func TestArrayJson(t *testing.T) {
 		{ctx, ` [1, 2, 3] `, `[1,2,3]`},
 	}
 
-	for _, test := range tests {
-		checkJson(test.context, test.a, test.b)
+	for _, tt := range tests {
+		checkJson(tt.context, tt.a, tt.b)
 	}
 }
 
@@ -36,8 +36,8 @@ func TestArrayEqual(t *testing.T) {
 		{ctx, `[{"a":[]}]`, `[{"a":[]}]`},
 	}
 
-	for _, test := range tests {
-		checkEqual(test.context, test.a, test.b)
+	for _, tt := range tests {
+		checkEqual(tt.context, tt.a, tt.b)
 	}
 }
 
@@ -54,8 +54,8 @@ func TestArrayNotEqual(t *testing.T) {
 		{ctx, `[1,2,3]`, `[3,2,1]`},
 	}
 
-	for _, test := range tests {
-		checkNotEqual(test.context, test.a, test.b)
+	for _, tt := range tests {
+		checkNotEqual(tt.context, tt.a, tt.b)
 	}
 }
 
@@ -75,8 +75,8 @@ func TestArrayHash(t *testing.T) {
 		{ctx, `[[1]]`, `[[[1]]]`, false},
 	}
 
-	for _, test := range tests {
-		checkHash(test.context, test.a, test.b, test.wantSame)
+	for _, tt := range tests {
+		checkHash(tt.context, tt.a, tt.b, tt.wantSame)
 	}
 }
 
@@ -150,8 +150,8 @@ func TestArrayDiff(t *testing.T) {
 	    },
 	}
 
-	for _, test := range tests {
-		checkDiff(test.context, test.a, test.b, test.diffLines...)
+	for _, tt := range tests {
+		checkDiff(tt.context, tt.a, tt.b, tt.diffLines...)
 	}
 }
 
@@ -238,8 +238,8 @@ func TestArrayPatch(t *testing.T) {
 		
 	}
 
-	for _, test := range tests {
-		checkPatch(test.context, test.a, test.b, test.diffLines...)
+	for _, tt := range tests {
+		checkPatch(tt.context, tt.a, tt.b, tt.diffLines...)
 	}
 }
 
@@ -282,7 +282,7 @@ func TestArrayPatchError(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		checkPatchError(test.context, test.a, test.diffLines...)
+	for _, tt := range tests {
+		checkPatchError(tt.context, tt.a, tt.diffLines...)
 	}
 }
