@@ -21,4 +21,4 @@ deploy : preflight
 
 release : preflight
 	mkdir -p release
-	go build -o release/jd main.go
+	CGO_ENABLED=0 go build -o release/jd main.go
