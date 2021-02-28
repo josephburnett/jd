@@ -11,7 +11,6 @@ http://play.jd-tool.io/
 Download [latest release](https://github.com/josephburnett/jd/releases/latest) or `go get github.com/josephburnett/jd`
 
 ```
-Usage: jd [OPTION]... FILE1 [FILE2]
 Diff and patch JSON files.
 
 Prints the diff of FILE1 and FILE2 to STDOUT.
@@ -23,6 +22,9 @@ Options:
   -o=FILE3  Write to FILE3 instead of STDOUT.
   -set      Treat arrays as sets.
   -mset     Treat arrays as multisets (bags).
+  -setkeys  Keys to identify set objects
+  -yaml     Read and write YAML instead of JSON.
+  -port=N   Serve web UI on port N
 
 Examples:
   jd a.json b.json

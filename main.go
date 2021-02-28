@@ -18,7 +18,7 @@ import (
 var mset = flag.Bool("mset", false, "Arrays as multisets")
 var output = flag.String("o", "", "Output file")
 var patch = flag.Bool("p", false, "Patch mode")
-var port = flag.Int("port", 0, "Serve web UI on port.")
+var port = flag.Int("port", 0, "Serve web UI on port")
 var set = flag.Bool("set", false, "Arrays as sets")
 var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
 var yaml = flag.Bool("yaml", false, "Read and write YAML")
@@ -95,7 +95,9 @@ func printUsageAndExit() {
 		`  -o=FILE3  Write to FILE3 instead of STDOUT.`,
 		`  -set      Treat arrays as sets.`,
 		`  -mset     Treat arrays as multisets (bags).`,
+		`  -setkeys  Keys to identify set objects`,
 		`  -yaml     Read and write YAML instead of JSON.`,
+		`  -port=N   Serve web UI on port N`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,
