@@ -28,13 +28,15 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 			idKeys:     make(map[string]bool),
 		}
 		for k, v := range t {
-			if _, ok := v.(JsonNode); !ok {
+			n, ok := v.(JsonNode)
+			if !ok {
 				e, err := NewJsonNode(v)
 				if err != nil {
 					return nil, err
 				}
-				m.properties[k] = e
+				n = e
 			}
+			m.properties[k] = n
 		}
 		return m, nil
 	case map[interface{}]interface{}:

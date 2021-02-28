@@ -91,8 +91,12 @@ func (o jsonObject) ident(metadata []Metadata) [8]byte {
 	return hashes.combine()
 }
 
-func (o jsonObject) pathIdent(metadata []Metadata) JsonNode {
-	keys := getSetkeysMetadata(metadata).mergeKeys(o.idKeys)
+func (o jsonObject) pathIdent(pathObject jsonObject, metadata []Metadata) [8]byte {
+	idKeys := map[string]bool{}
+	for k := range pathObject.properties {
+		idKeys[k] = true
+	}
+	keys := getSetkeysMetadata(metadata).mergeKeys(idKeys)
 	id := make(map[string]interface{})
 	for key := range keys {
 		if value, ok := o.properties[key]; ok {
@@ -100,7 +104,7 @@ func (o jsonObject) pathIdent(metadata []Metadata) JsonNode {
 		}
 	}
 	e, _ := NewJsonNode(id)
-	return e
+	return e.hashCode([]Metadata{})
 }
 
 func (k1 *setkeysMetadata) mergeKeys(k2 map[string]bool) map[string]bool {
