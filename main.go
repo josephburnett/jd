@@ -15,16 +15,23 @@ import (
 	"github.com/josephburnett/jd/web/serve"
 )
 
+const version = "HEAD"
+
 var mset = flag.Bool("mset", false, "Arrays as multisets")
 var output = flag.String("o", "", "Output file")
 var patch = flag.Bool("p", false, "Patch mode")
 var port = flag.Int("port", 0, "Serve web UI on port")
 var set = flag.Bool("set", false, "Arrays as sets")
 var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
+var ver = flag.Bool("version", false, "Print version and exit")
 var yaml = flag.Bool("yaml", false, "Read and write YAML")
 
 func main() {
 	flag.Parse()
+	if *ver {
+		fmt.Printf("jd version %v\n", version)
+		return
+	}
 	if *port != 0 {
 		serveWeb(strconv.Itoa(*port))
 		return
@@ -105,7 +112,7 @@ func printUsageAndExit() {
 		`  jd -o patch a.json b.json; jd patch a.json`,
 		`  jd -set a.json b.json`,
 		``,
-		`Version: HEAD`,
+		`Version: ` + version,
 		``,
 	} {
 		fmt.Println(line)
