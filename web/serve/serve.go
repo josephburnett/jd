@@ -1,3 +1,5 @@
+// +build include_web
+
 package serve
 
 import (
@@ -6,7 +8,11 @@ import (
 	"net/http"
 )
 
-func Handle(w http.ResponseWriter, r *http.Request) {
+func init() {
+	Handle = handle
+}
+
+func handle(w http.ResponseWriter, r *http.Request) {
 	f := r.URL.Path[1:]
 	if f == "" {
 		f = "index.html"

@@ -33,7 +33,10 @@ func main() {
 		return
 	}
 	if *port != 0 {
-		serveWeb(strconv.Itoa(*port))
+		err := serveWeb(strconv.Itoa(*port))
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 		return
 	}
 	metadata, err := parseMetadata()
@@ -59,6 +62,9 @@ func main() {
 }
 
 func serveWeb(port string) error {
+	if serve.Handle == nil {
+		return fmt.Errorf("The web UI wasn't include in this build. Use `make release` to include it.")
+	}
 	http.HandleFunc("/", serve.Handle)
 	log.Printf("Listening on :%v...", port)
 	return http.ListenAndServe(":"+port, nil)

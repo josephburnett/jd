@@ -1,5 +1,5 @@
-.goals = build-web deploy serve release
-.PHONY : build-web deploy serve release
+.goals = build-web pack-web serve test preflight deploy release
+.PHONY : build-web pack-web serve test preflight deploy release
 
 build-web :
 	cp $$GOROOT/misc/wasm/wasm_exec.js web/assets/
@@ -9,7 +9,7 @@ pack-web : build-web
 	go run web/pack/main.go
 
 serve : pack-web
-	go run main.go -port 8080
+	go run -tags include_web main.go -port 8080
 
 test :
 	go test ./lib
@@ -21,4 +21,4 @@ deploy : preflight
 
 release : preflight
 	mkdir -p release
-	CGO_ENABLED=0 go build -o release/jd main.go
+	CGO_ENABLED=0 go build -tags include_web -o release/jd main.go

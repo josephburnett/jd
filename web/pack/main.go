@@ -13,7 +13,9 @@ var files = []string{
 }
 
 func main() {
-	pack := "package serve\n"
+	pack := "// +build include_web\n"
+	pack += "\n"
+	pack += "package serve\n"
 	pack += "\n"
 	pack += "var base64EncodedFiles = map[string]string{\n"
 	for _, f := range files {
