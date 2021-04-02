@@ -21,7 +21,7 @@ build : test pack-web
 	CGO_ENABLED=0 go build -tags include_web -o release/jd main.go
 
 release : check-env build-all build-docker push-docker
-	echo "Upload release/jd-* to Github as release $$JD_VERSION"
+	echo "Upload release/jd-* to Github as release $(JD_VERSION)"
 
 build-all : test pack-web
 	mkdir -p release
@@ -30,12 +30,13 @@ build-all : test pack-web
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o release/jd-amd64-windows main.go
 
 build-docker : check-env test
-	docker build -t josephburnett/jd:$$JD_VERSION .
+	docker build -t josephburnett/jd:$(JD_VERSION) .
 
 push-docker : check-env
-	docker push josephburnett/jd:$$JD_VERSION
+	docker push josephburnett/jd:$(JD_VERSION)
 
 check-env :
 ifndef JD_VERSION
-	echo "Tag the commit on a release branch and set JD_VERSION."
+	$(error Set version in main.go, Tag the commit on a release branch and set JD_VERSION)
 endif
+
