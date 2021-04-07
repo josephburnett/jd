@@ -69,7 +69,7 @@ func TestObjectDiff(t *testing.T) {
 		`+ {"K":"I","V":"T"}`)
 }
 
-func testObjectPatch(t *testing.T) {
+func TestObjectPatch(t *testing.T) {
 	ctx := newTestContext(t)
 	checkPatch(ctx, `{}`, `{}`)
 	checkPatch(ctx, `{"a":1}`, `{"a":1}`)
@@ -90,7 +90,7 @@ func testObjectPatch(t *testing.T) {
 		`+ 2`)
 }
 
-func testObjectPatchError(t *testing.T) {
+func TestObjectPatchError(t *testing.T) {
 	ctx := newTestContext(t)
 	checkPatchError(ctx, `{}`,
 		`@ ["a"]`,
@@ -101,4 +101,49 @@ func testObjectPatchError(t *testing.T) {
 	checkPatchError(ctx, `{"a":1}`,
 		`@ ["a"]`,
 		`+ 1`)
+}
+
+func TestObjectDiffMask(t *testing.T) {
+	cases := []struct {
+		name string
+		a    JsonNode
+		b    JsonNode
+		mask Mask
+		want Diff
+	}{{
+		name: "no mask",
+		a:    mustParseJson(`{"foo":"bar"}`),
+		b:    mustParseJson(`{"foo":"baz"}`),
+		mask: mustParseMask(``),
+		want: mustParseDiff(
+			`@ ["foo"]`,
+			`- "bar"`,
+			`+ "baz"`,
+		),
+	}, {
+		name: "negative mask one key",
+		a:    mustParseJson(`{"foo":"bar"}`),
+		b:    mustParseJson(`{"foo":"baz"}`),
+		mask: mustParseMask(`- ["foo"]`),
+		want: mustParseDiff(``),
+	}, {
+		name: "positive mask one key",
+		a:    mustParseJson(`{"foo":"bar"}`),
+		b:    mustParseJson(`{"foo":"baz"}`),
+		mask: mustParseMask(`+ ["foo"]`),
+		want: mustParseDiff(
+			`@ ["foo"]`,
+			`- "bar"`,
+			`+ "baz"`,
+		),
+	}}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.a.Diff(tc.b, tc.mask)
+			if !got.equal(tc.want) {
+				t.Errorf("Wanted %v. Got %v", tc.want, got)
+			}
+		})
+	}
 }

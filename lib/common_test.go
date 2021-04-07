@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -168,4 +169,35 @@ func newTestContext(t *testing.T) *testContext {
 func (tc *testContext) withMetadata(metadata ...Metadata) *testContext {
 	tc.metadata = append(tc.metadata, metadata...)
 	return tc
+}
+
+func mustParseJson(ss ...string) JsonNode {
+	s := strings.Join(ss, "\n")
+	n, err := ReadJsonString(s)
+	if err != nil {
+		panic(err)
+	}
+	return n
+}
+
+func mustParseJsonArray(ss ...string) JsonNode {
+	return mustParseJson(ss...).(jsonArray)
+}
+
+func mustParseMask(ss ...string) Mask {
+	s := strings.Join(ss, "\n")
+	m, err := ReadMaskString(s)
+	if err != nil {
+		panic(err)
+	}
+	return m
+}
+
+func mustParseDiff(ss ...string) Diff {
+	s := strings.Join(ss, "\n")
+	d, err := ReadDiffString(s)
+	if err != err {
+		panic(err)
+	}
+	return d
 }

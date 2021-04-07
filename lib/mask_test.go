@@ -25,7 +25,7 @@ func TestReadMaskString(t *testing.T) {
 		want: Mask{
 			MaskElement{
 				Include: true,
-				Path:    mustParse(`["foo"]`).(jsonArray),
+				Path:    mustParseJsonArray(`["foo"]`).(jsonArray),
 			},
 		},
 	}, {
@@ -36,7 +36,7 @@ func TestReadMaskString(t *testing.T) {
 		want: Mask{
 			MaskElement{
 				Include: false,
-				Path:    mustParse(`["foo"]`).(jsonArray),
+				Path:    mustParseJsonArray(`["foo"]`).(jsonArray),
 			},
 		},
 	}, {
@@ -47,7 +47,7 @@ func TestReadMaskString(t *testing.T) {
 		want: Mask{
 			MaskElement{
 				Include: true,
-				Path:    mustParse(`["foo"]`).(jsonArray),
+				Path:    mustParseJsonArray(`["foo"]`).(jsonArray),
 			},
 		},
 	}, {
@@ -59,11 +59,11 @@ func TestReadMaskString(t *testing.T) {
 		want: Mask{
 			MaskElement{
 				Include: true,
-				Path:    mustParse(`["foo","bar"]`).(jsonArray),
+				Path:    mustParseJsonArray(`["foo","bar"]`).(jsonArray),
 			},
 			MaskElement{
 				Include: false,
-				Path:    mustParse(`["baz","boo"]`).(jsonArray),
+				Path:    mustParseJsonArray(`["baz","boo"]`).(jsonArray),
 			},
 		},
 	}, {
@@ -107,43 +107,4 @@ func TestReadMaskString(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestDiffMask(t *testing.T) {
-	cases := []struct {
-		name string
-		a    JsonNode
-		b    JsonNode
-		mask []string
-		want []string
-	}{{
-		name: "no mask",
-		a:    mustParse(`{"foo":"bar"}`),
-		b:    mustParse(`{"foo":"baz"}`),
-		mask: []string{},
-		want: []string{
-			`@ ["foo"]`,
-			`- "bar"`,
-			`+ "baz"`,
-		},
-	}}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			s := strings.Join(tc.mask, "\n")
-			mask, err := ReadMaskString(s)
-			if err != nil {
-				t.Errorf("Invalid mask: %v", err)
-			}
-
-		})
-	}
-}
-
-func mustParse(s string) JsonNode {
-	n, err := ReadJsonString(s)
-	if err != nil {
-		panic(err)
-	}
-	return n.(jsonArray)
 }

@@ -21,13 +21,26 @@ func (m Mask) string() string {
 	return m.Render()
 }
 
-func (d Mask) Render() string {
+func (m Mask) Render() string {
 	b := bytes.NewBuffer(nil)
-	for _, e := range d {
+	for _, e := range m {
 		b.WriteString(e.Render())
 		b.WriteString("\n")
 	}
 	return b.String()
+}
+
+func (m Mask) equal(m2 Mask) bool {
+	if len(m) != len(m2) {
+		return false
+	}
+	for i, e1 := range m {
+		e2 := m2[i]
+		if !e1.equal(e2) {
+			return false
+		}
+	}
+	return true
 }
 
 func (e MaskElement) Render() string {
@@ -39,6 +52,22 @@ func (e MaskElement) Render() string {
 	}
 	b.WriteString(jsonArray(e.Path).Json())
 	return b.String()
+}
+
+func (e MaskElement) equal(e2 MaskElement) bool {
+	if e.Include != e2.Include {
+		return false
+	}
+	if len(e.Path) != len(e2.Path) {
+		return false
+	}
+	for i, p1 := range e.Path {
+		p2 := e2.Path[i]
+		if !p1.Equals(p2) {
+			return false
+		}
+	}
+	return true
 }
 
 func ReadMaskString(s string) (Mask, error) {
