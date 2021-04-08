@@ -17,6 +17,31 @@ var _ Metadata = Mask{}
 
 func (m Mask) is_metadata() {}
 
+func getMask(metadata []Metadata) Mask {
+	for _, m := range metadata {
+		if n, ok := m.(Mask); ok {
+			return n
+		}
+	}
+	return Mask{}
+}
+
+func (m Mask) include(i JsonNode) bool {
+	for _, e := range m {
+		if len(e.Path) != 1 {
+			continue
+		}
+		j := e.Path[0]
+		if i.Equals(j) && !e.Include {
+			return false
+		}
+		if !i.Equals(j) && e.Include {
+			return false
+		}
+	}
+	return true
+}
+
 func (m Mask) string() string {
 	return m.Render()
 }

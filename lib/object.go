@@ -127,6 +127,7 @@ func (o jsonObject) Diff(n JsonNode, metadata ...Metadata) Diff {
 }
 
 func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
+	mask := getMask(metadata)
 	d := make(Diff, 0)
 	o2, ok := n.(jsonObject)
 	if !ok {
@@ -149,6 +150,9 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	}
 	sort.Strings(o2Keys)
 	for _, k1 := range o1Keys {
+		if !mask.include(jsonString(k1)) {
+			continue
+		}
 		v1 := o1.properties[k1]
 		if v2, ok := o2.properties[k1]; ok {
 			// Both keys are present
@@ -165,6 +169,9 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
 		}
 	}
 	for _, k2 := range o2Keys {
+		if !mask.include(jsonString(k2)) {
+			continue
+		}
 		v2 := o2.properties[k2]
 		if _, ok := o1.properties[k2]; !ok {
 			// O1 missing key

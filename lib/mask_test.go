@@ -108,3 +108,56 @@ func TestReadMaskString(t *testing.T) {
 		})
 	}
 }
+
+func TestMaskInclude(t *testing.T) {
+	cases := []struct {
+		name string
+		mask Mask
+		i    JsonNode
+		want bool
+	}{{
+		name: "empty mask",
+		mask: Mask{},
+		i:    mustParseJson(`"foo"`),
+		want: true,
+	}, {
+		name: "single negative mask",
+		mask: mustParseMask(
+			`- ["foo"]`,
+		),
+		i:    mustParseJson(`"foo"`),
+		want: false,
+	}, {
+		name: "single positive mask",
+		mask: mustParseMask(
+			`+ ["foo"]`,
+		),
+		i:    mustParseJson(`"foo"`),
+		want: true,
+	}, {
+		name: "positive mask with inapplicable negative mask",
+		mask: mustParseMask(
+			`+ ["foo"]`,
+			`- ["foo","bar"]`,
+		),
+		i:    mustParseJson(`"foo"`),
+		want: true,
+	}, {
+		name: "positive mask with overriding negative mask",
+		mask: mustParseMask(
+			`+ ["foo"]`,
+			`- ["foo"]`,
+		),
+		i:    mustParseJson(`"foo"`),
+		want: false,
+	}}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.mask.include(tc.i)
+			if tc.want != got {
+				t.Errorf("Wanted %v. Got %v", tc.want, got)
+			}
+		})
+	}
+}

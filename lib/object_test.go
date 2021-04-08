@@ -128,8 +128,8 @@ func TestObjectDiffMask(t *testing.T) {
 		want: mustParseDiff(``),
 	}, {
 		name: "positive mask one key",
-		a:    mustParseJson(`{"foo":"bar"}`),
-		b:    mustParseJson(`{"foo":"baz"}`),
+		a:    mustParseJson(`{"foo":"bar","boo":"bam"}`),
+		b:    mustParseJson(`{"foo":"baz","boo":"zap"}`),
 		mask: mustParseMask(`+ ["foo"]`),
 		want: mustParseDiff(
 			`@ ["foo"]`,
