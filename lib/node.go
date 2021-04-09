@@ -15,7 +15,7 @@ type JsonNode interface {
 	Equals(n JsonNode, metadata ...Metadata) bool
 	hashCode(metadata []Metadata) [8]byte
 	Diff(n JsonNode, metadata ...Metadata) Diff
-	diff(n JsonNode, p path, metadata []Metadata) Diff
+	diff(n JsonNode, p path, metadata []Metadata, mask Mask) Diff
 	Patch(d Diff) (JsonNode, error)
 	patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error)
 }

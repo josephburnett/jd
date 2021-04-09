@@ -50,10 +50,11 @@ func (a jsonMultiset) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (a jsonMultiset) Diff(n JsonNode, metadata ...Metadata) Diff {
-	return a.diff(n, nil, metadata)
+	mask := getMask(metadata)
+	return a.diff(n, nil, metadata, mask)
 }
 
-func (a1 jsonMultiset) diff(n JsonNode, path path, metadata []Metadata) Diff {
+func (a1 jsonMultiset) diff(n JsonNode, path path, metadata []Metadata, mask Mask) Diff {
 	d := make(Diff, 0)
 	a2, ok := n.(jsonMultiset)
 	if !ok {

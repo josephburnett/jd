@@ -28,10 +28,14 @@ func getMask(metadata []Metadata) Mask {
 
 func (m Mask) include(i JsonNode) bool {
 	for _, e := range m {
-		if len(e.Path) != 1 {
+		if len(e.Path) == 0 {
 			continue
 		}
-		j := e.Path[0]
+		p := path(e.Path)
+		j, _, p2 := p.next()
+		if len(p2) != 0 {
+			continue
+		}
 		if i.Equals(j) && !e.Include {
 			return false
 		}
@@ -40,6 +44,19 @@ func (m Mask) include(i JsonNode) bool {
 		}
 	}
 	return true
+}
+
+func (m Mask) next() Mask {
+	m2 := Mask{}
+	for _, e := range m {
+		e2 := MaskElement{}
+		e2.Include = e.Include
+		p := path(e.Path)
+		_, _, p2 := p.next()
+		e2.Path = p2
+		m2 = append(m2, e2)
+	}
+	return m2
 }
 
 func (m Mask) string() string {

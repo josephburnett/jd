@@ -136,6 +136,19 @@ func TestObjectDiffMask(t *testing.T) {
 			`- "bar"`,
 			`+ "baz"`,
 		),
+	}, {
+		name: "negative mask refining positive mask",
+		a:    mustParseJson(`{"foo":{"bar":"baz","boo":"bam"}}`),
+		b:    mustParseJson(`{"foo":{"bar":"zap","boo":"wam"}}`),
+		mask: mustParseMask(
+			`+ ["foo"]`,
+			`- ["foo","bar"]`,
+		),
+		want: mustParseDiff(
+			`@ ["foo","boo"]`,
+			`- "bam"`,
+			`+ "wam"`,
+		),
 	}}
 
 	for _, tc := range cases {

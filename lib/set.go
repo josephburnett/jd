@@ -62,10 +62,11 @@ func (s jsonSet) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (s jsonSet) Diff(j JsonNode, metadata ...Metadata) Diff {
-	return s.diff(j, make(path, 0), metadata)
+	mask := getMask(metadata)
+	return s.diff(j, make(path, 0), metadata, mask)
 }
 
-func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata) Diff {
+func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata, mask Mask) Diff {
 	d := make(Diff, 0)
 	s2, ok := n.(jsonSet)
 	if !ok {
@@ -129,7 +130,7 @@ func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata) Diff {
 			if isObject1 && isObject2 {
 				// Sub diff objects with same identity.
 				p := path.appendIndex(o1, metadata)
-				subDiff := o1.diff(o2, p, metadata)
+				subDiff := o1.diff(o2, p, metadata, mask.next())
 				for _, subElement := range subDiff {
 					d = append(d, subElement)
 				}

@@ -46,10 +46,11 @@ func (l jsonList) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (l jsonList) Diff(n JsonNode, metadata ...Metadata) Diff {
-	return l.diff(n, make(path, 0), metadata)
+	mask := getMask(metadata)
+	return l.diff(n, make(path, 0), metadata, mask)
 }
 
-func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata) Diff {
+func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, mask Mask) Diff {
 	d := make(Diff, 0)
 	a2, ok := n.(jsonList)
 	if !ok {
@@ -72,7 +73,7 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata) Diff {
 		if a1Has && a2Has {
 			n1 := dispatch(a1[i], metadata)
 			n2 := dispatch(a2[i], metadata)
-			subDiff := n1.diff(n2, subPath, metadata)
+			subDiff := n1.diff(n2, subPath, metadata, mask.next())
 			d = append(d, subDiff...)
 		}
 		if a1Has && !a2Has {

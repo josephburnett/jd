@@ -29,10 +29,11 @@ func (s jsonString) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (s jsonString) Diff(n JsonNode, metadata ...Metadata) Diff {
-	return s.diff(n, make(path, 0), metadata)
+	mask := getMask(metadata)
+	return s.diff(n, make(path, 0), metadata, mask)
 }
 
-func (s1 jsonString) diff(n JsonNode, path path, metadata []Metadata) Diff {
+func (s1 jsonString) diff(n JsonNode, path path, metadata []Metadata, mask Mask) Diff {
 	d := make(Diff, 0)
 	if s1.Equals(n) {
 		return d

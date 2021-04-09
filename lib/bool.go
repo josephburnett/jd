@@ -33,10 +33,10 @@ func (b jsonBool) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (b jsonBool) Diff(n JsonNode, metadata ...Metadata) Diff {
-	return b.diff(n, make(path, 0), metadata)
+	return b.diff(n, make(path, 0), metadata, nil)
 }
 
-func (b jsonBool) diff(n JsonNode, path path, metadata []Metadata) Diff {
+func (b jsonBool) diff(n JsonNode, path path, metadata []Metadata, mask Mask) Diff {
 	d := make(Diff, 0)
 	if b.Equals(n) {
 		return d
