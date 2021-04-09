@@ -67,6 +67,9 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, mask Mask) D
 		maxLen = len(a2)
 	}
 	for i := 0; i < maxLen; i++ {
+		if !mask.include(jsonNumber(i)) {
+			continue
+		}
 		a1Has := i < len(a1)
 		a2Has := i < len(a2)
 		subPath := append(path, jsonNumber(i))
