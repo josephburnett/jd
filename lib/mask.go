@@ -46,13 +46,16 @@ func (m Mask) include(i JsonNode) bool {
 	return true
 }
 
-func (m Mask) next() Mask {
+func (m Mask) next(i JsonNode) Mask {
 	m2 := Mask{}
 	for _, e := range m {
 		e2 := MaskElement{}
 		e2.Include = e.Include
 		p := path(e.Path)
-		_, _, p2 := p.next()
+		j, _, p2 := p.next()
+		if !i.Equals(j) {
+			continue
+		}
 		e2.Path = p2
 		m2 = append(m2, e2)
 	}

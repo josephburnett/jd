@@ -130,7 +130,7 @@ func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata, mask Mask) Di
 			if isObject1 && isObject2 {
 				// Sub diff objects with same identity.
 				p := path.appendIndex(o1, metadata)
-				subDiff := o1.diff(o2, p, metadata, mask.next())
+				subDiff := o1.diff(o2, p, metadata, mask.next(o1))
 				for _, subElement := range subDiff {
 					d = append(d, subElement)
 				}

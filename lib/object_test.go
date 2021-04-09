@@ -149,6 +149,22 @@ func TestObjectDiffMask(t *testing.T) {
 			`- "bam"`,
 			`+ "wam"`,
 		),
+	}, {
+		name: "mask two levels deep",
+		a:    mustParseJson(`{"foo":{"bar":"baz"}}`),
+		b:    mustParseJson(`{"foo":{"bar":"boo"}}`),
+		mask: mustParseMask(`- ["foo","bar"]`),
+		want: mustParseDiff(``),
+	}, {
+		name: "same key at same depth, different paths",
+		a:    mustParseJson(`{"foo":{"bar":"baz"},"who":{"bar":"baz"}}`),
+		b:    mustParseJson(`{"foo":{"bar":"boo"},"who":{"bar":"boo"}}`),
+		mask: mustParseMask(`- ["foo","bar"]`),
+		want: mustParseDiff(
+			`@ ["who","bar"]`,
+			`- "baz"`,
+			`+ "boo"`,
+		),
 	}}
 
 	for _, tc := range cases {

@@ -156,7 +156,7 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata, mask Mask)
 		v1 := o1.properties[k1]
 		if v2, ok := o2.properties[k1]; ok {
 			// Both keys are present
-			subMask := mask.next()
+			subMask := mask.next(jsonString(k1))
 			subDiff := v1.diff(v2, append(path, jsonString(k1)), metadata, subMask)
 			d = append(d, subDiff...)
 		} else {

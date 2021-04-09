@@ -73,7 +73,7 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, mask Mask) D
 		if a1Has && a2Has {
 			n1 := dispatch(a1[i], metadata)
 			n2 := dispatch(a2[i], metadata)
-			subDiff := n1.diff(n2, subPath, metadata, mask.next())
+			subDiff := n1.diff(n2, subPath, metadata, mask.next(jsonNumber(i)))
 			d = append(d, subDiff...)
 		}
 		if a1Has && !a2Has {
