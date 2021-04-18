@@ -25,6 +25,20 @@ func TestListDiffMask(t *testing.T) {
 		b:    mustParseJson(`[1,2,4]`),
 		mask: mustParseMask(`- [2]`),
 		want: mustParseDiff(``),
+	}, {
+		name: "mask elements within a list",
+		a:    mustParseJson(`[[1,2],[3,4]]`),
+		b:    mustParseJson(`[[5,6],[7,8]]`),
+		mask: mustParseMask(`- [[],0]`),
+		want: mustParseDiff(
+			`@ [0,1]`,
+			`- 2`,
+			`+ 6`,
+			`@ [1,1]`,
+			`- 4`,
+			`+ 8`,
+			// ignore the change at index 0's
+		),
 	}}
 
 	for _, tc := range cases {

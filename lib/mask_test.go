@@ -150,6 +150,34 @@ func TestMaskInclude(t *testing.T) {
 		),
 		i:    mustParseJson(`"foo"`),
 		want: false,
+	}, {
+		name: "array index negative masked",
+		mask: mustParseMask(
+			`- [0]`,
+		),
+		i:    mustParseJson(`0`),
+		want: false,
+	}, {
+		name: "array index not negative masked",
+		mask: mustParseMask(
+			`- [0]`,
+		),
+		i:    mustParseJson(`1`),
+		want: true,
+	}, {
+		name: "array all indexes negative masked",
+		mask: mustParseMask(
+			`- [[]]`,
+		),
+		i:    mustParseJson(`0`),
+		want: false,
+	}, {
+		name: "array all indexes positive masked",
+		mask: mustParseMask(
+			`+ [[]]`,
+		),
+		i:    mustParseJson(`0`),
+		want: true,
 	}}
 
 	for _, tc := range cases {

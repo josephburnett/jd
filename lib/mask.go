@@ -27,6 +27,7 @@ func getMask(metadata []Metadata) Mask {
 }
 
 func (m Mask) include(i JsonNode) bool {
+	result := true
 	for _, e := range m {
 		if len(e.Path) == 0 {
 			continue
@@ -36,14 +37,20 @@ func (m Mask) include(i JsonNode) bool {
 		if len(p2) != 0 {
 			continue
 		}
-		if i.Equals(j) && !e.Include {
-			return false
+		if a, ok := j.(jsonArray); ok && len(a) == 0 {
+			if _, ok := i.(jsonNumber); ok {
+				// Empty array matches all array indices.
+				result = e.Include
+				continue
+			}
 		}
-		if !i.Equals(j) && e.Include {
-			return false
+		if i.Equals(j) {
+			result = e.Include
+		} else {
+			result = !e.Include
 		}
 	}
-	return true
+	return result
 }
 
 func (m Mask) next(i JsonNode) Mask {
@@ -53,7 +60,17 @@ func (m Mask) next(i JsonNode) Mask {
 		e2.Include = e.Include
 		p := path(e.Path)
 		j, _, p2 := p.next()
-		if !i.Equals(j) {
+		match := false
+		if i.Equals(j) {
+			match = true
+		}
+		if a, ok := j.(jsonArray); ok && len(a) == 0 {
+			if _, ok := i.(jsonNumber); ok {
+				// Empty array matches all array indices.
+				match = true
+			}
+		}
+		if !match {
 			continue
 		}
 		e2.Path = p2

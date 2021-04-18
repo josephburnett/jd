@@ -31,6 +31,9 @@ func (p path) next() (JsonNode, []Metadata, path) {
 	for i, n := range p {
 		switch n := n.(type) {
 		case jsonArray:
+			if len(n) == 0 {
+				return n, metadata, p[i+1:]
+			}
 			for _, meta := range n {
 				// TODO: parse metadata cleanly.
 				if s, ok := meta.(jsonString); ok {
