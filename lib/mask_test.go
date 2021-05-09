@@ -178,12 +178,79 @@ func TestMaskInclude(t *testing.T) {
 		),
 		i:    mustParseJson(`0`),
 		want: true,
+	}, {
+		name: "set with matching key",
+		mask: mustParseMask(
+			`- [{"key":"value"}]`,
+		),
+		i:    mustParseJson(`{"key":"value"}`),
+		want: false,
+	}, {
+		name: "set with non-matching key",
+		mask: mustParseMask(
+			`- [{"key":"value"}]`,
+		),
+		i:    mustParseJson(`{"key":"not"}`),
+		want: true,
 	}}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := tc.mask.include(tc.i)
 			if tc.want != got {
+				t.Errorf("Wanted %v. Got %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestDiffMask(t *testing.T) {
+	cases := []struct {
+		name string
+		a    JsonNode
+		b    JsonNode
+		mask Mask
+		want Diff
+	}{{
+		name: "empty mask",
+		a:    mustParseJson(`[1,2,3]`),
+		b:    mustParseJson(`[1,2,4]`),
+		mask: mustParseMask(``),
+		want: mustParseDiff(
+			`@ [2]`,
+			`- 3`,
+			`+ 4`,
+		),
+	}, {
+		name: "specific element mask",
+		a:    mustParseJson(`[1,2,3]`),
+		b:    mustParseJson(`[1,2,4]`),
+		mask: mustParseMask(`- [2]`),
+		want: mustParseDiff(``),
+	}, {
+		name: "mask elements within a list",
+		a:    mustParseJson(`[[1,2],[3,4]]`),
+		b:    mustParseJson(`[[5,6],[7,8]]`),
+		mask: mustParseMask(`- [[],0]`),
+		want: mustParseDiff(
+			`@ [0,1]`,
+			`- 2`,
+			`+ 6`,
+			`@ [1,1]`,
+			`- 4`,
+			`+ 8`,
+			// ignore the change at index 0's
+		),
+	}, {
+		name: "mask property of all objects in set",
+		a:    mustParseJson(``),
+		b:    mustParseJson(``),
+	}}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.a.Diff(tc.b, tc.mask)
+			if !got.equal(tc.want) {
 				t.Errorf("Wanted %v. Got %v", tc.want, got)
 			}
 		})
