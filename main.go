@@ -147,9 +147,19 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 	}
 	diff := aNode.Diff(bNode, metadata...)
 	if *output == "" {
-		fmt.Print(diff.Render())
+		str := diff.Render()
+		if  str == "" {
+			os.Exit(0)
+		}
+		fmt.Print(str)
+		os.Exit(1)
 	} else {
-		ioutil.WriteFile(*output, []byte(diff.Render()), 0644)
+		str := diff.Render()
+		if str == "" {
+			os.Exit(0)
+		}
+		ioutil.WriteFile(*output, []byte(str), 0644)
+		os.Exit(1)
 	}
 }
 
@@ -178,9 +188,17 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 		out = bNode.Json(metadata...)
 	}
 	if *output == "" {
+		if out == "" {
+			os.Exit(0)
+		}
 		fmt.Print(out)
+		os.Exit(1)
 	} else {
+		if out == "" {
+			os.Exit(0)
+		}
 		ioutil.WriteFile(*output, []byte(out), 0644)
+		os.Exit(1)
 	}
 }
 
