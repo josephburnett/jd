@@ -243,8 +243,14 @@ func TestDiffMask(t *testing.T) {
 		),
 	}, {
 		name: "mask property of all objects in set",
-		a:    mustParseJson(``),
-		b:    mustParseJson(``),
+		a:    mustParseJson(`[{"foo":"bar"},{"baz":"bam"}]`),
+		b:    mustParseJson(`[{"foo":"boo"},{"baz":"hoo"}]`),
+		mask: mustParseMask(`- [["set"],"foo"]`),
+		want: mustParseDiff(
+			`@ [{}]`,
+			`{"baz":"bam"}`,
+			`{"baz":"hoo"}`,
+		),
 	}}
 
 	for _, tc := range cases {

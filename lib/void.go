@@ -40,8 +40,8 @@ func (v voidNode) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (v voidNode) Diff(n JsonNode, metadata ...Metadata) Diff {
-	mask := getMask(metadata)
-	return v.diff(n, make(path, 0), metadata, mask)
+	mask, rest := getMask(metadata)
+	return v.diff(n, make(path, 0), rest, mask)
 }
 
 func (v voidNode) diff(n JsonNode, p path, metadata []Metadata, mask Mask) Diff {

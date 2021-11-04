@@ -17,13 +17,17 @@ var _ Metadata = Mask{}
 
 func (m Mask) is_metadata() {}
 
-func getMask(metadata []Metadata) Mask {
+func getMask(metadata []Metadata) (Mask, []Metadata) {
+	mask := Mask{}
+	rest := []Metadata{}
 	for _, m := range metadata {
 		if n, ok := m.(Mask); ok {
-			return n
+			mask = n
+		} else {
+			rest = append(rest, n)
 		}
 	}
-	return Mask{}
+	return mask, rest
 }
 
 func (m Mask) include(i JsonNode) bool {

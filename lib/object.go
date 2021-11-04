@@ -123,8 +123,8 @@ func (k1 *setkeysMetadata) mergeKeys(k2 map[string]bool) map[string]bool {
 }
 
 func (o jsonObject) Diff(n JsonNode, metadata ...Metadata) Diff {
-	mask := getMask(metadata)
-	return o.diff(n, make(path, 0), metadata, mask)
+	mask, rest := getMask(metadata)
+	return o.diff(n, make(path, 0), rest, mask)
 }
 
 func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata, mask Mask) Diff {

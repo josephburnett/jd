@@ -36,11 +36,10 @@ func (a jsonArray) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (a jsonArray) Diff(n JsonNode, metadata ...Metadata) Diff {
-	mask := getMask(metadata)
-	// TODO get meta and dispatch on concrete type.
+	mask, rest := getMask(metadata)
 	n1 := dispatch(a, metadata)
 	n2 := dispatch(n, metadata)
-	return n1.diff(n2, make(path, 0), metadata, mask)
+	return n1.diff(n2, make(path, 0), rest, mask)
 }
 
 func (a jsonArray) diff(n JsonNode, path path, metadata []Metadata, mask Mask) Diff {

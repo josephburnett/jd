@@ -62,8 +62,8 @@ func (s jsonSet) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (s jsonSet) Diff(j JsonNode, metadata ...Metadata) Diff {
-	mask := getMask(metadata)
-	return s.diff(j, make(path, 0), metadata, mask)
+	mask, rest := getMask(metadata)
+	return s.diff(j, make(path, 0), rest, mask)
 }
 
 func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata, mask Mask) Diff {
