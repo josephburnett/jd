@@ -62,7 +62,7 @@ func (v voidNode) Patch(d Diff) (JsonNode, error) {
 
 func (v voidNode) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
 	if len(pathAhead) != 0 {
-		return patchErrExpectColl(v, pathBehind[0])
+		return patchErrExpectColl(v, pathBehind[len(pathBehind)-1])
 	}
 	if len(oldValues) > 1 || len(newValues) > 1 {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
