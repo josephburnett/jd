@@ -41,7 +41,8 @@ func main() {
 	}
 	metadata, err := parseMetadata()
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Printf(err.Error())
+		os.Exit(2)
 	}
 	var a, b string
 	switch len(flag.Args()) {
@@ -123,7 +124,7 @@ func printUsageAndExit() {
 	} {
 		fmt.Println(line)
 	}
-	os.Exit(1)
+	os.Exit(2)
 }
 
 func printDiff(a, b string, metadata []jd.Metadata) {
@@ -135,7 +136,8 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		aNode, err = jd.ReadJsonString(a)
 	}
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Printf(err.Error())
+		os.Exit(2)
 	}
 	if *yaml {
 		bNode, err = jd.ReadYamlString(b)
@@ -143,12 +145,13 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		bNode, err = jd.ReadJsonString(b)
 	}
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Printf(err.Error())
+		os.Exit(2)
 	}
 	diff := aNode.Diff(bNode, metadata...)
 	if *output == "" {
 		str := diff.Render()
-		if  str == "" {
+		if str == "" {
 			os.Exit(0)
 		}
 		fmt.Print(str)
@@ -166,7 +169,8 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 func printPatch(p, a string, metadata []jd.Metadata) {
 	diff, err := jd.ReadDiffString(p)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Printf(err.Error())
+		os.Exit(2)
 	}
 	var aNode jd.JsonNode
 	if *yaml {
@@ -175,11 +179,13 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 		aNode, err = jd.ReadJsonString(a)
 	}
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Printf(err.Error())
+		os.Exit(2)
 	}
 	bNode, err := aNode.Patch(diff)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Printf(err.Error())
+		os.Exit(2)
 	}
 	var out string
 	if *yaml {
@@ -205,7 +211,8 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 func readFile(filename string) string {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Printf(err.Error())
+		os.Exit(2)
 	}
 	return string(bytes)
 }
@@ -214,7 +221,8 @@ func readStdin() string {
 	r := bufio.NewReader(os.Stdin)
 	bytes, err := ioutil.ReadAll(r)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Printf(err.Error())
+		os.Exit(2)
 	}
 	return string(bytes)
 }
