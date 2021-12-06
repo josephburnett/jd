@@ -115,3 +115,13 @@ Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' | 'Empty JSON Object' )* ']' 
 + "Action"
 + "Comedy"
 ```
+
+## Cookbook
+
+Use git diff to produce a structural diff:
+```
+git difftool -yx jd @ -- foo.json
+@ ["foo"]
+- "bar"
++ "baz"
+```
