@@ -17,6 +17,7 @@ import (
 
 const version = "HEAD"
 
+var format = flag.String("f", "", "Diff format (jd, patch)")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
 var output = flag.String("o", "", "Output file")
 var patch = flag.Bool("p", false, "Patch mode")
@@ -105,13 +106,14 @@ func printUsageAndExit() {
 		`When patching (-p) FILE1 is a diff.`,
 		``,
 		`Options:`,
-		`  -p        Apply patch FILE1 to FILE2 or STDIN.`,
-		`  -o=FILE3  Write to FILE3 instead of STDOUT.`,
-		`  -set      Treat arrays as sets.`,
-		`  -mset     Treat arrays as multisets (bags).`,
-		`  -setkeys  Keys to identify set objects`,
-		`  -yaml     Read and write YAML instead of JSON.`,
-		`  -port=N   Serve web UI on port N`,
+		`  -p         Apply patch FILE1 to FILE2 or STDIN.`,
+		`  -o=FILE3   Write to FILE3 instead of STDOUT.`,
+		`  -set       Treat arrays as sets.`,
+		`  -mset      Treat arrays as multisets (bags).`,
+		`  -setkeys   Keys to identify set objects`,
+		`  -yaml      Read and write YAML instead of JSON.`,
+		`  -port=N    Serve web UI on port N`,
+		`  -f=FORMAT  Produce diff in FORMAT jd (default) or patch (RFC 6902).`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,
@@ -149,15 +151,27 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		os.Exit(2)
 	}
 	diff := aNode.Diff(bNode, metadata...)
+	var str string
+	switch *format {
+	case "", "jd":
+		str = diff.Render()
+	case "patch":
+		str, err = diff.RenderPatch()
+		if err != nil {
+			log.Printf(err.Error())
+			os.Exit(2)
+		}
+	default:
+		log.Printf("Invalid format: %q", *format)
+		os.Exit(2)
+	}
 	if *output == "" {
-		str := diff.Render()
 		if str == "" {
 			os.Exit(0)
 		}
 		fmt.Print(str)
 		os.Exit(1)
 	} else {
-		str := diff.Render()
 		if str == "" {
 			os.Exit(0)
 		}
