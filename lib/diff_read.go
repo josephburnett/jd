@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -127,4 +128,83 @@ func errorAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
 	line := lineZeroIndex + 1
 	e := fmt.Sprintf(err, i...)
 	return nil, fmt.Errorf("Invalid diff at line %v. %v", line, e)
+}
+
+func ReadPatchFile(filename string) (Diff, error) {
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return ReadPatchString(string(bytes))
+}
+
+func ReadPatchString(s string) (Diff, error) {
+	var patch []patchElement
+	err := json.Unmarshal([]byte(s), &patch)
+	if err != nil {
+		return nil, err
+	}
+	var diff Diff
+	var element DiffElement
+	for {
+		if len(patch) == 0 {
+			return diff, nil
+		}
+		element, patch, err = readPatchDiffElement(patch)
+		if err != nil {
+			return nil, err
+		}
+		diff = append(diff, element)
+	}
+}
+
+func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, error) {
+	read := false
+	d := DiffElement{}
+	if len(patch) == 0 {
+		return d, nil, fmt.Errorf("Unexpected end of JSON Patch.")
+	}
+	p := patch[0]
+	var err error
+	if p.Op == "test" {
+		d.Path, err = readPointer(p.Path)
+		if err != nil {
+			return d, nil, err
+		}
+		old, err := NewJsonNode(p.Value)
+		if err != nil {
+			return d, nil, err
+		}
+		d.OldValues = []JsonNode{old}
+		patch = patch[1:]
+		if len(patch) == 0 || patch[0].Op != "remove" {
+			return d, nil, fmt.Errorf("JSON Patch test op must be followed by a remove op.")
+		}
+		if patch[0].Path != p.Path {
+			return d, nil, fmt.Errorf("JSON Patch remove op must have the same path as test op.")
+		}
+		if patch[0].Value != p.Value {
+			return d, nil, fmt.Errorf("JSON Patch remove op must have the same value as test op.")
+		}
+		patch = patch[1:]
+		read = true
+	}
+	p = patch[0]
+	if p.Op == "add" {
+		d.Path, err = readPointer(p.Path)
+		if err != nil {
+			return d, nil, err
+		}
+		new, err := NewJsonNode(p.Value)
+		if err != nil {
+			return d, nil, err
+		}
+		d.NewValues = []JsonNode{new}
+		patch = patch[1:]
+		read = true
+	}
+	if !read {
+		return d, nil, fmt.Errorf("Invalid JSON Patch. Must be test/remove or add ops.")
+	}
+	return d, patch, nil
 }
