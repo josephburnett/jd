@@ -1,11 +1,8 @@
 package jd
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-
-	"gopkg.in/yaml.v2"
 )
 
 type JsonNode interface {
@@ -94,20 +91,4 @@ func nodeList(n ...JsonNode) []JsonNode {
 		return l
 	}
 	return append(l, n...)
-}
-
-func renderJson(i interface{}) string {
-	s, err := json.Marshal(i)
-	if err != nil {
-		panic(err)
-	}
-	return string(s)
-}
-
-func renderYaml(i interface{}) string {
-	s, err := yaml.Marshal(i)
-	if err != nil {
-		panic(err)
-	}
-	return string(s)
 }
