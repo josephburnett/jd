@@ -143,13 +143,13 @@ func TestMultisetDiff(t *testing.T) {
 		metadata: MULTISET,
 		a:        `[]`,
 		b:        `[]`,
-		want:     s(),
+		want:     ss(),
 	}, {
 		name:     "two multisets with different numbers",
 		metadata: MULTISET,
 		a:        `[1]`,
 		b:        `[1,2]`,
-		want: s(
+		want: ss(
 			`@ [["multiset"],{}]`,
 			`+ 2`,
 		),
@@ -158,13 +158,13 @@ func TestMultisetDiff(t *testing.T) {
 		metadata: MULTISET,
 		a:        `[1,2]`,
 		b:        `[1,2]`,
-		want:     s(),
+		want:     ss(),
 	}, {
 		name:     "adding two numbers",
 		metadata: MULTISET,
 		a:        `[1]`,
 		b:        `[1,2,2]`,
-		want: s(
+		want: ss(
 			`@ [["multiset"],{}]`,
 			`+ 2`,
 			`+ 2`,
@@ -174,7 +174,7 @@ func TestMultisetDiff(t *testing.T) {
 		metadata: MULTISET,
 		a:        `[1,2,3]`,
 		b:        `[1,3]`,
-		want: s(
+		want: ss(
 			`@ [["multiset"],{}]`,
 			`- 2`,
 		),
@@ -183,7 +183,7 @@ func TestMultisetDiff(t *testing.T) {
 		metadata: MULTISET,
 		a:        `[{"a":1}]`,
 		b:        `[{"a":2}]`,
-		want: s(
+		want: ss(
 			`@ [["multiset"],{}]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -193,7 +193,7 @@ func TestMultisetDiff(t *testing.T) {
 		metadata: MULTISET,
 		a:        `[{"a":1},{"a":1}]`,
 		b:        `[{"a":2}]`,
-		want: s(
+		want: ss(
 			`@ [["multiset"],{}]`,
 			`- {"a":1}`,
 			`- {"a":1}`,
@@ -204,7 +204,7 @@ func TestMultisetDiff(t *testing.T) {
 		metadata: MULTISET,
 		a:        `["foo","foo","bar"]`,
 		b:        `["baz"]`,
-		want: s(
+		want: ss(
 			`@ [["multiset"],{}]`,
 			`- "bar"`,
 			`- "foo"`,
@@ -216,7 +216,7 @@ func TestMultisetDiff(t *testing.T) {
 		metadata: MULTISET,
 		a:        `["foo"]`,
 		b:        `["bar","baz","bar"]`,
-		want: s(
+		want: ss(
 			`@ [["multiset"],{}]`,
 			`- "foo"`,
 			`+ "bar"`,
@@ -228,7 +228,7 @@ func TestMultisetDiff(t *testing.T) {
 		metadata: MULTISET,
 		a:        `{}`,
 		b:        `[]`,
-		want: s(
+		want: ss(
 			`@ []`,
 			`- {}`,
 			`+ []`,
@@ -255,13 +255,13 @@ func TestMultisetPatch(t *testing.T) {
 		name:     "empty patch on empty multiset",
 		metadata: MULTISET,
 		given:    `[]`,
-		patch:    s(``),
+		patch:    ss(``),
 		want:     `[]`,
 	}, {
 		name:     "add a number",
 		metadata: MULTISET,
 		given:    `[1]`,
-		patch: s(
+		patch: ss(
 			`@ [["multiset"],{}]`,
 			`+ 2`,
 		),
@@ -270,13 +270,13 @@ func TestMultisetPatch(t *testing.T) {
 		name:     "empty patch on multiset with numbers",
 		metadata: MULTISET,
 		given:    `[1,2]`,
-		patch:    s(``),
+		patch:    ss(``),
 		want:     `[1,2]`,
 	}, {
 		name:     "add two numbers",
 		metadata: MULTISET,
 		given:    `[1]`,
-		patch: s(
+		patch: ss(
 			`@ [["multiset"],{}]`,
 			`+ 2`,
 			`+ 2`,
@@ -286,7 +286,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:     "remove a number",
 		metadata: MULTISET,
 		given:    `[1,2,3]`,
-		patch: s(
+		patch: ss(
 			`@ [["multiset"],{}]`,
 			`- 2`,
 		),
@@ -295,7 +295,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:     "replace one object with another",
 		metadata: MULTISET,
 		given:    `[{"a":1}]`,
-		patch: s(
+		patch: ss(
 			`@ [["multiset"],{}]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -305,7 +305,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:     "remove two objects and add one",
 		metadata: MULTISET,
 		given:    `[{"a":1},{"a":1}]`,
-		patch: s(
+		patch: ss(
 			`@ [["multiset"],{}]`,
 			`- {"a":1}`,
 			`- {"a":1}`,
@@ -316,7 +316,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:     "remove three objects repeated and add one",
 		metadata: MULTISET,
 		given:    `["foo","foo","bar"]`,
-		patch: s(
+		patch: ss(
 			`@ [["multiset"],{}]`,
 			`- "bar"`,
 			`- "foo"`,
@@ -328,7 +328,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:     "remove one object and add three repeated",
 		metadata: MULTISET,
 		given:    `["foo"]`,
-		patch: s(
+		patch: ss(
 			`@ [["multiset"],{}]`,
 			`- "foo"`,
 			`+ "bar"`,
@@ -340,7 +340,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:     "replace multiset with array",
 		metadata: MULTISET,
 		given:    `{}`,
-		patch: s(
+		patch: ss(
 			`@ []`,
 			`- {}`,
 			`+ []`,
@@ -368,7 +368,7 @@ func TestMultisetPatchError(t *testing.T) {
 		name:     "remove number from empty multiset",
 		metadata: MULTISET,
 		given:    `[]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`- 1`,
 		),
@@ -376,7 +376,7 @@ func TestMultisetPatchError(t *testing.T) {
 		name:     "remove a single number twice",
 		metadata: MULTISET,
 		given:    `[1]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`- 1`,
 			`- 1`,
@@ -385,7 +385,7 @@ func TestMultisetPatchError(t *testing.T) {
 		name:     "remove an object when there is a multiset",
 		metadata: MULTISET,
 		given:    `[]`,
-		patch: s(
+		patch: ss(
 			`@ []`,
 			`- {}`,
 		),

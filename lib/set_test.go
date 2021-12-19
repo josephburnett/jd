@@ -157,13 +157,13 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `[]`,
 		b:        `[]`,
-		want:     s(),
+		want:     ss(),
 	}, {
 		name:     "add a number",
 		metadata: m(SET),
 		a:        `[1]`,
 		b:        `[1,2]`,
-		want: s(
+		want: ss(
 			`@ [["set"],{}]`,
 			`+ 2`,
 		),
@@ -172,13 +172,13 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `[1,2]`,
 		b:        `[1,2]`,
-		want:     s(),
+		want:     ss(),
 	}, {
 		name:     "add a number multiple times",
 		metadata: m(SET),
 		a:        `[1]`,
 		b:        `[1,2,2]`,
-		want: s(
+		want: ss(
 			`@ [["set"],{}]`,
 			`+ 2`,
 		),
@@ -187,7 +187,7 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `[1,2,3]`,
 		b:        `[1,3]`,
-		want: s(
+		want: ss(
 			`@ [["set"],{}]`,
 			`- 2`,
 		),
@@ -196,7 +196,7 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `[{"a":1}]`,
 		b:        `[{"a":2}]`,
-		want: s(
+		want: ss(
 			`@ [["set"],{}]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -206,7 +206,7 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `[{"a":1},{"a":1}]`,
 		b:        `[{"a":2}]`,
-		want: s(
+		want: ss(
 			`@ [["set"],{}]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -216,7 +216,7 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `["foo","foo","bar"]`,
 		b:        `["baz"]`,
-		want: s(
+		want: ss(
 			`@ [["set"],{}]`,
 			`- "bar"`,
 			`- "foo"`,
@@ -227,7 +227,7 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `["foo"]`,
 		b:        `["bar","baz","bar"]`,
-		want: s(
+		want: ss(
 			`@ [["set"],{}]`,
 			`- "foo"`,
 			`+ "bar"`,
@@ -238,7 +238,7 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `{}`,
 		b:        `[]`,
-		want: s(
+		want: ss(
 			`@ []`,
 			`- {}`,
 			`+ []`,
@@ -251,7 +251,7 @@ func TestSetDiff(t *testing.T) {
 		),
 		a: `[{"id":"foo"}]`,
 		b: `[{"id":"foo","bar":"baz"}]`,
-		want: s(
+		want: ss(
 			`@ [["set","setkeys=id"],{"id":"foo"},"bar"]`,
 			`+ "baz"`,
 		),
@@ -263,7 +263,7 @@ func TestSetDiff(t *testing.T) {
 		),
 		a: `[{},{},{"id":"foo"},{}]`,
 		b: `[{},{"id":"foo","bar":"baz"},{},{}]`,
-		want: s(
+		want: ss(
 			`@ [["set","setkeys=id"],{"id":"foo"},"bar"]`,
 			`+ "baz"`,
 		),
@@ -275,7 +275,7 @@ func TestSetDiff(t *testing.T) {
 		),
 		a: `[{},{"id1":"foo","id2":"zap"},{}]`,
 		b: `[{},{"id1":"foo","id2":"zap","bar":"baz"},{}]`,
-		want: s(
+		want: ss(
 			`@ [["set","setkeys=id1,id2"],{"id1":"foo","id2":"zap"},"bar"]`,
 			`+ "baz"`,
 		),
@@ -287,7 +287,7 @@ func TestSetDiff(t *testing.T) {
 		),
 		a: `[{"id":"foo"},{"id":"bar"}]`,
 		b: `[{"id":"foo","baz":"zap"},{"id":"bar"}]`,
-		want: s(
+		want: ss(
 			`@ [["set","setkeys=id"],{"id":"foo"},"baz"]`,
 			`+ "zap"`,
 		),
@@ -299,7 +299,7 @@ func TestSetDiff(t *testing.T) {
 		),
 		a: `[{"id":"foo"}]`,
 		b: `[{"id":"bar"}]`,
-		want: s(
+		want: ss(
 			`@ [["set","setkeys=id"],{}]`,
 			`- {"id":"foo"}`,
 			`+ {"id":"bar"}`,
@@ -309,7 +309,7 @@ func TestSetDiff(t *testing.T) {
 		metadata: m(SET),
 		a:        `{"a":[1,2]}`,
 		b:        `{"a":[2,1]}`,
-		want:     s(),
+		want:     ss(),
 	}}
 
 	for _, c := range cases {
@@ -332,13 +332,13 @@ func TestSetPatch(t *testing.T) {
 		name:     "empty patch on empty set does nothing",
 		metadata: SET,
 		given:    `[]`,
-		patch:    s(``),
+		patch:    ss(``),
 		want:     `[]`,
 	}, {
 		name:     "add a number",
 		metadata: SET,
 		given:    `[1]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`+ 2`,
 		),
@@ -347,13 +347,13 @@ func TestSetPatch(t *testing.T) {
 		name:     "empty patch on set with numbers does nothing",
 		metadata: SET,
 		given:    `[1,2]`,
-		patch:    s(``),
+		patch:    ss(``),
 		want:     `[1,2]`,
 	}, {
 		name:     "remove a number from a set",
 		metadata: SET,
 		given:    `[1,2,3]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`- 2`,
 		),
@@ -362,7 +362,7 @@ func TestSetPatch(t *testing.T) {
 		name:     "replace one object with another",
 		metadata: SET,
 		given:    `[{"a":1}]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -372,7 +372,7 @@ func TestSetPatch(t *testing.T) {
 		name:     "replace one repeated object with another",
 		metadata: SET,
 		given:    `[{"a":1},{"a":1}]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -382,7 +382,7 @@ func TestSetPatch(t *testing.T) {
 		name:     "replace two strings with one string",
 		metadata: SET,
 		given:    `["foo","foo","bar"]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`- "bar"`,
 			`- "foo"`,
@@ -393,7 +393,7 @@ func TestSetPatch(t *testing.T) {
 		name:     "replace one string with two strings",
 		metadata: SET,
 		given:    `["foo"]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`- "foo"`,
 			`+ "bar"`,
@@ -404,7 +404,7 @@ func TestSetPatch(t *testing.T) {
 		name:     "replace object with array",
 		metadata: SET,
 		given:    `{}`,
-		patch: s(
+		patch: ss(
 			`@ []`,
 			`- {}`,
 			`+ []`,
@@ -414,7 +414,7 @@ func TestSetPatch(t *testing.T) {
 		name:     "patch property to object in set",
 		metadata: SET,
 		given:    `[{"id":"foo"}]`,
-		patch: s(
+		patch: ss(
 			`@ [["set"],{"id":"foo"},"bar"]`,
 			`+ "baz"`,
 		),
@@ -423,7 +423,7 @@ func TestSetPatch(t *testing.T) {
 		name:     "patch object among empty objects",
 		metadata: SET,
 		given:    `[{},{},{"id":"foo"},{}]`,
-		patch: s(
+		patch: ss(
 			`@ [["set","setkeys=id"],{"id":"foo"},"bar"]`,
 			`+ "baz"`,
 		),
@@ -432,7 +432,7 @@ func TestSetPatch(t *testing.T) {
 		name:     "patch object by multiple ids",
 		metadata: SET,
 		given:    `[{},{"id1":"foo","id2":"zap"},{}]`,
-		patch: s(
+		patch: ss(
 			`@ [["set","setkeys=id1,id2"],{"id1":"foo","id2":"zap"},"bar"]`,
 			`+ "baz"`,
 		),
@@ -441,7 +441,7 @@ func TestSetPatch(t *testing.T) {
 		name:     "patch object by id among other",
 		metadata: SET,
 		given:    `[{"id":"foo"},{"id":"bar"}]`,
-		patch: s(
+		patch: ss(
 			`@ [["set","setkeys=id"],{"id":"foo"},"baz"]`,
 			`+ "zap"`,
 		),
@@ -450,7 +450,7 @@ func TestSetPatch(t *testing.T) {
 		name:     "replace two objects with diffent ids",
 		metadata: SET,
 		given:    `[{"id":"foo"}]`,
-		patch: s(
+		patch: ss(
 			`@ [["set","setkeys=id"],{}]`,
 			`- {"id":"foo"}`,
 			`+ {"id":"bar"}`,
@@ -477,7 +477,7 @@ func TestSetPatchError(t *testing.T) {
 		name:     "removing number from empty set",
 		metadata: SET,
 		given:    `[]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`- 1`,
 		),
@@ -485,7 +485,7 @@ func TestSetPatchError(t *testing.T) {
 		name:     "removing number from set twice",
 		metadata: SET,
 		given:    `[1]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`- 1`,
 			`- 1`,
@@ -494,7 +494,7 @@ func TestSetPatchError(t *testing.T) {
 		name:     "removing object from empty set",
 		metadata: SET,
 		given:    `[]`,
-		patch: s(
+		patch: ss(
 			`@ []`,
 			`- {}`,
 		),
@@ -502,7 +502,7 @@ func TestSetPatchError(t *testing.T) {
 		name:     "removing number from set twice added twice",
 		metadata: SET,
 		given:    `[]`,
-		patch: s(
+		patch: ss(
 			`@ [{}]`,
 			`+ 1`,
 			`+ 1`,

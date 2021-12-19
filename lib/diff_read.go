@@ -159,14 +159,14 @@ func ReadPatchString(s string) (Diff, error) {
 }
 
 func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, error) {
-	read := false
 	d := DiffElement{}
 	if len(patch) == 0 {
 		return d, nil, fmt.Errorf("Unexpected end of JSON Patch.")
 	}
 	p := patch[0]
 	var err error
-	if p.Op == "test" {
+	switch p.Op {
+	case "test":
 		d.Path, err = readPointer(p.Path)
 		if err != nil {
 			return d, nil, err
@@ -186,11 +186,8 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 		if patch[0].Value != p.Value {
 			return d, nil, fmt.Errorf("JSON Patch remove op must have the same value as test op.")
 		}
-		patch = patch[1:]
-		read = true
-	}
-	p = patch[0]
-	if p.Op == "add" {
+		return d, patch[1:], nil
+	case "add":
 		d.Path, err = readPointer(p.Path)
 		if err != nil {
 			return d, nil, err
@@ -200,11 +197,8 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 			return d, nil, err
 		}
 		d.NewValues = []JsonNode{new}
-		patch = patch[1:]
-		read = true
-	}
-	if !read {
+		return d, patch[1:], nil
+	default:
 		return d, nil, fmt.Errorf("Invalid JSON Patch. Must be test/remove or add ops.")
 	}
-	return d, patch, nil
 }

@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -145,7 +146,11 @@ func checkPatchError(ctx *testContext, a string, diffLines ...string) {
 	}
 }
 
-func s(s ...string) []string {
+func s(s ...string) string {
+	return strings.Join(s, "\n") + "\n"
+}
+
+func ss(s ...string) []string {
 	return s
 }
 
