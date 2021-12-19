@@ -49,28 +49,45 @@ func TestDiffAndPatchError(t *testing.T) {
 		`2`)
 }
 
+type format string
+
+const (
+	formatJd    format = "jd"
+	formatPatch format = "patch"
+	formatMerge format = "merge"
+)
+
 func checkDiffAndPatchSuccessSet(t *testing.T, a, b, c, expect string) {
-	err := checkDiffAndPatch(t, a, b, c, expect, SET)
+	err := checkDiffAndPatch(t, formatJd, a, b, c, expect, SET)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("Error round-tripping jd format: %v", err)
 	}
+	// JSON Patch format does not support sets.
 }
 
 func checkDiffAndPatchSuccess(t *testing.T, a, b, c, expect string) {
-	err := checkDiffAndPatch(t, a, b, c, expect)
+	err := checkDiffAndPatch(t, formatJd, a, b, c, expect)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("Error round-tripping jd format: %v", err)
+	}
+	err = checkDiffAndPatch(t, formatPatch, a, b, c, expect)
+	if err != nil {
+		t.Errorf("Error round-tripping patch format: %v", err)
 	}
 }
 
 func checkDiffAndPatchError(t *testing.T, a, b, c string) {
-	err := checkDiffAndPatch(t, a, b, c, "")
+	err := checkDiffAndPatch(t, formatJd, a, b, c, "")
 	if err == nil {
-		t.Errorf("Expected error.")
+		t.Errorf("Expected error round-tripping jd format.")
+	}
+	err = checkDiffAndPatch(t, formatPatch, a, b, c, "")
+	if err == nil {
+		t.Errorf("Expected error rount-tripping patch format.")
 	}
 }
 
-func checkDiffAndPatch(t *testing.T, a, b, c, expect string, metadata ...Metadata) error {
+func checkDiffAndPatch(t *testing.T, f format, a, b, c, expect string, metadata ...Metadata) error {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		return err
@@ -87,8 +104,20 @@ func checkDiffAndPatch(t *testing.T, a, b, c, expect string, metadata ...Metadat
 	if err != nil {
 		return err
 	}
-	diffString := nodeA.Diff(nodeB).Render()
-	diff, err := ReadDiffString(diffString)
+	var diff Diff
+	switch f {
+	case formatJd:
+		diffString := nodeA.Diff(nodeB).Render()
+		diff, err = ReadDiffString(diffString)
+	case formatPatch:
+		patchString, err := nodeA.Diff(nodeB).RenderPatch()
+		if err != nil {
+			return nil
+		}
+		diff, err = ReadPatchString(patchString)
+	case formatMerge:
+		// not yet implemented
+	}
 	if err != nil {
 		return err
 	}
