@@ -84,8 +84,9 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata) Diff {
 			d = append(d, e)
 		}
 		if !a1Has && a2Has {
+			appendPath := append(path, jsonNumber(-1))
 			e := DiffElement{
-				Path:      subPath.clone(),
+				Path:      appendPath.clone(),
 				OldValues: nodeList(),
 				NewValues: nodeList(a2[i]),
 			}
@@ -121,6 +122,12 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 			"Invalid path element %T. Expected float64.", n)
 	}
 	i := int(jn)
+
+	if i == -1 {
+		// Append at end of list
+		i = len(l)
+	}
+	
 	var nextNode JsonNode = voidNode{}
 	if len(l) > i {
 		nextNode = l[i]
