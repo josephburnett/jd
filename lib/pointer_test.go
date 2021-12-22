@@ -8,23 +8,26 @@ func TestReadPointer(t *testing.T) {
 		output  string
 		wantErr bool
 	}{{
-		input:  "",
-		output: "[]",
+		input:  ``,
+		output: `[]`,
 	}, {
-		input:  "/foo",
+		input:  `/foo`,
 		output: `["foo"]`,
 	}, {
-		input:  "/foo/bar",
+		input:  `/foo/bar`,
 		output: `["foo","bar"]`,
 	}, {
-		input:  "/foo/0",
+		input:  `/foo/0`,
 		output: `["foo",0]`,
 	}, {
-		input:  "/foo/0/bar",
+		input:  `/foo/0/bar`,
 		output: `["foo",0,"bar"]`,
 	}, {
-		input:  "/0/foo",
+		input:  `/0/foo`,
 		output: `[0,"foo"]`,
+	}, {
+		input:  `/foo/-/bar`,
+		output: `["foo",-1,"bar"]`,
 	}}
 
 	for _, tc := range testCases {

@@ -41,7 +41,11 @@ func writePointer(path []JsonNode) (string, error) {
 		b.WriteString("/")
 		switch e := element.(type) {
 		case jsonNumber:
-			b.WriteString(jsonpointer.Escape(strconv.Itoa(int(e))))
+			if int(e) == -1 {
+				b.WriteString("-")
+			} else {
+				b.WriteString(jsonpointer.Escape(strconv.Itoa(int(e))))
+			}
 		case jsonString:
 			b.WriteString(string(e))
 		case jsonArray:
