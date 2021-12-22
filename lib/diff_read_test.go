@@ -9,21 +9,37 @@ func TestReadPatch(t *testing.T) {
 		wantErr bool
 	}{{
 		patch: s(`[{"op":"add","path":"/foo","value":1}]`),
-		diff: s(`@ ["foo"]`,
-			`+ 1`),
+		diff: s(
+			`@ ["foo"]`,
+			`+ 1`,
+		),
 	}, {
-		patch: s(`[{"op":"test","path":"/foo","value":1},`,
-			`{"op":"remove","path":"/foo","value":1}]`),
-		diff: s(`@ ["foo"]`,
-			`- 1`),
+		patch: s(
+			`[{"op":"test","path":"/foo","value":1},`,
+			`{"op":"remove","path":"/foo","value":1}]`,
+		),
+		diff: s(
+			`@ ["foo"]`,
+			`- 1`,
+		),
 	}, {
-		patch: s(`[{"op":"add","path":"/foo","value":1},`,
+		patch: s(
+			`[{"op":"add","path":"/foo","value":1},`,
 			`{"op":"test","path":"/foo","value":1},`,
-			`{"op":"remove","path":"/foo","value":1}]`),
-		diff: s(`@ ["foo"]`,
+			`{"op":"remove","path":"/foo","value":1}]`,
+		),
+		diff: s(
+			`@ ["foo"]`,
 			`+ 1`,
 			`@ ["foo"]`,
-			`- 1`),
+			`- 1`,
+		),
+	}, {
+		patch: s(`[{"op":"add","path":"/foo/-","value":2}]`),
+		diff: s(
+			`@ ["foo",-1]`,
+			`+ 2`,
+		),
 	}, {
 		patch:   s(`[{"op":"test","path":"/foo","value":1}]`),
 		wantErr: true,

@@ -27,6 +27,9 @@ func readPointer(s string) ([]JsonNode, error) {
 		if err != nil {
 			return nil, err
 		}
+		if s, ok := element.(jsonString); ok && s == "-" {
+			element, _ = NewJsonNode(-1)
+		}
 		path[i] = element
 	}
 	return path, nil
