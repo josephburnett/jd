@@ -118,10 +118,42 @@ Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' | 'Empty JSON Object' )* ']' 
 
 ## Cookbook
 
-Use git diff to produce a structural diff:
+### Use git diff to produce a structural diff:
 ```
 git difftool -yx jd @ -- foo.json
 @ ["foo"]
 - "bar"
 + "baz"
+```
+
+### See what changes in a Kuberentes Deployment:
+```
+kubectl get deployment example -oyaml > a.yaml
+kubectl edit deployment example
+# change cpu resource from 100m to 200m
+kubectl get deployment example -oyaml | jd -yaml a.yaml
+```
+output:
+```diff
+@ ["metadata","annotations","deployment.kubernetes.io/revision"]
+- "2"
++ "3"
+@ ["metadata","generation"]
+- 2
++ 3
+@ ["metadata","resourceVersion"]
+- "4661"
++ "5179"
+@ ["spec","template","spec","containers",0,"resources","requests","cpu"]
+- "100m"
++ "200m"
+@ ["status","conditions",1,"lastUpdateTime"]
+- "2021-12-23T09:40:39Z"
++ "2021-12-23T09:41:49Z"
+@ ["status","conditions",1,"message"]
+- "ReplicaSet \"nginx-deployment-787d795676\" has successfully progressed."
++ "ReplicaSet \"nginx-deployment-795c7f5bb\" has successfully progressed."
+@ ["status","observedGeneration"]
+- 2
++ 3
 ```
