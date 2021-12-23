@@ -24,6 +24,7 @@ var patch = flag.Bool("p", false, "Patch mode")
 var port = flag.Int("port", 0, "Serve web UI on port")
 var set = flag.Bool("set", false, "Arrays as sets")
 var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
+var translate = flag.String("t", "", "Translate mode")
 var ver = flag.Bool("version", false, "Print version and exit")
 var yaml = flag.Bool("yaml", false, "Read and write YAML")
 
@@ -42,26 +43,58 @@ func main() {
 	}
 	metadata, err := parseMetadata()
 	if err != nil {
-		log.Printf(err.Error())
-		os.Exit(2)
+		errorAndExit(err.Error())
+	}
+	mode := diffMode
+	if *patch {
+		mode = patchMode
+	}
+	if *translate != "" {
+		mode = translateMode
+	}
+	if *patch && *translate != "" {
+		errorAndExit("Patch and translate modes cannot be used together.")
 	}
 	var a, b string
-	switch len(flag.Args()) {
-	case 1:
-		a = readFile(flag.Arg(0))
-		b = readStdin()
-	case 2:
-		a = readFile(flag.Arg(0))
-		b = readFile(flag.Arg(1))
-	default:
-		printUsageAndExit()
+	switch mode {
+	case diffMode, patchMode:
+		switch len(flag.Args()) {
+		case 1:
+			a = readFile(flag.Arg(0))
+			b = readStdin()
+		case 2:
+			a = readFile(flag.Arg(0))
+			b = readFile(flag.Arg(1))
+		default:
+			printUsageAndExit()
+		}
+	case translateMode:
+		switch len(flag.Args()) {
+		case 0:
+			a = readStdin()
+		case 1:
+			a = readFile(flag.Arg(0))
+		default:
+			printUsageAndExit()
+		}
 	}
-	if *patch {
-		printPatch(a, b, metadata)
-	} else {
+	switch mode {
+	case diffMode:
 		printDiff(a, b, metadata)
+	case patchMode:
+		printPatch(a, b, metadata)
+	case translateMode:
+		printTranslation(a, metadata)
 	}
 }
+
+type mode string
+
+const (
+	diffMode mode = "diff"
+	patchMode     = "patch"
+	translateMode = "trans"
+)
 
 func serveWeb(port string) error {
 	if serve.Handle == nil {
@@ -113,7 +146,10 @@ func printUsageAndExit() {
 		`  -setkeys   Keys to identify set objects`,
 		`  -yaml      Read and write YAML instead of JSON.`,
 		`  -port=N    Serve web UI on port N`,
-		`  -f=FORMAT  Produce diff in FORMAT jd (default) or patch (RFC 6902).`,
+		`  -f=FORMAT  Produce diff in FORMAT "jd" (default) or "patch" (RFC 6902).`,
+		`  -t=FORMATS Translate FILE1 between FORMATS. Supported formats are "jd",`,
+		`             "patch" (RFC 6902), "json" and "yaml". FORMATS are provided`,
+		`             as a pair separated by "2". E.g. "yaml2json" or "jd2patch".`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,
@@ -138,8 +174,7 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		aNode, err = jd.ReadJsonString(a)
 	}
 	if err != nil {
-		log.Printf(err.Error())
-		os.Exit(2)
+		errorAndExit(err.Error())
 	}
 	if *yaml {
 		bNode, err = jd.ReadYamlString(b)
@@ -147,8 +182,7 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		bNode, err = jd.ReadJsonString(b)
 	}
 	if err != nil {
-		log.Printf(err.Error())
-		os.Exit(2)
+		errorAndExit(err.Error())
 	}
 	diff := aNode.Diff(bNode, metadata...)
 	var str string
@@ -158,12 +192,10 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 	case "patch":
 		str, err = diff.RenderPatch()
 		if err != nil {
-			log.Printf(err.Error())
-			os.Exit(2)
+			errorAndExit(err.Error())
 		}
 	default:
-		log.Printf("Invalid format: %q", *format)
-		os.Exit(2)
+		errorAndExit("Invalid format: %q", *format)
 	}
 	if *output == "" {
 		if str == "" {
@@ -183,8 +215,7 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 func printPatch(p, a string, metadata []jd.Metadata) {
 	diff, err := jd.ReadDiffString(p)
 	if err != nil {
-		log.Printf(err.Error())
-		os.Exit(2)
+		errorAndExit(err.Error())
 	}
 	var aNode jd.JsonNode
 	if *yaml {
@@ -193,13 +224,11 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 		aNode, err = jd.ReadJsonString(a)
 	}
 	if err != nil {
-		log.Printf(err.Error())
-		os.Exit(2)
+		errorAndExit(err.Error())
 	}
 	bNode, err := aNode.Patch(diff)
 	if err != nil {
-		log.Printf(err.Error())
-		os.Exit(2)
+		errorAndExit(err.Error())
 	}
 	var out string
 	if *yaml {
@@ -220,6 +249,34 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 		ioutil.WriteFile(*output, []byte(out), 0644)
 		os.Exit(1)
 	}
+}
+
+func printTranslation(a string, metadata []jd.Metadata) {
+	var out string
+	switch *translate {
+	case "jd2patch":
+		diff, err := jd.ReadDiffString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out, err = diff.RenderPatch()
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+	default:
+		errorAndExit("Unsupported translation: %q", *translate)
+	}
+	if *output == "" {
+		fmt.Print(out)
+	} else {
+		ioutil.WriteFile(*output, []byte(out), 0644)
+	}
+	os.Exit(0)
+}
+
+func errorAndExit(msg string, args ...interface{}) {
+	log.Printf(msg, args...)
+	os.Exit(2)
 }
 
 func readFile(filename string) string {
