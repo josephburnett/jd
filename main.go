@@ -263,6 +263,12 @@ func printTranslation(a string, metadata []jd.Metadata) {
 		if err != nil {
 			errorAndExit(err.Error())
 		}
+	case "patch2jd":
+		patch, err := jd.ReadPatchString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out = patch.Render()
 	default:
 		errorAndExit("Unsupported translation: %q", *translate)
 	}
