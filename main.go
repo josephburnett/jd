@@ -269,6 +269,18 @@ func printTranslation(a string, metadata []jd.Metadata) {
 			errorAndExit(err.Error())
 		}
 		out = patch.Render()
+	case "json2yaml":
+		node, err := jd.ReadJsonString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out = node.Yaml()
+	case "yaml2json":
+		node, err := jd.ReadYamlString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out = node.Json()
 	default:
 		errorAndExit("Unsupported translation: %q", *translate)
 	}
