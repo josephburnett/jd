@@ -10,27 +10,34 @@ import (
 )
 
 const (
-	commandId      = "command"
-	aLabelId       = "a-label"
-	aJsonId        = "a-json"
-	aErrorId       = "a-error"
-	bLabelId       = "b-label"
-	bJsonId        = "b-json"
-	bErrorId       = "b-error"
-	diffLabelId    = "diff-label"
-	diffId         = "diff"
-	diffErrorId    = "diff-error"
-	modeDiffId     = "mode-diff"
-	modePatchId    = "mode-patch"
-	formatJsonId   = "format-json"
-	formatYamlId   = "format-yaml"
-	arrayListId    = "array-list"
-	arraySetId     = "array-set"
-	arrayMsetId    = "array-mset"
-	focusStyle     = "border:solid 3px #080"
-	unfocusStyle   = "border:solid 3px #ccc"
-	halfWidthStyle = "width:97%"
-	fullWidthStyle = "width:98.5%"
+	commandId               = "command"
+	aLabelId                = "a-label"
+	aJsonId                 = "a-json"
+	aErrorId                = "a-error"
+	bLabelId                = "b-label"
+	bJsonId                 = "b-json"
+	bErrorId                = "b-error"
+	diffLabelId             = "diff-label"
+	diffId                  = "diff"
+	diffErrorId             = "diff-error"
+	modeDiffId              = "mode-diff"
+	modePatchId             = "mode-patch"
+	formatJsonId            = "format-json"
+	formatYamlId            = "format-yaml"
+	diffFormatJdId          = "diff-format-jd"
+	diffFormatPatchId       = "diff-format-patch"
+	arrayListId             = "array-list"
+	arraySetId              = "array-set"
+	arrayMsetId             = "array-mset"
+	focusStyle              = "border:solid 3px #080"
+	unfocusStyle            = "border:solid 3px #ccc"
+	halfWidthStyle          = "width:97%"
+	fullWidthStyle          = "width:98.5%"
+	diffFormatJdPlaceholder = `@ ["foo"]
+- "bar"
++ "baz"
+`
+	diffFormatPatchPlaceholder = `[]`
 )
 
 func main() {
@@ -41,21 +48,23 @@ func main() {
 }
 
 type app struct {
-	mux      sync.Mutex
-	doc      js.Value
-	changeCh chan struct{}
-	mode     string
-	format   string
-	array    string
+	mux        sync.Mutex
+	doc        js.Value
+	changeCh   chan struct{}
+	mode       string
+	format     string
+	diffFormat string
+	array      string
 }
 
 func newApp() (*app, error) {
 	a := &app{
-		changeCh: make(chan struct{}, 10),
-		doc:      js.Global().Get("document"),
-		mode:     modeDiffId,
-		format:   formatJsonId,
-		array:    arrayListId,
+		changeCh:   make(chan struct{}, 10),
+		doc:        js.Global().Get("document"),
+		mode:       modeDiffId,
+		format:     formatJsonId,
+		diffFormat: diffFormatJdId,
+		array:      arrayListId,
 	}
 	for _, id := range []string{
 		aJsonId,
@@ -81,6 +90,15 @@ func newApp() (*app, error) {
 		formatYamlId,
 	} {
 		err := a.watchChange(id, &a.format)
+		if err != nil {
+			return nil, err
+		}
+	}
+	for _, id := range []string{
+		diffFormatJdId,
+		diffFormatPatchId,
+	} {
+		err := a.watchChange(id, &a.diffFormat)
 		if err != nil {
 			return nil, err
 		}
@@ -145,6 +163,8 @@ func (a *app) reconcile() {
 	a.mux.Lock()
 	defer a.mux.Unlock()
 
+	a.setDerived()
+	a.setPlaceholder()
 	a.setCommandLabel()
 	a.setInputLabels()
 	a.setInputsEnabled()
@@ -154,6 +174,30 @@ func (a *app) reconcile() {
 		a.printDiff()
 	case modePatchId:
 		a.printPatch()
+	}
+}
+
+func (a *app) setDerived() {
+	if a.diffFormat == diffFormatPatchId {
+		a.array = arrayListId
+		for id, val := range map[string]bool{
+			arrayListId: true,
+			arraySetId:  false,
+			arrayMsetId: false,
+		} {
+			e := a.getElementById(id)
+			e.Set("checked", val)
+		}
+	}
+}
+
+func (a *app) setPlaceholder() {
+	d := a.getElementById(diffId)
+	switch a.diffFormat {
+	case diffFormatJdId:
+		d.Set("placeholder", diffFormatJdPlaceholder)
+	case diffFormatPatchId:
+		d.Set("placeholder", diffFormatPatchPlaceholder)
 	}
 }
 
@@ -168,6 +212,10 @@ func (a *app) setCommandLabel() {
 	case formatYamlId:
 		command += " -yaml"
 	default:
+	}
+	switch a.diffFormat {
+	case diffFormatPatchId:
+		command += " -f patch"
 	}
 	switch a.array {
 	case arraySetId:
@@ -217,6 +265,20 @@ func (a *app) setInputsEnabled() {
 		diffText.Set("style", focusStyle+";"+fullWidthStyle)
 	default:
 	}
+	buttons := []string{
+		arrayListId,
+		arraySetId,
+		arrayMsetId,
+	}
+	for _, id := range buttons {
+		e := a.getElementById(id)
+		switch a.diffFormat {
+		case diffFormatJdId:
+			e.Set("disabled", js.ValueOf(false))
+		case diffFormatPatchId:
+			e.Set("disabled", js.ValueOf(true))
+		}
+	}
 }
 
 func (a *app) getMetadata() []jd.Metadata {
@@ -235,11 +297,11 @@ func (a *app) parseAndTranslate(id string) (jd.JsonNode, error) {
 	value := a.getElementById(id)
 	nodeJson, errJson := jd.ReadJsonString(value.Get("value").String())
 	nodeYaml, errYaml := jd.ReadYamlString(value.Get("value").String())
-	// Translate YAML to JSON
+	// Translate YAML to JSON.
 	if a.format == formatJsonId && errJson != nil && errYaml == nil {
 		a.setTextarea(id, nodeYaml.Json())
 	}
-	// Translate JSON to YAML
+	// Translate JSON to YAML.
 	if a.format == formatYamlId && errJson == nil {
 		a.setTextarea(id, nodeJson.Yaml())
 	}
@@ -255,6 +317,40 @@ func (a *app) parseAndTranslate(id string) (jd.JsonNode, error) {
 		return nil, errJson
 	} else {
 		return nil, errYaml
+	}
+}
+
+func (a *app) parseAndTranslateDiff() (jd.Diff, error) {
+	diffText := a.getElementById(diffId)
+	diffJd, errJd := jd.ReadDiffString(diffText.Get("value").String())
+	diffPatch, errPatch := jd.ReadPatchString(diffText.Get("value").String())
+	// Translate jd to patch.
+	if a.diffFormat == diffFormatPatchId && errPatch != nil && errJd == nil {
+		patchString, err := diffJd.RenderPatch()
+		if err != nil {
+			return nil, err
+		}
+		if patchString == "[]" {
+			patchString = ""
+		}
+		a.setTextarea(diffId, patchString)
+	}
+	// Translate patch to jd.
+	if a.diffFormat == diffFormatJdId && errJd != nil && errPatch == nil {
+		a.setTextarea(diffId, diffPatch.Render())
+	}
+	// Return any good parsing resuilts.
+	if errJd == nil {
+		return diffJd, nil
+	}
+	if errPatch == nil {
+		return diffPatch, nil
+	}
+	// Return an error relevant to the desired format.
+	if a.diffFormat == diffFormatJdId {
+		return nil, errJd
+	} else {
+		return nil, errPatch
 	}
 }
 
@@ -283,7 +379,20 @@ func (a *app) printDiff() {
 	}
 	// Print diff
 	diff := aNode.Diff(bNode, metadata...)
-	a.setTextarea(diffId, diff.Render())
+	var out string
+	switch a.diffFormat {
+	case diffFormatJdId:
+		out = diff.Render()
+	case diffFormatPatchId:
+		out, err = diff.RenderPatch()
+		if err != nil {
+			a.setLabel(diffErrorId, err.Error())
+		}
+		if out == "[]" {
+			out = ""
+		}
+	}
+	a.setTextarea(diffId, out)
 }
 
 func (a *app) printPatch() {
@@ -298,8 +407,13 @@ func (a *app) printPatch() {
 		a.setLabel(aErrorId, "")
 	}
 	// Read diff
-	diffText := a.getElementById(diffId)
-	diff, err := jd.ReadDiffString(diffText.Get("value").String())
+	diff, err := a.parseAndTranslateDiff()
+	if err != nil {
+		a.setLabel(diffErrorId, err.Error())
+		fail = true
+	} else {
+		a.setLabel(diffErrorId, "")
+	}
 	if err != nil {
 		a.setLabel(diffErrorId, err.Error())
 		fail = true
