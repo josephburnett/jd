@@ -37,7 +37,7 @@ const (
 - "bar"
 + "baz"
 `
-	diffFormatPatchPlaceholder = `[]`
+	diffFormatPatchPlaceholder = `[{"op":"test","path":"/foo","value":"bar"},{"op":"remove","path":"/foo","value":"bar"},{"op":"add","path":"/foo","value":"baz"}]`
 )
 
 func main() {
