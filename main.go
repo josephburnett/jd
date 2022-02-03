@@ -15,7 +15,7 @@ import (
 	"github.com/josephburnett/jd/web/serve"
 )
 
-const version = "HEAD"
+const version = "1.5.0"
 
 var format = flag.String("f", "", "Diff format (jd, patch)")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
@@ -91,9 +91,9 @@ func main() {
 type mode string
 
 const (
-	diffMode mode = "diff"
-	patchMode     = "patch"
-	translateMode = "trans"
+	diffMode      mode = "diff"
+	patchMode          = "patch"
+	translateMode      = "trans"
 )
 
 func serveWeb(port string) error {
