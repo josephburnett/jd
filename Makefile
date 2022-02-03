@@ -20,7 +20,7 @@ build : test pack-web
 	mkdir -p release
 	CGO_ENABLED=0 go build -tags include_web -o release/jd main.go
 
-release : check-env build-all push-github build-docker push-docker push-latest release-notes
+release : check-env build-all push-github release-notes
 	@echo
 	@echo "Upload release/jd-* to Github as release $(JD_VERSION) with release notes above."
 	@echo
