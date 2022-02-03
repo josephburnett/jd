@@ -7,106 +7,102 @@ import (
 func TestArrayJson(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
-		context *testContext
-		a           string
-		b           string
+		a string
+		b string
 	}{
-		{ctx, `[]`, `[]`},
-		{ctx, ` [ ] `, `[]`},
-		{ctx, `[1,2,3]`, `[1,2,3]`},
-		{ctx, ` [1, 2, 3] `, `[1,2,3]`},
+		{`[]`, `[]`},
+		{` [ ] `, `[]`},
+		{`[1,2,3]`, `[1,2,3]`},
+		{` [1, 2, 3] `, `[1,2,3]`},
 	}
 
 	for _, tt := range tests {
-		checkJson(tt.context, tt.a, tt.b)
+		checkJson(ctx, tt.a, tt.b)
 	}
 }
 
 func TestArrayEqual(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
-		context *testContext
-		a       string
-		b       string
+		a string
+		b string
 	}{
-		{ctx, `[]`, `[]`},
-		{ctx, `[1,2,3]`, `[1,2,3]`},
-		{ctx, `[[]]`, `[[]]`},
-		{ctx, `[{"a":1}]`, `[{"a":1}]`},
-		{ctx, `[{"a":[]}]`, `[{"a":[]}]`},
+		{`[]`, `[]`},
+		{`[1,2,3]`, `[1,2,3]`},
+		{`[[]]`, `[[]]`},
+		{`[{"a":1}]`, `[{"a":1}]`},
+		{`[{"a":[]}]`, `[{"a":[]}]`},
 	}
 
 	for _, tt := range tests {
-		checkEqual(tt.context, tt.a, tt.b)
+		checkEqual(ctx, tt.a, tt.b)
 	}
 }
 
 func TestArrayNotEqual(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
-		context *testContext
-		a       string
-		b       string
+		a string
+		b string
 	}{
-		{ctx, `[]`, `0`},
-		{ctx, `[]`, `{}`},
-		{ctx, `[]`, `[[]]`},
-		{ctx, `[1,2,3]`, `[3,2,1]`},
+		{`[]`, `0`},
+		{`[]`, `{}`},
+		{`[]`, `[[]]`},
+		{`[1,2,3]`, `[3,2,1]`},
 	}
 
 	for _, tt := range tests {
-		checkNotEqual(tt.context, tt.a, tt.b)
+		checkNotEqual(ctx, tt.a, tt.b)
 	}
 }
 
 func TestArrayHash(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
-		context  *testContext
 		a        string
 		b        string
 		wantSame bool
 	}{
-		{ctx, `[]`, `[]`, true},
-		{ctx, `[1]`, `[]`, false},
-		{ctx, `[1]`, `[1]`, true},
-		{ctx, `[1]`, `[2]`, false},
-		{ctx, `[[1]]`, `[[1]]`, true},
-		{ctx, `[[1]]`, `[[[1]]]`, false},
+		{`[]`, `[]`, true},
+		{`[1]`, `[]`, false},
+		{`[1]`, `[1]`, true},
+		{`[1]`, `[2]`, false},
+		{`[[1]]`, `[[1]]`, true},
+		{`[[1]]`, `[[[1]]]`, false},
 	}
 
 	for _, tt := range tests {
-		checkHash(tt.context, tt.a, tt.b, tt.wantSame)
+		checkHash(ctx, tt.a, tt.b, tt.wantSame)
 	}
 }
 
 func TestArrayDiff(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
-		a         string
-		b         string
+		a    string
+		b    string
 		diff []string
 	}{{
-		a:`[]`,
-		b:`[]`,
+		a:    `[]`,
+		b:    `[]`,
 		diff: ss(),
 	}, {
 		a: `[1]`,
-		b:`[]`,
+		b: `[]`,
 		diff: ss(
 			`@ [0]`,
 			`- 1`,
 		),
 	}, {
 		a: `[[]]`,
-		b:`[[1]]`,
+		b: `[[1]]`,
 		diff: ss(
 			`@ [0,-1]`,
 			`+ 1`,
 		),
 	}, {
 		a: `[1]`,
-		b:`[2]`,
+		b: `[2]`,
 		diff: ss(
 			`@ [0]`,
 			`- 1`,
@@ -127,7 +123,6 @@ func TestArrayDiff(t *testing.T) {
 			`- []`,
 			`+ {}`,
 		),
-
 	}, {
 		a: `[{"a":[1]}]`,
 		b: `[{"a":[2]}]`,
@@ -167,7 +162,7 @@ func TestArrayDiff(t *testing.T) {
 			`+ 3`,
 			`@ [-1]`,
 			`+ 4`,
-		),	
+		),
 	}, {
 		a: `[]`,
 		b: `[3,4,5]`,
@@ -189,12 +184,12 @@ func TestArrayDiff(t *testing.T) {
 func TestArrayPatch(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
-		a         string
-		b         string
+		a    string
+		b    string
 		diff []string
 	}{{
-		a: `[]`,
-		b: `[]`,
+		a:    `[]`,
+		b:    `[]`,
 		diff: ss(),
 	}, {
 		a: `[1]`,
@@ -205,14 +200,14 @@ func TestArrayPatch(t *testing.T) {
 		),
 	}, {
 		a: `[[]]`,
-		b:`[[1]]`,
+		b: `[[1]]`,
 		diff: ss(
 			`@ [0, 0]`,
 			`+ 1`,
 		),
 	}, {
 		a: `[[]]`,
-		b:`[[1]]`,
+		b: `[[1]]`,
 		diff: ss(
 			`@ [0, -1]`,
 			`+ 1`,
@@ -316,6 +311,34 @@ func TestArrayPatch(t *testing.T) {
 			"@ [-1]",
 			"+ 5",
 		),
+	}, {
+		a: "[2]",
+		b: "[1,2]",
+		diff: ss(
+			"@ [0]",
+			"+ 1",
+		),
+	}, {
+		a: `[1,2,3]`,
+		b: `[1,3]`,
+		diff: ss(
+			`@ [1]`,
+			`- 2`,
+		),
+	}, {
+		a: `[1,2,3]`,
+		b: `[2,3]`,
+		diff: ss(
+			`@ [0]`,
+			`- 1`,
+		),
+	}, {
+		a: `[1,3]`,
+		b: `[1,2,3]`,
+		diff: ss(
+			`@ [1]`,
+			`+ 2`,
+		),
 	}}
 
 	for _, tt := range tests {
@@ -326,43 +349,29 @@ func TestArrayPatch(t *testing.T) {
 func TestArrayPatchError(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
-		context   *testContext
 		a         string
 		diffLines []string
-	}{
-		{ctx, `[]`, []string {
+	}{{
+		`[]`,
+		[]string{
 			`@ ["a"]`,
-		    `+ 1`,
-		  },
+			`+ 1`,
 		},
-		{ctx, `[]`, []string {
+	}, {
+		`[]`,
+		[]string{
 			`@ [0]`,
-		    `- 1`,
-		  },
+			`- 1`,
 		},
-		{ctx, `[]`, []string {
+	}, {
+		`[]`,
+		[]string{
 			`@ [0]`,
-		    `- null`,
-		  },
+			`- null`,
 		},
-		{ctx, `[1,2,3]`, []string {
-			`@ [1]`,
-		    `- 2`,
-		  },
-		},
-		{ctx, `[1,2,3]`, []string {
-			`@ [0]`,
-		    `- 1`,
-		  },
-		},
-		{ctx, `[1,3]`, []string {
-			`@ [1]`,
-		    `+ 2`,
-		  },
-		},
-	}
+	}}
 
 	for _, tt := range tests {
-		checkPatchError(tt.context, tt.a, tt.diffLines...)
+		checkPatchError(ctx, tt.a, tt.diffLines...)
 	}
 }

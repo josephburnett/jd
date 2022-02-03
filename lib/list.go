@@ -127,32 +127,66 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		// Append at end of list
 		i = len(l)
 	}
-	
-	var nextNode JsonNode = voidNode{}
-	if len(l) > i {
-		nextNode = l[i]
-	}
-	patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues)
-	if err != nil {
-		return nil, err
-	}
-	if isVoid(patchedNode) {
-		if i != len(l)-1 {
-			return nil, fmt.Errorf(
-				"Removal of a non-terminal element of an array.")
+
+	switch {
+	case isVoid(newValue):
+		var nextNode JsonNode = voidNode{}
+		if len(l) > i {
+			nextNode = l[i]
 		}
-		// Delete an element
-		return l[:len(l)-1], nil
+		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues)
+		if err != nil {
+			return nil, err
+		}
+		if i < 0 || i >= len(l) {
+			return nil, fmt.Errorf(
+				"Deletion of element outside of array bounds.")
+		}
+		if len(rest) == 0 {
+			// Delete an element (base case).
+			return append(l[:i], l[i+1:]...), nil
+		} else {
+			l[i] = patchedNode
+			return l, nil
+		}
+	case isVoid(oldValue):
+		var nextNode JsonNode = voidNode{}
+		if len(l) > i && len(rest) != 0 {
+			// Replacing an element.
+			nextNode = l[i]
+		}
+		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues)
+		if err != nil {
+			return nil, err
+		}
+		if i < 0 || i > len(l) {
+			return nil, fmt.Errorf(
+				"Addition of element outside of array bounds +1.")
+		}
+		if i == len(l) {
+			// Append an element.
+			return append(l, patchedNode), nil
+		}
+		if len(rest) == 0 {
+			// Insert an element (base case).
+			l = append(l[:i+1], l[i:]...)
+			l[i] = patchedNode
+		} else {
+			// Replace an element after recursion.
+			l[i] = patchedNode
+		}
+		return l, nil
+	default:
+		var nextNode JsonNode = voidNode{}
+		if len(l) > i {
+			nextNode = l[i]
+		}
+		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues)
+		if err != nil {
+			return nil, err
+		}
+		// Replace an element (base case).
+		l[i] = patchedNode
+		return l, nil
 	}
-	if i > len(l) {
-		return nil, fmt.Errorf(
-			"Addition beyond the terminal element of an array.")
-	}
-	if i == len(l) {
-		// Add an element
-		return append(l, patchedNode), nil
-	}
-	// Replace an element
-	l[i] = patchedNode
-	return l, nil
 }
