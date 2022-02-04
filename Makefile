@@ -30,6 +30,9 @@ build-all : test pack-web
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o release/jd-amd64-linux main.go
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o release/jd-amd64-darwin main.go
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o release/jd-amd64-windows main.go
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o release/jd-arm64-linux main.go
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o release/jd-arm64-darwin main.go
+	GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o release/jd-arm64-windows main.go
 
 build-docker : check-env test
 	docker build -t josephburnett/jd:v$(JD_VERSION) .
