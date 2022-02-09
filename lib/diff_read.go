@@ -167,23 +167,30 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 	var err error
 	switch p.Op {
 	case "test":
+		// Read path.
 		d.Path, err = readPointer(p.Path)
 		if err != nil {
 			return d, nil, err
 		}
-		old, err := NewJsonNode(p.Value)
+		// Read value to test and remove.
+		testValue, err := NewJsonNode(p.Value)
 		if err != nil {
 			return d, nil, err
 		}
-		d.OldValues = []JsonNode{old}
+		d.OldValues = []JsonNode{testValue}
 		patch = patch[1:]
+		// Validate test and remove are paired because jd remove is strict.
 		if len(patch) == 0 || patch[0].Op != "remove" {
 			return d, nil, fmt.Errorf("JSON Patch test op must be followed by a remove op.")
 		}
 		if patch[0].Path != p.Path {
 			return d, nil, fmt.Errorf("JSON Patch remove op must have the same path as test op.")
 		}
-		if patch[0].Value != p.Value {
+		removeValue, err := NewJsonNode(patch[0].Value)
+		if err != nil {
+			return d, nil, err
+		}
+		if !testValue.Equals(removeValue) {
 			return d, nil, fmt.Errorf("JSON Patch remove op must have the same value as test op.")
 		}
 		return d, patch[1:], nil
@@ -192,11 +199,11 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 		if err != nil {
 			return d, nil, err
 		}
-		new, err := NewJsonNode(p.Value)
+		addValue, err := NewJsonNode(p.Value)
 		if err != nil {
 			return d, nil, err
 		}
-		d.NewValues = []JsonNode{new}
+		d.NewValues = []JsonNode{addValue}
 		return d, patch[1:], nil
 	default:
 		return d, nil, fmt.Errorf("Invalid JSON Patch. Must be test/remove or add ops.")
