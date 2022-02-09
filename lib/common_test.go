@@ -245,7 +245,7 @@ func fuzz(t *testing.T, aStr, bStr string) {
 			t.Errorf("applying patch %v to %v should give %v. Got err: %v", diffAB.Render(), aStr, bStr, err)
 			return
 		}
-		if !patchedA.Equals(b) {
+		if !patchedA.Equals(b, metadata...) {
 			t.Errorf("applying patch %v to %v should give %v. Got: %v", diffAB.Render(), aStr, bStr, patchedA)
 			return
 		}
