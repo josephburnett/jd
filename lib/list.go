@@ -65,7 +65,11 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata) Diff {
 	if len(a1) < len(a2) {
 		maxLen = len(a2)
 	}
-	for i := 0; i < maxLen; i++ {
+	from, to, by := maxLen-1, -1, -1
+	if len(a1) < len(a2) {
+		from, to, by = 0, maxLen, 1
+	}
+	for i := from; i != to; i = i + by {
 		a1Has := i < len(a1)
 		a2Has := i < len(a2)
 		subPath := append(path, jsonNumber(i))
