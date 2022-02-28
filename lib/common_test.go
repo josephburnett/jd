@@ -202,6 +202,7 @@ func fuzz(t *testing.T, aStr, bStr string) {
 	}, {
 		"patch", "list",
 	}} {
+		a, _ = ReadJsonString(aStr) // Fresh parsed copy.
 		var metadata []Metadata
 		switch format[0] {
 		case "jd":

@@ -78,7 +78,11 @@ func (o jsonObject) ident(metadata []Metadata) [8]byte {
 	if len(keys) == 0 {
 		return o.hashCode(metadata)
 	}
-	hashes := make(hashCodes, 0)
+	hashes := hashCodes{
+		// We start with a constant hash to distinguish between
+		// an empty object and an empty array.
+		[8]byte{0x4B, 0x08, 0xD2, 0x0F, 0xBD, 0xC8, 0xDE, 0x9A}, // random bytes
+	}
 	for key := range keys {
 		v, ok := o.properties[key]
 		if ok {
