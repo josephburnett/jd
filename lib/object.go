@@ -47,7 +47,7 @@ func (o1 jsonObject) Equals(n JsonNode, metadata ...Metadata) bool {
 		if !ok {
 			return false
 		}
-		ret := val1.Equals(val2)
+		ret := val1.Equals(val2, metadata...)
 		if !ret {
 			return false
 		}
