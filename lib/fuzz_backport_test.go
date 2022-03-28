@@ -24,6 +24,10 @@ func TestFuzzBackport(t *testing.T) {
 		// FuzzJd/6b2fe6255e01bb1b87cc8f4fe43404606525e8329b03d290059dca991a1c7853
 		`{}`,
 		`{"0":0}`,
+	}, {
+		// FuzzJd/f8e5090c2fcac5e1eeb199b8b2536dfed028105cb98ddce43a1d29a4909f9fd5
+		"{\"/\":\"\"}",
+		"{}",
 	}} {
 		fuzz(t, backport[0], backport[1])
 	}

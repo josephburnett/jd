@@ -55,11 +55,12 @@ func writePointer(path []JsonNode) (string, error) {
 				b.WriteString(jsonpointer.Escape(strconv.Itoa(int(e))))
 			}
 		case jsonString:
-			if _, err := strconv.Atoi(string(e)); err == nil {
+			s := jsonpointer.Escape(string(e))
+			if _, err := strconv.Atoi(s); err == nil {
 				// Escape number "as string".
 				b.WriteString(escapeNumberAsString)
 			}
-			b.WriteString(string(e))
+			b.WriteString(s)
 		case jsonArray:
 			return "", fmt.Errorf("JSON Pointer does not support jd metadata.")
 		default:
