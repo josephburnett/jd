@@ -36,6 +36,7 @@ func (s jsonSet) raw(metadata []Metadata) interface{} {
 }
 
 func (s1 jsonSet) Equals(n JsonNode, metadata ...Metadata) bool {
+	n = dispatch(n, metadata)
 	s2, ok := n.(jsonSet)
 	if !ok {
 		return false

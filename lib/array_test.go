@@ -174,6 +174,17 @@ func TestArrayDiff(t *testing.T) {
 			`@ [-1]`,
 			`+ 5`,
 		),
+	}, {
+		a: `[null,null,null]`,
+		b: `[]`,
+		diff: ss(
+			`@ [2]`,
+			`- null`,
+			`@ [1]`,
+			`- null`,
+			`@ [0]`,
+			`- null`,
+		),
 	}}
 
 	for _, tt := range tests {

@@ -59,7 +59,7 @@ func (d Diff) RenderPatch() (string, error) {
 		if len(element.OldValues) == 0 && len(element.NewValues) == 0 {
 			return "", fmt.Errorf("Cannot render empty diff element as JSON Patch op.")
 		}
-		if len(element.OldValues) == 1 {
+		if len(element.OldValues) == 1 && !isVoid(element.OldValues[0]) {
 			patch = append(patch, patchElement{
 				Op:    "test",
 				Path:  path,
@@ -71,7 +71,7 @@ func (d Diff) RenderPatch() (string, error) {
 				Value: element.OldValues[0],
 			})
 		}
-		if len(element.NewValues) == 1 {
+		if len(element.NewValues) == 1 && !isVoid(element.NewValues[0]) {
 			patch = append(patch, patchElement{
 				Op:    "add",
 				Path:  path,

@@ -22,6 +22,7 @@ func (a jsonMultiset) raw(metadata []Metadata) interface{} {
 }
 
 func (a1 jsonMultiset) Equals(n JsonNode, metadata ...Metadata) bool {
+	n = dispatch(n, metadata)
 	a2, ok := n.(jsonMultiset)
 	if !ok {
 		return false
