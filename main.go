@@ -15,7 +15,7 @@ import (
 	"github.com/josephburnett/jd/web/serve"
 )
 
-const version = "1.5.1"
+const version = "1.5.2"
 
 var format = flag.String("f", "", "Diff format (jd, patch)")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
