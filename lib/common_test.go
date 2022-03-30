@@ -223,7 +223,7 @@ func fuzz(t *testing.T, aStr, bStr string) {
 			t.Errorf("nil diff of a and b")
 			return
 		}
-		if hasObjectKeyLikeNumber(d) {
+		if format[0] == "patch" && hasUnsupportedObjectKey(d) {
 			return
 		}
 		var diffABStr string
@@ -258,11 +258,16 @@ func fuzz(t *testing.T, aStr, bStr string) {
 
 }
 
-func hasObjectKeyLikeNumber(diff Diff) bool {
+func hasUnsupportedObjectKey(diff Diff) bool {
 	for _, d := range diff {
 		for _, p := range d.Path {
 			if s, ok := p.(jsonString); ok {
+				// Object key that looks like number is interpretted incorrectly as array index.
 				if _, err := strconv.Atoi(string(s)); err == nil {
+					return true
+				}
+				// Object key "-" is interpretted incorrectly as append-to-array.
+				if string(s) == "-" {
 					return true
 				}
 			}
