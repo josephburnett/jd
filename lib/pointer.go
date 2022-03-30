@@ -8,8 +8,6 @@ import (
 	"github.com/go-openapi/jsonpointer"
 )
 
-const escapeNumberAsString = "~2"
-
 func readPointer(s string) ([]JsonNode, error) {
 	pointer, err := jsonpointer.New(s)
 	if err != nil {
@@ -24,12 +22,6 @@ func readPointer(s string) ([]JsonNode, error) {
 		if err == nil {
 			element, err = NewJsonNode(number)
 		} else {
-			// If this is a number with "as string" prefix then strip the prefix.
-			if strings.HasPrefix(t, escapeNumberAsString) {
-				if _, err = strconv.Atoi(t[2:]); err == nil {
-					t = t[2:]
-				}
-			}
 			element, err = NewJsonNode(t)
 		}
 		if err != nil {
@@ -55,11 +47,10 @@ func writePointer(path []JsonNode) (string, error) {
 				b.WriteString(jsonpointer.Escape(strconv.Itoa(int(e))))
 			}
 		case jsonString:
-			s := jsonpointer.Escape(string(e))
-			if _, err := strconv.Atoi(s); err == nil {
-				// Escape number "as string".
-				b.WriteString(escapeNumberAsString)
+			if _, err := strconv.Atoi(string(e)); err == nil {
+				return "", fmt.Errorf("JSON Pointer does not support object keys that look like numbers: %v", e)
 			}
+			s := jsonpointer.Escape(string(e))
 			b.WriteString(s)
 		case jsonArray:
 			return "", fmt.Errorf("JSON Pointer does not support jd metadata.")

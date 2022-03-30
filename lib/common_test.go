@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -222,6 +223,9 @@ func fuzz(t *testing.T, aStr, bStr string) {
 			t.Errorf("nil diff of a and b")
 			return
 		}
+		if hasObjectKeyLikeNumber(d) {
+			return
+		}
 		var diffABStr string
 		var diffAB Diff
 		switch format[0] {
@@ -252,4 +256,17 @@ func fuzz(t *testing.T, aStr, bStr string) {
 		}
 	}
 
+}
+
+func hasObjectKeyLikeNumber(diff Diff) bool {
+	for _, d := range diff {
+		for _, p := range d.Path {
+			if s, ok := p.(jsonString); ok {
+				if _, err := strconv.Atoi(string(s)); err == nil {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
