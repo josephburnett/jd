@@ -39,7 +39,7 @@ func checkEqual(ctx *testContext, a, b string) {
 	}
 }
 
-func checkNotEqual(ctx *testContext, a, b string, metadata ...Metadata) {
+func checkNotEqual(ctx *testContext, a, b string) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Errorf(err.Error())
