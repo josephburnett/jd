@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestArrayJson(t *testing.T) {
+func TestListJson(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
 		a string
@@ -21,7 +21,7 @@ func TestArrayJson(t *testing.T) {
 	}
 }
 
-func TestArrayEqual(t *testing.T) {
+func TestListEqual(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
 		a string
@@ -39,7 +39,7 @@ func TestArrayEqual(t *testing.T) {
 	}
 }
 
-func TestArrayNotEqual(t *testing.T) {
+func TestListNotEqual(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
 		a string
@@ -56,7 +56,7 @@ func TestArrayNotEqual(t *testing.T) {
 	}
 }
 
-func TestArrayHash(t *testing.T) {
+func TestListHash(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
 		a        string
@@ -76,7 +76,7 @@ func TestArrayHash(t *testing.T) {
 	}
 }
 
-func TestArrayDiff(t *testing.T) {
+func TestListDiff(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
 		a    string
@@ -192,7 +192,7 @@ func TestArrayDiff(t *testing.T) {
 	}
 }
 
-func TestArrayPatch(t *testing.T) {
+func TestListPatch(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
 		a    string
@@ -357,7 +357,7 @@ func TestArrayPatch(t *testing.T) {
 	}
 }
 
-func TestArrayPatchError(t *testing.T) {
+func TestListPatchError(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
 		a         string
