@@ -361,28 +361,28 @@ func TestListPatchError(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
 		a         string
-		diffLines []string
+		diff []string
 	}{{
-		`[]`,
-		[]string{
+		a: `[]`,
+		diff: ss(
 			`@ ["a"]`,
 			`+ 1`,
-		},
+		),
 	}, {
-		`[]`,
-		[]string{
+		a: `[]`,
+		diff: ss(
 			`@ [0]`,
 			`- 1`,
-		},
+		),
 	}, {
-		`[]`,
-		[]string{
+		a: `[]`,
+		diff: ss(
 			`@ [0]`,
 			`- null`,
-		},
+		),
 	}}
 
 	for _, tt := range tests {
-		checkPatchError(ctx, tt.a, tt.diffLines...)
+		checkPatchError(ctx, tt.a, tt.diff...)
 	}
 }
