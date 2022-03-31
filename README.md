@@ -11,6 +11,7 @@ http://play.jd-tool.io/
 Download [latest release](https://github.com/josephburnett/jd/releases/latest) or `go get github.com/josephburnett/jd`
 
 ```
+Usage: jd [OPTION]... FILE1 [FILE2]
 Diff and patch JSON files.
 
 Prints the diff of FILE1 and FILE2 to STDOUT.
@@ -18,13 +19,17 @@ When FILE2 is omitted the second input is read from STDIN.
 When patching (-p) FILE1 is a diff.
 
 Options:
-  -p        Apply patch FILE1 to FILE2 or STDIN.
-  -o=FILE3  Write to FILE3 instead of STDOUT.
-  -set      Treat arrays as sets.
-  -mset     Treat arrays as multisets (bags).
-  -setkeys  Keys to identify set objects
-  -yaml     Read and write YAML instead of JSON.
-  -port=N   Serve web UI on port N
+  -p         Apply patch FILE1 to FILE2 or STDIN.
+  -o=FILE3   Write to FILE3 instead of STDOUT.
+  -set       Treat arrays as sets.
+  -mset      Treat arrays as multisets (bags).
+  -setkeys   Keys to identify set objects
+  -yaml      Read and write YAML instead of JSON.
+  -port=N    Serve web UI on port N
+  -f=FORMAT  Produce diff in FORMAT "jd" (default) or "patch" (RFC 6902).
+  -t=FORMATS Translate FILE1 between FORMATS. Supported formats are "jd",
+             "patch" (RFC 6902), "json" and "yaml". FORMATS are provided
+             as a pair separated by "2". E.g. "yaml2json" or "jd2patch".
 
 Examples:
   jd a.json b.json
