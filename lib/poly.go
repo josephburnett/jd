@@ -15,10 +15,12 @@ type multisetMetadata struct{}
 type setkeysMetadata struct {
 	keys map[string]bool
 }
+type mergeMetadata struct{}
 
 func (setMetadata) is_metadata()      {}
 func (multisetMetadata) is_metadata() {}
 func (setkeysMetadata) is_metadata()  {}
+func (mergeMetadata) is_metadata()    {}
 
 func (m setMetadata) string() string {
 	return "set"
@@ -38,9 +40,14 @@ func (m setkeysMetadata) string() string {
 	return "setkeys=" + strings.Join(ks, ",")
 }
 
+func (m mergeMetadata) string() string {
+	return "merge"
+}
+
 var (
 	MULTISET Metadata = multisetMetadata{}
 	SET      Metadata = setMetadata{}
+	MERGE    Metadata = mergeMetadata{}
 )
 
 func Setkeys(keys ...string) Metadata {
