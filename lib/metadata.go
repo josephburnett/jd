@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Metadata is a closed set of types which modify diff and patch semantics.
 type Metadata interface {
 	is_metadata()
 	string() string
@@ -58,6 +59,20 @@ func Setkeys(keys ...string) Metadata {
 		m.keys[key] = true
 	}
 	return m
+}
+
+type patchStrategy string
+
+const (
+	mergePatchStrategy  patchStrategy = "merge"
+	strictPatchStrategy               = "strict"
+)
+
+func getPatchStrategy(metadata []Metadata) patchStrategy {
+	if checkMetadata(MERGE, metadata) {
+		return mergePatchStrategy
+	}
+	return strictPatchStrategy
 }
 
 func dispatch(n JsonNode, metadata []Metadata) JsonNode {

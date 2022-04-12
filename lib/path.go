@@ -40,6 +40,9 @@ func (p path) next() (JsonNode, []Metadata, path) {
 					if string(s) == MULTISET.string() {
 						metadata = append(metadata, MULTISET)
 					}
+					if string(s) == MERGE.string() {
+						metadata = append(metadata, MERGE)
+					}
 				}
 				// Ignore unrecognized metadata.
 			}

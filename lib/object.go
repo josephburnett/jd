@@ -187,7 +187,7 @@ func (o jsonObject) Patch(d Diff) (JsonNode, error) {
 	return patchAll(o, d)
 }
 
-func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
 	if (len(pathAhead) == 0) && (len(oldValues) > 1 || len(newValues) > 1) {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}
@@ -212,7 +212,7 @@ func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 	if !ok {
 		nextNode = voidNode{}
 	}
-	patchedNode, err := nextNode.patch(append(pathBehind, pe), rest, oldValues, newValues)
+	patchedNode, err := nextNode.patch(append(pathBehind, pe), rest, oldValues, newValues, strategy)
 	if err != nil {
 		return nil, err
 	}

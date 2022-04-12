@@ -154,7 +154,7 @@ func (s jsonSet) Patch(d Diff) (JsonNode, error) {
 	return patchAll(s, d)
 }
 
-func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
 	// Base case
 	if len(pathAhead) == 0 {
 		if len(oldValues) > 1 || len(newValues) > 1 {
@@ -181,7 +181,7 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 			if o, ok := v.(jsonObject); ok {
 				id := o.pathIdent(pathObject, metadata)
 				if id == lookingFor {
-					v.patch(append(pathBehind, n), rest, oldValues, newValues)
+					v.patch(append(pathBehind, n), rest, oldValues, newValues, strategy)
 					return s, nil
 				}
 			}

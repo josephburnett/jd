@@ -104,7 +104,7 @@ func (l jsonList) Patch(d Diff) (JsonNode, error) {
 	return patchAll(l, d)
 }
 
-func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
 
 	if len(oldValues) > 1 || len(newValues) > 1 {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
@@ -138,7 +138,7 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		if len(l) > i {
 			nextNode = l[i]
 		}
-		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues)
+		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues, strategy)
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +159,7 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 			// Replacing an element.
 			nextNode = l[i]
 		}
-		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues)
+		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues, strategy)
 		if err != nil {
 			return nil, err
 		}
@@ -185,7 +185,7 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		if len(l) > i {
 			nextNode = l[i]
 		}
-		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues)
+		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues, strategy)
 		if err != nil {
 			return nil, err
 		}

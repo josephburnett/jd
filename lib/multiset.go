@@ -133,7 +133,7 @@ func (a jsonMultiset) Patch(d Diff) (JsonNode, error) {
 	return patchAll(a, d)
 }
 
-func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
 	// Base case
 	if len(pathAhead) == 0 {
 		if len(oldValues) > 1 || len(newValues) > 1 {

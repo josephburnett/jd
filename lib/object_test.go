@@ -6,18 +6,18 @@ import (
 
 func TestObjectJson(t *testing.T) {
 	ctx := newTestContext(t)
-	tests := []struct{
+	tests := []struct {
 		a string
 		b string
 	}{{
-		a:`{"a":1}`,
+		a: `{"a":1}`,
 		b: `{"a":1}`,
 	}, {
 		a: ` { "a" : 1 } `,
-		b:`{"a":1}`,
+		b: `{"a":1}`,
 	}, {
-		a:`{}`,
-		b:`{}`,
+		a: `{}`,
+		b: `{}`,
 	}}
 
 	for _, tt := range tests {
@@ -27,15 +27,15 @@ func TestObjectJson(t *testing.T) {
 
 func TestObjectEqual(t *testing.T) {
 	ctx := newTestContext(t)
-	tests := []struct{
+	tests := []struct {
 		a string
 		b string
 	}{{
-		a:`{"a":1}`,
-		b:`{"a":1}`,
+		a: `{"a":1}`,
+		b: `{"a":1}`,
 	}, {
 		a: `{"a":1}`,
-		b:`{"a":1.0}`,
+		b: `{"a":1.0}`,
 	}, {
 		a: `{"a":[1,2]}`,
 		b: `{"a":[1,2]}`,
@@ -51,7 +51,7 @@ func TestObjectEqual(t *testing.T) {
 
 func TestObjectNotEqual(t *testing.T) {
 	ctx := newTestContext(t)
-	tests := []struct{
+	tests := []struct {
 		a string
 		b string
 	}{{
@@ -59,10 +59,10 @@ func TestObjectNotEqual(t *testing.T) {
 		b: `{"b":1}`,
 	}, {
 		a: `{"a":[1,2]}`,
-		b:`{"a":[2,1]}`,
+		b: `{"a":[2,1]}`,
 	}, {
 		a: `{"a":"b"}`,
-		b:`{"a":"c"}`,
+		b: `{"a":"c"}`,
 	}}
 
 	for _, tt := range tests {
@@ -73,29 +73,29 @@ func TestObjectNotEqual(t *testing.T) {
 // TODO: add unit test for object identity with setkeys metadata.
 func TestObjectHash(t *testing.T) {
 	ctx := newTestContext(t)
-	tests := []struct{
-		a string
-		b string
+	tests := []struct {
+		a         string
+		b         string
 		wantEqual bool
 	}{{
-		a: `{}`,
-		b:`{}`,
+		a:         `{}`,
+		b:         `{}`,
 		wantEqual: true,
 	}, {
-		a: `{"a":1}`,
-		b:`{"a":1}`,
+		a:         `{"a":1}`,
+		b:         `{"a":1}`,
 		wantEqual: true,
 	}, {
-		a: `{"a":1}`,
-		b:`{"a":2}`,
+		a:         `{"a":1}`,
+		b:         `{"a":2}`,
 		wantEqual: false,
 	}, {
-		a: `{"a":1}`,
-		b:`{"b":1}`,
+		a:         `{"a":1}`,
+		b:         `{"b":1}`,
 		wantEqual: false,
 	}, {
-		a: `{"a":1,"b":2}`,
-		b: `{"b":2,"a":1}`,
+		a:         `{"a":1,"b":2}`,
+		b:         `{"b":2,"a":1}`,
 		wantEqual: true,
 	}}
 
@@ -106,9 +106,9 @@ func TestObjectHash(t *testing.T) {
 
 func TestObjectDiff(t *testing.T) {
 	ctx := newTestContext(t)
-	tests := []struct{
-		a string
-		b string
+	tests := []struct {
+		a    string
+		b    string
 		diff []string
 	}{{
 		a: `{}`,
@@ -166,11 +166,11 @@ func TestObjectDiff(t *testing.T) {
 	}
 }
 
-func testObjectPatch(t *testing.T) {
+func TestObjectPatch(t *testing.T) {
 	ctx := newTestContext(t)
-	tests := []struct{
-		a string
-		b string
+	tests := []struct {
+		a    string
+		b    string
 		diff []string
 	}{{
 		a: `{}`,
@@ -207,6 +207,13 @@ func testObjectPatch(t *testing.T) {
 			`@ ["a","d"]`,
 			`+ 2`,
 		),
+	}, {
+		a: `{"foo":1}`,
+		b: `{"foo":2}`,
+		diff: ss(
+			`@ [["merge"],"foo"]`,
+			`+ 2`,
+		),
 	}}
 
 	for _, tt := range tests {
@@ -216,8 +223,8 @@ func testObjectPatch(t *testing.T) {
 
 func testObjectPatchError(t *testing.T) {
 	ctx := newTestContext(t)
-	tests := []struct{
-		a string
+	tests := []struct {
+		a    string
 		diff []string
 	}{{
 		a: `{}`,

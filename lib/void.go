@@ -60,7 +60,7 @@ func (v voidNode) Patch(d Diff) (JsonNode, error) {
 	return patchAll(v, d)
 }
 
-func (v voidNode) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (v voidNode) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(v, pathBehind[len(pathBehind)-1])
 	}

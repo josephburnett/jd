@@ -49,7 +49,7 @@ func (s jsonString) Patch(d Diff) (JsonNode, error) {
 	return patchAll(s, d)
 }
 
-func (s jsonString) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
+func (s jsonString) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
 	if len(pathAhead) != 0 {
 		return patchErrExpectColl(s, pathBehind[0])
 	}

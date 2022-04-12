@@ -7,7 +7,9 @@ import (
 func patchAll(n JsonNode, d Diff) (JsonNode, error) {
 	var err error
 	for _, de := range d {
-		n, err = n.patch(make(path, 0), de.Path, de.OldValues, de.NewValues)
+		_, metadata, _ := path(de.Path).next()
+		strategy := getPatchStrategy(metadata)
+		n, err = n.patch(make(path, 0), de.Path, de.OldValues, de.NewValues, strategy)
 		if err != nil {
 			return nil, err
 		}
