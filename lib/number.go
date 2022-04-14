@@ -3,7 +3,6 @@ package jd
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 )
 
 type jsonNumber float64
@@ -62,7 +61,7 @@ func (n jsonNumber) Patch(d Diff) (JsonNode, error) {
 }
 
 func (n jsonNumber) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
-	if len(pathAhead) != 0 {
+	if !pathAhead.isLeaf() {
 		return patchErrExpectColl(n, pathAhead[0])
 	}
 	if len(oldValues) > 1 || len(newValues) > 1 {
@@ -73,14 +72,14 @@ func (n jsonNumber) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 	switch strategy {
 	case mergePatchStrategy:
 		if !isVoid(oldValue) {
-			return nil, fmt.Errorf("patch with merge strategy has unnecessary old value: %v", oldValue)
+			return patchErrMergeWithOldValue(pathBehind, oldValue)
 		}
 	case strictPatchStrategy:
 		if !n.Equals(oldValue) {
 			return patchErrExpectValue(oldValue, n, pathBehind)
 		}
 	default:
-		return nil, fmt.Errorf("unsupported patch strategy: %v", strategy)
+		return patchErrUnsupportedPatchStrategy(pathBehind, strategy)
 	}
 	return newValue, nil
 }

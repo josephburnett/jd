@@ -7,8 +7,7 @@ import (
 func patchAll(n JsonNode, d Diff) (JsonNode, error) {
 	var err error
 	for _, de := range d {
-		_, metadata, _ := path(de.Path).next()
-		strategy := getPatchStrategy(metadata)
+		strategy := path(de.Path).getPatchStrategy()
 		n, err = n.patch(make(path, 0), de.Path, de.OldValues, de.NewValues, strategy)
 		if err != nil {
 			return nil, err
@@ -57,4 +56,16 @@ func patchErrExpectValue(want, found JsonNode, path path) (JsonNode, error) {
 	return nil, fmt.Errorf(
 		"Found %v at %v. Expected %v.",
 		found.Json(), path, want.Json())
+}
+
+func patchErrMergeWithOldValue(path path, oldValue JsonNode) (JsonNode, error) {
+	return nil, fmt.Errorf(
+		"Patch with merge strategy at %v has unnecessary old value %v",
+		path, oldValue)
+}
+
+func patchErrUnsupportedPatchStrategy(path path, strategy patchStrategy) (JsonNode, error) {
+	return nil, fmt.Errorf(
+		"Unsupported patch strategy %v at %v",
+		strategy, path)
 }

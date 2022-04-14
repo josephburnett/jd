@@ -65,7 +65,7 @@ type patchStrategy string
 
 const (
 	mergePatchStrategy  patchStrategy = "merge"
-	strictPatchStrategy               = "strict"
+	strictPatchStrategy patchStrategy = "strict"
 )
 
 func getPatchStrategy(metadata []Metadata) patchStrategy {

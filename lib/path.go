@@ -58,3 +58,37 @@ func (p path) next() (JsonNode, []Metadata, path) {
 	}
 	return voidNode{}, metadata, nil
 }
+
+func (p path) getPatchStrategy() patchStrategy {
+	var defaultStrategy = strictPatchStrategy
+	if len(p) == 0 {
+		return defaultStrategy
+	}
+	a, ok := p[0].(jsonArray)
+	if !ok {
+		return defaultStrategy
+	}
+	for _, n := range a {
+		s, ok := n.(jsonString)
+		if !ok {
+			continue
+		}
+		if string(s) == MERGE.string() {
+			return mergePatchStrategy
+		}
+	}
+	return defaultStrategy
+}
+
+func (p path) isLeaf() bool {
+	if len(p) == 0 {
+		return true
+	}
+	if len(p) == 1 {
+		if _, ok := p[0].(jsonArray); ok {
+			// The only path element is metadata.
+			return true
+		}
+	}
+	return false
+}
