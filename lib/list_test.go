@@ -360,7 +360,7 @@ func TestListPatch(t *testing.T) {
 func TestListPatchError(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
-		a         string
+		a    string
 		diff []string
 	}{{
 		a: `[]`,
