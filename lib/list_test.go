@@ -393,6 +393,19 @@ func TestListPatchError(t *testing.T) {
 			`@ [["merge"],1]`,
 			`+ 4`,
 		),
+	}, {
+		a: `[1,2,3]`,
+		diff: ss(
+			`@ [["merge"],1]`,
+			`- 2`,
+			`+ 4`,
+		),
+	}, {
+		a: `[1,2,3]`,
+		diff: ss(
+			`@ [["merge"],-1]`,
+			`+ 4`,
+		),
 	}}
 
 	for _, tt := range tests {
