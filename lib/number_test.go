@@ -56,6 +56,9 @@ func TestNumberPatch(t *testing.T) {
 	checkPatch(ctx, `0`, ``,
 		`@ []`,
 		`- 0`)
+	checkPatch(ctx, `0`, `1`,
+		`@ [["merge"]]`,
+		`+ 1`)
 }
 
 func TestNumberPatchError(t *testing.T) {
@@ -66,4 +69,8 @@ func TestNumberPatchError(t *testing.T) {
 	checkPatchError(ctx, ``,
 		`@ []`,
 		`- 0`)
+	checkPatchError(ctx, `0`,
+		`@ [["merge"]]`,
+		`- 0`,
+		`+ 1`)
 }
