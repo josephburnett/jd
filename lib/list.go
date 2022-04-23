@@ -111,6 +111,22 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 	}
 	oldValue := singleValue(oldValues)
 	newValue := singleValue(newValues)
+
+	// Merge patch strategy
+	if strategy == mergePatchStrategy {
+		n, _, _ := pathAhead.next()
+		if !isVoid(n) {
+			return nil, fmt.Errorf(
+				"Merge patch strategy cannot index into an array.")
+		}
+		if !isVoid(oldValue) {
+			return nil, fmt.Errorf(
+				"Merge patch strategy cannot specify a value to replace.")
+		}
+		return newValue, nil
+	}
+
+	// Strict patch strategy
 	// Base case
 	if len(pathAhead) == 0 {
 		if !l.Equals(oldValue) {

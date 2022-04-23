@@ -350,6 +350,13 @@ func TestListPatch(t *testing.T) {
 			`@ [1]`,
 			`+ 2`,
 		),
+	}, {
+		a: `[1,2,3]`,
+		b: `[4,5,6]`,
+		diff: ss(
+			`@ [["merge"]]`,
+			`+ [4,5,6]`,
+		),
 	}}
 
 	for _, tt := range tests {
@@ -379,6 +386,12 @@ func TestListPatchError(t *testing.T) {
 		diff: ss(
 			`@ [0]`,
 			`- null`,
+		),
+	}, {
+		a: `[1,2,3]`,
+		diff: ss(
+			`@ [["merge"],1]`,
+			`+ 4`,
 		),
 	}}
 
