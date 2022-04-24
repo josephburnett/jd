@@ -123,6 +123,10 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 			return nil, fmt.Errorf(
 				"Merge patch strategy cannot specify a value to replace.")
 		}
+		if isNull(newValue) {
+			// Null deletes a node
+			return voidNode{}, nil
+		}
 		return newValue, nil
 	}
 

@@ -316,6 +316,14 @@ func TestMultisetPatch(t *testing.T) {
 			`+ [4,5,6]`,
 		),
 		want: `[4,5,6]`,
+	}, {
+		name:  "Null deletes a node",
+		given: `[1,2,3]`,
+		patch: ss(
+			`@ [["merge","multiset"]]`,
+			`+ null`,
+		),
+		want: ``,
 	}}
 
 	for _, c := range cases {

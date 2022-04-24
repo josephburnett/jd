@@ -357,6 +357,14 @@ func TestListPatch(t *testing.T) {
 			`@ [["merge"]]`,
 			`+ [4,5,6]`,
 		),
+	}, {
+		// Null deletes a node
+		a: `[1,2,3]`,
+		b: ``,
+		diff: ss(
+			`@ [["merge"]]`,
+			`+ null`,
+		),
 	}}
 
 	for _, tt := range tests {

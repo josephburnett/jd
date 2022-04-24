@@ -145,11 +145,14 @@ func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []J
 			return nil, fmt.Errorf(
 				"Cannot specify multiple new values in a merge patch.")
 		}
-		newValue := singleValue(newValues)
 		n, _, _ := pathAhead.next()
 		if !isVoid(n) {
 			return nil, fmt.Errorf(
 				"Merge patch strategy cannot index into an array.")
+		}
+		newValue := singleValue(newValues)
+		if isNull(newValue) {
+			return voidNode{}, nil
 		}
 		return newValue, nil
 	}

@@ -74,6 +74,10 @@ func (n jsonNumber) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 		if !isVoid(oldValue) {
 			return patchErrMergeWithOldValue(pathBehind, oldValue)
 		}
+		if isNull(newValue) {
+			// Null deletes a node
+			return voidNode{}, nil
+		}
 	case strictPatchStrategy:
 		if !n.Equals(oldValue) {
 			return patchErrExpectValue(oldValue, n, pathBehind)

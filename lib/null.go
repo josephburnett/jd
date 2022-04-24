@@ -51,7 +51,7 @@ func (n jsonNull) Patch(d Diff) (JsonNode, error) {
 }
 
 func (n jsonNull) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
-	if len(pathAhead) != 0 {
+	if !pathAhead.isLeaf() {
 		return patchErrExpectColl(n, pathAhead[0])
 	}
 	if len(oldValues) > 1 || len(newValues) > 1 {
@@ -59,8 +59,21 @@ func (n jsonNull) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 	}
 	oldValue := singleValue(oldValues)
 	newValue := singleValue(newValues)
-	if !n.Equals(oldValue) {
-		return patchErrExpectValue(oldValue, n, pathBehind)
+	switch strategy {
+	case mergePatchStrategy:
+		if !isVoid(oldValue) {
+			return patchErrMergeWithOldValue(pathBehind, oldValue)
+		}
+		if isNull(newValue) {
+			// Null deletes a node
+			return voidNode{}, nil
+		}
+	case strictPatchStrategy:
+		if !n.Equals(oldValue) {
+			return patchErrExpectValue(oldValue, n, pathBehind)
+		}
+	default:
+		return patchErrUnsupportedPatchStrategy(pathBehind, strategy)
 	}
 	return newValue, nil
 }

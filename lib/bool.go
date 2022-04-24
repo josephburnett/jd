@@ -67,6 +67,9 @@ func (b jsonBool) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		if !isVoid(oldValue) {
 			return patchErrMergeWithOldValue(pathBehind, oldValue)
 		}
+		if isNull(newValue) {
+			return voidNode{}, nil
+		}
 	case strictPatchStrategy:
 		if !b.Equals(oldValue) {
 			return patchErrExpectValue(oldValue, b, pathBehind)

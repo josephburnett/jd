@@ -14,6 +14,16 @@ func isVoid(n JsonNode) bool {
 	return false
 }
 
+func isNull(n JsonNode) bool {
+	if n == nil {
+		return false
+	}
+	if _, ok := n.(jsonNull); ok {
+		return true
+	}
+	return false
+}
+
 func (v voidNode) Json(metadata ...Metadata) string {
 	return ""
 }
