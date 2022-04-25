@@ -155,8 +155,32 @@ func (s jsonSet) Patch(d Diff) (JsonNode, error) {
 }
 
 func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
+
+	// Merge patch strategy
+	if strategy == mergePatchStrategy {
+		if len(oldValues) != 0 {
+			return nil, fmt.Errorf(
+				"Merge patch strategy cannot specify a value to replace.")
+		}
+		if len(newValues) > 1 {
+			return nil, fmt.Errorf(
+				"Cannot specify multiple new values in a merge patch.")
+		}
+		n, _, _ := pathAhead.next()
+		if !isVoid(n) {
+			return nil, fmt.Errorf(
+				"Merge patch strategy cannot index into an array.")
+		}
+		newValue := singleValue(newValues)
+		if isNull(newValue) {
+			return voidNode{}, nil
+		}
+		return newValue, nil
+	}
+
+	// Strict patch strategy
 	// Base case
-	if len(pathAhead) == 0 {
+	if pathAhead.isLeaf() {
 		if len(oldValues) > 1 || len(newValues) > 1 {
 			return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 		}

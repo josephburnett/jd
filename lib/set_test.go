@@ -456,6 +456,22 @@ func TestSetPatch(t *testing.T) {
 			`+ {"id":"bar"}`,
 		),
 		want: `[{"id":"bar"}]`,
+	}, {
+		name:  "merge replaces entire set",
+		given: `[1,2,3]`,
+		patch: ss(
+			`@ [["merge","set"]]`,
+			`+ [4,5,6]`,
+		),
+		want: `[4,5,6]`,
+	}, {
+		name:  "null deletes a node",
+		given: `[1,2,3]`,
+		patch: ss(
+			`@ [["merge","set"]]`,
+			`+ null`,
+		),
+		want: ``,
 	}}
 
 	for _, c := range cases {

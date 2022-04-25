@@ -159,7 +159,7 @@ func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []J
 
 	// Strict patch strategy
 	// Base case
-	if len(pathAhead) == 0 {
+	if pathAhead.isLeaf() {
 		if len(oldValues) > 1 || len(newValues) > 1 {
 			return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 		}
