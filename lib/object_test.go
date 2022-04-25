@@ -221,6 +221,13 @@ func TestObjectPatch(t *testing.T) {
 			`@ [["merge"],"foo"]`,
 			`+ [4,5,6]`,
 		),
+	}, {
+		a: `{}`,
+		b: `{"foo":{"bar":1}}`,
+		diff: ss(
+			`@ [["merge"],"foo","bar"]`,
+			`+ 1`,
+		),
 	}}
 
 	for _, tt := range tests {

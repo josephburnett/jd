@@ -13,6 +13,13 @@ type jsonObject struct {
 
 var _ JsonNode = jsonObject{}
 
+func newJsonObject() jsonObject {
+	return jsonObject{
+		properties: map[string]JsonNode{},
+		idKeys:     map[string]bool{},
+	}
+}
+
 func (o jsonObject) Json(metadata ...Metadata) string {
 	return renderJson(o.raw(metadata))
 }
@@ -210,7 +217,19 @@ func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 	}
 	nextNode, ok := o.properties[string(pe)]
 	if !ok {
-		nextNode = voidNode{}
+		switch strategy {
+		case mergePatchStrategy:
+			// Create objects
+			if rest.isLeaf() {
+				nextNode = voidNode{}
+			} else {
+				nextNode = newJsonObject()
+			}
+		case strictPatchStrategy:
+			nextNode = voidNode{}
+		default:
+			return patchErrUnsupportedPatchStrategy(pathBehind, strategy)
+		}
 	}
 	patchedNode, err := nextNode.patch(append(pathBehind, pe), rest, oldValues, newValues, strategy)
 	if err != nil {
