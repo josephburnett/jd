@@ -20,6 +20,20 @@ func (p path) appendIndex(o jsonObject, metadata []Metadata) path {
 	return append(p, o)
 }
 
+func (p path) withMetadata(metadata []Metadata) path {
+	if checkMetadata(MERGE, metadata) {
+		c := make(path, len(p)+1)
+		c[0] = jsonArray{jsonString(MERGE.string())}
+		for i, e := range p {
+			c[i+1] = e
+		}
+		return c
+	}
+	c := make(path, len(p))
+	copy(c, p)
+	return c
+}
+
 func (p path) clone() path {
 	c := make(path, len(p))
 	copy(c, p)

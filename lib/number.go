@@ -40,18 +40,27 @@ func (n jsonNumber) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (n jsonNumber) Diff(node JsonNode, metadata ...Metadata) Diff {
-	return n.diff(node, make(path, 0), metadata)
+	return n.diff(node, make(path, 0), metadata, getPatchStrategy(metadata))
 }
 
-func (n jsonNumber) diff(node JsonNode, path path, metadata []Metadata) Diff {
+func (n jsonNumber) diff(node JsonNode, path path, metadata []Metadata, strategy patchStrategy) Diff {
 	d := make(Diff, 0)
 	if n.Equals(node) {
 		return d
 	}
-	e := DiffElement{
-		Path:      path.clone(),
-		OldValues: nodeList(n),
-		NewValues: nodeList(node),
+	var e DiffElement
+	switch strategy {
+	case mergePatchStrategy:
+		e = DiffElement{
+			Path:      path.withMetadata([]Metadata{MERGE}),
+			NewValues: nodeList(node),
+		}
+	default:
+		e = DiffElement{
+			Path:      path.clone(),
+			OldValues: nodeList(n),
+			NewValues: nodeList(node),
+		}
 	}
 	return append(d, e)
 }

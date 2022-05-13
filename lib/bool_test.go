@@ -43,6 +43,10 @@ func TestBoolDiff(t *testing.T) {
 		`@ []`,
 		`- false`,
 		`+ true`)
+	ctx = ctx.withMetadata(MERGE)
+	checkDiff(ctx, `true`, `false`,
+		`@ [["merge"]]`,
+		`+ false`)
 }
 
 func TestBoolPatch(t *testing.T) {

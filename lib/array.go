@@ -38,13 +38,14 @@ func (a jsonArray) hashCode(metadata []Metadata) [8]byte {
 func (a jsonArray) Diff(n JsonNode, metadata ...Metadata) Diff {
 	n1 := dispatch(a, metadata)
 	n2 := dispatch(n, metadata)
-	return n1.diff(n2, make(path, 0), metadata)
+	strategy := getPatchStrategy(metadata)
+	return n1.diff(n2, make(path, 0), metadata, strategy)
 }
 
-func (a jsonArray) diff(n JsonNode, path path, metadata []Metadata) Diff {
+func (a jsonArray) diff(n JsonNode, path path, metadata []Metadata, strategy patchStrategy) Diff {
 	n1 := dispatch(a, metadata)
 	n2 := dispatch(n, metadata)
-	return n1.diff(n2, path, metadata)
+	return n1.diff(n2, path, metadata, strategy)
 }
 
 func (a jsonArray) Patch(d Diff) (JsonNode, error) {

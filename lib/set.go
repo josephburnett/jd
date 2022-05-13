@@ -63,18 +63,27 @@ func (s jsonSet) hashCode(metadata []Metadata) [8]byte {
 }
 
 func (s jsonSet) Diff(j JsonNode, metadata ...Metadata) Diff {
-	return s.diff(j, make(path, 0), metadata)
+	return s.diff(j, make(path, 0), metadata, getPatchStrategy(metadata))
 }
 
-func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata) Diff {
+func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata, strategy patchStrategy) Diff {
 	d := make(Diff, 0)
 	s2, ok := n.(jsonSet)
 	if !ok {
 		// Different types
-		e := DiffElement{
-			Path:      path.clone(),
-			OldValues: nodeList(s1),
-			NewValues: nodeList(n),
+		var e DiffElement
+		switch strategy {
+		case mergePatchStrategy:
+			e = DiffElement{
+				Path:      path.withMetadata([]Metadata{MERGE}),
+				NewValues: nodeList(n),
+			}
+		default:
+			e = DiffElement{
+				Path:      path.clone(),
+				OldValues: nodeList(s1),
+				NewValues: nodeList(n),
+			}
 		}
 		return append(d, e)
 	}
@@ -130,7 +139,7 @@ func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata) Diff {
 			if isObject1 && isObject2 {
 				// Sub diff objects with same identity.
 				p := path.appendIndex(o1, metadata)
-				subDiff := o1.diff(o2, p, metadata)
+				subDiff := o1.diff(o2, p, metadata, strategy)
 				for _, subElement := range subDiff {
 					d = append(d, subElement)
 				}

@@ -38,7 +38,7 @@ func checkDiffRender(t *testing.T, a, b string, diffLines ...string) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	d := aJson.diff(bJson, nil, []Metadata{}).Render()
+	d := aJson.diff(bJson, nil, []Metadata{}, strictPatchStrategy).Render()
 	if d != diff {
 		t.Errorf("%v.diff(%v) = %v. Want %v.", a, b, d, diff)
 	}

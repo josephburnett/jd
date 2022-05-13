@@ -134,10 +134,10 @@ func (k1 *setkeysMetadata) mergeKeys(k2 map[string]bool) map[string]bool {
 }
 
 func (o jsonObject) Diff(n JsonNode, metadata ...Metadata) Diff {
-	return o.diff(n, make(path, 0), metadata)
+	return o.diff(n, make(path, 0), metadata, getPatchStrategy(metadata))
 }
 
-func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
+func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata, strategy patchStrategy) Diff {
 	d := make(Diff, 0)
 	o2, ok := n.(jsonObject)
 	if !ok {
@@ -163,7 +163,7 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata) Diff {
 		v1 := o1.properties[k1]
 		if v2, ok := o2.properties[k1]; ok {
 			// Both keys are present
-			subDiff := v1.diff(v2, append(path, jsonString(k1)), metadata)
+			subDiff := v1.diff(v2, append(path, jsonString(k1)), metadata, strategy)
 			d = append(d, subDiff...)
 		} else {
 			// O2 missing key
