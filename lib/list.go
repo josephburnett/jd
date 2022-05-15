@@ -54,12 +54,31 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 	a2, ok := n.(jsonList)
 	if !ok {
 		// Different types
-		e := DiffElement{
-			Path:      path.clone(),
-			OldValues: nodeList(a1),
-			NewValues: nodeList(n),
+		var e DiffElement
+		switch strategy {
+		case mergePatchStrategy:
+			e = DiffElement{
+				Path:      path.withMetadata([]Metadata{MERGE}),
+				NewValues: nodeList(n),
+			}
+		default:
+			e = DiffElement{
+				Path:      path.clone(),
+				OldValues: nodeList(a1),
+				NewValues: nodeList(n),
+			}
 		}
 		return append(d, e)
+	}
+	if strategy == mergePatchStrategy {
+		// Merge patches do not recurse into lists
+		if !a1.Equals(a2, metadata...) {
+			e := DiffElement{
+				Path:      path.withMetadata([]Metadata{MERGE}),
+				NewValues: nodeList(n),
+			}
+			return append(d, e)
+		}
 	}
 	maxLen := len(a1)
 	if len(a1) < len(a2) {

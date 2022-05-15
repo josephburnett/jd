@@ -82,6 +82,7 @@ func TestListDiff(t *testing.T) {
 		a    string
 		b    string
 		diff []string
+		ctx  *testContext
 	}{{
 		a:    `[]`,
 		b:    `[]`,
@@ -185,10 +186,30 @@ func TestListDiff(t *testing.T) {
 			`@ [0]`,
 			`- null`,
 		),
+	}, {
+		a: `[1,2,3]`,
+		b: `[1,4,3]`,
+		diff: ss(
+			`@ [["merge"]]`,
+			`+ [1,4,3]`,
+		),
+		ctx: newTestContext(t).withMetadata(MERGE),
+	}, {
+		a: `[1,2,3]`,
+		b: `{}`,
+		diff: ss(
+			`@ [["merge"]]`,
+			`+ {}`,
+		),
+		ctx: newTestContext(t).withMetadata(MERGE),
 	}}
 
 	for _, tt := range tests {
-		checkDiff(ctx, tt.a, tt.b, tt.diff...)
+		c := tt.ctx
+		if c == nil {
+			c = ctx
+		}
+		checkDiff(c, tt.a, tt.b, tt.diff...)
 	}
 }
 
