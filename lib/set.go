@@ -87,6 +87,13 @@ func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata, strategy patc
 		}
 		return append(d, e)
 	}
+	if strategy == mergePatchStrategy && !s1.Equals(n) {
+		e := DiffElement{
+			Path:      path.prependMetadataMerge(),
+			NewValues: nodeList(n),
+		}
+		return append(d, e)
+	}
 	s1Map := make(map[[8]byte]JsonNode)
 	for _, v := range s1 {
 		var hc [8]byte

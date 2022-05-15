@@ -310,6 +310,30 @@ func TestSetDiff(t *testing.T) {
 		a:        `{"a":[1,2]}`,
 		b:        `{"a":[2,1]}`,
 		want:     ss(),
+	}, {
+		name:     "merge different types produces only new values",
+		metadata: m(MERGE, SET),
+		a:        `[1,2,3]`,
+		b:        `{}`,
+		want: ss(
+			`@ [["merge"]]`,
+			`+ {}`,
+		),
+	}, {
+		name:     "merge outputs no diff when equal",
+		metadata: m(MERGE, SET),
+		a:        `[1,2,3]`,
+		b:        `[2,1,3]`,
+		want:     ss(),
+	}, {
+		name:     "merge replaces entire set when not equal",
+		metadata: m(MERGE, SET),
+		a:        `[1,2,3]`,
+		b:        `[2,1,4]`,
+		want: ss(
+			`@ [["merge"]]`,
+			`+ [2,1,4]`,
+		),
 	}}
 
 	for _, c := range cases {
