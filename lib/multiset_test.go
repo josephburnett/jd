@@ -121,6 +121,7 @@ func TestMultisetDiff(t *testing.T) {
 		a    string
 		b    string
 		want []string
+		ctx  *testContext
 	}{{
 		name: "two empty multisets",
 		a:    `[]`,
@@ -206,11 +207,39 @@ func TestMultisetDiff(t *testing.T) {
 			`- {}`,
 			`+ []`,
 		),
+		// }, {
+		// 	name: "merge different types produces only new values",
+		// 	a:    `[1,2,2,3]`,
+		// 	b:    `{}`,
+		// 	want: ss(
+		// 		`@ [["multiset", "merge"]]`,
+		// 		`+ {}`,
+		// 	),
+		// 	ctx: newTestContext(t).withMetadata(MERGE, MULTISET),
+	}, {
+		name: "merge outputs no diff when equal",
+		a:    `[1,2,2,3]`,
+		b:    `[2,1,3,2]`,
+		want: ss(),
+		ctx:  newTestContext(t).withMetadata(MERGE, MULTISET),
+		// }, {
+		// 	name: "merge replaces entire multiset when not equal",
+		// 	a:    `[1,2,2,3]`,
+		// 	b:    `[2,1,3,3]`,
+		// 	want: ss(
+		// 		`@ [["multiset", "merge"]]`,
+		// 		`+ [2,1,3,3]`,
+		// 	),
+		// 	ctx: newTestContext(t).withMetadata(MERGE, MULTISET),
 	}}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			checkDiff(ctx, c.a, c.b, c.want...)
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			c := tt.ctx
+			if c == nil {
+				c = ctx
+			}
+			checkDiff(c, tt.a, tt.b, tt.want...)
 		})
 	}
 }

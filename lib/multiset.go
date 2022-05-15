@@ -59,10 +59,19 @@ func (a1 jsonMultiset) diff(n JsonNode, path path, metadata []Metadata, strategy
 	a2, ok := n.(jsonMultiset)
 	if !ok {
 		// Different types
-		e := DiffElement{
-			Path:      path.clone(),
-			OldValues: nodeList(a1),
-			NewValues: nodeList(n),
+		var e DiffElement
+		switch strategy {
+		case mergePatchStrategy:
+			e = DiffElement{
+				Path:      path.withMetadata([]Metadata{MERGE}),
+				NewValues: nodeList(n),
+			}
+		default:
+			e = DiffElement{
+				Path:      path.clone(),
+				OldValues: nodeList(a1),
+				NewValues: nodeList(n),
+			}
 		}
 		return append(d, e)
 	}
@@ -82,8 +91,9 @@ func (a1 jsonMultiset) diff(n JsonNode, path path, metadata []Metadata, strategy
 	}
 	// TODO: cast directly to jsonObject when jsonObject drops idKeys.
 	o, _ := NewJsonNode(map[string]interface{}{})
+	pathWithMultiset := path.appendIndex(o.(jsonObject), metadata).clone()
 	e := DiffElement{
-		Path:      path.appendIndex(o.(jsonObject), metadata).clone(),
+		Path:      pathWithMultiset,
 		OldValues: nodeList(),
 		NewValues: nodeList(),
 	}
