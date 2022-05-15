@@ -36,6 +36,13 @@ func TestNullDiff(t *testing.T) {
 	checkDiff(ctx, ``, `null`,
 		`@ []`,
 		`+ null`)
+	ctx = ctx.withMetadata(MERGE)
+	checkDiff(ctx, `true`, `null`,
+		`@ [["merge"]]`,
+		`+ null`)
+	checkDiff(ctx, `null`, `true`,
+		`@ [["merge"]]`,
+		`+ true`)
 }
 
 func TestNullPatch(t *testing.T) {
