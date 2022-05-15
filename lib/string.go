@@ -41,7 +41,7 @@ func (s1 jsonString) diff(n JsonNode, path path, metadata []Metadata, strategy p
 	switch strategy {
 	case mergePatchStrategy:
 		e = DiffElement{
-			Path:      path.withMetadata([]Metadata{MERGE}),
+			Path:      path.prependMetadataMerge(),
 			NewValues: nodeList(n),
 		}
 	default:

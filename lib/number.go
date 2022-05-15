@@ -52,7 +52,7 @@ func (n jsonNumber) diff(node JsonNode, path path, metadata []Metadata, strategy
 	switch strategy {
 	case mergePatchStrategy:
 		e = DiffElement{
-			Path:      path.withMetadata([]Metadata{MERGE}),
+			Path:      path.prependMetadataMerge(),
 			NewValues: nodeList(node),
 		}
 	default:

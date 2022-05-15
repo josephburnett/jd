@@ -58,7 +58,7 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 		switch strategy {
 		case mergePatchStrategy:
 			e = DiffElement{
-				Path:      path.withMetadata([]Metadata{MERGE}),
+				Path:      path.prependMetadataMerge(),
 				NewValues: nodeList(n),
 			}
 		default:
@@ -74,7 +74,7 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 		// Merge patches do not recurse into lists
 		if !a1.Equals(a2, metadata...) {
 			e := DiffElement{
-				Path:      path.withMetadata([]Metadata{MERGE}),
+				Path:      path.prependMetadataMerge(),
 				NewValues: nodeList(n),
 			}
 			return append(d, e)
