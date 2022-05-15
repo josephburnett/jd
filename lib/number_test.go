@@ -44,6 +44,10 @@ func TestNumberDiff(t *testing.T) {
 	checkDiff(ctx, `0`, ``,
 		`@ []`,
 		`- 0`)
+	ctx = ctx.withMetadata(MERGE)
+	checkDiff(ctx, `1`, `2`,
+		`@ [["merge"]]`,
+		`+ 2`)
 }
 
 func TestNumberPatch(t *testing.T) {
