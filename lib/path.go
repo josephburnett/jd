@@ -52,6 +52,11 @@ func (p path) prependMetadataMerge() path {
 	return []JsonNode{jsonArray{jsonString(MERGE.string())}}
 }
 
+func (p path) isMerge() bool {
+	_, metadata, _ := p.next()
+	return checkMetadata(MERGE, metadata)
+}
+
 func (p path) clone() path {
 	c := make(path, len(p))
 	copy(c, p)

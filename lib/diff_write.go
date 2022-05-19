@@ -7,6 +7,7 @@ import (
 )
 
 func (d DiffElement) Render() string {
+	isMerge := path(d.Path).isMerge()
 	b := bytes.NewBuffer(nil)
 	b.WriteString("@ ")
 	b.Write([]byte(jsonArray(d.Path).Json()))
@@ -31,6 +32,9 @@ func (d DiffElement) Render() string {
 			b.WriteString("+ ")
 			b.Write(newValueJson)
 			b.WriteString("\n")
+		} else if isMerge {
+			// Merge deletion is writing void to a node.
+			b.WriteString("+\n")
 		}
 	}
 	return b.String()
