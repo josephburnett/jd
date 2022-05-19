@@ -38,8 +38,17 @@ func (p path) prependMetadataMerge() path {
 			}
 			pathWithMetadataMerge[0] = metadataWithMerge
 			return pathWithMetadataMerge
+		} else {
+			// No metadata yet
+			pathWithMetadataMerge := make(path, len(p)+1)
+			pathWithMetadataMerge[0] = jsonArray{jsonString(MERGE.string())}
+			for i, e := range p {
+				pathWithMetadataMerge[i+1] = e
+			}
+			return pathWithMetadataMerge
 		}
 	}
+	// Empty path
 	return []JsonNode{jsonArray{jsonString(MERGE.string())}}
 }
 

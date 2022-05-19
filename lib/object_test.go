@@ -110,6 +110,7 @@ func TestObjectDiff(t *testing.T) {
 		a    string
 		b    string
 		diff []string
+		ctx  *testContext
 	}{{
 		a: `{}`,
 		b: `{}`,
@@ -159,10 +160,22 @@ func TestObjectDiff(t *testing.T) {
 			`@ ["R",0,"I",0,"T",-1]`,
 			`+ {"K":"I","V":"T"}`,
 		),
+	}, {
+		a: `{"a":1}`,
+		b: `{"a":2}`,
+		diff: ss(
+			`@ [["merge"],"a"]`,
+			`+ 2`,
+		),
+		ctx: newTestContext(t).withMetadata(MERGE),
 	}}
 
 	for _, tt := range tests {
-		checkDiff(ctx, tt.a, tt.b, tt.diff...)
+		c := tt.ctx
+		if c == nil {
+			c = ctx
+		}
+		checkDiff(c, tt.a, tt.b, tt.diff...)
 	}
 }
 
