@@ -133,8 +133,13 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 
 	// Merge patch strategy
 	if strategy == mergePatchStrategy {
-		n, _, _ := pathAhead.next()
-		if !isVoid(n) {
+		next, _, _ := pathAhead.next()
+		if _, ok := next.(jsonString); ok {
+			// Replacing the list with an object
+			o := newJsonObject()
+			return o.patch(pathBehind, pathAhead, oldValues, newValues, strategy)
+		}
+		if !pathAhead.isLeaf() {
 			return nil, fmt.Errorf(
 				"Merge patch strategy cannot index into an array.")
 		}

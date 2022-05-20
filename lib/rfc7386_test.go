@@ -59,10 +59,10 @@ func TestRfc7386AppendixA(t *testing.T) {
 		original: `{"e":null}`,
 		patch:    `{"a":1}`,
 		result:   `{"e":null,"a":1}`,
-		// }, {
-		// 	original: `[1,2]`,
-		// 	patch:    `{"a":"b","c":null}`,
-		// 	result:   `{"a":"b"}`,
+	}, {
+		original: `[1,2]`,
+		patch:    `{"a":"b","c":null}`,
+		result:   `{"a":"b"}`,
 	}, {
 		original: `{}`,
 		patch:    `{"a":{"bb":{"ccc":null}}}`,
@@ -80,7 +80,7 @@ func TestRfc7386AppendixA(t *testing.T) {
 		}
 		_, err = original.Patch(diff)
 		if err != nil {
-			t.Errorf("Error patching original with %v: %v", diff.Render(), err)
+			t.Errorf("Error patching %v with %v (%v): %v", tc.original, tc.patch, diff.Render(), err)
 		}
 
 	}
