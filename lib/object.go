@@ -142,10 +142,19 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata, strategy p
 	o2, ok := n.(jsonObject)
 	if !ok {
 		// Different types
-		e := DiffElement{
-			Path:      path.clone(),
-			OldValues: []JsonNode{o1},
-			NewValues: []JsonNode{n},
+		var e DiffElement
+		switch strategy {
+		case mergePatchStrategy:
+			e = DiffElement{
+				Path:      path.clone().prependMetadataMerge(),
+				NewValues: []JsonNode{n},
+			}
+		default:
+			e = DiffElement{
+				Path:      path.clone(),
+				OldValues: []JsonNode{o1},
+				NewValues: []JsonNode{n},
+			}
 		}
 		return append(d, e)
 	}
@@ -218,9 +227,12 @@ func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}
 	// Base case
-	if len(pathAhead) == 0 {
-		oldValue := singleValue(oldValues)
+	if pathAhead.isLeaf() {
 		newValue := singleValue(newValues)
+		if strategy == mergePatchStrategy {
+			return newValue, nil
+		}
+		oldValue := singleValue(oldValues)
 		if !o.Equals(oldValue) {
 			return patchErrExpectValue(oldValue, o, pathBehind)
 		}
