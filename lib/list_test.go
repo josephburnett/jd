@@ -190,7 +190,7 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[1,4,3]`,
 		diff: ss(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+ [1,4,3]`,
 		),
 		ctx: newTestContext(t).withMetadata(MERGE),
@@ -198,7 +198,7 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `{}`,
 		diff: ss(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+ {}`,
 		),
 		ctx: newTestContext(t).withMetadata(MERGE),
@@ -375,7 +375,7 @@ func TestListPatch(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[4,5,6]`,
 		diff: ss(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+ [4,5,6]`,
 		),
 	}, {
@@ -383,7 +383,7 @@ func TestListPatch(t *testing.T) {
 		a: `[1,2,3]`,
 		b: ``,
 		diff: ss(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+ null`,
 		),
 	}}
@@ -419,20 +419,20 @@ func TestListPatchError(t *testing.T) {
 	}, {
 		a: `[1,2,3]`,
 		diff: ss(
-			`@ [["merge"],1]`,
+			`@ [["MERGE"],1]`,
 			`+ 4`,
 		),
 	}, {
 		a: `[1,2,3]`,
 		diff: ss(
-			`@ [["merge"],1]`,
+			`@ [["MERGE"],1]`,
 			`- 2`,
 			`+ 4`,
 		),
 	}, {
 		a: `[1,2,3]`,
 		diff: ss(
-			`@ [["merge"],-1]`,
+			`@ [["MERGE"],-1]`,
 			`+ 4`,
 		),
 	}}

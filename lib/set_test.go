@@ -316,7 +316,7 @@ func TestSetDiff(t *testing.T) {
 		a:        `[1,2,3]`,
 		b:        `{}`,
 		want: ss(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+ {}`,
 		),
 	}, {
@@ -331,7 +331,7 @@ func TestSetDiff(t *testing.T) {
 		a:        `[1,2,3]`,
 		b:        `[2,1,4]`,
 		want: ss(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+ [2,1,4]`,
 		),
 	}}
@@ -484,7 +484,7 @@ func TestSetPatch(t *testing.T) {
 		name:  "merge replaces entire set",
 		given: `[1,2,3]`,
 		patch: ss(
-			`@ [["merge","set"]]`,
+			`@ [["MERGE","set"]]`,
 			`+ [4,5,6]`,
 		),
 		want: `[4,5,6]`,
@@ -492,7 +492,7 @@ func TestSetPatch(t *testing.T) {
 		name:  "null deletes a node",
 		given: `[1,2,3]`,
 		patch: ss(
-			`@ [["merge","set"]]`,
+			`@ [["MERGE","set"]]`,
 			`+ null`,
 		),
 		want: ``,

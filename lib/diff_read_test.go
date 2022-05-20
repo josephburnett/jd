@@ -74,25 +74,25 @@ func TestReadMerge(t *testing.T) {
 	}{{
 		patch: `{"a":1}`,
 		diff: s(
-			`@ [["merge"],"a"]`,
+			`@ [["MERGE"],"a"]`,
 			`+ 1`,
 		),
 	}, {
 		patch: ``,
 		diff: s(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+`,
 		),
 	}, {
 		patch: `null`,
 		diff: s(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+ null`,
 		),
 	}, {
 		patch: `[1,2,3]`,
 		diff: s(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+ [1,2,3]`,
 		),
 	}}

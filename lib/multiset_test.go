@@ -212,7 +212,7 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1,2,2,3]`,
 		b:    `{}`,
 		want: ss(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+ {}`,
 		),
 		ctx: newTestContext(t).withMetadata(MERGE, MULTISET),
@@ -227,7 +227,7 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1,2,2,3]`,
 		b:    `[2,1,3,3]`,
 		want: ss(
-			`@ [["merge"]]`,
+			`@ [["MERGE"]]`,
 			`+ [2,1,3,3]`,
 		),
 		ctx: newTestContext(t).withMetadata(MERGE, MULTISET),
@@ -341,7 +341,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "merge replaces entire set",
 		given: `[1,2,3]`,
 		patch: ss(
-			`@ [["merge","multiset"]]`,
+			`@ [["MERGE","multiset"]]`,
 			`+ [4,5,6]`,
 		),
 		want: `[4,5,6]`,
@@ -349,7 +349,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "Null deletes a node",
 		given: `[1,2,3]`,
 		patch: ss(
-			`@ [["merge","multiset"]]`,
+			`@ [["MERGE","multiset"]]`,
 			`+ null`,
 		),
 		want: ``,

@@ -50,11 +50,11 @@ func TestVoidPatch(t *testing.T) {
 		`@ []`,
 		`- 1`)
 	checkPatch(ctx, ``, `1`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ 1`)
 	// Null deletes a node
 	checkPatch(ctx, ``, ``,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ null`)
 }
 

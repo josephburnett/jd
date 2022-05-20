@@ -164,7 +164,7 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"a":2}`,
 		diff: ss(
-			`@ [["merge"],"a"]`,
+			`@ [["MERGE"],"a"]`,
 			`+ 2`,
 		),
 		ctx: newTestContext(t).withMetadata(MERGE),
@@ -172,7 +172,7 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"a":null}`,
 		diff: ss(
-			`@ [["merge"],"a"]`,
+			`@ [["MERGE"],"a"]`,
 			`+ null`,
 		),
 		ctx: newTestContext(t).withMetadata(MERGE),
@@ -180,7 +180,7 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{}`,
 		diff: ss(
-			`@ [["merge"],"a"]`,
+			`@ [["MERGE"],"a"]`,
 			`+`,
 		),
 		ctx: newTestContext(t).withMetadata(MERGE),
@@ -188,9 +188,9 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"b":1}`,
 		diff: ss(
-			`@ [["merge"],"a"]`,
+			`@ [["MERGE"],"a"]`,
 			`+`,
-			`@ [["merge"],"b"]`,
+			`@ [["MERGE"],"b"]`,
 			`+ 1`,
 		),
 		ctx: newTestContext(t).withMetadata(MERGE),
@@ -250,21 +250,21 @@ func TestObjectPatch(t *testing.T) {
 		a: `{"foo":1}`,
 		b: `{"foo":2}`,
 		diff: ss(
-			`@ [["merge"],"foo"]`,
+			`@ [["MERGE"],"foo"]`,
 			`+ 2`,
 		),
 	}, {
 		a: `{"foo":[1,2,3]}`,
 		b: `{"foo":[4,5,6]}`,
 		diff: ss(
-			`@ [["merge"],"foo"]`,
+			`@ [["MERGE"],"foo"]`,
 			`+ [4,5,6]`,
 		),
 	}, {
 		a: `{}`,
 		b: `{"foo":{"bar":1}}`,
 		diff: ss(
-			`@ [["merge"],"foo","bar"]`,
+			`@ [["MERGE"],"foo","bar"]`,
 			`+ 1`,
 		),
 	}}

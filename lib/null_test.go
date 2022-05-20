@@ -38,10 +38,10 @@ func TestNullDiff(t *testing.T) {
 		`+ null`)
 	ctx = ctx.withMetadata(MERGE)
 	checkDiff(ctx, `true`, `null`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ null`)
 	checkDiff(ctx, `null`, `true`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ true`)
 }
 
@@ -56,7 +56,7 @@ func TestNullPatch(t *testing.T) {
 		`+ null`)
 	// Null deletes a node
 	checkPatch(ctx, `null`, ``,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ null`)
 }
 

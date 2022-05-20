@@ -42,7 +42,9 @@ func (m setkeysMetadata) string() string {
 }
 
 func (m mergeMetadata) string() string {
-	return "merge"
+	// Merge apply to the whole path not just the next
+	// element. Therefore it is all caps.
+	return "MERGE"
 }
 
 var (

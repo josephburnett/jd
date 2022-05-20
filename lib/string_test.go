@@ -59,12 +59,12 @@ func TestStringPatch(t *testing.T) {
 		`- null`,
 		`+ "abc"`)
 	checkPatch(ctx, `"def"`, `"abc"`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ "abc"`)
 
 	// Null deletes a node
 	checkPatch(ctx, `"abc"`, ``,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ null`)
 }
 

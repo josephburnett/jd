@@ -46,7 +46,7 @@ func TestNumberDiff(t *testing.T) {
 		`- 0`)
 	ctx = ctx.withMetadata(MERGE)
 	checkDiff(ctx, `1`, `2`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ 2`)
 }
 
@@ -61,12 +61,12 @@ func TestNumberPatch(t *testing.T) {
 		`@ []`,
 		`- 0`)
 	checkPatch(ctx, `0`, `1`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ 1`)
 
 	// Null deletes a node
 	checkPatch(ctx, `1`, ``,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ null`)
 }
 
@@ -79,7 +79,7 @@ func TestNumberPatchError(t *testing.T) {
 		`@ []`,
 		`- 0`)
 	checkPatchError(ctx, `0`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`- 0`,
 		`+ 1`)
 }

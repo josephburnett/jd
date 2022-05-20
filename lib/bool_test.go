@@ -45,7 +45,7 @@ func TestBoolDiff(t *testing.T) {
 		`+ true`)
 	ctx = ctx.withMetadata(MERGE)
 	checkDiff(ctx, `true`, `false`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ false`)
 }
 
@@ -62,15 +62,15 @@ func TestBoolPatch(t *testing.T) {
 		`- false`,
 		`+ true`)
 	checkPatch(ctx, `false`, `true`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ true`)
 	checkPatch(ctx, `true`, `false`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ false`)
 
 	// Null deletes a node
 	checkPatch(ctx, `true`, ``,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`+ null`)
 }
 
@@ -83,11 +83,11 @@ func TestBoolPatchError(t *testing.T) {
 		`@ []`,
 		`- true`)
 	checkPatchError(ctx, `true`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`- true`,
 		`+ false`)
 	checkPatchError(ctx, `false`,
-		`@ [["merge"]]`,
+		`@ [["MERGE"]]`,
 		`- false`,
 		`+ true`)
 }
