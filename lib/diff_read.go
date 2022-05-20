@@ -209,3 +209,36 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 		return d, nil, fmt.Errorf("Invalid JSON Patch. Must be test/remove or add ops.")
 	}
 }
+
+func ReadMergeFile(filename string) (Diff, error) {
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return ReadMergeString(string(bytes))
+}
+
+func ReadMergeString(s string) (Diff, error) {
+	n, err := ReadJsonString(s)
+	if err != nil {
+		return nil, err
+	}
+	d := Diff{}
+	p := []JsonNode{jsonArray{jsonString(MERGE.string())}}
+	return readMergeInto(d, p, n), nil
+}
+
+func readMergeInto(d Diff, p path, n JsonNode) Diff {
+	switch n := n.(type) {
+	case jsonObject:
+		for k, v := range n.properties {
+			d = readMergeInto(d, append(p.clone(), jsonString(k)), v)
+		}
+	default:
+		return append(d, DiffElement{
+			Path:      p.clone(),
+			NewValues: []JsonNode{n},
+		})
+	}
+	return d
+}

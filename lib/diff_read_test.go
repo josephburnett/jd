@@ -66,3 +66,44 @@ func TestReadPatch(t *testing.T) {
 		}
 	}
 }
+
+func TestReadMerge(t *testing.T) {
+	cases := []struct {
+		patch string
+		diff  string
+	}{{
+		patch: `{"a":1}`,
+		diff: s(
+			`@ [["merge"],"a"]`,
+			`+ 1`,
+		),
+	}, {
+		patch: ``,
+		diff: s(
+			`@ [["merge"]]`,
+			`+`,
+		),
+	}, {
+		patch: `null`,
+		diff: s(
+			`@ [["merge"]]`,
+			`+ null`,
+		),
+	}, {
+		patch: `[1,2,3]`,
+		diff: s(
+			`@ [["merge"]]`,
+			`+ [1,2,3]`,
+		),
+	}}
+
+	for _, c := range cases {
+		diff, err := ReadMergeString(c.patch)
+		if err != nil {
+			t.Errorf("Wanted no error. Got %v", err)
+		}
+		if got := diff.Render(); got != c.diff {
+			t.Errorf("Wanted %s. Got %s", c.diff, got)
+		}
+	}
+}
