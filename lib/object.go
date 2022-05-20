@@ -188,10 +188,20 @@ func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata, strategy p
 		v2 := o2.properties[k2]
 		if _, ok := o1.properties[k2]; !ok {
 			// O1 missing key
-			e := DiffElement{
-				Path:      append(path, jsonString(k2)).clone(),
-				OldValues: nodeList(),
-				NewValues: nodeList(v2),
+			var e DiffElement
+			switch strategy {
+			case mergePatchStrategy:
+				e = DiffElement{
+					Path:      append(path, jsonString(k2)).clone().prependMetadataMerge(),
+					OldValues: nodeList(),
+					NewValues: nodeList(v2),
+				}
+			default:
+				e = DiffElement{
+					Path:      append(path, jsonString(k2)).clone(),
+					OldValues: nodeList(),
+					NewValues: nodeList(v2),
+				}
 			}
 			d = append(d, e)
 		}

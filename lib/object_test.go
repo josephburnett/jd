@@ -184,6 +184,16 @@ func TestObjectDiff(t *testing.T) {
 			`+`,
 		),
 		ctx: newTestContext(t).withMetadata(MERGE),
+	}, {
+		a: `{"a":1}`,
+		b: `{"b":1}`,
+		diff: ss(
+			`@ [["merge"],"a"]`,
+			`+`,
+			`@ [["merge"],"b"]`,
+			`+ 1`,
+		),
+		ctx: newTestContext(t).withMetadata(MERGE),
 	}}
 
 	for _, tt := range tests {
