@@ -89,3 +89,16 @@ func (d Diff) RenderPatch() (string, error) {
 	}
 	return string(patchJson), nil
 }
+
+func (d Diff) RenderMerge() (string, error) {
+	for _, e := range d {
+		if len(e.Path) == 0 || !(jsonArray{jsonString(MERGE.string())}).Equals(e.Path[0]) {
+			return "", fmt.Errorf("Diff must be composed entirely of paths with merge metadata to be rendered as a merge patch.")
+		}
+	}
+	mergePatch, err := voidNode{}.Patch(d)
+	if err != nil {
+		return "", err
+	}
+	return mergePatch.Json(), nil
+}

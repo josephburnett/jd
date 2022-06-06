@@ -92,3 +92,36 @@ func TestDiffRenderPatch(t *testing.T) {
 		}
 	}
 }
+
+func TestDiffRenderMerge(t *testing.T) {
+	cases := []struct {
+		diff  string
+		merge string
+	}{{
+		diff: s(
+			`@ [["MERGE"]]`,
+			`+ 1`,
+		),
+		merge: `1`,
+	}, {
+		diff: s(
+			`@ [["MERGE"],"foo"]`,
+			`+ 1`,
+		),
+		merge: `{"foo":1}`,
+	}}
+
+	for _, c := range cases {
+		d, err := ReadDiffString(c.diff)
+		if err != nil {
+			t.Errorf("Error reading diff: %v", err)
+		}
+		s, err := d.RenderMerge()
+		if err != nil {
+			t.Errorf("Error rendering diff as merge patch: %v", err)
+		}
+		if s != c.merge {
+			t.Errorf("Want %v. Got %v", c.merge, s)
+		}
+	}
+}
