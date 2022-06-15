@@ -201,7 +201,20 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		if str == "" {
 			os.Exit(0)
 		}
-		fmt.Print(str)
+		colorDefault := "\033[0m"
+		colorRed := "\033[31m"
+		colorGreen := "\033[32m"
+		for _, line := range strings.Split(strings.TrimSuffix(str, "\n"), "\n") {
+			lineColor := colorDefault
+			if line[0:2] == "+ " {
+				lineColor = colorGreen
+			} else if line[0:2] == "- " {
+				lineColor = colorRed
+			} else {
+				lineColor = colorDefault
+			}
+			fmt.Println(string(lineColor), line)
+		}
 		os.Exit(1)
 	} else {
 		if str == "" {
