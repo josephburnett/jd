@@ -1,7 +1,5 @@
 package jd
 
-import "fmt"
-
 type voidNode struct{}
 
 var _ JsonNode = voidNode{}
@@ -81,45 +79,10 @@ func (v voidNode) Patch(d Diff) (JsonNode, error) {
 	return patchAll(v, d)
 }
 
-func (v voidNode) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
-	if !pathAhead.isLeaf() {
-		if strategy != mergePatchStrategy {
-			return patchErrExpectColl(v, pathAhead[0])
-		}
-		next, _, rest := pathAhead.next()
-		key, ok := next.(jsonString)
-		if !ok {
-			return nil, fmt.Errorf("Merge patch path must be composed of only strings. Found %v", next)
-		}
-		o := newJsonObject()
-		value, err := v.patch(append(pathBehind.clone(), key), rest, oldValues, newValues, strategy)
-		if err != nil {
-			return nil, err
-		}
-		o.properties[string(key)] = value
-		return o, nil
-	}
-	if len(oldValues) > 1 || len(newValues) > 1 {
-		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
-
-	}
-	oldValue := singleValue(oldValues)
-	newValue := singleValue(newValues)
-	switch strategy {
-	case mergePatchStrategy:
-		if !isVoid(oldValue) {
-			return patchErrMergeWithOldValue(pathBehind, oldValue)
-		}
-		if isNull(newValue) {
-			// Null deletes a node
-			return voidNode{}, nil
-		}
-	case strictPatchStrategy:
-		if !v.Equals(oldValue) {
-			return patchErrExpectValue(oldValue, v, pathBehind)
-		}
-	default:
-		return patchErrUnsupportedPatchStrategy(pathBehind, strategy)
-	}
-	return newValue, nil
+func (v voidNode) patch(
+	pathBehind, pathAhead path,
+	oldValues, newValues []JsonNode,
+	strategy patchStrategy,
+) (JsonNode, error) {
+	return patch(v, pathBehind, pathAhead, oldValues, newValues, strategy)
 }
