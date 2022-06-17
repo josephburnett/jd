@@ -36,7 +36,9 @@ func patch(
 		if err != nil {
 			return nil, err
 		}
-		o[string(key)] = value
+		if !isVoid(value) || !rest.isLeaf() {
+			o[string(key)] = value
+		}
 		return o, nil
 	}
 	if len(oldValues) > 1 || len(newValues) > 1 {
