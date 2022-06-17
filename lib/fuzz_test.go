@@ -78,8 +78,18 @@ func fuzz(t *testing.T, aStr, bStr string) {
 		"jd", "mset",
 	}, {
 		"patch", "list",
+	}, {
+		"merge", "list",
 	}} {
 		a, _ = ReadJsonString(aStr) // Fresh parsed copy.
+		if format[0] == "merge" {
+			if hasUnsupportedNullValue(a) {
+				continue
+			}
+			if hasUnsupportedNullValue(b) {
+				continue
+			}
+		}
 		var metadata []Metadata
 		switch format[0] {
 		case "jd":
@@ -90,6 +100,8 @@ func fuzz(t *testing.T, aStr, bStr string) {
 				metadata = append(metadata, MULTISET)
 			default: // list
 			}
+		case "merge":
+			metadata = append(metadata, MERGE)
 		default: // patch
 		}
 
@@ -115,6 +127,13 @@ func fuzz(t *testing.T, aStr, bStr string) {
 				return
 			}
 			diffAB, err = ReadPatchString(diffABStr)
+		case "merge":
+			diffABStr, err = d.RenderMerge()
+			if err != nil {
+				t.Errorf("could not render diff %v as merge: %v", d, err)
+				return
+			}
+			diffAB, err = ReadMergeString(diffABStr)
 		}
 		if err != nil {
 			t.Errorf("error parsing diff string %q: %v", diffABStr, err)
@@ -150,4 +169,29 @@ func hasUnsupportedObjectKey(diff Diff) bool {
 		}
 	}
 	return false
+}
+
+func hasUnsupportedNullValue(node JsonNode) bool {
+	switch n := node.(type) {
+	case jsonObject:
+		for _, v := range n {
+			if isNull(v) {
+				return true
+			}
+			return hasUnsupportedNullValue(v)
+		}
+		return false
+	case jsonArray, jsonList, jsonSet, jsonMultiset:
+		for _, v := range n.(jsonArray) {
+			if isNull(v) {
+				return true
+			}
+			return hasUnsupportedNullValue(v)
+		}
+		return false
+	case jsonNull:
+		return true
+	default:
+		return false
+	}
 }
