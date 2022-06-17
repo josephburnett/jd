@@ -37,26 +37,13 @@ func (b jsonBool) Diff(n JsonNode, metadata ...Metadata) Diff {
 	return b.diff(n, make(path, 0), metadata, strategy)
 }
 
-func (b jsonBool) diff(n JsonNode, path path, metadata []Metadata, strategy patchStrategy) Diff {
-	d := make(Diff, 0)
-	if b.Equals(n) {
-		return d
-	}
-	var e DiffElement
-	switch strategy {
-	case mergePatchStrategy:
-		e = DiffElement{
-			Path:      path.prependMetadataMerge(),
-			NewValues: nodeList(n),
-		}
-	default:
-		e = DiffElement{
-			Path:      path.clone(),
-			OldValues: nodeList(b),
-			NewValues: nodeList(n),
-		}
-	}
-	return append(d, e)
+func (b jsonBool) diff(
+	n JsonNode,
+	path path,
+	metadata []Metadata,
+	strategy patchStrategy,
+) Diff {
+	return diff(b, n, path, metadata, strategy)
 }
 
 func (b jsonBool) Patch(d Diff) (JsonNode, error) {

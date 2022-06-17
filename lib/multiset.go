@@ -194,7 +194,7 @@ func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []J
 		return nil, fmt.Errorf(
 			"Invalid path element %v. Expected map[string]interface{}.", n)
 	}
-	if len(o.properties) != 0 {
+	if len(o) != 0 {
 		return nil, fmt.Errorf(
 			"Invalid path element %v. Expected empty object.", n)
 	}

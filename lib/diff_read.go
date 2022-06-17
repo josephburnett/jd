@@ -231,7 +231,7 @@ func ReadMergeString(s string) (Diff, error) {
 func readMergeInto(d Diff, p path, n JsonNode) Diff {
 	switch n := n.(type) {
 	case jsonObject:
-		for k, v := range n.properties {
+		for k, v := range n {
 			d = readMergeInto(d, append(p.clone(), jsonString(k)), v)
 		}
 	default:

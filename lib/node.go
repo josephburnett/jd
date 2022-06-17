@@ -30,7 +30,7 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 				}
 				n = e
 			}
-			m.properties[k] = n
+			m[k] = n
 		}
 		return m, nil
 	case map[interface{}]interface{}:
@@ -45,7 +45,7 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 				if err != nil {
 					return nil, err
 				}
-				m.properties[s] = e
+				m[s] = e
 			}
 		}
 		return m, nil

@@ -36,7 +36,7 @@ func patch(
 		if err != nil {
 			return nil, err
 		}
-		o.properties[string(key)] = value
+		o[string(key)] = value
 		return o, nil
 	}
 	if len(oldValues) > 1 || len(newValues) > 1 {
