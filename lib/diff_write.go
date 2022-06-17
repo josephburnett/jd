@@ -6,13 +6,44 @@ import (
 	"fmt"
 )
 
-func (d DiffElement) Render() string {
+type RenderOption interface {
+	is_render_option()
+}
+
+type colorRenderOption struct{}
+
+func (c colorRenderOption) is_render_option() {}
+
+var (
+	COLOR RenderOption = colorRenderOption{}
+)
+
+func checkRenderOption(want RenderOption, opts []RenderOption) bool {
+	for _, o := range opts {
+		if o == want {
+			return true
+		}
+	}
+	return false
+}
+
+const (
+	colorDefault = "\033[0m"
+	colorRed     = "\033[31m"
+	colorGreen   = "\033[32m"
+)
+
+func (d DiffElement) Render(opts ...RenderOption) string {
+	isColor := checkRenderOption(COLOR, opts)
 	isMerge := path(d.Path).isMerge()
 	b := bytes.NewBuffer(nil)
 	b.WriteString("@ ")
 	b.Write([]byte(jsonArray(d.Path).Json()))
 	b.WriteString("\n")
 	for _, oldValue := range d.OldValues {
+		if isColor {
+			b.WriteString(colorRed)
+		}
 		if !isVoid(oldValue) {
 			oldValueJson, err := json.Marshal(oldValue)
 			if err != nil {
@@ -22,8 +53,14 @@ func (d DiffElement) Render() string {
 			b.Write(oldValueJson)
 			b.WriteString("\n")
 		}
+		if isColor {
+			b.WriteString(colorDefault)
+		}
 	}
 	for _, newValue := range d.NewValues {
+		if isColor {
+			b.WriteString(colorGreen)
+		}
 		if !isVoid(newValue) {
 			newValueJson, err := json.Marshal(newValue)
 			if err != nil {
@@ -36,13 +73,16 @@ func (d DiffElement) Render() string {
 			// Merge deletion is writing void to a node.
 			b.WriteString("+\n")
 		}
+		if isColor {
+			b.WriteString(colorDefault)
+		}
 	}
 	return b.String()
 }
-func (d Diff) Render() string {
+func (d Diff) Render(opts ...RenderOption) string {
 	b := bytes.NewBuffer(nil)
 	for _, element := range d {
-		b.WriteString(element.Render())
+		b.WriteString(element.Render(opts...))
 	}
 	return b.String()
 }

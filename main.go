@@ -17,6 +17,7 @@ import (
 
 const version = "HEAD"
 
+var color = flag.Bool("color", false, "Print color diff")
 var format = flag.String("f", "", "Diff format (jd, patch)")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
 var output = flag.String("o", "", "Output file")
@@ -91,9 +92,9 @@ func main() {
 type mode string
 
 const (
-	diffMode mode = "diff"
-	patchMode     = "patch"
-	translateMode = "trans"
+	diffMode      mode = "diff"
+	patchMode          = "patch"
+	translateMode      = "trans"
 )
 
 func serveWeb(port string) error {
@@ -139,6 +140,7 @@ func printUsageAndExit() {
 		`When patching (-p) FILE1 is a diff.`,
 		``,
 		`Options:`,
+		`  -color     Print color diff.`,
 		`  -p         Apply patch FILE1 to FILE2 or STDIN.`,
 		`  -o=FILE3   Write to FILE3 instead of STDOUT.`,
 		`  -set       Treat arrays as sets.`,
@@ -185,10 +187,14 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		errorAndExit(err.Error())
 	}
 	diff := aNode.Diff(bNode, metadata...)
+	var renderOptions []jd.RenderOption
+	if *color {
+		renderOptions = append(renderOptions, jd.COLOR)
+	}
 	var str string
 	switch *format {
 	case "", "jd":
-		str = diff.Render()
+		str = diff.Render(renderOptions...)
 	case "patch":
 		str, err = diff.RenderPatch()
 		if err != nil {
@@ -201,20 +207,7 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		if str == "" {
 			os.Exit(0)
 		}
-		colorDefault := "\033[0m"
-		colorRed := "\033[31m"
-		colorGreen := "\033[32m"
-		for _, line := range strings.Split(strings.TrimSuffix(str, "\n"), "\n") {
-			lineColor := colorDefault
-			if line[0:2] == "+ " {
-				lineColor = colorGreen
-			} else if line[0:2] == "- " {
-				lineColor = colorRed
-			} else {
-				lineColor = colorDefault
-			}
-			fmt.Println(string(lineColor), line)
-		}
+		fmt.Print(str)
 		os.Exit(1)
 	} else {
 		if str == "" {
