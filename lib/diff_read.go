@@ -224,6 +224,9 @@ func ReadMergeString(s string) (Diff, error) {
 		return nil, err
 	}
 	d := Diff{}
+	if isVoid(n) {
+		return d, nil
+	}
 	p := []JsonNode{jsonArray{jsonString(MERGE.string())}}
 	return readMergeInto(d, p, n), nil
 }
