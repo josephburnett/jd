@@ -51,10 +51,6 @@ func patch(
 		if !isVoid(oldValue) {
 			return patchErrMergeWithOldValue(pathBehind, oldValue)
 		}
-		if isNull(newValue) {
-			// Null deletes a node
-			return voidNode{}, nil
-		}
 	case strictPatchStrategy:
 		if !node.Equals(oldValue) {
 			return patchErrExpectValue(oldValue, node, pathBehind)

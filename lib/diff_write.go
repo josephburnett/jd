@@ -135,6 +135,11 @@ func (d Diff) RenderMerge() (string, error) {
 		if len(e.Path) == 0 || !(jsonArray{jsonString(MERGE.string())}).Equals(e.Path[0]) {
 			return "", fmt.Errorf("Diff must be composed entirely of paths with merge metadata to be rendered as a merge patch.")
 		}
+		for i := range e.NewValues {
+			if isVoid(e.NewValues[i]) {
+				e.NewValues[i] = jsonNull{}
+			}
+		}
 	}
 	mergePatch, err := voidNode{}.Patch(d)
 	if err != nil {
