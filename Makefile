@@ -68,6 +68,7 @@ check-dirty :
 check-version : check-env
 	if ! grep -q $(JD_VERSION) main.go; then
 		@echo "Set 'const version = $(JD_VERSION)' in main.go."
+		false
 	fi
 
 check-env :
