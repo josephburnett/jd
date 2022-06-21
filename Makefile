@@ -1,4 +1,8 @@
-.PHONY : test fuzz build-web pack-web serve deploy build release build-all build-docker push-docker push-latest push-github release-notes check-env
+.PHONY : build test fuzz pack-web build-web serve release-build build-all build-docker release-push push-docker push-latest push-github deploy release-notes check-dirty check-version check-env
+
+build : test pack-web
+	mkdir -p release
+	CGO_ENABLED=0 go build -tags include_web -o release/jd main.go
 
 test :
 	go test ./lib
@@ -6,26 +10,19 @@ test :
 fuzz :
 	go test ./lib -fuzz=FuzzJd
 
+pack-web : build-web
+	go run web/pack/main.go
+
 build-web :
 	cp $$GOROOT/misc/wasm/wasm_exec.js web/assets/
 	GOOS=js GOARCH=wasm go build -o web/assets/jd.wasm ./web/ui/main.go
 
-pack-web : build-web
-	go run web/pack/main.go
-
 serve : pack-web
 	go run -tags include_web main.go -port 8080
 
-deploy : test build-web
-	gsutil -m cp -r web/assets/* gs://play.jd-tool.io
-
-build : test pack-web
-	mkdir -p release
-	CGO_ENABLED=0 go build -tags include_web -o release/jd main.go
-
-release : check-env build-all push-github build-docker push-docker push-latest release-notes
+release-build : check-env check-version check-dirty build-all build-docker
 	@echo
-	@echo "Upload release/jd-* to Github as release $(JD_VERSION) with release notes above."
+	@echo "If everything looks good, run 'make release-push'."
 	@echo
 
 build-all : test pack-web
@@ -40,6 +37,11 @@ build-all : test pack-web
 build-docker : check-env test
 	docker build -t josephburnett/jd:v$(JD_VERSION) .
 
+release-push : check-env push-github push-docker push-latest deploy release-notes
+	@echo
+	@echo "Upload release/jd-* to Github as release $(JD_VERSION) with release notes above."
+	@echo
+
 push-docker : check-env build-docker
 	docker push josephburnett/jd:v$(JD_VERSION)
 
@@ -52,13 +54,25 @@ push-github : check-env
 	git tag v$(JD_VERSION) --force
 	git push origin v$(JD_VERSION)
 
+deploy : test build-web
+	gsutil -m cp -r web/assets/* gs://play.jd-tool.io
+
 release-notes : check-env
 	@echo
 	@git log --oneline --no-decorate v$(JD_PREVIOUS_VERSION)..v$(JD_VERSION)
 
+check-dirty :
+	git diff --quiet --exit-code
+
+.ONESHELL:
+check-version : check-env
+	if ! grep -q $(JD_VERSION) main.go; then
+		@echo "Set 'const version = $(JD_VERSION)' in main.go."
+	fi
+
 check-env :
 ifndef JD_VERSION
-	$(error Set version in main.go, commit and set JD_VERSION)
+	$(error Set JD_VERSION)
 endif
 ifndef JD_PREVIOUS_VERSION
 	$(error Set JD_PREVIOUS_VERSION for release notes)
