@@ -240,6 +240,8 @@ func readMergeInto(d Diff, p path, n JsonNode) Diff {
 				NewValues: []JsonNode{newJsonObject()},
 			})
 		}
+	case voidNode:
+		return d
 	default:
 		if isNull(n) {
 			n = voidNode{}
