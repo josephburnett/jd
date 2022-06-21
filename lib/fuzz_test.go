@@ -71,14 +71,14 @@ func fuzz(t *testing.T, aStr, bStr string) {
 		return
 	}
 	for _, format := range [][2]string{{
-		// 	"jd", "list",
-		// }, {
-		// 	"jd", "set",
-		// }, {
-		// 	"jd", "mset",
-		// }, {
-		// 	"patch", "list",
-		// }, {
+		"jd", "list",
+	}, {
+		"jd", "set",
+	}, {
+		"jd", "mset",
+	}, {
+		"patch", "list",
+	}, {
 		"merge", "list",
 	}} {
 		a, _ = ReadJsonString(aStr) // Fresh parsed copy.
