@@ -26,6 +26,7 @@ const (
 	formatYamlId            = "format-yaml"
 	diffFormatJdId          = "diff-format-jd"
 	diffFormatPatchId       = "diff-format-patch"
+	diffFormatMergeId       = "diff-format-merge"
 	arrayListId             = "array-list"
 	arraySetId              = "array-set"
 	arrayMsetId             = "array-mset"
@@ -38,6 +39,7 @@ const (
 + "baz"
 `
 	diffFormatPatchPlaceholder = `[{"op":"test","path":"/foo","value":"bar"},{"op":"remove","path":"/foo","value":"bar"},{"op":"add","path":"/foo","value":"baz"}]`
+	diffFormatMergePlaceholder = `{"foo":"baz"}`
 )
 
 func main() {
@@ -97,6 +99,7 @@ func newApp() (*app, error) {
 	for _, id := range []string{
 		diffFormatJdId,
 		diffFormatPatchId,
+		diffFormatMergeId,
 	} {
 		err := a.watchChange(id, &a.diffFormat)
 		if err != nil {
@@ -198,6 +201,8 @@ func (a *app) setPlaceholder() {
 		d.Set("placeholder", diffFormatJdPlaceholder)
 	case diffFormatPatchId:
 		d.Set("placeholder", diffFormatPatchPlaceholder)
+	case diffFormatMergeId:
+		d.Set("placeholder", diffFormatMergePlaceholder)
 	}
 }
 
@@ -216,6 +221,8 @@ func (a *app) setCommandLabel() {
 	switch a.diffFormat {
 	case diffFormatPatchId:
 		command += " -f patch"
+	case diffFormatMergeId:
+		command += " -f merge"
 	}
 	switch a.array {
 	case arraySetId:
@@ -275,7 +282,7 @@ func (a *app) setInputsEnabled() {
 		switch a.diffFormat {
 		case diffFormatJdId:
 			e.Set("disabled", js.ValueOf(false))
-		case diffFormatPatchId:
+		case diffFormatPatchId, diffFormatMergeId:
 			e.Set("disabled", js.ValueOf(true))
 		}
 	}
@@ -289,6 +296,10 @@ func (a *app) getMetadata() []jd.Metadata {
 	case arrayMsetId:
 		metadata = append(metadata, jd.MULTISET)
 	default:
+	}
+	switch a.diffFormat {
+	case diffFormatMergeId:
+		metadata = append(metadata, jd.MERGE)
 	}
 	return metadata
 }
@@ -324,8 +335,20 @@ func (a *app) parseAndTranslateDiff() (jd.Diff, error) {
 	diffText := a.getElementById(diffId)
 	diffJd, errJd := jd.ReadDiffString(diffText.Get("value").String())
 	diffPatch, errPatch := jd.ReadPatchString(diffText.Get("value").String())
+	diffMerge, errMerge := jd.ReadMergeString(diffText.Get("value").String())
 	// Translate jd to patch.
-	if a.diffFormat == diffFormatPatchId && errPatch != nil && errJd == nil {
+	if a.diffFormat == diffFormatPatchId && (errPatch != nil || errMerge != nil) && errJd == nil {
+		patchString, err := diffJd.RenderPatch()
+		if err != nil {
+			return nil, err
+		}
+		if patchString == "[]" {
+			patchString = ""
+		}
+		a.setTextarea(diffId, patchString)
+	}
+	// Translate jd to merge:
+	if a.diffFormat == diffFormatPatchId && (errPatch != nil || errJd != nil) && errMerge == nil {
 		patchString, err := diffJd.RenderPatch()
 		if err != nil {
 			return nil, err
@@ -336,22 +359,33 @@ func (a *app) parseAndTranslateDiff() (jd.Diff, error) {
 		a.setTextarea(diffId, patchString)
 	}
 	// Translate patch to jd.
-	if a.diffFormat == diffFormatJdId && errJd != nil && errPatch == nil {
+	if a.diffFormat == diffFormatJdId && (errJd != nil || errMerge != nil) && errPatch == nil {
 		a.setTextarea(diffId, diffPatch.Render())
 	}
-	// Return any good parsing resuilts.
+	// Translate merge to jd.
+	if a.diffFormat == diffFormatJdId && (errJd != nil || errPatch != nil) && errMerge == nil {
+		a.setTextarea(diffId, diffPatch.Render())
+	}
+	// Return any good parsing results.
 	if errJd == nil {
 		return diffJd, nil
 	}
 	if errPatch == nil {
 		return diffPatch, nil
 	}
-	// Return an error relevant to the desired format.
-	if a.diffFormat == diffFormatJdId {
-		return nil, errJd
-	} else {
-		return nil, errPatch
+	if errMerge == nil {
+		return diffMerge, nil
 	}
+	// Return an error relevant to the desired format.
+	switch a.diffFormat {
+	case diffFormatJdId:
+		return nil, errJd
+	case diffFormatPatchId:
+		return nil, errPatch
+	case diffFormatMergeId:
+		return nil, errMerge
+	}
+	return nil, fmt.Errorf("unsupported diff format: %v", a.diffFormat)
 }
 
 func (a *app) printDiff() {
@@ -390,6 +424,11 @@ func (a *app) printDiff() {
 		}
 		if out == "[]" {
 			out = ""
+		}
+	case diffFormatMergeId:
+		out, err = diff.RenderMerge()
+		if err != nil {
+			a.setLabel(diffErrorId, err.Error())
 		}
 	}
 	a.setTextarea(diffId, out)
