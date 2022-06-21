@@ -15,7 +15,7 @@ func diff(
 	case mergePatchStrategy:
 		de = DiffElement{
 			Path:      p.prependMetadataMerge(),
-			NewValues: nodeList(b),
+			NewValues: jsonArray{b},
 		}
 	default:
 		de = DiffElement{

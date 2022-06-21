@@ -37,3 +37,7 @@ spec:
 		t.Errorf("wanted no err. got %v", err)
 	}
 }
+
+func TestDebug(t *testing.T) {
+	fuzz(t, `0`, ``)
+}
