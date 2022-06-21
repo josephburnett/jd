@@ -18,7 +18,7 @@ import (
 const version = "HEAD"
 
 var color = flag.Bool("color", false, "Print color diff")
-var format = flag.String("f", "", "Diff format (jd, patch)")
+var format = flag.String("f", "", "Diff format (jd, patch, merge)")
 var mset = flag.Bool("mset", false, "Arrays as multisets")
 var output = flag.String("o", "", "Output file")
 var patch = flag.Bool("p", false, "Patch mode")
@@ -126,6 +126,9 @@ func parseMetadata() ([]jd.Metadata, error) {
 		}
 		metadata = append(metadata, jd.Setkeys(keys...))
 	}
+	if *format == "merge" {
+		metadata = append(metadata, jd.MERGE)
+	}
 	return metadata, nil
 }
 
@@ -148,16 +151,20 @@ func printUsageAndExit() {
 		`  -setkeys   Keys to identify set objects`,
 		`  -yaml      Read and write YAML instead of JSON.`,
 		`  -port=N    Serve web UI on port N`,
-		`  -f=FORMAT  Produce diff in FORMAT "jd" (default) or "patch" (RFC 6902).`,
+		`  -f=FORMAT  Produce diff in FORMAT "jd" (default), "patch" (RFC 6902) or`,
+		`             "merge" (RFC 7386)`,
 		`  -t=FORMATS Translate FILE1 between FORMATS. Supported formats are "jd",`,
-		`             "patch" (RFC 6902), "json" and "yaml". FORMATS are provided`,
-		`             as a pair separated by "2". E.g. "yaml2json" or "jd2patch".`,
+		`             "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".`,
+		`             FORMATS are provided as a pair separated by "2". E.g.`,
+		`             "yaml2json" or "jd2patch".`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,
 		`  cat b.json | jd a.json`,
 		`  jd -o patch a.json b.json; jd patch a.json`,
 		`  jd -set a.json b.json`,
+		`  jd -f patch a.json b.json`,
+		`  jd -f merge a.json b.json`,
 		``,
 		`Version: ` + version,
 		``,
@@ -197,6 +204,11 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		str = diff.Render(renderOptions...)
 	case "patch":
 		str, err = diff.RenderPatch()
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+	case "merge":
+		str, err = diff.RenderMerge()
 		if err != nil {
 			errorAndExit(err.Error())
 		}
@@ -271,6 +283,21 @@ func printTranslation(a string, metadata []jd.Metadata) {
 		}
 	case "patch2jd":
 		patch, err := jd.ReadPatchString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out = patch.Render()
+	case "jd2merge":
+		diff, err := jd.ReadDiffString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out, err = diff.RenderMerge()
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+	case "merge2jd":
+		patch, err := jd.ReadMergeString(a)
 		if err != nil {
 			errorAndExit(err.Error())
 		}
