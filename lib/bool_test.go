@@ -67,11 +67,9 @@ func TestBoolPatch(t *testing.T) {
 	checkPatch(ctx, `true`, `false`,
 		`@ [["MERGE"]]`,
 		`+ false`)
-
-	// Null deletes a node
 	checkPatch(ctx, `true`, ``,
 		`@ [["MERGE"]]`,
-		`+ null`)
+		`+`)
 }
 
 func TestBoolPatchError(t *testing.T) {

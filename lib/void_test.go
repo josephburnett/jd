@@ -52,10 +52,9 @@ func TestVoidPatch(t *testing.T) {
 	checkPatch(ctx, ``, `1`,
 		`@ [["MERGE"]]`,
 		`+ 1`)
-	// Null deletes a node
 	checkPatch(ctx, ``, ``,
 		`@ [["MERGE"]]`,
-		`+ null`)
+		`+`)
 }
 
 func TestVoidPatchError(t *testing.T) {

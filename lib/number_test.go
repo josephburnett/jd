@@ -63,11 +63,9 @@ func TestNumberPatch(t *testing.T) {
 	checkPatch(ctx, `0`, `1`,
 		`@ [["MERGE"]]`,
 		`+ 1`)
-
-	// Null deletes a node
 	checkPatch(ctx, `1`, ``,
 		`@ [["MERGE"]]`,
-		`+ null`)
+		`+`)
 }
 
 func TestNumberPatchError(t *testing.T) {
