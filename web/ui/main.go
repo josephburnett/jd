@@ -181,7 +181,8 @@ func (a *app) reconcile() {
 }
 
 func (a *app) setDerived() {
-	if a.diffFormat == diffFormatPatchId {
+	switch a.diffFormat {
+	case diffFormatPatchId, diffFormatMergeId:
 		a.array = arrayListId
 		for id, val := range map[string]bool{
 			arrayListId: true,
