@@ -234,6 +234,12 @@ func readMergeInto(d Diff, p path, n JsonNode) Diff {
 		for k, v := range n {
 			d = readMergeInto(d, append(p.clone(), jsonString(k)), v)
 		}
+		if len(n) == 0 {
+			return append(d, DiffElement{
+				Path:      p.clone(),
+				NewValues: []JsonNode{newJsonObject()},
+			})
+		}
 	default:
 		if isNull(n) {
 			n = voidNode{}
