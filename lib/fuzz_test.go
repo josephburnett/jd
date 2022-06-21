@@ -112,7 +112,7 @@ func fuzz(t *testing.T, aStr, bStr string) {
 			return
 		}
 		if format[0] == "patch" && hasUnsupportedObjectKey(d) {
-			return
+			continue
 		}
 		var diffABStr string
 		var diffAB Diff
