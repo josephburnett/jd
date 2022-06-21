@@ -1,7 +1,10 @@
-.PHONY : test build-web pack-web serve deploy build release build-all build-docker push-docker push-latest push-github release-notes check-env
+.PHONY : test fuzz build-web pack-web serve deploy build release build-all build-docker push-docker push-latest push-github release-notes check-env
 
 test :
 	go test ./lib
+
+fuzz :
+	go test ./lib -fuzz=FuzzJd
 
 build-web :
 	cp $$GOROOT/misc/wasm/wasm_exec.js web/assets/
