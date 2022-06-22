@@ -1,6 +1,6 @@
 # JSON diff and patch
 
-`jd` is a commandline utility and Go library for diffing and patching JSON values.
+`jd` is a commandline utility and Go library for diffing and patching JSON and YAML values. It supports a native `jd` format (similar to unified format) as well as JSON Merge Patch ([RFC 7386](https://datatracker.ietf.org/doc/html/rfc7386)) and a subset of JSON Patch ([RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902)).
 
 ## Installation
 
@@ -15,8 +15,6 @@ To use the `jd` web UI:
 * run `jd -port 8080` and visit http://localhost.8080.
 
 ## Command line usage
-
-Download [latest release](https://github.com/josephburnett/jd/releases/latest) or `go get github.com/josephburnett/jd`
 
 ```
 Usage: jd [OPTION]... FILE1 [FILE2]
@@ -53,7 +51,7 @@ Examples:
 
 ## Library usage
 
-`go get github.com/josephburnett/jd`
+Note: import only release commits (`v1.Y.Z`) because `master` can be unstable.
 
 ```Go
 import (
@@ -144,7 +142,7 @@ git difftool -yx jd @ -- foo.json
 + "baz"
 ```
 
-### See what changes in a Kuberentes Deployment:
+### See what changes in a Kubernetes Deployment:
 ```
 kubectl get deployment example -oyaml > a.yaml
 kubectl edit deployment example
