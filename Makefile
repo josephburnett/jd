@@ -42,10 +42,10 @@ release-push : check-env push-github push-docker push-latest deploy release-note
 	@echo "Upload release/jd-* to Github as release $(JD_VERSION) with release notes above."
 	@echo
 
-push-docker : check-env build-docker
+push-docker : check-env
 	docker push josephburnett/jd:v$(JD_VERSION)
 
-push-latest : check-env build-docker
+push-latest : check-env
 	docker tag josephburnett/jd:v$(JD_VERSION) josephburnett/jd:latest
 	docker push josephburnett/jd:latest
 
