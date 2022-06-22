@@ -8,6 +8,7 @@ To get the `jd` commandline utility:
 * run `brew install jd` or
 * run `go install github.com/josephburnett/jd@latest` or
 * visit https://github.com/josephburnett/jd/releases/latest and download the pre-built binary for your architecture/os.
+* run in a Docker image `jd(){ docker run --rm -i -v $PWD:$PWD -w $PWD josephburnett/jd "$@"; }`
 
 To use the `jd` web UI:
 * visit http://play.jd-tool.io/ or
