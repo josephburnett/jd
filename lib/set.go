@@ -147,9 +147,7 @@ func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata, strategy patc
 				// Sub diff objects with same identity.
 				p := path.appendIndex(o1, metadata)
 				subDiff := o1.diff(o2, p, metadata, strategy)
-				for _, subElement := range subDiff {
-					d = append(d, subElement)
-				}
+				d = append(d, subDiff...)
 			}
 		}
 	}
@@ -176,16 +174,16 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 	if strategy == mergePatchStrategy {
 		if len(oldValues) != 0 {
 			return nil, fmt.Errorf(
-				"Merge patch strategy cannot specify a value to replace.")
+				"merge patch strategy cannot specify a value to replace")
 		}
 		if len(newValues) > 1 {
 			return nil, fmt.Errorf(
-				"Cannot specify multiple new values in a merge patch.")
+				"cannot specify multiple new values in a merge patch")
 		}
 		n, _, _ := pathAhead.next()
 		if !isVoid(n) {
 			return nil, fmt.Errorf(
-				"Merge patch strategy cannot index into an array.")
+				"merge patch strategy cannot index into an array")
 		}
 		newValue := singleValue(newValues)
 		if isNull(newValue) {
@@ -212,7 +210,7 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 	pathObject, ok := n.(jsonObject)
 	if !ok {
 		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected jsonObject.", n)
+			"invalid path element %v: expected jsonObject", n)
 	}
 	if len(rest) > 0 {
 		// Recurse into a specific object.
@@ -226,7 +224,7 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 				}
 			}
 		}
-		return nil, fmt.Errorf("Invalid diff. Expected object with id %v but found none", pathObject.Json(metadata...))
+		return nil, fmt.Errorf("invalid diff: expected object with id %v but found none", pathObject.Json(metadata...))
 	}
 	// Patch set
 	aMap := make(map[[8]byte]JsonNode)
@@ -253,12 +251,12 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 		toDelete, ok := aMap[hc]
 		if !ok {
 			return nil, fmt.Errorf(
-				"Invalid diff. Expected %v at %v but found nothing.",
+				"invalid diff: expected %v at %v but found nothing",
 				v.Json(metadata...), pathBehind)
 		}
 		if !toDelete.Equals(v, metadata...) {
 			return nil, fmt.Errorf(
-				"Invalid diff. Expected %v at %v but found %v.",
+				"invalid diff: expected %v at %v but found %v",
 				v.Json(metadata...), pathBehind, toDelete.Json(metadata...))
 
 		}

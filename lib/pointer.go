@@ -51,14 +51,14 @@ func writePointer(path []JsonNode) (string, error) {
 				return "", fmt.Errorf("JSON Pointer does not support object keys that look like numbers: %v", e)
 			}
 			if string(e) == "-" {
-				return "", fmt.Errorf("JSON Pointer does not support object key '-'.")
+				return "", fmt.Errorf("JSON Pointer does not support object key '-'")
 			}
 			s := jsonpointer.Escape(string(e))
 			b.WriteString(s)
 		case jsonArray:
-			return "", fmt.Errorf("JSON Pointer does not support jd metadata.")
+			return "", fmt.Errorf("JSON Pointer does not support jd metadata")
 		default:
-			return "", fmt.Errorf("Unsupported type: %T", e)
+			return "", fmt.Errorf("unsupported type: %T", e)
 		}
 	}
 	return b.String(), nil

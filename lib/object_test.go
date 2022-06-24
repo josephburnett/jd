@@ -274,7 +274,7 @@ func TestObjectPatch(t *testing.T) {
 	}
 }
 
-func testObjectPatchError(t *testing.T) {
+func TestObjectPatchError(t *testing.T) {
 	ctx := newTestContext(t)
 	tests := []struct {
 		a    string

@@ -239,7 +239,7 @@ func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 	pe, ok := n.(jsonString)
 	if !ok {
 		return nil, fmt.Errorf(
-			"Found %v at %v. Expected JSON object.",
+			"found %v at %v: expected JSON object",
 			o.Json(), pathBehind)
 	}
 	nextNode, ok := o[string(pe)]

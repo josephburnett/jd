@@ -141,11 +141,11 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		}
 		if !pathAhead.isLeaf() {
 			return nil, fmt.Errorf(
-				"Merge patch strategy cannot index into an array.")
+				"merge patch strategy cannot index into an array")
 		}
 		if !isVoid(oldValue) {
 			return nil, fmt.Errorf(
-				"Merge patch strategy cannot specify a value to replace.")
+				"merge patch strategy cannot specify a value to replace")
 		}
 		if isNull(newValue) {
 			// Null deletes a node
@@ -167,7 +167,7 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 	jn, ok := n.(jsonNumber)
 	if !ok {
 		return nil, fmt.Errorf(
-			"Invalid path element %T. Expected float64.", n)
+			"invalid path element %T: expected float64", n)
 	}
 	i := int(jn)
 
@@ -188,7 +188,7 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		}
 		if i < 0 || i >= len(l) {
 			return nil, fmt.Errorf(
-				"Deletion of element outside of array bounds.")
+				"deletion of element outside of array bounds")
 		}
 		if len(rest) == 0 {
 			// Delete an element (base case).
@@ -209,7 +209,7 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		}
 		if i < 0 || i > len(l) {
 			return nil, fmt.Errorf(
-				"Addition of element outside of array bounds +1.")
+				"addition of element outside of array bounds +1")
 		}
 		if i == len(l) {
 			// Append an element.

@@ -118,7 +118,7 @@ func checkDiffElement(de DiffElement) string {
 		// Must be a set.
 		emptyObject, _ := NewJsonNode(map[string]interface{}{})
 		if len(de.Path) == 0 || !de.Path[len(de.Path)-1].Equals(emptyObject) {
-			return "Expected path to end with {} for sets."
+			return "expected path to end with {} for sets."
 		}
 	}
 	return ""
@@ -127,7 +127,7 @@ func checkDiffElement(de DiffElement) string {
 func errorAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
 	line := lineZeroIndex + 1
 	e := fmt.Sprintf(err, i...)
-	return nil, fmt.Errorf("Invalid diff at line %v. %v", line, e)
+	return nil, fmt.Errorf("invalid diff at line %v. %v", line, e)
 }
 
 func ReadPatchFile(filename string) (Diff, error) {
@@ -161,7 +161,7 @@ func ReadPatchString(s string) (Diff, error) {
 func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, error) {
 	d := DiffElement{}
 	if len(patch) == 0 {
-		return d, nil, fmt.Errorf("Unexpected end of JSON Patch.")
+		return d, nil, fmt.Errorf("unexpected end of JSON Patch")
 	}
 	p := patch[0]
 	var err error
@@ -181,17 +181,17 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 		patch = patch[1:]
 		// Validate test and remove are paired because jd remove is strict.
 		if len(patch) == 0 || patch[0].Op != "remove" {
-			return d, nil, fmt.Errorf("JSON Patch test op must be followed by a remove op.")
+			return d, nil, fmt.Errorf("JSON Patch test op must be followed by a remove op")
 		}
 		if patch[0].Path != p.Path {
-			return d, nil, fmt.Errorf("JSON Patch remove op must have the same path as test op.")
+			return d, nil, fmt.Errorf("JSON Patch remove op must have the same path as test op")
 		}
 		removeValue, err := NewJsonNode(patch[0].Value)
 		if err != nil {
 			return d, nil, err
 		}
 		if !testValue.Equals(removeValue) {
-			return d, nil, fmt.Errorf("JSON Patch remove op must have the same value as test op.")
+			return d, nil, fmt.Errorf("JSON Patch remove op must have the same value as test op")
 		}
 		return d, patch[1:], nil
 	case "add":
@@ -206,7 +206,7 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 		d.NewValues = []JsonNode{addValue}
 		return d, patch[1:], nil
 	default:
-		return d, nil, fmt.Errorf("Invalid JSON Patch. Must be test/remove or add ops.")
+		return d, nil, fmt.Errorf("invalid JSON Patch: must be test/remove or add ops")
 	}
 }
 

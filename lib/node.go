@@ -1,7 +1,6 @@
 package jd
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -38,7 +37,7 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 		for k, v := range t {
 			s, ok := k.(string)
 			if !ok {
-				return nil, fmt.Errorf("Unsupported key type %T", k)
+				return nil, fmt.Errorf("unsupported key type %T", k)
 			}
 			if _, ok := v.(JsonNode); !ok {
 				e, err := NewJsonNode(v)
@@ -72,7 +71,7 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 	case nil:
 		return jsonNull(nil), nil
 	default:
-		return nil, errors.New(fmt.Sprintf("Unsupported type %T", t))
+		return nil, fmt.Errorf("unsupported type %T", t)
 	}
 }
 

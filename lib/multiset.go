@@ -156,16 +156,16 @@ func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []J
 	if strategy == mergePatchStrategy {
 		if len(oldValues) != 0 {
 			return nil, fmt.Errorf(
-				"Merge patch strategy cannot specify a value to replace.")
+				"merge patch strategy cannot specify a value to replace")
 		}
 		if len(newValues) > 1 {
 			return nil, fmt.Errorf(
-				"Cannot specify multiple new values in a merge patch.")
+				"cannot specify multiple new values in a merge patch")
 		}
 		n, _, _ := pathAhead.next()
 		if !isVoid(n) {
 			return nil, fmt.Errorf(
-				"Merge patch strategy cannot index into an array.")
+				"merge patch strategy cannot index into an array")
 		}
 		newValue := singleValue(newValues)
 		if isNull(newValue) {
@@ -192,11 +192,11 @@ func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []J
 	o, ok := n.(jsonObject)
 	if !ok {
 		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected map[string]interface{}.", n)
+			"invalid path element %v: expected map[string]interface{}", n)
 	}
 	if len(o) != 0 {
 		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected empty object.", n)
+			"invalid path element %v: expected empty object", n)
 	}
 	aCounts := make(map[[8]byte]int)
 	aMap := make(map[[8]byte]JsonNode)
@@ -213,7 +213,7 @@ func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []J
 	for hc, count := range aCounts {
 		if count < 0 {
 			return nil, fmt.Errorf(
-				"Invalid diff. Expected %v at %v but found nothing.",
+				"invalid diff: expected %v at %v but found nothing",
 				aMap[hc].Json(metadata...), pathBehind)
 		}
 	}
