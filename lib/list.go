@@ -128,31 +128,13 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 	if len(oldValues) > 1 || len(newValues) > 1 {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}
+
+	if strategy == mergePatchStrategy {
+		return l.patchMerge(pathBehind, pathAhead, oldValues, newValues)
+	}
+
 	oldValue := singleValue(oldValues)
 	newValue := singleValue(newValues)
-
-	// Merge patch strategy
-	if strategy == mergePatchStrategy {
-		next, _, _ := pathAhead.next()
-		if _, ok := next.(jsonString); ok {
-			// Replacing the list with an object
-			o := newJsonObject()
-			return o.patch(pathBehind, pathAhead, oldValues, newValues, strategy)
-		}
-		if !pathAhead.isLeaf() {
-			return nil, fmt.Errorf(
-				"merge patch strategy cannot index into an array")
-		}
-		if !isVoid(oldValue) {
-			return nil, fmt.Errorf(
-				"merge patch strategy cannot specify a value to replace")
-		}
-		if isNull(newValue) {
-			// Null deletes a node
-			return voidNode{}, nil
-		}
-		return newValue, nil
-	}
 
 	// Strict patch strategy
 	// Base case
@@ -237,4 +219,28 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 		l[i] = patchedNode
 		return l, nil
 	}
+}
+
+func (l jsonList) patchMerge(pathBehind, pathAhead path, oldValues, newValues []JsonNode) (JsonNode, error) {
+	oldValue := singleValue(oldValues)
+	newValue := singleValue(newValues)
+	next, _, _ := pathAhead.next()
+	if _, ok := next.(jsonString); ok {
+		// Replacing the list with an object
+		o := newJsonObject()
+		return o.patch(pathBehind, pathAhead, oldValues, newValues, mergePatchStrategy)
+	}
+	if !pathAhead.isLeaf() {
+		return nil, fmt.Errorf(
+			"merge patch strategy cannot index into an array")
+	}
+	if !isVoid(oldValue) {
+		return nil, fmt.Errorf(
+			"merge patch strategy cannot specify a value to replace")
+	}
+	if isNull(newValue) {
+		// Null deletes a node
+		return voidNode{}, nil
+	}
+	return newValue, nil
 }
