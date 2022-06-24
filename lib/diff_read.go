@@ -35,7 +35,7 @@ func readDiff(s string) (Diff, error) {
 			continue
 		}
 		header := dl[:1]
-		// Validate state transistion.
+		// Validate state transition.
 		switch state {
 		case INIT:
 			if header != "@" {
