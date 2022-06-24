@@ -1,4 +1,4 @@
-.PHONY : build test fuzz pack-web build-web serve release-build build-all build-docker release-push push-docker push-latest push-github deploy release-notes check-dirty check-version check-env
+.PHONY : build test fuzz pack-web build-web serve release-build build-all build-docker release-push push-docker push-latest push-github deploy release-notes check-dirty check-version check-env find-issues
 
 build : test pack-web
 	mkdir -p release
@@ -79,3 +79,6 @@ ifndef JD_PREVIOUS_VERSION
 	$(error Set JD_PREVIOUS_VERSION for release notes)
 endif
 
+find-issues :
+	-staticcheck ./...
+	-goreportcard-cli -v ./...
