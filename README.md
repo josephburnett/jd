@@ -16,7 +16,7 @@ To get the `jd` commandline utility:
 
 To use the `jd` web UI:
 * visit http://play.jd-tool.io/, or
-* run `jd -port 8080` and visit http://localhost.8080.
+* run `jd -port 8080` and visit http://localhost:8080.
 
 ## Command line usage
 
