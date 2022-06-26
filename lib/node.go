@@ -7,12 +7,16 @@ import (
 type JsonNode interface {
 	Json(metadata ...Metadata) string
 	Yaml(metadata ...Metadata) string
-	raw() interface{}
 	Equals(n JsonNode, metadata ...Metadata) bool
-	hashCode(metadata []Metadata) [8]byte
 	Diff(n JsonNode, metadata ...Metadata) Diff
-	diff(n JsonNode, p path, metadata []Metadata, strategy patchStrategy) Diff
 	Patch(d Diff) (JsonNode, error)
+	jsonNodeInternals
+}
+
+type jsonNodeInternals interface {
+	raw() interface{}
+	hashCode(metadata []Metadata) [8]byte
+	diff(n JsonNode, p path, metadata []Metadata, strategy patchStrategy) Diff
 	patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error)
 }
 
