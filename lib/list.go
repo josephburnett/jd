@@ -7,15 +7,15 @@ type jsonList []JsonNode
 var _ JsonNode = jsonList(nil)
 
 func (l jsonList) Json(metadata ...Metadata) string {
-	return renderJson(l.raw(metadata))
+	return renderJson(l.raw())
 }
 
 func (l jsonList) Yaml(metadata ...Metadata) string {
-	return renderYaml(l.raw(metadata))
+	return renderYaml(l.raw())
 }
 
-func (l jsonList) raw(metadata []Metadata) interface{} {
-	return jsonArray(l).raw(metadata)
+func (l jsonList) raw() interface{} {
+	return jsonArray(l).raw()
 }
 
 func (l1 jsonList) Equals(n JsonNode, metadata ...Metadata) bool {

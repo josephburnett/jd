@@ -16,10 +16,10 @@ func (a jsonArray) Yaml(metadata ...Metadata) string {
 	return n.Yaml(metadata...)
 }
 
-func (a jsonArray) raw(metadata []Metadata) interface{} {
+func (a jsonArray) raw() interface{} {
 	r := make([]interface{}, len(a))
 	for i, n := range a {
-		r[i] = n.raw(metadata)
+		r[i] = n.raw()
 	}
 	return r
 }

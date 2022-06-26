@@ -14,7 +14,7 @@ func newJsonObject() jsonObject {
 }
 
 func (o jsonObject) Json(metadata ...Metadata) string {
-	return renderJson(o.raw(metadata))
+	return renderJson(o.raw())
 }
 
 func (o jsonObject) MarshalJSON() ([]byte, error) {
@@ -22,13 +22,13 @@ func (o jsonObject) MarshalJSON() ([]byte, error) {
 }
 
 func (o jsonObject) Yaml(metadata ...Metadata) string {
-	return renderYaml(o.raw(metadata))
+	return renderYaml(o.raw())
 }
 
-func (o jsonObject) raw(metadata []Metadata) interface{} {
+func (o jsonObject) raw() interface{} {
 	j := make(map[string]interface{})
 	for k, v := range o {
-		j[k] = v.raw(metadata)
+		j[k] = v.raw()
 	}
 	return j
 }

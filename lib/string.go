@@ -5,14 +5,14 @@ type jsonString string
 var _ JsonNode = jsonString("")
 
 func (s jsonString) Json(metadata ...Metadata) string {
-	return renderJson(s.raw(metadata))
+	return renderJson(s.raw())
 }
 
 func (s jsonString) Yaml(metadata ...Metadata) string {
-	return renderYaml(s.raw(metadata))
+	return renderYaml(s.raw())
 }
 
-func (s jsonString) raw(_ []Metadata) interface{} {
+func (s jsonString) raw() interface{} {
 	return string(s)
 }
 
@@ -24,7 +24,7 @@ func (s1 jsonString) Equals(n JsonNode, metadata ...Metadata) bool {
 	return s1 == s2
 }
 
-func (s jsonString) hashCode(metadata []Metadata) [8]byte {
+func (s jsonString) hashCode(_ []Metadata) [8]byte {
 	return hash([]byte(s))
 }
 

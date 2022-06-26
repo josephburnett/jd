@@ -9,16 +9,16 @@ type jsonMultiset jsonArray
 
 var _ JsonNode = jsonMultiset(nil)
 
-func (a jsonMultiset) Json(metadata ...Metadata) string {
-	return renderJson(a.raw(metadata))
+func (a jsonMultiset) Json(_ ...Metadata) string {
+	return renderJson(a.raw())
 }
 
-func (a jsonMultiset) Yaml(metadata ...Metadata) string {
-	return renderYaml(a.raw(metadata))
+func (a jsonMultiset) Yaml(_ ...Metadata) string {
+	return renderYaml(a.raw())
 }
 
-func (a jsonMultiset) raw(metadata []Metadata) interface{} {
-	return jsonArray(a).raw(metadata)
+func (a jsonMultiset) raw() interface{} {
+	return jsonArray(a).raw()
 }
 
 func (a1 jsonMultiset) Equals(n JsonNode, metadata ...Metadata) bool {

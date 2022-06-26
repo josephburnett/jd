@@ -10,17 +10,17 @@ type jsonSet jsonArray
 var _ JsonNode = jsonSet(nil)
 
 func (s jsonSet) Json(metadata ...Metadata) string {
-	return renderJson(s.raw(metadata))
+	return renderJson(s.raw())
 }
 
 func (s jsonSet) Yaml(metadata ...Metadata) string {
-	return renderYaml(s.raw(metadata))
+	return renderYaml(s.raw())
 }
 
-func (s jsonSet) raw(metadata []Metadata) interface{} {
+func (s jsonSet) raw() interface{} {
 	sMap := make(map[[8]byte]JsonNode)
 	for _, n := range s {
-		hc := n.hashCode(metadata)
+		hc := n.hashCode([]Metadata{SET})
 		sMap[hc] = n
 	}
 	hashes := make(hashCodes, 0, len(sMap))
@@ -30,7 +30,7 @@ func (s jsonSet) raw(metadata []Metadata) interface{} {
 	sort.Sort(hashes)
 	set := make([]interface{}, 0, len(sMap))
 	for _, hc := range hashes {
-		set = append(set, sMap[hc].raw(metadata))
+		set = append(set, sMap[hc].raw())
 	}
 	return set
 }

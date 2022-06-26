@@ -7,7 +7,7 @@ import (
 type JsonNode interface {
 	Json(metadata ...Metadata) string
 	Yaml(metadata ...Metadata) string
-	raw(metadata []Metadata) interface{}
+	raw() interface{}
 	Equals(n JsonNode, metadata ...Metadata) bool
 	hashCode(metadata []Metadata) [8]byte
 	Diff(n JsonNode, metadata ...Metadata) Diff
