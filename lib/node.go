@@ -10,11 +10,36 @@ import (
 // List, unordered Set or Multiset. JsonNodes are created with the
 // NewJsonNode function or ReadJson* and ReadYaml* functions.
 type JsonNode interface {
+
+	// Json renders a JsonNode as a JSON string.
 	Json(metadata ...RenderOption) string
+
+	// Yaml renders a JsonNode as a YAML string in block format.
 	Yaml(metadata ...RenderOption) string
+
+	// Equals returns true if the JsonNodes are equal according to
+	// the provided Metadata. The default behavior (no Metadata) is
+	// to compare the entire structure down to scalar values treating
+	// Arrays as orders Lists. The SET and MULTISET Metadata will
+	// treat Arrays as sets or multisets (bags) respectively. To deep
+	// compare objects in an array irrespective of order, the SetKeys
+	// function will construct Metadata to compare objects by a set
+	// of keys. If two JsonNodes are equal, then Diff with the same
+	// Metadata will produce an empty Diff. And vice versa.
 	Equals(n JsonNode, metadata ...Metadata) bool
+
+	// Diff produces a list of differences (Diff) between two
+	// JsonNodes such that if the output Diff were applied to the
+	// first JsonNode (Patch) then the two JsonNodes would be
+	// Equal. The necessary Metadata is embeded in the Diff itself so
+	// only the Diff is required to Patch a JsonNode.
 	Diff(n JsonNode, metadata ...Metadata) Diff
+
+	// Patch applies a Diff to a JsonNode. No Metadata is provided
+	// because the original interpretation of the structure is
+	// embedded in the Diff itself.
 	Patch(d Diff) (JsonNode, error)
+
 	jsonNodeInternals
 }
 
