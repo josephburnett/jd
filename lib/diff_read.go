@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// ReadDiffFile reads a file in native jd format.
 func ReadDiffFile(filename string) (Diff, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -15,6 +16,7 @@ func ReadDiffFile(filename string) (Diff, error) {
 	return readDiff(string(bytes))
 }
 
+// ReadDiffString reads a string in native jd format.
 func ReadDiffString(s string) (Diff, error) {
 	return readDiff(s)
 }
@@ -130,6 +132,8 @@ func errorAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
 	return nil, fmt.Errorf("invalid diff at line %v. %v", line, e)
 }
 
+// ReadPatchFile reads a JSON Patch (RFC 6902) from a file. It is subject
+// to the same restrictions as ReadPatchString.
 func ReadPatchFile(filename string) (Diff, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -138,6 +142,17 @@ func ReadPatchFile(filename string) (Diff, error) {
 	return ReadPatchString(string(bytes))
 }
 
+// ReadPatchString reads a JSON Patch (RFC 6902) from a
+// string. ReadPatchString supports a subset of the specification and
+// requires a sequence of "test", "remove", "add" operations which mimics
+// the strict patching strategy of a native jd patch.
+//
+// For example:
+//   [
+//     {"op":"test","path":"/foo","value":"bar"},
+//     {"op":"remove","path":"/foo","value":"bar"},
+//     {"op":"add","path":"/foo","value":"baz"}
+//   ]
 func ReadPatchString(s string) (Diff, error) {
 	var patch []patchElement
 	err := json.Unmarshal([]byte(s), &patch)
@@ -210,6 +225,7 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 	}
 }
 
+// ReadMergeFile reads a JSON Merge Patch (RFC 7386) from a file.
 func ReadMergeFile(filename string) (Diff, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -218,6 +234,7 @@ func ReadMergeFile(filename string) (Diff, error) {
 	return ReadMergeString(string(bytes))
 }
 
+// ReadMergeString reads a JSON Merge Patch (RFC 7386) from a string.
 func ReadMergeString(s string) (Diff, error) {
 	n, err := ReadJsonString(s)
 	if err != nil {
