@@ -83,7 +83,7 @@ func main() {
 	case diffMode:
 		printDiff(a, b, metadata)
 	case patchMode:
-		printPatch(a, b, metadata)
+		printPatch(a, b)
 	case translateMode:
 		printTranslation(a, metadata)
 	}
@@ -230,7 +230,7 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 	}
 }
 
-func printPatch(p, a string, metadata []jd.Metadata) {
+func printPatch(p, a string) {
 	diff, err := jd.ReadDiffString(p)
 	if err != nil {
 		errorAndExit(err.Error())
@@ -250,9 +250,9 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 	}
 	var out string
 	if *yaml {
-		out = bNode.Yaml(metadata...)
+		out = bNode.Yaml()
 	} else {
-		out = bNode.Json(metadata...)
+		out = bNode.Json()
 	}
 	if *output == "" {
 		if out == "" {
