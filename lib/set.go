@@ -9,11 +9,11 @@ type jsonSet jsonArray
 
 var _ JsonNode = jsonSet(nil)
 
-func (s jsonSet) Json(_ ...RenderOption) string {
+func (s jsonSet) Json(_ ...Metadata) string {
 	return renderJson(s.raw())
 }
 
-func (s jsonSet) Yaml(_ ...RenderOption) string {
+func (s jsonSet) Yaml(_ ...Metadata) string {
 	return renderYaml(s.raw())
 }
 

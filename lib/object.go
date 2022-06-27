@@ -13,7 +13,7 @@ func newJsonObject() jsonObject {
 	return jsonObject{}
 }
 
-func (o jsonObject) Json(_ ...RenderOption) string {
+func (o jsonObject) Json(_ ...Metadata) string {
 	return renderJson(o.raw())
 }
 
@@ -21,7 +21,7 @@ func (o jsonObject) MarshalJSON() ([]byte, error) {
 	return []byte(o.Json()), nil
 }
 
-func (o jsonObject) Yaml(_ ...RenderOption) string {
+func (o jsonObject) Yaml(_ ...Metadata) string {
 	return renderYaml(o.raw())
 }
 

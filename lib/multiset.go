@@ -9,11 +9,11 @@ type jsonMultiset jsonArray
 
 var _ JsonNode = jsonMultiset(nil)
 
-func (a jsonMultiset) Json(_ ...RenderOption) string {
+func (a jsonMultiset) Json(_ ...Metadata) string {
 	return renderJson(a.raw())
 }
 
-func (a jsonMultiset) Yaml(_ ...RenderOption) string {
+func (a jsonMultiset) Yaml(_ ...Metadata) string {
 	return renderYaml(a.raw())
 }
 

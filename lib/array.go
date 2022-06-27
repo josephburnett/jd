@@ -6,14 +6,14 @@ type jsonArray []JsonNode
 
 var _ JsonNode = jsonArray(nil)
 
-func (a jsonArray) Json(opts ...RenderOption) string {
-	n := dispatchRenderOptions(a, opts)
-	return n.Json(opts...)
+func (a jsonArray) Json(renderOptions ...Metadata) string {
+	n := dispatch(a, renderOptions)
+	return n.Json(renderOptions...)
 }
 
-func (a jsonArray) Yaml(opts ...RenderOption) string {
-	n := dispatchRenderOptions(a, opts)
-	return n.Yaml(opts...)
+func (a jsonArray) Yaml(renderOptions ...Metadata) string {
+	n := dispatch(a, renderOptions)
+	return n.Yaml(renderOptions...)
 }
 
 func (a jsonArray) raw() interface{} {

@@ -4,11 +4,11 @@ type jsonString string
 
 var _ JsonNode = jsonString("")
 
-func (s jsonString) Json(_ ...RenderOption) string {
+func (s jsonString) Json(_ ...Metadata) string {
 	return renderJson(s.raw())
 }
 
-func (s jsonString) Yaml(_ ...RenderOption) string {
+func (s jsonString) Yaml(_ ...Metadata) string {
 	return renderYaml(s.raw())
 }
 

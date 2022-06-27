@@ -10,7 +10,7 @@ func checkJson(ctx *testContext, a, b string) {
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	nodeAJson := nodeA.Json(ctx.opts...)
+	nodeAJson := nodeA.Json(ctx.metadata...)
 	if nodeAJson != b {
 		ctx.t.Errorf("%v.Json() = %v. Want %v.", nodeA, nodeAJson, b)
 	}
@@ -173,10 +173,5 @@ func newTestContext(t *testing.T) *testContext {
 
 func (tc *testContext) withMetadata(metadata ...Metadata) *testContext {
 	tc.metadata = append(tc.metadata, metadata...)
-	return tc
-}
-
-func (tc *testContext) withRenderOption(opts ...RenderOption) *testContext {
-	tc.opts = append(tc.opts, opts...)
 	return tc
 }

@@ -12,10 +12,10 @@ import (
 type JsonNode interface {
 
 	// Json renders a JsonNode as a JSON string.
-	Json(metadata ...RenderOption) string
+	Json(renderOptions ...Metadata) string
 
 	// Yaml renders a JsonNode as a YAML string in block format.
-	Yaml(metadata ...RenderOption) string
+	Yaml(renderOptions ...Metadata) string
 
 	// Equals returns true if the JsonNodes are equal according to
 	// the provided Metadata. The default behavior (no Metadata) is

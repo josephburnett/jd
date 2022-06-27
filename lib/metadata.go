@@ -10,13 +10,6 @@ import (
 type Metadata interface {
 	is_metadata()
 	string() string
-
-	// Metadata are included in the closed RenderOption set for
-	// backward compatability. Previously Json and Yaml methods
-	// accepted Metadata instead of RenderOptions. Passing
-	// Metadata to Json and Yaml methods did nothing but it remains
-	// an option to not break any existing code.
-	RenderOption
 }
 
 type setMetadata struct{}
@@ -30,11 +23,6 @@ func (setMetadata) is_metadata()      {}
 func (multisetMetadata) is_metadata() {}
 func (setkeysMetadata) is_metadata()  {}
 func (mergeMetadata) is_metadata()    {}
-
-func (setMetadata) is_render_option()      {}
-func (multisetMetadata) is_render_option() {}
-func (setkeysMetadata) is_render_option()  {}
-func (mergeMetadata) is_render_option()    {}
 
 func (m setMetadata) string() string {
 	return "set"
