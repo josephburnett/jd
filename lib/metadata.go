@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Metadata is a closed set of types which modify Diff and Equals
+// Metadata is a closed set of values which modify Diff and Equals
 // semantics.
 type Metadata interface {
 	is_metadata()
