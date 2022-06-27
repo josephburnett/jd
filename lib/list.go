@@ -6,11 +6,11 @@ type jsonList []JsonNode
 
 var _ JsonNode = jsonList(nil)
 
-func (l jsonList) Json(metadata ...Metadata) string {
+func (l jsonList) Json(_ ...RenderOption) string {
 	return renderJson(l.raw())
 }
 
-func (l jsonList) Yaml(metadata ...Metadata) string {
+func (l jsonList) Yaml(...RenderOption) string {
 	return renderYaml(l.raw())
 }
 

@@ -9,11 +9,11 @@ type jsonSet jsonArray
 
 var _ JsonNode = jsonSet(nil)
 
-func (s jsonSet) Json(metadata ...Metadata) string {
+func (s jsonSet) Json(_ ...RenderOption) string {
 	return renderJson(s.raw())
 }
 
-func (s jsonSet) Yaml(metadata ...Metadata) string {
+func (s jsonSet) Yaml(_ ...RenderOption) string {
 	return renderYaml(s.raw())
 }
 
@@ -207,7 +207,7 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 				}
 			}
 		}
-		return nil, fmt.Errorf("invalid diff: expected object with id %v but found none", pathObject.Json(metadata...))
+		return nil, fmt.Errorf("invalid diff: expected object with id %v but found none", pathObject.Json())
 	}
 	// Patch set
 	aMap := make(map[[8]byte]JsonNode)
@@ -235,12 +235,12 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 		if !ok {
 			return nil, fmt.Errorf(
 				"invalid diff: expected %v at %v but found nothing",
-				v.Json(metadata...), pathBehind)
+				v.Json(), pathBehind)
 		}
 		if !toDelete.Equals(v, metadata...) {
 			return nil, fmt.Errorf(
 				"invalid diff: expected %v at %v but found %v",
-				v.Json(metadata...), pathBehind, toDelete.Json(metadata...))
+				v.Json(), pathBehind, toDelete.Json())
 
 		}
 		delete(aMap, hc)

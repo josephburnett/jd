@@ -4,9 +4,14 @@ import (
 	"fmt"
 )
 
+// JsonNode is a JSON value, collection of values, or a void representing
+// the absense of a value. JSON values can be a Number, String, Boolean
+// or Null. Collections can be an Object, native JSON array, ordered
+// List, unordered Set or Multiset. JsonNodes are created with the
+// NewJsonNode function or ReadJson* and ReadYaml* functions.
 type JsonNode interface {
-	Json(metadata ...Metadata) string
-	Yaml(metadata ...Metadata) string
+	Json(metadata ...RenderOption) string
+	Yaml(metadata ...RenderOption) string
 	Equals(n JsonNode, metadata ...Metadata) bool
 	Diff(n JsonNode, metadata ...Metadata) Diff
 	Patch(d Diff) (JsonNode, error)
@@ -20,6 +25,11 @@ type jsonNodeInternals interface {
 	patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error)
 }
 
+// NewJsonNode constructs a JsonNode from native Golang objects. See the
+// function source for supported types and conversions. Slices are always
+// placed into native JSON Arrays and interpretated as Lists, Sets or
+// Multisets based on Metadata provided during Equals and Diff
+// operations.
 func NewJsonNode(n interface{}) (JsonNode, error) {
 	switch t := n.(type) {
 	case map[string]interface{}:

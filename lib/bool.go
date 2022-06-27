@@ -4,11 +4,11 @@ type jsonBool bool
 
 var _ JsonNode = jsonBool(true)
 
-func (b jsonBool) Json(metadata ...Metadata) string {
+func (b jsonBool) Json(_ ...RenderOption) string {
 	return renderJson(b.raw())
 }
 
-func (b jsonBool) Yaml(metadata ...Metadata) string {
+func (b jsonBool) Yaml(_ ...RenderOption) string {
 	return renderYaml(b.raw())
 }
 

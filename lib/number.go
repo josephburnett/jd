@@ -9,11 +9,11 @@ type jsonNumber float64
 
 var _ JsonNode = jsonNumber(0)
 
-func (n jsonNumber) Json(metadata ...Metadata) string {
+func (n jsonNumber) Json(_ ...RenderOption) string {
 	return renderJson(n.raw())
 }
 
-func (n jsonNumber) Yaml(metadata ...Metadata) string {
+func (n jsonNumber) Yaml(_ ...RenderOption) string {
 	return renderYaml(n.raw())
 }
 

@@ -24,11 +24,11 @@ func isNull(n JsonNode) bool {
 	return false
 }
 
-func (v voidNode) Json(metadata ...Metadata) string {
+func (v voidNode) Json(_ ...RenderOption) string {
 	return ""
 }
 
-func (v voidNode) Yaml(metadata ...Metadata) string {
+func (v voidNode) Yaml(_ ...RenderOption) string {
 	return ""
 }
 

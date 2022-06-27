@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// ReadJsonFile reads a file as JSON and constructs a JsonNode.
 func ReadJsonFile(filename string) (JsonNode, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -16,6 +17,7 @@ func ReadJsonFile(filename string) (JsonNode, error) {
 	return unmarshal(bytes, json.Unmarshal)
 }
 
+// ReadYamlFile reads a file as YAML and constructs a JsonNode.
 func ReadYamlFile(filename string) (JsonNode, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -24,10 +26,12 @@ func ReadYamlFile(filename string) (JsonNode, error) {
 	return unmarshal(bytes, yaml.Unmarshal)
 }
 
+// ReadJsonString reads a string as JSON and constructs a JsonNode.
 func ReadJsonString(s string) (JsonNode, error) {
 	return unmarshal([]byte(s), json.Unmarshal)
 }
 
+// ReadJsonString reads a string as YAML and constructs a JsonNode.
 func ReadYamlString(s string) (JsonNode, error) {
 	return unmarshal([]byte(s), yaml.Unmarshal)
 }

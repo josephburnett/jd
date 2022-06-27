@@ -6,6 +6,8 @@ import (
 	"fmt"
 )
 
+// RenderOption is a closed set of types which modify the output
+// appearance of Render*, Json and Yaml methods.
 type RenderOption interface {
 	is_render_option()
 }

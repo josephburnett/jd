@@ -6,46 +6,46 @@ import (
 
 func TestSetJson(t *testing.T) {
 	cases := []struct {
-		name     string
-		metadata Metadata
-		given    string
-		want     string
+		name  string
+		opt   RenderOption
+		given string
+		want  string
 	}{{
-		name:     "array with no space",
-		metadata: SET,
-		given:    `[]`,
-		want:     `[]`,
+		name:  "array with no space",
+		opt:   SET,
+		given: `[]`,
+		want:  `[]`,
 	}, {
-		name:     "array with space",
-		metadata: SET,
-		given:    ` [ ] `,
-		want:     `[]`,
+		name:  "array with space",
+		opt:   SET,
+		given: ` [ ] `,
+		want:  `[]`,
 	}, {
-		name:     "array with numbers out of order",
-		metadata: SET,
-		given:    `[2,1,3]`,
-		want:     `[3,2,1]`,
+		name:  "array with numbers out of order",
+		opt:   SET,
+		given: `[2,1,3]`,
+		want:  `[3,2,1]`,
 	}, {
-		name:     "array with numbers in order",
-		metadata: SET,
-		given:    `[3,2,1]`,
-		want:     `[3,2,1]`,
+		name:  "array with numbers in order",
+		opt:   SET,
+		given: `[3,2,1]`,
+		want:  `[3,2,1]`,
 	}, {
-		name:     "array with spaced numbers",
-		metadata: SET,
-		given:    ` [1, 2, 3] `,
-		want:     `[3,2,1]`,
+		name:  "array with spaced numbers",
+		opt:   SET,
+		given: ` [1, 2, 3] `,
+		want:  `[3,2,1]`,
 	}, {
-		name:     "duplicate entries",
-		metadata: SET,
-		given:    `[1,1,1]`,
-		want:     `[1]`,
+		name:  "duplicate entries",
+		opt:   SET,
+		given: `[1,1,1]`,
+		want:  `[1]`,
 	}}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			ctx := newTestContext(t).
-				withMetadata(c.metadata)
+				withRenderOption(c.opt)
 			checkJson(ctx, c.given, c.want)
 		})
 	}

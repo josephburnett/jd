@@ -9,11 +9,11 @@ type jsonMultiset jsonArray
 
 var _ JsonNode = jsonMultiset(nil)
 
-func (a jsonMultiset) Json(_ ...Metadata) string {
+func (a jsonMultiset) Json(_ ...RenderOption) string {
 	return renderJson(a.raw())
 }
 
-func (a jsonMultiset) Yaml(_ ...Metadata) string {
+func (a jsonMultiset) Yaml(_ ...RenderOption) string {
 	return renderYaml(a.raw())
 }
 
@@ -197,7 +197,7 @@ func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []J
 		if count < 0 {
 			return nil, fmt.Errorf(
 				"invalid diff: expected %v at %v but found nothing",
-				aMap[hc].Json(metadata...), pathBehind)
+				aMap[hc].Json(), pathBehind)
 		}
 	}
 	for _, v := range newValues {

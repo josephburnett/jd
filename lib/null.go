@@ -4,11 +4,11 @@ type jsonNull []byte
 
 var _ JsonNode = jsonNull{}
 
-func (n jsonNull) Json(metadata ...Metadata) string {
+func (n jsonNull) Json(_ ...RenderOption) string {
 	return renderJson(n.raw())
 }
 
-func (n jsonNull) Yaml(metadata ...Metadata) string {
+func (n jsonNull) Yaml(_ ...RenderOption) string {
 	return renderJson(n.raw())
 }
 
