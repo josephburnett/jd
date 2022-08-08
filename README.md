@@ -1,21 +1,24 @@
+[![Go Report Card](https://goreportcard.com/badge/josephburnett/jd)](https://goreportcard.com/report/josephburnett/jd)
+
 # JSON diff and patch
 
-`jd` is a commandline utility and Go library for diffing and patching JSON values.
+`jd` is a commandline utility and Go library for diffing and patching JSON and YAML values. It supports a native `jd` format (similar to unified format) as well as JSON Merge Patch ([RFC 7386](https://datatracker.ietf.org/doc/html/rfc7386)) and a subset of JSON Patch ([RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902)). Try it out at http://play.jd-tool.io/.
+
+![jd logo](logo_small.png)
 
 ## Installation
 
 To get the `jd` commandline utility:
-* run `brew install jd` or
-* run `go install github.com/josephburnett/jd@latest` or
-* visit https://github.com/josephburnett/jd/releases/latest and download the pre-built binary for your architecture/os.
+* run `brew install jd`, or
+* run `go install github.com/josephburnett/jd@latest`, or
+* visit https://github.com/josephburnett/jd/releases/latest and download the pre-built binary for your architecture/os, or
+* run in a Docker image `jd(){ docker run --rm -i -v $PWD:$PWD -w $PWD josephburnett/jd "$@"; }`.
 
 To use the `jd` web UI:
-* visit http://play.jd-tool.io/ or
-* run `jd -port 8080` and visit http://localhost.8080.
+* visit http://play.jd-tool.io/, or
+* run `jd -port 8080` and visit http://localhost:8080.
 
 ## Command line usage
-
-Download [latest release](https://github.com/josephburnett/jd/releases/latest) or `go get github.com/josephburnett/jd`
 
 ```
 Usage: jd [OPTION]... FILE1 [FILE2]
@@ -26,6 +29,7 @@ When FILE2 is omitted the second input is read from STDIN.
 When patching (-p) FILE1 is a diff.
 
 Options:
+  -color     Print color diff.
   -p         Apply patch FILE1 to FILE2 or STDIN.
   -o=FILE3   Write to FILE3 instead of STDOUT.
   -set       Treat arrays as sets.
@@ -33,21 +37,25 @@ Options:
   -setkeys   Keys to identify set objects
   -yaml      Read and write YAML instead of JSON.
   -port=N    Serve web UI on port N
-  -f=FORMAT  Produce diff in FORMAT "jd" (default) or "patch" (RFC 6902).
+  -f=FORMAT  Produce diff in FORMAT "jd" (default), "patch" (RFC 6902) or
+             "merge" (RFC 7386)
   -t=FORMATS Translate FILE1 between FORMATS. Supported formats are "jd",
-             "patch" (RFC 6902), "json" and "yaml". FORMATS are provided
-             as a pair separated by "2". E.g. "yaml2json" or "jd2patch".
+             "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".
+             FORMATS are provided as a pair separated by "2". E.g.
+             "yaml2json" or "jd2patch".
 
 Examples:
   jd a.json b.json
   cat b.json | jd a.json
   jd -o patch a.json b.json; jd patch a.json
   jd -set a.json b.json
+  jd -f patch a.json b.json
+  jd -f merge a.json b.json
 ```
 
 ## Library usage
 
-`go get github.com/josephburnett/jd`
+Note: import only release commits (`v1.Y.Z`) because `master` can be unstable.
 
 ```Go
 import (
@@ -138,7 +146,7 @@ git difftool -yx jd @ -- foo.json
 + "baz"
 ```
 
-### See what changes in a Kuberentes Deployment:
+### See what changes in a Kubernetes Deployment:
 ```
 kubectl get deployment example -oyaml > a.yaml
 kubectl edit deployment example

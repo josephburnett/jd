@@ -1,4 +1,4 @@
-.PHONY : build test fuzz pack-web build-web serve release-build build-all build-docker release-push push-docker push-latest push-github deploy release-notes check-dirty check-version check-env
+.PHONY : build test fuzz pack-web build-web serve release-build build-all build-docker release-push push-docker push-latest push-github deploy release-notes check-dirty check-version check-env find-issues
 
 build : test pack-web
 	mkdir -p release
@@ -29,10 +29,10 @@ build-all : test pack-web
 	mkdir -p release
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o release/jd-amd64-linux main.go
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o release/jd-amd64-darwin main.go
-	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o release/jd-amd64-windows main.go
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o release/jd-amd64-windows.exe main.go
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o release/jd-arm64-linux main.go
 	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o release/jd-arm64-darwin main.go
-	GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o release/jd-arm64-windows main.go
+	GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o release/jd-arm64-windows.exe main.go
 
 build-docker : check-env test
 	docker build -t josephburnett/jd:v$(JD_VERSION) .
@@ -79,3 +79,6 @@ ifndef JD_PREVIOUS_VERSION
 	$(error Set JD_PREVIOUS_VERSION for release notes)
 endif
 
+find-issues :
+	-staticcheck ./...
+	-goreportcard-cli -v ./...

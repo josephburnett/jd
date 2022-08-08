@@ -60,7 +60,7 @@ const (
 func checkDiffAndPatchSuccessSet(t *testing.T, a, b, c, expect string) {
 	err := checkDiffAndPatch(t, formatJd, a, b, c, expect, SET)
 	if err != nil {
-		t.Errorf("Error round-tripping jd format: %v", err)
+		t.Errorf("error round-tripping jd format: %v", err)
 	}
 	// JSON Patch format does not support sets.
 }
@@ -68,22 +68,22 @@ func checkDiffAndPatchSuccessSet(t *testing.T, a, b, c, expect string) {
 func checkDiffAndPatchSuccess(t *testing.T, a, b, c, expect string) {
 	err := checkDiffAndPatch(t, formatJd, a, b, c, expect)
 	if err != nil {
-		t.Errorf("Error round-tripping jd format: %v", err)
+		t.Errorf("error round-tripping jd format: %v", err)
 	}
 	err = checkDiffAndPatch(t, formatPatch, a, b, c, expect)
 	if err != nil {
-		t.Errorf("Error round-tripping patch format: %v", err)
+		t.Errorf("error round-tripping patch format: %v", err)
 	}
 }
 
 func checkDiffAndPatchError(t *testing.T, a, b, c string) {
 	err := checkDiffAndPatch(t, formatJd, a, b, c, "")
 	if err == nil {
-		t.Errorf("Expected error round-tripping jd format.")
+		t.Errorf("expected error round-tripping jd format")
 	}
 	err = checkDiffAndPatch(t, formatPatch, a, b, c, "")
 	if err == nil {
-		t.Errorf("Expected error rount-tripping patch format.")
+		t.Errorf("expected error rount-tripping patch format")
 	}
 }
 
@@ -115,6 +115,9 @@ func checkDiffAndPatch(t *testing.T, f format, a, b, c, expect string, metadata 
 			return nil
 		}
 		diff, err = ReadPatchString(patchString)
+		if err != nil {
+			return err
+		}
 	case formatMerge:
 		// not yet implemented
 	}

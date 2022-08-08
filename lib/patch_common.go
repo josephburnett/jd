@@ -29,7 +29,7 @@ func patch(
 		next, _, rest := pathAhead.next()
 		key, ok := next.(jsonString)
 		if !ok {
-			return nil, fmt.Errorf("Merge patch path must be composed of only strings. Found %v", next)
+			return nil, fmt.Errorf("merge patch path must be composed of only strings: found %v", next)
 		}
 		o := newJsonObject()
 		value, err := node.patch(append(pathBehind.clone(), key), rest, oldValues, newValues, strategy)
@@ -73,15 +73,15 @@ func patchErrExpectColl(n JsonNode, pe interface{}) (JsonNode, error) {
 	switch pe := pe.(type) {
 	case string:
 		return nil, fmt.Errorf(
-			"Found %v at %v. Expected JSON object.",
+			"found %v at %v: expected JSON object",
 			// TODO: plumb through metadata.
 			n.Json(), pe)
 	case float64:
 		return nil, fmt.Errorf(
-			"Found %v at %v. Expected JSON array.",
+			"found %v at %v: expected JSON array",
 			n.Json(), pe)
 	default:
-		return nil, fmt.Errorf("Invalid path element %v.", pe)
+		return nil, fmt.Errorf("invalid path element %v", pe)
 	}
 
 }
@@ -89,29 +89,29 @@ func patchErrExpectColl(n JsonNode, pe interface{}) (JsonNode, error) {
 func patchErrNonSetDiff(oldValues, newValues []JsonNode, path path) (JsonNode, error) {
 	if len(oldValues) > 1 {
 		return nil, fmt.Errorf(
-			"Invalid diff: Multiple removals from non-set at %v.",
+			"invalid diff: multiple removals from non-set at %v",
 			path)
 	} else {
 		return nil, fmt.Errorf(
-			"Invalid diff: Multiple additions to a non-set at %v.",
+			"invalid diff: multiple additions to a non-set at %v",
 			path)
 	}
 }
 
 func patchErrExpectValue(want, found JsonNode, path path) (JsonNode, error) {
 	return nil, fmt.Errorf(
-		"Found %v at %v. Expected %v.",
+		"found %v at %v: expected %v",
 		found.Json(), path, want.Json())
 }
 
 func patchErrMergeWithOldValue(path path, oldValue JsonNode) (JsonNode, error) {
 	return nil, fmt.Errorf(
-		"Patch with merge strategy at %v has unnecessary old value %v",
+		"patch with merge strategy at %v has unnecessary old value %v",
 		path, oldValue)
 }
 
 func patchErrUnsupportedPatchStrategy(path path, strategy patchStrategy) (JsonNode, error) {
 	return nil, fmt.Errorf(
-		"Unsupported patch strategy %v at %v",
+		"unsupported patch strategy %v at %v",
 		strategy, path)
 }

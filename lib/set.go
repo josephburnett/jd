@@ -9,18 +9,18 @@ type jsonSet jsonArray
 
 var _ JsonNode = jsonSet(nil)
 
-func (s jsonSet) Json(metadata ...Metadata) string {
-	return renderJson(s.raw(metadata))
+func (s jsonSet) Json(_ ...Metadata) string {
+	return renderJson(s.raw())
 }
 
-func (s jsonSet) Yaml(metadata ...Metadata) string {
-	return renderYaml(s.raw(metadata))
+func (s jsonSet) Yaml(_ ...Metadata) string {
+	return renderYaml(s.raw())
 }
 
-func (s jsonSet) raw(metadata []Metadata) interface{} {
+func (s jsonSet) raw() interface{} {
 	sMap := make(map[[8]byte]JsonNode)
 	for _, n := range s {
-		hc := n.hashCode(metadata)
+		hc := n.hashCode([]Metadata{SET})
 		sMap[hc] = n
 	}
 	hashes := make(hashCodes, 0, len(sMap))
@@ -30,7 +30,7 @@ func (s jsonSet) raw(metadata []Metadata) interface{} {
 	sort.Sort(hashes)
 	set := make([]interface{}, 0, len(sMap))
 	for _, hc := range hashes {
-		set = append(set, sMap[hc].raw(metadata))
+		set = append(set, sMap[hc].raw())
 	}
 	return set
 }
@@ -147,9 +147,7 @@ func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata, strategy patc
 				// Sub diff objects with same identity.
 				p := path.appendIndex(o1, metadata)
 				subDiff := o1.diff(o2, p, metadata, strategy)
-				for _, subElement := range subDiff {
-					d = append(d, subElement)
-				}
+				d = append(d, subDiff...)
 			}
 		}
 	}
@@ -174,24 +172,7 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 
 	// Merge patch strategy
 	if strategy == mergePatchStrategy {
-		if len(oldValues) != 0 {
-			return nil, fmt.Errorf(
-				"Merge patch strategy cannot specify a value to replace.")
-		}
-		if len(newValues) > 1 {
-			return nil, fmt.Errorf(
-				"Cannot specify multiple new values in a merge patch.")
-		}
-		n, _, _ := pathAhead.next()
-		if !isVoid(n) {
-			return nil, fmt.Errorf(
-				"Merge patch strategy cannot index into an array.")
-		}
-		newValue := singleValue(newValues)
-		if isNull(newValue) {
-			return voidNode{}, nil
-		}
-		return newValue, nil
+		return patch(s, pathBehind, pathAhead, oldValues, newValues, mergePatchStrategy)
 	}
 
 	// Strict patch strategy
@@ -212,7 +193,7 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 	pathObject, ok := n.(jsonObject)
 	if !ok {
 		return nil, fmt.Errorf(
-			"Invalid path element %v. Expected jsonObject.", n)
+			"invalid path element %v: expected jsonObject", n)
 	}
 	if len(rest) > 0 {
 		// Recurse into a specific object.
@@ -226,7 +207,7 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 				}
 			}
 		}
-		return nil, fmt.Errorf("Invalid diff. Expected object with id %v but found none", pathObject.Json(metadata...))
+		return nil, fmt.Errorf("invalid diff: expected object with id %v but found none", pathObject.Json())
 	}
 	// Patch set
 	aMap := make(map[[8]byte]JsonNode)
@@ -253,13 +234,13 @@ func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNo
 		toDelete, ok := aMap[hc]
 		if !ok {
 			return nil, fmt.Errorf(
-				"Invalid diff. Expected %v at %v but found nothing.",
-				v.Json(metadata...), pathBehind)
+				"invalid diff: expected %v at %v but found nothing",
+				v.Json(), pathBehind)
 		}
 		if !toDelete.Equals(v, metadata...) {
 			return nil, fmt.Errorf(
-				"Invalid diff. Expected %v at %v but found %v.",
-				v.Json(metadata...), pathBehind, toDelete.Json(metadata...))
+				"invalid diff: expected %v at %v but found %v",
+				v.Json(), pathBehind, toDelete.Json())
 
 		}
 		delete(aMap, hc)

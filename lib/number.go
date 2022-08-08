@@ -9,15 +9,15 @@ type jsonNumber float64
 
 var _ JsonNode = jsonNumber(0)
 
-func (n jsonNumber) Json(metadata ...Metadata) string {
-	return renderJson(n.raw(metadata))
+func (n jsonNumber) Json(_ ...Metadata) string {
+	return renderJson(n.raw())
 }
 
-func (n jsonNumber) Yaml(metadata ...Metadata) string {
-	return renderYaml(n.raw(metadata))
+func (n jsonNumber) Yaml(_ ...Metadata) string {
+	return renderYaml(n.raw())
 }
 
-func (n jsonNumber) raw(_ []Metadata) interface{} {
+func (n jsonNumber) raw() interface{} {
 	return float64(n)
 }
 

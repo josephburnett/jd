@@ -178,7 +178,9 @@ func hasUnsupportedNullValue(node JsonNode) bool {
 			if isNull(v) {
 				return true
 			}
-			return hasUnsupportedNullValue(v)
+			if hasUnsupportedNullValue(v) {
+				return true
+			}
 		}
 		return false
 	case jsonArray, jsonList, jsonSet, jsonMultiset:
@@ -186,7 +188,9 @@ func hasUnsupportedNullValue(node JsonNode) bool {
 			if isNull(v) {
 				return true
 			}
-			return hasUnsupportedNullValue(v)
+			if hasUnsupportedNullValue(v) {
+				return true
+			}
 		}
 		return false
 	case jsonNull:

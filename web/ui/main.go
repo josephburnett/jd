@@ -10,36 +10,32 @@ import (
 )
 
 const (
-	commandId               = "command"
-	aLabelId                = "a-label"
-	aJsonId                 = "a-json"
-	aErrorId                = "a-error"
-	bLabelId                = "b-label"
-	bJsonId                 = "b-json"
-	bErrorId                = "b-error"
-	diffLabelId             = "diff-label"
-	diffId                  = "diff"
-	diffErrorId             = "diff-error"
-	modeDiffId              = "mode-diff"
-	modePatchId             = "mode-patch"
-	formatJsonId            = "format-json"
-	formatYamlId            = "format-yaml"
-	diffFormatJdId          = "diff-format-jd"
-	diffFormatPatchId       = "diff-format-patch"
-	diffFormatMergeId       = "diff-format-merge"
-	arrayListId             = "array-list"
-	arraySetId              = "array-set"
-	arrayMsetId             = "array-mset"
-	focusStyle              = "border:solid 3px #080"
-	unfocusStyle            = "border:solid 3px #ccc"
-	halfWidthStyle          = "width:97%"
-	fullWidthStyle          = "width:98.5%"
-	diffFormatJdPlaceholder = `@ ["foo"]
-- "bar"
-+ "baz"
-`
-	diffFormatPatchPlaceholder = `[{"op":"test","path":"/foo","value":"bar"},{"op":"remove","path":"/foo","value":"bar"},{"op":"add","path":"/foo","value":"baz"}]`
-	diffFormatMergePlaceholder = `{"foo":"baz"}`
+	commandId         = "command"
+	aLabelId          = "a-label"
+	aJsonId           = "a-json"
+	aErrorId          = "a-error"
+	bLabelId          = "b-label"
+	bJsonId           = "b-json"
+	bErrorId          = "b-error"
+	diffLabelId       = "diff-label"
+	diffId            = "diff"
+	diffErrorId       = "diff-error"
+	modeDiffId        = "mode-diff"
+	modePatchId       = "mode-patch"
+	formatJsonId      = "format-json"
+	formatYamlId      = "format-yaml"
+	diffFormatJdId    = "diff-format-jd"
+	diffFormatPatchId = "diff-format-patch"
+	diffFormatMergeId = "diff-format-merge"
+	arrayListId       = "array-list"
+	arraySetId        = "array-set"
+	arrayMsetId       = "array-mset"
+	focusStyle        = "border:solid 3px #080"
+	unfocusStyle      = "border:solid 3px #ccc"
+	halfWidthStyle    = "width:97%"
+	fullWidthStyle    = "width:98.5%"
+	placeholderA      = `{"foo":["bar"]}`
+	placeholderB      = `{"foo":["baz"]}`
 )
 
 func main() {
@@ -195,15 +191,51 @@ func (a *app) setDerived() {
 	}
 }
 
+var (
+	jdPlaceholderList string
+	jdPlaceholderSet  string
+	jdPlaceholderMset string
+	patchPlaceholder  string
+	mergePlaceholder  string
+)
+
+func init() {
+	var (
+		a   jd.JsonNode
+		b   jd.JsonNode
+		err error
+	)
+	a, err = jd.ReadJsonString(placeholderA)
+	b, err = jd.ReadJsonString(placeholderB)
+	if err != nil {
+		panic(err)
+	}
+	jdPlaceholderList = a.Diff(b).Render()
+	jdPlaceholderSet = a.Diff(b, jd.SET).Render()
+	jdPlaceholderMset = a.Diff(b, jd.MULTISET).Render()
+	patchPlaceholder, err = a.Diff(b).RenderPatch()
+	mergePlaceholder, err = a.Diff(b, jd.MERGE).RenderMerge()
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (a *app) setPlaceholder() {
 	d := a.getElementById(diffId)
 	switch a.diffFormat {
 	case diffFormatJdId:
-		d.Set("placeholder", diffFormatJdPlaceholder)
+		switch a.array {
+		case arrayListId:
+			d.Set("placeholder", jdPlaceholderList)
+		case arraySetId:
+			d.Set("placeholder", jdPlaceholderSet)
+		case arrayMsetId:
+			d.Set("placeholder", jdPlaceholderMset)
+		}
 	case diffFormatPatchId:
-		d.Set("placeholder", diffFormatPatchPlaceholder)
+		d.Set("placeholder", patchPlaceholder)
 	case diffFormatMergeId:
-		d.Set("placeholder", diffFormatMergePlaceholder)
+		d.Set("placeholder", mergePlaceholder)
 	}
 }
 

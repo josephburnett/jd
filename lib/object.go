@@ -13,22 +13,22 @@ func newJsonObject() jsonObject {
 	return jsonObject{}
 }
 
-func (o jsonObject) Json(metadata ...Metadata) string {
-	return renderJson(o.raw(metadata))
+func (o jsonObject) Json(_ ...Metadata) string {
+	return renderJson(o.raw())
 }
 
 func (o jsonObject) MarshalJSON() ([]byte, error) {
 	return []byte(o.Json()), nil
 }
 
-func (o jsonObject) Yaml(metadata ...Metadata) string {
-	return renderYaml(o.raw(metadata))
+func (o jsonObject) Yaml(_ ...Metadata) string {
+	return renderYaml(o.raw())
 }
 
-func (o jsonObject) raw(metadata []Metadata) interface{} {
+func (o jsonObject) raw() interface{} {
 	j := make(map[string]interface{})
 	for k, v := range o {
-		j[k] = v.raw(metadata)
+		j[k] = v.raw()
 	}
 	return j
 }
@@ -239,7 +239,7 @@ func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 	pe, ok := n.(jsonString)
 	if !ok {
 		return nil, fmt.Errorf(
-			"Found %v at %v. Expected JSON object.",
+			"found %v at %v: expected JSON object",
 			o.Json(), pathBehind)
 	}
 	nextNode, ok := o[string(pe)]

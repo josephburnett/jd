@@ -33,9 +33,7 @@ func (p path) prependMetadataMerge() path {
 			}
 			metadataWithMerge := make(jsonArray, len(metadata)+1)
 			metadataWithMerge[0] = jsonString(MERGE.string())
-			for i, m := range metadata {
-				metadataWithMerge[i] = m
-			}
+			copy(metadataWithMerge, metadata)
 			pathWithMetadataMerge[0] = metadataWithMerge
 			return pathWithMetadataMerge
 		} else {

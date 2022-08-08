@@ -489,11 +489,11 @@ func TestSetPatch(t *testing.T) {
 		),
 		want: `[4,5,6]`,
 	}, {
-		name:  "null deletes a node",
+		name:  "void deletes a node",
 		given: `[1,2,3]`,
 		patch: ss(
 			`@ [["MERGE","set"]]`,
-			`+ null`,
+			`+`,
 		),
 		want: ``,
 	}}

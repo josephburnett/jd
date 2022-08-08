@@ -6,20 +6,20 @@ type jsonArray []JsonNode
 
 var _ JsonNode = jsonArray(nil)
 
-func (a jsonArray) Json(metadata ...Metadata) string {
-	n := dispatch(a, metadata)
-	return n.Json(metadata...)
+func (a jsonArray) Json(renderOptions ...Metadata) string {
+	n := dispatch(a, renderOptions)
+	return n.Json(renderOptions...)
 }
 
-func (a jsonArray) Yaml(metadata ...Metadata) string {
-	n := dispatch(a, metadata)
-	return n.Yaml(metadata...)
+func (a jsonArray) Yaml(renderOptions ...Metadata) string {
+	n := dispatch(a, renderOptions)
+	return n.Yaml(renderOptions...)
 }
 
-func (a jsonArray) raw(metadata []Metadata) interface{} {
+func (a jsonArray) raw() interface{} {
 	r := make([]interface{}, len(a))
 	for i, n := range a {
-		r[i] = n.raw(metadata)
+		r[i] = n.raw()
 	}
 	return r
 }

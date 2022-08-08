@@ -6,13 +6,24 @@ import (
 	"fmt"
 )
 
+// RenderOption is a closed set of values which modify the output
+// appearance of Render*, Json and Yaml methods.
 type RenderOption interface {
 	is_render_option()
+
+	// RenderOptions are included in the closed Metadata set for
+	// backward compatability. Previously Json and Yaml methods
+	// accepted Metadata instead of RenderOptions. Passing
+	// Metadata to Json and Yaml methods did nothing but it remains
+	// an option to not break any existing code.
+	Metadata
 }
 
 type colorRenderOption struct{}
 
 func (c colorRenderOption) is_render_option() {}
+func (c colorRenderOption) is_metadata()      {}
+func (c colorRenderOption) string() string    { return "COLOR" }
 
 var (
 	COLOR RenderOption = colorRenderOption{}
@@ -95,13 +106,13 @@ func (d Diff) RenderPatch() (string, error) {
 			return "", err
 		}
 		if len(element.OldValues) > 1 {
-			return "", fmt.Errorf("Cannot render more than one old value in a JSON Patch op.")
+			return "", fmt.Errorf("cannot render more than one old value in a JSON Patch op")
 		}
 		if len(element.NewValues) > 1 {
-			return "", fmt.Errorf("Cannot render more than one new value in a JSON Patch op.")
+			return "", fmt.Errorf("cannot render more than one new value in a JSON Patch op")
 		}
 		if len(element.OldValues) == 0 && len(element.NewValues) == 0 {
-			return "", fmt.Errorf("Cannot render empty diff element as JSON Patch op.")
+			return "", fmt.Errorf("cannot render empty diff element as JSON Patch op")
 		}
 		if len(element.OldValues) == 1 && !isVoid(element.OldValues[0]) {
 			patch = append(patch, patchElement{
@@ -133,7 +144,7 @@ func (d Diff) RenderPatch() (string, error) {
 func (d Diff) RenderMerge() (string, error) {
 	for _, e := range d {
 		if len(e.Path) == 0 || !(jsonArray{jsonString(MERGE.string())}).Equals(e.Path[0]) {
-			return "", fmt.Errorf("Diff must be composed entirely of paths with merge metadata to be rendered as a merge patch.")
+			return "", fmt.Errorf("diff must be composed entirely of paths with merge metadata to be rendered as a merge patch")
 		}
 		for i := range e.NewValues {
 			if isVoid(e.NewValues[i]) {

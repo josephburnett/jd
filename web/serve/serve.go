@@ -1,4 +1,4 @@
-// +build include_web
+//go:build include_web
 
 package serve
 

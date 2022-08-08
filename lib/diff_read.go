@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// ReadDiffFile reads a file in native jd format.
 func ReadDiffFile(filename string) (Diff, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -15,6 +16,7 @@ func ReadDiffFile(filename string) (Diff, error) {
 	return readDiff(string(bytes))
 }
 
+// ReadDiffString reads a string in native jd format.
 func ReadDiffString(s string) (Diff, error) {
 	return readDiff(s)
 }
@@ -35,7 +37,7 @@ func readDiff(s string) (Diff, error) {
 			continue
 		}
 		header := dl[:1]
-		// Validate state transistion.
+		// Validate state transition.
 		switch state {
 		case INIT:
 			if header != "@" {
@@ -118,7 +120,7 @@ func checkDiffElement(de DiffElement) string {
 		// Must be a set.
 		emptyObject, _ := NewJsonNode(map[string]interface{}{})
 		if len(de.Path) == 0 || !de.Path[len(de.Path)-1].Equals(emptyObject) {
-			return "Expected path to end with {} for sets."
+			return "expected path to end with {} for sets."
 		}
 	}
 	return ""
@@ -127,9 +129,11 @@ func checkDiffElement(de DiffElement) string {
 func errorAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
 	line := lineZeroIndex + 1
 	e := fmt.Sprintf(err, i...)
-	return nil, fmt.Errorf("Invalid diff at line %v. %v", line, e)
+	return nil, fmt.Errorf("invalid diff at line %v. %v", line, e)
 }
 
+// ReadPatchFile reads a JSON Patch (RFC 6902) from a file. It is subject
+// to the same restrictions as ReadPatchString.
 func ReadPatchFile(filename string) (Diff, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -138,6 +142,17 @@ func ReadPatchFile(filename string) (Diff, error) {
 	return ReadPatchString(string(bytes))
 }
 
+// ReadPatchString reads a JSON Patch (RFC 6902) from a
+// string. ReadPatchString supports a subset of the specification and
+// requires a sequence of "test", "remove", "add" operations which mimics
+// the strict patching strategy of a native jd patch.
+//
+// For example:
+//   [
+//     {"op":"test","path":"/foo","value":"bar"},
+//     {"op":"remove","path":"/foo","value":"bar"},
+//     {"op":"add","path":"/foo","value":"baz"}
+//   ]
 func ReadPatchString(s string) (Diff, error) {
 	var patch []patchElement
 	err := json.Unmarshal([]byte(s), &patch)
@@ -161,7 +176,7 @@ func ReadPatchString(s string) (Diff, error) {
 func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, error) {
 	d := DiffElement{}
 	if len(patch) == 0 {
-		return d, nil, fmt.Errorf("Unexpected end of JSON Patch.")
+		return d, nil, fmt.Errorf("unexpected end of JSON Patch")
 	}
 	p := patch[0]
 	var err error
@@ -181,17 +196,17 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 		patch = patch[1:]
 		// Validate test and remove are paired because jd remove is strict.
 		if len(patch) == 0 || patch[0].Op != "remove" {
-			return d, nil, fmt.Errorf("JSON Patch test op must be followed by a remove op.")
+			return d, nil, fmt.Errorf("JSON Patch test op must be followed by a remove op")
 		}
 		if patch[0].Path != p.Path {
-			return d, nil, fmt.Errorf("JSON Patch remove op must have the same path as test op.")
+			return d, nil, fmt.Errorf("JSON Patch remove op must have the same path as test op")
 		}
 		removeValue, err := NewJsonNode(patch[0].Value)
 		if err != nil {
 			return d, nil, err
 		}
 		if !testValue.Equals(removeValue) {
-			return d, nil, fmt.Errorf("JSON Patch remove op must have the same value as test op.")
+			return d, nil, fmt.Errorf("JSON Patch remove op must have the same value as test op")
 		}
 		return d, patch[1:], nil
 	case "add":
@@ -206,10 +221,11 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 		d.NewValues = []JsonNode{addValue}
 		return d, patch[1:], nil
 	default:
-		return d, nil, fmt.Errorf("Invalid JSON Patch. Must be test/remove or add ops.")
+		return d, nil, fmt.Errorf("invalid JSON Patch: must be test/remove or add ops")
 	}
 }
 
+// ReadMergeFile reads a JSON Merge Patch (RFC 7386) from a file.
 func ReadMergeFile(filename string) (Diff, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -218,6 +234,7 @@ func ReadMergeFile(filename string) (Diff, error) {
 	return ReadMergeString(string(bytes))
 }
 
+// ReadMergeString reads a JSON Merge Patch (RFC 7386) from a string.
 func ReadMergeString(s string) (Diff, error) {
 	n, err := ReadJsonString(s)
 	if err != nil {

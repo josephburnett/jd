@@ -5,7 +5,8 @@ import (
 	"strings"
 )
 
-// Metadata is a closed set of types which modify diff and patch semantics.
+// Metadata is a closed set of values which modify Diff and Equals
+// semantics.
 type Metadata interface {
 	is_metadata()
 	string() string
@@ -48,11 +49,18 @@ func (m mergeMetadata) string() string {
 }
 
 var (
+	// MULTISET interprets all Arrays as Multisets (bags) during Diff
+	// and Equals operations.
 	MULTISET Metadata = multisetMetadata{}
-	SET      Metadata = setMetadata{}
-	MERGE    Metadata = mergeMetadata{}
+	// SET interprets all Arrays as Sets during Diff and Equals
+	// operations.
+	SET Metadata = setMetadata{}
+	// MERGE produces a Diff with merge semantics (RFC 7386).
+	MERGE Metadata = mergeMetadata{}
 )
 
+// SetKeys constructs Metadata to identify unique objects in an Array for
+// deeper Diff and Patch operations.
 func Setkeys(keys ...string) Metadata {
 	m := setkeysMetadata{
 		keys: make(map[string]bool),
@@ -89,6 +97,16 @@ func dispatch(n JsonNode, metadata []Metadata) JsonNode {
 		return jsonList(n)
 	}
 	return n
+}
+
+func dispatchRenderOptions(n JsonNode, opts []RenderOption) JsonNode {
+	metadata := []Metadata{}
+	for _, o := range opts {
+		if m, ok := o.(Metadata); ok {
+			metadata = append(metadata, m)
+		}
+	}
+	return dispatch(n, metadata)
 }
 
 func checkMetadata(want Metadata, metadata []Metadata) bool {

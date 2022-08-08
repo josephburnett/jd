@@ -93,13 +93,13 @@ type mode string
 
 const (
 	diffMode      mode = "diff"
-	patchMode          = "patch"
-	translateMode      = "trans"
+	patchMode     mode = "patch"
+	translateMode mode = "trans"
 )
 
 func serveWeb(port string) error {
 	if serve.Handle == nil {
-		return fmt.Errorf("The web UI wasn't include in this build. Use `make release` to include it.")
+		return fmt.Errorf("the web UI wasn't include in this build: use `make release` to include it")
 	}
 	http.HandleFunc("/", serve.Handle)
 	log.Printf("Listening on http://localhost:%v...", port)
@@ -120,7 +120,7 @@ func parseMetadata() ([]jd.Metadata, error) {
 		for _, k := range ks {
 			trimmed := strings.TrimSpace(k)
 			if trimmed == "" {
-				return nil, fmt.Errorf("Invalid set key: %v", k)
+				return nil, fmt.Errorf("invalid set key: %v", k)
 			}
 			keys = append(keys, trimmed)
 		}
@@ -315,7 +315,7 @@ func printTranslation(a string, metadata []jd.Metadata) {
 		}
 		out = node.Json()
 	default:
-		errorAndExit("Unsupported translation: %q", *translate)
+		errorAndExit("unsupported translation: %q", *translate)
 	}
 	if *output == "" {
 		fmt.Print(out)
@@ -333,7 +333,7 @@ func errorAndExit(msg string, args ...interface{}) {
 func readFile(filename string) string {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		os.Exit(2)
 	}
 	return string(bytes)
@@ -343,7 +343,7 @@ func readStdin() string {
 	r := bufio.NewReader(os.Stdin)
 	bytes, err := ioutil.ReadAll(r)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		os.Exit(2)
 	}
 	return string(bytes)

@@ -379,12 +379,11 @@ func TestListPatch(t *testing.T) {
 			`+ [4,5,6]`,
 		),
 	}, {
-		// Null deletes a node
 		a: `[1,2,3]`,
 		b: ``,
 		diff: ss(
 			`@ [["MERGE"]]`,
-			`+ null`,
+			`+`,
 		),
 	}}
 
