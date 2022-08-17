@@ -17,17 +17,20 @@ import (
 
 const version = "HEAD"
 
-var color = flag.Bool("color", false, "Print color diff")
-var format = flag.String("f", "", "Diff format (jd, patch, merge)")
-var mset = flag.Bool("mset", false, "Arrays as multisets")
-var output = flag.String("o", "", "Output file")
-var patch = flag.Bool("p", false, "Patch mode")
-var port = flag.Int("port", 0, "Serve web UI on port")
-var set = flag.Bool("set", false, "Arrays as sets")
-var setkeys = flag.String("setkeys", "", "Keys to identify set objects")
-var translate = flag.String("t", "", "Translate mode")
-var ver = flag.Bool("version", false, "Print version and exit")
-var yaml = flag.Bool("yaml", false, "Read and write YAML")
+var (
+	color         = flag.Bool("color", false, "Print color diff")
+	format        = flag.String("f", "", "Diff format (jd, patch, merge)")
+	gitDiffDriver = flag.Bool("git-diff-driver", false, "Use jd as a git diff driver.")
+	mset          = flag.Bool("mset", false, "Arrays as multisets")
+	output        = flag.String("o", "", "Output file")
+	patch         = flag.Bool("p", false, "Patch mode")
+	port          = flag.Int("port", 0, "Serve web UI on port")
+	set           = flag.Bool("set", false, "Arrays as sets")
+	setkeys       = flag.String("setkeys", "", "Keys to identify set objects")
+	translate     = flag.String("t", "", "Translate mode")
+	ver           = flag.Bool("version", false, "Print version and exit")
+	yaml          = flag.Bool("yaml", false, "Read and write YAML")
+)
 
 func main() {
 	flag.Parse()
@@ -45,6 +48,14 @@ func main() {
 	metadata, err := parseMetadata()
 	if err != nil {
 		errorAndExit(err.Error())
+	}
+	if *gitDiffDriver {
+		err := printGitDiffDriver(metadata)
+		if err != nil {
+			panic(err)
+		}
+		os.Exit(0)
+		return
 	}
 	mode := diffMode
 	if *patch {
@@ -175,6 +186,41 @@ func printUsageAndExit() {
 }
 
 func printDiff(a, b string, metadata []jd.Metadata) {
+	str, err := diff(a, b, metadata)
+	if err != nil {
+		errorAndExit(err.Error())
+	}
+	if *output == "" {
+		if str == "" {
+
+		}
+		fmt.Print(str)
+		os.Exit(1)
+	} else {
+		if str == "" {
+			os.Exit(0)
+		}
+		ioutil.WriteFile(*output, []byte(str), 0644)
+		os.Exit(1)
+	}
+}
+
+func printGitDiffDriver(metadata []jd.Metadata) error {
+	if len(flag.Args()) != 7 {
+		return fmt.Errorf("Git diff driver expects exactly 7 arguments.")
+	}
+	a := readFile(flag.Arg(1))
+	b := readFile(flag.Arg(4))
+	str, err := diff(a, b, metadata)
+	if err != nil {
+		return err
+	}
+	fmt.Print(str)
+	os.Exit(0)
+	return nil
+}
+
+func diff(a, b string, metadata []jd.Metadata) (string, error) {
 	var aNode, bNode jd.JsonNode
 	var err error
 	if *yaml {
@@ -183,7 +229,7 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		aNode, err = jd.ReadJsonString(a)
 	}
 	if err != nil {
-		errorAndExit(err.Error())
+		return "", err
 	}
 	if *yaml {
 		bNode, err = jd.ReadYamlString(b)
@@ -191,7 +237,7 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 		bNode, err = jd.ReadJsonString(b)
 	}
 	if err != nil {
-		errorAndExit(err.Error())
+		return "", err
 	}
 	diff := aNode.Diff(bNode, metadata...)
 	var renderOptions []jd.RenderOption
@@ -205,29 +251,17 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 	case "patch":
 		str, err = diff.RenderPatch()
 		if err != nil {
-			errorAndExit(err.Error())
+			return "", err
 		}
 	case "merge":
 		str, err = diff.RenderMerge()
 		if err != nil {
-			errorAndExit(err.Error())
+			return "", err
 		}
 	default:
-		errorAndExit("Invalid format: %q", *format)
+		return "", fmt.Errorf("Invalid format: %q", *format)
 	}
-	if *output == "" {
-		if str == "" {
-			os.Exit(0)
-		}
-		fmt.Print(str)
-		os.Exit(1)
-	} else {
-		if str == "" {
-			os.Exit(0)
-		}
-		ioutil.WriteFile(*output, []byte(str), 0644)
-		os.Exit(1)
-	}
+	return str, nil
 }
 
 func printPatch(p, a string, metadata []jd.Metadata) {
