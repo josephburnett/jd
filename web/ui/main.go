@@ -46,14 +46,15 @@ func main() {
 }
 
 type app struct {
-	mux        sync.Mutex
-	doc        js.Value
-	changeCh   chan struct{}
-	mode       string
-	format     string
-	formatLast string
-	diffFormat string
-	array      string
+	mux            sync.Mutex
+	doc            js.Value
+	changeCh       chan struct{}
+	mode           string
+	format         string
+	formatLast     string
+	diffFormat     string
+	diffFormatLast string
+	array          string
 }
 
 func newApp() (*app, error) {
@@ -373,12 +374,17 @@ func (a *app) parseAndTranslate(id string) (jd.JsonNode, error) {
 }
 
 func (a *app) parseAndTranslateDiff() (jd.Diff, error) {
+	change := false
+	if a.diffFormat != a.diffFormatLast {
+		change = true
+		a.diffFormatLast = a.diffFormat
+	}
 	diffText := a.getElementById(diffId)
 	diffJd, errJd := jd.ReadDiffString(diffText.Get("value").String())
 	diffPatch, errPatch := jd.ReadPatchString(diffText.Get("value").String())
 	diffMerge, errMerge := jd.ReadMergeString(diffText.Get("value").String())
 	// Translate jd to patch.
-	if a.diffFormat == diffFormatPatchId && (errPatch != nil || errMerge != nil) && errJd == nil {
+	if change && a.diffFormat == diffFormatPatchId && (errPatch != nil || errMerge != nil) && errJd == nil {
 		patchString, err := diffJd.RenderPatch()
 		if err != nil {
 			return nil, err
@@ -387,34 +393,35 @@ func (a *app) parseAndTranslateDiff() (jd.Diff, error) {
 			patchString = ""
 		}
 		a.setTextarea(diffId, patchString)
-	}
-	// Translate jd to merge:
-	if a.diffFormat == diffFormatPatchId && (errPatch != nil || errJd != nil) && errMerge == nil {
-		patchString, err := diffJd.RenderPatch()
-		if err != nil {
-			return nil, err
-		}
-		if patchString == "[]" {
-			patchString = ""
-		}
-		a.setTextarea(diffId, patchString)
-	}
-	// Translate patch to jd.
-	if a.diffFormat == diffFormatJdId && (errJd != nil || errMerge != nil) && errPatch == nil {
-		a.setTextarea(diffId, diffPatch.Render())
-	}
-	// Translate merge to jd.
-	if a.diffFormat == diffFormatJdId && (errJd != nil || errPatch != nil) && errMerge == nil {
-		a.setTextarea(diffId, diffPatch.Render())
-	}
-	// Return any good parsing results.
-	if errJd == nil {
 		return diffJd, nil
 	}
-	if errPatch == nil {
+	// Translate jd to merge:
+	if change && a.diffFormat == diffFormatMergeId && (errPatch != nil || errJd != nil) && errMerge == nil {
+		mergeString, err := diffJd.RenderMerge()
+		if err != nil {
+			return nil, err
+		}
+		a.setTextarea(diffId, mergeString)
+		return diffJd, nil
+	}
+	// Translate patch to jd.
+	if change && a.diffFormat == diffFormatJdId && (errJd != nil || errMerge != nil) && errPatch == nil {
+		a.setTextarea(diffId, diffPatch.Render())
 		return diffPatch, nil
 	}
-	if errMerge == nil {
+	// Translate merge to jd.
+	if change && a.diffFormat == diffFormatJdId && (errJd != nil || errPatch != nil) && errMerge == nil {
+		a.setTextarea(diffId, diffMerge.Render())
+		return diffMerge, nil
+	}
+	// Return good parsing results.
+	if a.diffFormat == diffFormatJdId && errJd == nil {
+		return diffJd, nil
+	}
+	if a.diffFormat == diffFormatPatchId && errPatch == nil {
+		return diffPatch, nil
+	}
+	if a.diffFormat == diffFormatMergeId && errMerge == nil {
 		return diffMerge, nil
 	}
 	// Return an error relevant to the desired format.
