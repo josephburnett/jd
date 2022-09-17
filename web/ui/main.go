@@ -51,6 +51,7 @@ type app struct {
 	changeCh   chan struct{}
 	mode       string
 	format     string
+	formatLast string
 	diffFormat string
 	array      string
 }
@@ -338,22 +339,29 @@ func (a *app) getMetadata() []jd.Metadata {
 }
 
 func (a *app) parseAndTranslate(id string) (jd.JsonNode, error) {
+	change := false
+	if a.format != a.formatLast {
+		change = true
+		a.formatLast = a.format
+	}
 	value := a.getElementById(id)
 	nodeJson, errJson := jd.ReadJsonString(value.Get("value").String())
 	nodeYaml, errYaml := jd.ReadYamlString(value.Get("value").String())
 	// Translate YAML to JSON.
-	if a.format == formatJsonId && errJson != nil && errYaml == nil {
+	if change && a.format == formatJsonId && errJson != nil && errYaml == nil {
 		a.setTextarea(id, nodeYaml.Json())
+		return nodeYaml, nil
 	}
 	// Translate JSON to YAML.
-	if a.format == formatYamlId && errJson == nil {
+	if change && a.format == formatYamlId && errJson == nil {
 		a.setTextarea(id, nodeJson.Yaml())
-	}
-	// Return any good parsing results.
-	if errJson == nil {
 		return nodeJson, nil
 	}
-	if errYaml == nil {
+	// Return good parsing results.
+	if a.format == formatJsonId && errJson == nil {
+		return nodeJson, nil
+	}
+	if a.format == formatYamlId && errYaml == nil {
 		return nodeYaml, nil
 	}
 	// Return an error relevant to the desired format.
