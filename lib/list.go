@@ -1,6 +1,10 @@
 package jd
 
-import "fmt"
+import (
+	"fmt"
+
+	lcs "github.com/yudai/golcs"
+)
 
 type jsonList []JsonNode
 
@@ -80,42 +84,83 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 			return append(d, e)
 		}
 	}
-	maxLen := len(a1)
-	if len(a1) < len(a2) {
-		maxLen = len(a2)
+
+	a1Hashes := make([]interface{}, len(a1))
+	a2Hashes := make([]interface{}, len(a2))
+	for i, v := range a1 {
+		a1Hashes[i] = v.hashCode(metadata)
 	}
-	from, to, by := maxLen-1, -1, -1
-	if len(a1) < len(a2) {
-		from, to, by = 0, maxLen, 1
+	for i, v := range a2 {
+		a2Hashes[i] = v.hashCode(metadata)
 	}
-	for i := from; i != to; i = i + by {
-		a1Has := i < len(a1)
-		a2Has := i < len(a2)
-		subPath := append(path, jsonNumber(i))
-		if a1Has && a2Has {
-			n1 := dispatch(a1[i], metadata)
-			n2 := dispatch(a2[i], metadata)
-			subDiff := n1.diff(n2, subPath, metadata, strategy)
-			d = append(d, subDiff...)
+	sequence := lcs.New([]interface{}(a1Hashes), []interface{}(a2Hashes)).Values()
+
+	a1Ptr, a2Ptr := 0, 0
+	for _, hash := range sequence {
+		// Advance to the next common element and add to diff.
+		e := DiffElement{
+			Path: append(path.clone(), jsonNumber(a1Ptr)),
 		}
-		if a1Has && !a2Has {
-			e := DiffElement{
-				Path:      subPath.clone(),
-				OldValues: nodeList(a1[i]),
-				NewValues: nodeList(),
-			}
-			d = append(d, e)
+		for a1Hashes[a1Ptr] != hash {
+			e.OldValues = append(e.OldValues, a1[a1Ptr])
+			a1Ptr++
 		}
-		if !a1Has && a2Has {
-			appendPath := append(path, jsonNumber(-1))
-			e := DiffElement{
-				Path:      appendPath.clone(),
-				OldValues: nodeList(),
-				NewValues: nodeList(a2[i]),
-			}
-			d = append(d, e)
+		for a2Hashes[a2Ptr] != hash {
+			e.NewValues = append(e.NewValues, a2[a2Ptr])
+			a2Ptr++
 		}
+		d = append(d, e)
 	}
+	// Add all remaining elements to the diff.
+	e := DiffElement{
+		Path: append(path.clone(), jsonNumber(a1Ptr)),
+	}
+	for a1Ptr < len(a1) {
+		e.OldValues = append(e.OldValues, a1[a1Ptr])
+		a1Ptr++
+	}
+	for a2Ptr < len(a2) {
+		e.NewValues = append(e.NewValues, a2[a2Ptr])
+		a2Ptr++
+	}
+	d = append(d, e)
+
+	// maxLen := len(a1)
+	// if len(a1) < len(a2) {
+	// 	maxLen = len(a2)
+	// }
+	// from, to, by := maxLen-1, -1, -1
+	// if len(a1) < len(a2) {
+	// 	from, to, by = 0, maxLen, 1
+	// }
+	// for i := from; i != to; i = i + by {
+	// 	a1Has := i < len(a1)
+	// 	a2Has := i < len(a2)
+	// 	subPath := append(path, jsonNumber(i))
+	// 	if a1Has && a2Has {
+	// 		n1 := dispatch(a1[i], metadata)
+	// 		n2 := dispatch(a2[i], metadata)
+	// 		subDiff := n1.diff(n2, subPath, metadata, strategy)
+	// 		d = append(d, subDiff...)
+	// 	}
+	// 	if a1Has && !a2Has {
+	// 		e := DiffElement{
+	// 			Path:      subPath.clone(),
+	// 			OldValues: nodeList(a1[i]),
+	// 			NewValues: nodeList(),
+	// 		}
+	// 		d = append(d, e)
+	// 	}
+	// 	if !a1Has && a2Has {
+	// 		appendPath := append(path, jsonNumber(-1))
+	// 		e := DiffElement{
+	// 			Path:      appendPath.clone(),
+	// 			OldValues: nodeList(),
+	// 			NewValues: nodeList(a2[i]),
+	// 		}
+	// 		d = append(d, e)
+	// 	}
+	// }
 	return d
 }
 
