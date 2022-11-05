@@ -95,25 +95,33 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 	}
 	sequence := lcs.New([]interface{}(a1Hashes), []interface{}(a2Hashes)).Values()
 
-	a1Ptr, a2Ptr := 0, 0
+	a1Ptr, a2Ptr, pathPtr := 0, 0, 0
 	for _, hash := range sequence {
-		// Advance to the next common element and add to diff.
+		// Advance to the next common element accumulating a diff.
 		e := DiffElement{
-			Path: append(path.clone(), jsonNumber(a1Ptr)),
+			Path: append(path.clone(), jsonNumber(pathPtr)),
 		}
 		for a1Hashes[a1Ptr] != hash {
 			e.OldValues = append(e.OldValues, a1[a1Ptr])
 			a1Ptr++
+			pathPtr--
 		}
 		for a2Hashes[a2Ptr] != hash {
 			e.NewValues = append(e.NewValues, a2[a2Ptr])
 			a2Ptr++
+			pathPtr++
 		}
-		d = append(d, e)
+		if len(e.NewValues) != 0 || len(e.OldValues) != 0 {
+			d = append(d, e)
+		}
+		// Advance past common element
+		a1Ptr++
+		a2Ptr++
+		pathPtr++
 	}
 	// Add all remaining elements to the diff.
 	e := DiffElement{
-		Path: append(path.clone(), jsonNumber(a1Ptr)),
+		Path: append(path.clone(), jsonNumber(pathPtr)),
 	}
 	for a1Ptr < len(a1) {
 		e.OldValues = append(e.OldValues, a1[a1Ptr])
@@ -123,7 +131,9 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 		e.NewValues = append(e.NewValues, a2[a2Ptr])
 		a2Ptr++
 	}
-	d = append(d, e)
+	if len(e.NewValues) != 0 || len(e.OldValues) != 0 {
+		d = append(d, e)
+	}
 
 	// maxLen := len(a1)
 	// if len(a1) < len(a2) {
