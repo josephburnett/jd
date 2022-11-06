@@ -135,42 +135,6 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 		d = append(d, e)
 	}
 
-	// maxLen := len(a1)
-	// if len(a1) < len(a2) {
-	// 	maxLen = len(a2)
-	// }
-	// from, to, by := maxLen-1, -1, -1
-	// if len(a1) < len(a2) {
-	// 	from, to, by = 0, maxLen, 1
-	// }
-	// for i := from; i != to; i = i + by {
-	// 	a1Has := i < len(a1)
-	// 	a2Has := i < len(a2)
-	// 	subPath := append(path, jsonNumber(i))
-	// 	if a1Has && a2Has {
-	// 		n1 := dispatch(a1[i], metadata)
-	// 		n2 := dispatch(a2[i], metadata)
-	// 		subDiff := n1.diff(n2, subPath, metadata, strategy)
-	// 		d = append(d, subDiff...)
-	// 	}
-	// 	if a1Has && !a2Has {
-	// 		e := DiffElement{
-	// 			Path:      subPath.clone(),
-	// 			OldValues: nodeList(a1[i]),
-	// 			NewValues: nodeList(),
-	// 		}
-	// 		d = append(d, e)
-	// 	}
-	// 	if !a1Has && a2Has {
-	// 		appendPath := append(path, jsonNumber(-1))
-	// 		e := DiffElement{
-	// 			Path:      appendPath.clone(),
-	// 			OldValues: nodeList(),
-	// 			NewValues: nodeList(a2[i]),
-	// 		}
-	// 		d = append(d, e)
-	// 	}
-	// }
 	return d
 }
 
