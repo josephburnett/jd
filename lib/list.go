@@ -97,27 +97,52 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 
 	a1Ptr, a2Ptr, pathPtr := 0, 0, 0
 	for _, hash := range sequence {
-		// Advance to the next common element accumulating a diff.
-		e := DiffElement{
+		// Advance to the next common element accumulating diff elements.
+		currentDiffElement := diffElement{
 			Path: append(path.clone(), jsonNumber(pathPtr)),
 		}
-		for a1Hashes[a1Ptr] != hash {
-			e.OldValues = append(e.OldValues, a1[a1Ptr])
+		for a1Hashes[a1Ptr] != hash || a2Hashes[a2Ptr] != hash {
+
+			switch {
+			case a1Hashes[a1Ptr] == hash:
+				// A1 is done. The rest of A2 are new values.
+				for a2Hashes[a2Ptr] != hash {
+					currentDiffElement.NewValues = append(currentDiffElement.NewValues, a2[a2Ptr])
+					a2Ptr++
+					pathPtr++
+				}
+			case a2Hashes[a2Ptr] == hash:
+				// A2 is done. The rest of A1 are old values.
+				for a1Hashes[a1Ptr] != hash {
+					currentDiffElement.OldValues = append(currentDiffElement.OldValues, a1[a1Ptr])
+					a1Ptr++
+					pathPtr--
+				}
+			case: // same same type of container:
+				// 1. add current diff element
+				// 2. recurse and add subpath
+				// 3. advance all pointers
+				// 4. create a new current diff element
+			default:
+				// add current values to old and new in current diff element
+			}
+
+			e := DiffElement{
+				Path: append(path.clone(), jsonNumber(pathPtr)),
+			}
+			for a2Hashes[a2Ptr] != hash {
+			}
+			if len(e.NewValues) != 0 || len(e.OldValues) != 0 {
+				// Match up new and old values and maybe recurse on them.
+
+				// Add any leftovers to the current level diff.
+				d = append(d, e) // Adjust path ++ by number of matched pairs.
+			}
+			// Advance past common element
 			a1Ptr++
-			pathPtr--
-		}
-		for a2Hashes[a2Ptr] != hash {
-			e.NewValues = append(e.NewValues, a2[a2Ptr])
 			a2Ptr++
 			pathPtr++
 		}
-		if len(e.NewValues) != 0 || len(e.OldValues) != 0 {
-			d = append(d, e)
-		}
-		// Advance past common element
-		a1Ptr++
-		a2Ptr++
-		pathPtr++
 	}
 	// Add all remaining elements to the diff.
 	e := DiffElement{
