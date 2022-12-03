@@ -98,7 +98,7 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 	a1Ptr, a2Ptr, pathPtr := 0, 0, 0
 	for _, hash := range sequence {
 		// Advance to the next common element accumulating diff elements.
-		currentDiffElement := diffElement{
+		currentDiffElement := DiffElement{
 			Path: append(path.clone(), jsonNumber(pathPtr)),
 		}
 		for a1Hashes[a1Ptr] != hash || a2Hashes[a2Ptr] != hash {
@@ -118,31 +118,36 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 					a1Ptr++
 					pathPtr--
 				}
-			case: // same same type of container:
-				// 1. add current diff element
-				// 2. recurse and add subpath
-				// 3. advance all pointers
-				// 4. create a new current diff element
+			case sameContainerType(a1[a1Ptr], a2[a2Ptr], metadata):
+				// Add what we have.
+				if len(currentDiffElement.NewValues) != 0 || len(currentDiffElement.OldValues) != 0 {
+					d = append(d, currentDiffElement)
+				}
+				// Recurse and add the subdiff.
+				subDiff := a1[a1Ptr].diff(a2[a2Ptr], append(path.clone(), jsonNumber(pathPtr)), metadata, strategy)
+				if len(subDiff) > 0 {
+					d = append(d, subDiff...)
+				}
+				// Continue after subdiff.
+				a1Ptr++
+				a2Ptr++
+				pathPtr++
+				currentDiffElement = DiffElement{
+					Path: append(path.clone(), jsonNumber(pathPtr)),
+				}
 			default:
-				// add current values to old and new in current diff element
+				currentDiffElement.OldValues = append(currentDiffElement.OldValues, a1[a1Ptr])
+				currentDiffElement.NewValues = append(currentDiffElement.NewValues, a2[a2Ptr])
 			}
 
-			e := DiffElement{
-				Path: append(path.clone(), jsonNumber(pathPtr)),
-			}
-			for a2Hashes[a2Ptr] != hash {
-			}
-			if len(e.NewValues) != 0 || len(e.OldValues) != 0 {
-				// Match up new and old values and maybe recurse on them.
-
-				// Add any leftovers to the current level diff.
-				d = append(d, e) // Adjust path ++ by number of matched pairs.
-			}
-			// Advance past common element
-			a1Ptr++
-			a2Ptr++
-			pathPtr++
 		}
+		if len(currentDiffElement.NewValues) > 0 || len(currentDiffElement.OldValues) > 0 {
+			d = append(d, currentDiffElement)
+		}
+		// Advance past common element
+		a1Ptr++
+		a2Ptr++
+		pathPtr++
 	}
 	// Add all remaining elements to the diff.
 	e := DiffElement{
@@ -161,6 +166,32 @@ func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy pat
 	}
 
 	return d
+}
+
+func sameContainerType(n1, n2 JsonNode, metadata []Metadata) bool {
+	c1 := dispatch(n1, metadata)
+	c2 := dispatch(n2, metadata)
+	switch c1.(type) {
+	case jsonObject:
+		if _, ok := c2.(jsonObject); ok {
+			return true
+		}
+	case jsonList:
+		if _, ok := c2.(jsonList); ok {
+			return true
+		}
+	case jsonSet:
+		if _, ok := c2.(jsonSet); ok {
+			return true
+		}
+	case jsonMultiset:
+		if _, ok := c2.(jsonMultiset); ok {
+			return true
+		}
+	default:
+		return false
+	}
+	return false
 }
 
 func (l jsonList) Patch(d Diff) (JsonNode, error) {
