@@ -162,7 +162,7 @@ func printUsageAndExit() {
 		`  -setkeys   Keys to identify set objects`,
 		`  -yaml      Read and write YAML instead of JSON.`,
 		`  -port=N    Serve web UI on port N`,
-		`  -f=FORMAT  Produce diff in FORMAT "jd" (default), "patch" (RFC 6902) or`,
+		`  -f=FORMAT  Read and write diff in FORMAT "jd" (default), "patch" (RFC 6902) or`,
 		`             "merge" (RFC 7386)`,
 		`  -t=FORMATS Translate FILE1 between FORMATS. Supported formats are "jd",`,
 		`             "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".`,
@@ -265,7 +265,18 @@ func diff(a, b string, metadata []jd.Metadata) (string, error) {
 }
 
 func printPatch(p, a string, metadata []jd.Metadata) {
-	diff, err := jd.ReadDiffString(p)
+	var diff jd.Diff
+	var err error
+	switch *format {
+	case "", "jd":
+		diff, err = jd.ReadDiffString(p)
+	case "patch":
+		diff, err = jd.ReadPatchString(p)
+	case "merge":
+		diff, err = jd.ReadMergeString(p)
+	default:
+		errorAndExit(fmt.Sprintf("Invalid format: %q", *format))
+	}
 	if err != nil {
 		errorAndExit(err.Error())
 	}
