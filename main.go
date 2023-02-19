@@ -192,7 +192,7 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 	}
 	if *output == "" {
 		if str == "" {
-
+			os.Exit(0)
 		}
 		fmt.Print(str)
 		os.Exit(1)

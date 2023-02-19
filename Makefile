@@ -6,6 +6,7 @@ build : test pack-web
 
 test :
 	go test ./lib
+	go test .
 
 fuzz :
 	go test ./lib -fuzz=FuzzJd
