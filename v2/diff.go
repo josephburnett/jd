@@ -22,6 +22,11 @@ type DiffElement struct {
 	//   [["MERGE"],"foo","bar"]     // indexes to 1 in {"foo":{"bar":1}} with merge semantics
 	Path []JsonNode
 
+	// BeforeValues are the required context which should appear
+	// before new and old values of a diff element. They are only
+	// used for diffs in a list element.
+	BeforeValues []JsonNode
+
 	// OldValues are removed from the JsonNode at the Path. Usually
 	// only one old value is provided unless removing entries from a
 	// Set or Multiset. When using merge semantics no old values are
@@ -32,6 +37,11 @@ type DiffElement struct {
 	// one new value is provided unless adding entries to a Set or
 	// Multiset.
 	NewValues []JsonNode
+
+	// AfterValues are the required context which should appear
+	// after new and old values of a diff element. They are only
+	// used for diffs in a list element.
+	AfterValues []JsonNode
 }
 
 // Diff describes how two JsonNodes differ from each other. A Diff is
