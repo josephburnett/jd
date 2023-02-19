@@ -5,8 +5,9 @@ build : test pack-web
 	CGO_ENABLED=0 go build -tags include_web -o release/jd main.go
 
 test :
-	go test ./lib
 	go test .
+	go test ./lib
+	cd v2 ; go test .
 
 fuzz :
 	go test ./lib -fuzz=FuzzJd
