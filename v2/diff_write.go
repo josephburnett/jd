@@ -10,19 +10,11 @@ import (
 // appearance of Render*, Json and Yaml methods.
 type RenderOption interface {
 	is_render_option()
-
-	// RenderOptions are included in the closed Metadata set for
-	// backward compatability. Previously Json and Yaml methods
-	// accepted Metadata instead of RenderOptions. Passing
-	// Metadata to Json and Yaml methods did nothing but it remains
-	// an option to not break any existing code.
-	Metadata
 }
 
 type colorRenderOption struct{}
 
 func (c colorRenderOption) is_render_option() {}
-func (c colorRenderOption) is_metadata()      {}
 func (c colorRenderOption) string() string    { return "COLOR" }
 
 var (

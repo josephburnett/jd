@@ -5,6 +5,7 @@ package jd
 // Path and how to interpret the intervening structure is determined by a
 // list of JsonNodes (path elements).
 type DiffElement struct {
+	Metadata Metadata
 
 	// Path elements can be strings to index Objects, numbers to
 	// index Lists and objects to index Sets and Multisets. Path

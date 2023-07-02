@@ -1,74 +1,17 @@
 package jd
 
-import (
-	"sort"
-	"strings"
-)
-
 // Metadata is a closed set of values which modify Diff and Equals
 // semantics.
-type Metadata interface {
-	is_metadata()
-	string() string
+type PatchMetadata struct {
+	Version int
+	Merge   bool
 }
 
-type setMetadata struct{}
-type multisetMetadata struct{}
-type setkeysMetadata struct {
-	keys map[string]bool
-}
-type mergeMetadata struct{}
-
-func (setMetadata) is_metadata()      {}
-func (multisetMetadata) is_metadata() {}
-func (setkeysMetadata) is_metadata()  {}
-func (mergeMetadata) is_metadata()    {}
-
-func (m setMetadata) string() string {
-	return "set"
-}
-
-func (m multisetMetadata) string() string {
-	return "multiset"
-}
-
-func (m setkeysMetadata) string() string {
-	ks := make([]string, 0)
-	for k := range m.keys {
-		ks = append(ks, k)
-	}
-	sort.Strings(ks)
-	// TODO: escape commas.
-	return "setkeys=" + strings.Join(ks, ",")
-}
-
-func (m mergeMetadata) string() string {
-	// Merge apply to the whole path not just the next
-	// element. Therefore it is all caps.
-	return "MERGE"
-}
-
-var (
-	// MULTISET interprets all Arrays as Multisets (bags) during Diff
-	// and Equals operations.
-	MULTISET Metadata = multisetMetadata{}
-	// SET interprets all Arrays as Sets during Diff and Equals
-	// operations.
-	SET Metadata = setMetadata{}
-	// MERGE produces a Diff with merge semantics (RFC 7386).
-	MERGE Metadata = mergeMetadata{}
-)
-
-// SetKeys constructs Metadata to identify unique objects in an Array for
-// deeper Diff and Patch operations.
-func Setkeys(keys ...string) Metadata {
-	m := setkeysMetadata{
-		keys: make(map[string]bool),
-	}
-	for _, key := range keys {
-		m.keys[key] = true
-	}
-	return m
+type DiffMetadata struct {
+	Version  int
+	Merge    bool
+	Set      bool
+	Multiset bool
 }
 
 type patchStrategy string
@@ -78,20 +21,20 @@ const (
 	strictPatchStrategy patchStrategy = "strict"
 )
 
-func getPatchStrategy(metadata []Metadata) patchStrategy {
-	if checkMetadata(MERGE, metadata) {
+func getPatchStrategy(metadata Metadata) patchStrategy {
+	if metadata.Merge {
 		return mergePatchStrategy
 	}
 	return strictPatchStrategy
 }
 
-func dispatch(n JsonNode, metadata []Metadata) JsonNode {
+func dispatch(n JsonNode, metadata Metadata) JsonNode {
 	switch n := n.(type) {
 	case jsonArray:
-		if checkMetadata(SET, metadata) {
+		if metadata.Set {
 			return jsonSet(n)
 		}
-		if checkMetadata(MULTISET, metadata) {
+		if metadata.Multiset {
 			return jsonMultiset(n)
 		}
 		return jsonList(n)
@@ -116,13 +59,4 @@ func checkMetadata(want Metadata, metadata []Metadata) bool {
 		}
 	}
 	return false
-}
-
-func getSetkeysMetadata(metadata []Metadata) *setkeysMetadata {
-	for _, o := range metadata {
-		if s, ok := o.(setkeysMetadata); ok {
-			return &s
-		}
-	}
-	return nil
 }
