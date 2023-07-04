@@ -245,7 +245,7 @@ func ReadMergeString(s string) (Diff, error) {
 	return readMergeInto(d, p, n), nil
 }
 
-func readMergeInto(d Diff, p path, n JsonNode) Diff {
+func readMergeInto(d Diff, p Path, n JsonNode) Diff {
 	switch n := n.(type) {
 	case jsonObject:
 		for k, v := range n {

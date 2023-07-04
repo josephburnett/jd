@@ -4,11 +4,11 @@ type jsonString string
 
 var _ JsonNode = jsonString("")
 
-func (s jsonString) Json(_ ...Metadata) string {
+func (s jsonString) Json(_ ...Option) string {
 	return renderJson(s.raw())
 }
 
-func (s jsonString) Yaml(_ ...Metadata) string {
+func (s jsonString) Yaml(_ ...Option) string {
 	return renderYaml(s.raw())
 }
 
@@ -16,7 +16,7 @@ func (s jsonString) raw() interface{} {
 	return string(s)
 }
 
-func (s1 jsonString) Equals(n JsonNode, metadata ...Metadata) bool {
+func (s1 jsonString) Equals(n JsonNode, options ...Option) bool {
 	s2, ok := n.(jsonString)
 	if !ok {
 		return false
@@ -24,18 +24,18 @@ func (s1 jsonString) Equals(n JsonNode, metadata ...Metadata) bool {
 	return s1 == s2
 }
 
-func (s jsonString) hashCode(_ []Metadata) [8]byte {
+func (s jsonString) hashCode(_ []Option) [8]byte {
 	return hash([]byte(s))
 }
 
-func (s jsonString) Diff(n JsonNode, metadata ...Metadata) Diff {
+func (s jsonString) Diff(n JsonNode, options ...Option) Diff {
 	return s.diff(n, make(path, 0), metadata, getPatchStrategy(metadata))
 }
 
 func (s1 jsonString) diff(
 	n JsonNode,
-	path path,
-	metadata []Metadata,
+	path Path,
+	options []Option,
 	strategy patchStrategy,
 ) Diff {
 	return diff(s1, n, path, metadata, strategy)
@@ -46,7 +46,7 @@ func (s jsonString) Patch(d Diff) (JsonNode, error) {
 }
 
 func (s jsonString) patch(
-	pathBehind, pathAhead path,
+	pathBehind, pathAhead Path,
 	oldValues, newValues []JsonNode,
 	strategy patchStrategy,
 ) (JsonNode, error) {

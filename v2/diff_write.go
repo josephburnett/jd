@@ -6,37 +6,13 @@ import (
 	"fmt"
 )
 
-// RenderOption is a closed set of values which modify the output
-// appearance of Render*, Json and Yaml methods.
-type RenderOption interface {
-	is_render_option()
-}
-
-type colorRenderOption struct{}
-
-func (c colorRenderOption) is_render_option() {}
-func (c colorRenderOption) string() string    { return "COLOR" }
-
-var (
-	COLOR RenderOption = colorRenderOption{}
-)
-
-func checkRenderOption(want RenderOption, opts []RenderOption) bool {
-	for _, o := range opts {
-		if o == want {
-			return true
-		}
-	}
-	return false
-}
-
 const (
 	colorDefault = "\033[0m"
 	colorRed     = "\033[31m"
 	colorGreen   = "\033[32m"
 )
 
-func (d DiffElement) Render(opts ...RenderOption) string {
+func (d DiffElement) Render(opts ...Option) string {
 	isColor := checkRenderOption(COLOR, opts)
 	isMerge := path(d.Path).isMerge()
 	b := bytes.NewBuffer(nil)
@@ -82,7 +58,7 @@ func (d DiffElement) Render(opts ...RenderOption) string {
 	}
 	return b.String()
 }
-func (d Diff) Render(opts ...RenderOption) string {
+func (d Diff) Render(opts ...Option) string {
 	b := bytes.NewBuffer(nil)
 	for _, element := range d {
 		b.WriteString(element.Render(opts...))

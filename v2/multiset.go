@@ -9,11 +9,11 @@ type jsonMultiset jsonArray
 
 var _ JsonNode = jsonMultiset(nil)
 
-func (a jsonMultiset) Json(_ ...Metadata) string {
+func (a jsonMultiset) Json(_ ...Option) string {
 	return renderJson(a.raw())
 }
 
-func (a jsonMultiset) Yaml(_ ...Metadata) string {
+func (a jsonMultiset) Yaml(_ ...Option) string {
 	return renderYaml(a.raw())
 }
 
@@ -21,7 +21,7 @@ func (a jsonMultiset) raw() interface{} {
 	return jsonArray(a).raw()
 }
 
-func (a1 jsonMultiset) Equals(n JsonNode, metadata ...Metadata) bool {
+func (a1 jsonMultiset) Equals(n JsonNode, options ...Option) bool {
 	n = dispatch(n, metadata)
 	a2, ok := n.(jsonMultiset)
 	if !ok {
@@ -37,7 +37,7 @@ func (a1 jsonMultiset) Equals(n JsonNode, metadata ...Metadata) bool {
 	}
 }
 
-func (a jsonMultiset) hashCode(metadata []Metadata) [8]byte {
+func (a jsonMultiset) hashCode(options []Option) [8]byte {
 	h := make(hashCodes, 0, len(a))
 	for _, v := range a {
 		h = append(h, v.hashCode(metadata))
@@ -50,11 +50,16 @@ func (a jsonMultiset) hashCode(metadata []Metadata) [8]byte {
 	return hash(b)
 }
 
-func (a jsonMultiset) Diff(n JsonNode, metadata ...Metadata) Diff {
+func (a jsonMultiset) Diff(n JsonNode, options ...Option) Diff {
 	return a.diff(n, nil, metadata, getPatchStrategy(metadata))
 }
 
-func (a1 jsonMultiset) diff(n JsonNode, path path, metadata []Metadata, strategy patchStrategy) Diff {
+func (a1 jsonMultiset) diff(
+	n JsonNode,
+	path Path,
+	options []Option,
+	strategy patchStrategy,
+) Diff {
 	d := make(Diff, 0)
 	a2, ok := n.(jsonMultiset)
 	if !ok {
@@ -150,7 +155,7 @@ func (a jsonMultiset) Patch(d Diff) (JsonNode, error) {
 	return patchAll(a, d)
 }
 
-func (a jsonMultiset) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
+func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
 
 	// Merge patch strategy
 	if strategy == mergePatchStrategy {

@@ -2,7 +2,7 @@ package jd
 
 func diff(
 	a, b JsonNode,
-	p path,
+	p Path,
 	metadata []Metadata,
 	strategy patchStrategy,
 ) Diff {

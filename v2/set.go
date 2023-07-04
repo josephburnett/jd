@@ -9,11 +9,11 @@ type jsonSet jsonArray
 
 var _ JsonNode = jsonSet(nil)
 
-func (s jsonSet) Json(_ ...Metadata) string {
+func (s jsonSet) Json(_ ...Option) string {
 	return renderJson(s.raw())
 }
 
-func (s jsonSet) Yaml(_ ...Metadata) string {
+func (s jsonSet) Yaml(_ ...Option) string {
 	return renderYaml(s.raw())
 }
 
@@ -35,7 +35,7 @@ func (s jsonSet) raw() interface{} {
 	return set
 }
 
-func (s1 jsonSet) Equals(n JsonNode, metadata ...Metadata) bool {
+func (s1 jsonSet) Equals(n JsonNode, options ...Option) bool {
 	n = dispatch(n, metadata)
 	s2, ok := n.(jsonSet)
 	if !ok {
@@ -48,7 +48,7 @@ func (s1 jsonSet) Equals(n JsonNode, metadata ...Metadata) bool {
 	}
 }
 
-func (s jsonSet) hashCode(metadata []Metadata) [8]byte {
+func (s jsonSet) hashCode(options []Option) [8]byte {
 	sMap := make(map[[8]byte]bool)
 	for _, v := range s {
 		v = dispatch(v, metadata)
@@ -62,11 +62,16 @@ func (s jsonSet) hashCode(metadata []Metadata) [8]byte {
 	return hashes.combine()
 }
 
-func (s jsonSet) Diff(j JsonNode, metadata ...Metadata) Diff {
+func (s jsonSet) Diff(j JsonNode, option ...Option) Diff {
 	return s.diff(j, make(path, 0), metadata, getPatchStrategy(metadata))
 }
 
-func (s1 jsonSet) diff(n JsonNode, path path, metadata []Metadata, strategy patchStrategy) Diff {
+func (s1 jsonSet) diff(
+	n JsonNode,
+	path Path,
+	options []Option,
+	strategy patchStrategy,
+) Diff {
 	d := make(Diff, 0)
 	s2, ok := n.(jsonSet)
 	if !ok {
@@ -168,7 +173,11 @@ func (s jsonSet) Patch(d Diff) (JsonNode, error) {
 	return patchAll(s, d)
 }
 
-func (s jsonSet) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
+func (s jsonSet) patch(
+	pathBehind, pathAhead Path,
+	oldValues, newValues []JsonNode,
+	strategy patchStrategy,
+) (JsonNode, error) {
 
 	// Merge patch strategy
 	if strategy == mergePatchStrategy {

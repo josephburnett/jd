@@ -18,7 +18,7 @@ func patchAll(n JsonNode, d Diff) (JsonNode, error) {
 
 func patch(
 	node JsonNode,
-	pathBehind, pathAhead path,
+	pathBehind, pathAhead Path,
 	oldValues, newValues []JsonNode,
 	strategy patchStrategy,
 ) (JsonNode, error) {
@@ -86,7 +86,7 @@ func patchErrExpectColl(n JsonNode, pe interface{}) (JsonNode, error) {
 
 }
 
-func patchErrNonSetDiff(oldValues, newValues []JsonNode, path path) (JsonNode, error) {
+func patchErrNonSetDiff(oldValues, newValues []JsonNode, path Path) (JsonNode, error) {
 	if len(oldValues) > 1 {
 		return nil, fmt.Errorf(
 			"invalid diff: multiple removals from non-set at %v",
@@ -98,19 +98,19 @@ func patchErrNonSetDiff(oldValues, newValues []JsonNode, path path) (JsonNode, e
 	}
 }
 
-func patchErrExpectValue(want, found JsonNode, path path) (JsonNode, error) {
+func patchErrExpectValue(want, found JsonNode, path Path) (JsonNode, error) {
 	return nil, fmt.Errorf(
 		"found %v at %v: expected %v",
 		found.Json(), path, want.Json())
 }
 
-func patchErrMergeWithOldValue(path path, oldValue JsonNode) (JsonNode, error) {
+func patchErrMergeWithOldValue(path Path, oldValue JsonNode) (JsonNode, error) {
 	return nil, fmt.Errorf(
 		"patch with merge strategy at %v has unnecessary old value %v",
 		path, oldValue)
 }
 
-func patchErrUnsupportedPatchStrategy(path path, strategy patchStrategy) (JsonNode, error) {
+func patchErrUnsupportedPatchStrategy(path Path, strategy patchStrategy) (JsonNode, error) {
 	return nil, fmt.Errorf(
 		"unsupported patch strategy %v at %v",
 		strategy, path)

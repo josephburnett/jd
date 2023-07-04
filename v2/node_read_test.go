@@ -132,7 +132,7 @@ func checkReadDiffError(t *testing.T, diffLines ...string) {
 	}
 }
 
-func p(elements ...interface{}) path {
+func p(elements ...interface{}) Path {
 	var path path
 	for _, e := range elements {
 		n, err := NewJsonNode(e)

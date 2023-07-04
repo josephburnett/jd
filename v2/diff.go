@@ -5,6 +5,10 @@ package jd
 // Path and how to interpret the intervening structure is determined by a
 // list of JsonNodes (path elements).
 type DiffElement struct {
+
+	// Metadata describes how this DiffElement should be
+	// interpretted. It is also inherited by following
+	// DiffElements until another Metadata is encountered.
 	Metadata Metadata
 
 	// Path elements can be strings to index Objects, numbers to
@@ -21,28 +25,28 @@ type DiffElement struct {
 	//   ["foo",["multiset"],{}]     // indexes a multiset under "foo" in {"foo":[1,1]}
 	//   ["foo",{"id":"bar"},"baz"]  // indexes to 1 in {"foo":[{"id":"bar","baz":1}]}
 	//   [["MERGE"],"foo","bar"]     // indexes to 1 in {"foo":{"bar":1}} with merge semantics
-	Path []JsonNode
+	Path Path
 
-	// BeforeValues are the required context which should appear
-	// before new and old values of a diff element. They are only
-	// used for diffs in a list element.
-	BeforeValues []JsonNode
+	// Before are the required context which should appear before
+	// new and old values of a diff element. They are only used
+	// for diffs in a list element.
+	Before []JsonNode
 
-	// OldValues are removed from the JsonNode at the Path. Usually
-	// only one old value is provided unless removing entries from a
-	// Set or Multiset. When using merge semantics no old values are
-	// provided (new values stomp old ones).
-	OldValues []JsonNode
+	// Remove are removed from the JsonNode at the Path. Usually
+	// only one old value is provided unless removing entries from
+	// a Set or Multiset. When using merge semantics no old values
+	// are provided (new values stomp old ones).
+	Remove []JsonNode
 
-	// NewValues are added to the JsonNode at the Path. Usually only
-	// one new value is provided unless adding entries to a Set or
+	// Add are added to the JsonNode at the Path. Usually only one
+	// new value is provided unless adding entries to a Set or
 	// Multiset.
-	NewValues []JsonNode
+	Add []JsonNode
 
-	// AfterValues are the required context which should appear
-	// after new and old values of a diff element. They are only
-	// used for diffs in a list element.
-	AfterValues []JsonNode
+	// After are the required context which should appear after
+	// new and old values of a diff element. They are only used
+	// for diffs in a list element.
+	After []JsonNode
 }
 
 // Diff describes how two JsonNodes differ from each other. A Diff is

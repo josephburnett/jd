@@ -12,10 +12,10 @@ import (
 type JsonNode interface {
 
 	// Json renders a JsonNode as a JSON string.
-	Json(renderOptions ...Metadata) string
+	Json(renderOptions ...Option) string
 
 	// Yaml renders a JsonNode as a YAML string in block format.
-	Yaml(renderOptions ...Metadata) string
+	Yaml(renderOptions ...Option) string
 
 	// Equals returns true if the JsonNodes are equal according to
 	// the provided Metadata. The default behavior (no Metadata) is
@@ -26,14 +26,14 @@ type JsonNode interface {
 	// function will construct Metadata to compare objects by a set
 	// of keys. If two JsonNodes are equal, then Diff with the same
 	// Metadata will produce an empty Diff. And vice versa.
-	Equals(n JsonNode, metadata ...Metadata) bool
+	Equals(n JsonNode, options ...Option) bool
 
 	// Diff produces a list of differences (Diff) between two
 	// JsonNodes such that if the output Diff were applied to the
 	// first JsonNode (Patch) then the two JsonNodes would be
 	// Equal. The necessary Metadata is embeded in the Diff itself so
 	// only the Diff is required to Patch a JsonNode.
-	Diff(n JsonNode, metadata ...Metadata) Diff
+	Diff(n JsonNode, options ...Option) Diff
 
 	// Patch applies a Diff to a JsonNode. No Metadata is provided
 	// because the original interpretation of the structure is
@@ -45,9 +45,9 @@ type JsonNode interface {
 
 type jsonNodeInternals interface {
 	raw() interface{}
-	hashCode(metadata []Metadata) [8]byte
-	diff(n JsonNode, p path, metadata []Metadata, strategy patchStrategy) Diff
-	patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error)
+	hashCode(options []Option) [8]byte
+	diff(n JsonNode, p Path, options []Option, strategy patchStrategy) Diff
+	patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error)
 }
 
 // NewJsonNode constructs a JsonNode from native Golang objects. See the

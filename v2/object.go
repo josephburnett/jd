@@ -13,7 +13,7 @@ func newJsonObject() jsonObject {
 	return jsonObject{}
 }
 
-func (o jsonObject) Json(_ ...Metadata) string {
+func (o jsonObject) Json(_ ...Option) string {
 	return renderJson(o.raw())
 }
 
@@ -21,7 +21,7 @@ func (o jsonObject) MarshalJSON() ([]byte, error) {
 	return []byte(o.Json()), nil
 }
 
-func (o jsonObject) Yaml(_ ...Metadata) string {
+func (o jsonObject) Yaml(_ ...Option) string {
 	return renderYaml(o.raw())
 }
 
@@ -33,7 +33,7 @@ func (o jsonObject) raw() interface{} {
 	return j
 }
 
-func (o1 jsonObject) Equals(n JsonNode, metadata ...Metadata) bool {
+func (o1 jsonObject) Equals(n JsonNode, options ...Option) bool {
 	o2, ok := n.(jsonObject)
 	if !ok {
 		return false
@@ -55,7 +55,7 @@ func (o1 jsonObject) Equals(n JsonNode, metadata ...Metadata) bool {
 	return true
 }
 
-func (o jsonObject) hashCode(metadata []Metadata) [8]byte {
+func (o jsonObject) hashCode(options []Option) [8]byte {
 	keys := make([]string, 0, len(o))
 	for k := range o {
 		keys = append(keys, k)
@@ -98,7 +98,7 @@ func (o jsonObject) ident(metadata []Metadata) [8]byte {
 	return hashes.combine()
 }
 
-func (o jsonObject) pathIdent(pathObject jsonObject, metadata []Metadata) [8]byte {
+func (o jsonObject) pathIdent(pathObject jsonObject, options []Option) [8]byte {
 	idKeys := map[string]bool{}
 	for k := range pathObject {
 		idKeys[k] = true
@@ -114,26 +114,16 @@ func (o jsonObject) pathIdent(pathObject jsonObject, metadata []Metadata) [8]byt
 	return e.hashCode([]Metadata{})
 }
 
-func (k1 *setkeysMetadata) mergeKeys(k2 map[string]bool) map[string]bool {
-	if k1 == nil {
-		// Nothing to merge
-		return k2
-	}
-	k3 := make(map[string]bool)
-	for k := range k1.keys {
-		k3[k] = true
-	}
-	for k := range k2 {
-		k3[k] = true
-	}
-	return k3
-}
-
-func (o jsonObject) Diff(n JsonNode, metadata ...Metadata) Diff {
+func (o jsonObject) Diff(n JsonNode, options ...Option) Diff {
 	return o.diff(n, make(path, 0), metadata, getPatchStrategy(metadata))
 }
 
-func (o1 jsonObject) diff(n JsonNode, path path, metadata []Metadata, strategy patchStrategy) Diff {
+func (o1 jsonObject) diff(
+	n JsonNode,
+	path Path,
+	options []Option,
+	strategy patchStrategy,
+) Diff {
 	d := make(Diff, 0)
 	o2, ok := n.(jsonObject)
 	if !ok {
@@ -218,7 +208,11 @@ func (o jsonObject) Patch(d Diff) (JsonNode, error) {
 	return patchAll(o, d)
 }
 
-func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
+func (o jsonObject) patch(
+	pathBehind, pathAhead Path,
+	oldValues, newValues []JsonNode,
+	strategy patchStrategy,
+) (JsonNode, error) {
 	if (len(pathAhead) == 0) && (len(oldValues) > 1 || len(newValues) > 1) {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}

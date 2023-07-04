@@ -6,11 +6,11 @@ type jsonList []JsonNode
 
 var _ JsonNode = jsonList(nil)
 
-func (l jsonList) Json(_ ...Metadata) string {
+func (l jsonList) Json(_ ...Option) string {
 	return renderJson(l.raw())
 }
 
-func (l jsonList) Yaml(...Metadata) string {
+func (l jsonList) Yaml(_ ...Option) string {
 	return renderYaml(l.raw())
 }
 
@@ -18,7 +18,7 @@ func (l jsonList) raw() interface{} {
 	return jsonArray(l).raw()
 }
 
-func (l1 jsonList) Equals(n JsonNode, metadata ...Metadata) bool {
+func (l1 jsonList) Equals(n JsonNode, option ...Option) bool {
 	n2 := dispatch(n, metadata)
 	l2, ok := n2.(jsonList)
 	if !ok {
@@ -36,7 +36,7 @@ func (l1 jsonList) Equals(n JsonNode, metadata ...Metadata) bool {
 	return true
 }
 
-func (l jsonList) hashCode(metadata []Metadata) [8]byte {
+func (l jsonList) hashCode(options []Option) [8]byte {
 	b := make([]byte, 0, len(l)*8)
 	for _, n := range l {
 		h := n.hashCode(metadata)
@@ -45,11 +45,16 @@ func (l jsonList) hashCode(metadata []Metadata) [8]byte {
 	return hash(b)
 }
 
-func (l jsonList) Diff(n JsonNode, metadata ...Metadata) Diff {
+func (l jsonList) Diff(n JsonNode, options ...Option) Diff {
 	return l.diff(n, make(path, 0), metadata, getPatchStrategy(metadata))
 }
 
-func (a1 jsonList) diff(n JsonNode, path path, metadata []Metadata, strategy patchStrategy) Diff {
+func (a1 jsonList) diff(
+	n JsonNode,
+	path Path,
+	options []Option,
+	strategy patchStrategy,
+) Diff {
 	d := make(Diff, 0)
 	a2, ok := n.(jsonList)
 	if !ok {
@@ -123,7 +128,7 @@ func (l jsonList) Patch(d Diff) (JsonNode, error) {
 	return patchAll(l, d)
 }
 
-func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
+func (l jsonList) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
 
 	if len(oldValues) > 1 || len(newValues) > 1 {
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
