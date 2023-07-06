@@ -76,9 +76,9 @@ func readDiff(s string) (Diff, error) {
 				return errorAt(i, "Invalid path. Want JSON list. Got %T.", p)
 			}
 			de = DiffElement{
-				Path:      path(pa).clone(),
-				OldValues: []JsonNode{},
-				NewValues: []JsonNode{},
+				Path:   Path(pa).clone(),
+				Remove: []JsonNode{},
+				Add:    []JsonNode{},
 			}
 			state = AT
 		case "-":
@@ -86,7 +86,7 @@ func readDiff(s string) (Diff, error) {
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}
-			de.OldValues = append(de.OldValues, v)
+			de.Remove = append(de.Remove, v)
 			state = OLD
 		case "+":
 			v, err := ReadJsonString(dl[1:])

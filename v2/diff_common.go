@@ -3,7 +3,7 @@ package jd
 func diff(
 	a, b JsonNode,
 	p Path,
-	metadata []Metadata,
+	options []Option,
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)
@@ -14,14 +14,14 @@ func diff(
 	switch strategy {
 	case mergePatchStrategy:
 		de = DiffElement{
-			Path:      p.prependMetadataMerge(),
-			NewValues: jsonArray{b},
+			Path: p.clone(),
+			Add:  jsonArray{b},
 		}
 	default:
 		de = DiffElement{
-			Path:      p.clone(),
-			OldValues: nodeList(a),
-			NewValues: nodeList(b),
+			Path:   p.clone(),
+			Remove: nodeList(a),
+			Add:    nodeList(b),
 		}
 	}
 	return append(d, de)

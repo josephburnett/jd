@@ -33,8 +33,8 @@ func (b jsonBool) hashCode(_ []Option) [8]byte {
 }
 
 func (b jsonBool) Diff(n JsonNode, options ...Option) Diff {
-	strategy := getPatchStrategy(metadata)
-	return b.diff(n, make(path, 0), metadata, strategy)
+	strategy := getPatchStrategy(options)
+	return b.diff(n, make(Path, 0), options, strategy)
 }
 
 func (b jsonBool) diff(
@@ -43,7 +43,7 @@ func (b jsonBool) diff(
 	options []Option,
 	strategy patchStrategy,
 ) Diff {
-	return diff(b, n, path, metadata, strategy)
+	return diff(b, n, path, options, strategy)
 }
 
 func (b jsonBool) Patch(d Diff) (JsonNode, error) {

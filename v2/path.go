@@ -10,6 +10,12 @@ func (n jsonNumber) isPathElement() {}
 
 type Path []PathElement
 
+func NewPath(n JsonNode) (Path, error) {
+	if n == nil {
+		return 
+	}
+}
+
 func (p Path) next() (JsonNode, []Option, Path) {
 	if len(p) == 0 {
 		return jsonVoid{}, nil, nil
@@ -29,4 +35,12 @@ func (p Path) next() (JsonNode, []Option, Path) {
 		return p[0], nil, rest
 	}
 	panic("path element should be closed set")
+}
+
+func (p Path) clone() Path {
+	p2 := make(Path, len(p))
+	for i, e := range p {
+		p2[i] = e
+	}
+	return p2
 }

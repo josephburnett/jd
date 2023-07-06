@@ -161,7 +161,7 @@ func m(m ...Metadata) []Metadata {
 type testContext struct {
 	t        *testing.T
 	metadata []Metadata
-	opts     []RenderOption
+	opts     []Option
 }
 
 func newTestContext(t *testing.T) *testContext {
