@@ -10,9 +10,19 @@ type multisetOption struct{}
 type renderColorOption struct{}
 
 func (o mergeOption) isOption()       {}
+func (o mergeOption) string() string  { return "MERGE" }
 func (o setOption) isOption()         {}
 func (o multisetOption) isOption()    {}
 func (o renderColorOption) isOption() {}
+
+type colorOption struct{}
+
+func (o colorOption) isOption() {}
+
+var (
+	COLOR = colorOption{}
+	MERGE = mergeOption{}
+)
 
 type patchStrategy string
 
@@ -21,6 +31,15 @@ const (
 	strictPatchStrategy patchStrategy = "strict"
 )
 
+func checkOption(options []Option, want Option) bool {
+	for _, o := range options {
+		if o == want {
+			return true
+		}
+	}
+	return false
+}
+
 func getPatchStrategy(options []Option) patchStrategy {
 	for _, o := range options {
 		if o == mergeOption {
@@ -28,4 +47,18 @@ func getPatchStrategy(options []Option) patchStrategy {
 		}
 	}
 	return strictPatchStrategy
+}
+
+func dispatch(n JsonNode, options []Option) JsonNode {
+	switch n := n.(type) {
+	case jsonArray:
+		if metadata.Set {
+			return jsonSet(n)
+		}
+		if metadata.Multiset {
+			return jsonMultiset(n)
+		}
+		return jsonList(n)
+	}
+	return n
 }

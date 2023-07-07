@@ -8,13 +8,13 @@ import (
 	"github.com/go-openapi/jsonpointer"
 )
 
-func readPointer(s string) ([]JsonNode, error) {
+func readPointer(s string) (Path, error) {
 	pointer, err := jsonpointer.New(s)
 	if err != nil {
 		return nil, err
 	}
 	tokens := pointer.DecodedTokens()
-	path := make([]JsonNode, len(tokens))
+	path := make(jsonArray, len(tokens))
 	for i, t := range tokens {
 		var element JsonNode
 		var err error
@@ -32,7 +32,7 @@ func readPointer(s string) ([]JsonNode, error) {
 		}
 		path[i] = element
 	}
-	return path, nil
+	return NewPath(path)
 }
 
 func writePointer(path []JsonNode) (string, error) {

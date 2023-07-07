@@ -71,12 +71,12 @@ func readDiff(s string) (Diff, error) {
 			if err != nil {
 				return errorAt(i, "Invalid path. %v", err.Error())
 			}
-			pa, ok := p.(jsonArray)
-			if !ok {
-				return errorAt(i, "Invalid path. Want JSON list. Got %T.", p)
+			path, err := NewPath(p)
+			if err != nil {
+				errorAt(i, err.Error())
 			}
 			de = DiffElement{
-				Path:   Path(pa).clone(),
+				Path:   path,
 				Remove: []JsonNode{},
 				Add:    []JsonNode{},
 			}
@@ -93,7 +93,7 @@ func readDiff(s string) (Diff, error) {
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}
-			de.NewValues = append(de.NewValues, v)
+			de.Add = append(de.Add, v)
 			state = NEW
 		default:
 			errorAt(i, "Unexpected %v.", dl[0])
@@ -116,10 +116,12 @@ func readDiff(s string) (Diff, error) {
 }
 
 func checkDiffElement(de DiffElement) string {
-	if len(de.NewValues) > 1 || len(de.OldValues) > 1 {
+	if len(de.Add) > 1 || len(de.Add) > 1 {
 		// Must be a set.
-		emptyObject, _ := NewJsonNode(map[string]interface{}{})
-		if len(de.Path) == 0 || !de.Path[len(de.Path)-1].Equals(emptyObject) {
+		if len(de.Path) == 0 {
+			return "expected path to end with {} for sets."
+		}
+		if _, ok := de.Path[len(de.Path)-1].(pathSet); !ok {
 			return "expected path to end with {} for sets."
 		}
 	}
@@ -192,7 +194,7 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 		if err != nil {
 			return d, nil, err
 		}
-		d.OldValues = []JsonNode{testValue}
+		d.Remove = []JsonNode{testValue}
 		patch = patch[1:]
 		// Validate test and remove are paired because jd remove is strict.
 		if len(patch) == 0 || patch[0].Op != "remove" {
@@ -218,7 +220,7 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 		if err != nil {
 			return d, nil, err
 		}
-		d.NewValues = []JsonNode{addValue}
+		d.Add = []JsonNode{addValue}
 		return d, patch[1:], nil
 	default:
 		return d, nil, fmt.Errorf("invalid JSON Patch: must be test/remove or add ops")
@@ -241,7 +243,10 @@ func ReadMergeString(s string) (Diff, error) {
 		return nil, err
 	}
 	d := Diff{}
-	p := []JsonNode{jsonArray{jsonString(MERGE.string())}}
+	p, err := NewPath(jsonArray{jsonString(MERGE.string())})
+	if err != nil {
+		return nil, err
+	}
 	return readMergeInto(d, p, n), nil
 }
 
@@ -249,12 +254,12 @@ func readMergeInto(d Diff, p Path, n JsonNode) Diff {
 	switch n := n.(type) {
 	case jsonObject:
 		for k, v := range n {
-			d = readMergeInto(d, append(p.clone(), jsonString(k)), v)
+			d = readMergeInto(d, append(p.clone(), pathKey(k)), v)
 		}
 		if len(n) == 0 {
 			return append(d, DiffElement{
-				Path:      p.clone(),
-				NewValues: []JsonNode{newJsonObject()},
+				Path: p.clone(),
+				Add:  []JsonNode{newJsonObject()},
 			})
 		}
 	case voidNode:
@@ -264,8 +269,8 @@ func readMergeInto(d Diff, p Path, n JsonNode) Diff {
 			n = voidNode{}
 		}
 		return append(d, DiffElement{
-			Path:      p.clone(),
-			NewValues: []JsonNode{n},
+			Path: p.clone(),
+			Add:  []JsonNode{n},
 		})
 	}
 	return d
