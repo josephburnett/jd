@@ -40,7 +40,7 @@ func (n jsonNumber) hashCode(options []Option) [8]byte {
 }
 
 func (n jsonNumber) Diff(node JsonNode, options ...Option) Diff {
-	return n.diff(node, make(path, 0), metadata, getPatchStrategy(metadata))
+	return n.diff(node, make(Path, 0), options, getPatchStrategy(options))
 }
 
 func (n jsonNumber) diff(
@@ -49,7 +49,7 @@ func (n jsonNumber) diff(
 	options []Option,
 	strategy patchStrategy,
 ) Diff {
-	return diff(n, node, path, metadata, strategy)
+	return diff(n, node, path, options, strategy)
 }
 
 func (n jsonNumber) Patch(d Diff) (JsonNode, error) {

@@ -13,8 +13,8 @@ const (
 )
 
 func (d DiffElement) Render(opts ...Option) string {
-	isColor := checkOption(opts, COLOR)
-	isMerge := checkOption(opts, MERGE)
+	isColor := checkOption[colorOption](opts)
+	isMerge := checkOption[mergeOption](opts)
 	b := bytes.NewBuffer(nil)
 	b.WriteString("@ ")
 	b.Write([]byte(d.Path.JsonNode().Json()))

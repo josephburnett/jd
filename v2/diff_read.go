@@ -121,7 +121,7 @@ func checkDiffElement(de DiffElement) string {
 		if len(de.Path) == 0 {
 			return "expected path to end with {} for sets."
 		}
-		if _, ok := de.Path[len(de.Path)-1].(pathSet); !ok {
+		if _, ok := de.Path[len(de.Path)-1].(PathSet); !ok {
 			return "expected path to end with {} for sets."
 		}
 	}
@@ -254,7 +254,7 @@ func readMergeInto(d Diff, p Path, n JsonNode) Diff {
 	switch n := n.(type) {
 	case jsonObject:
 		for k, v := range n {
-			d = readMergeInto(d, append(p.clone(), pathKey(k)), v)
+			d = readMergeInto(d, append(p.clone(), PathKey(k)), v)
 		}
 		if len(n) == 0 {
 			return append(d, DiffElement{

@@ -6,19 +6,19 @@ type PathElement interface {
 	isPathElement()
 }
 
-type pathIndex int
-type pathKey string
-type pathSet struct{}
-type pathMultiset struct{}
-type pathSetKeys map[string]JsonNode
-type pathMultisetKeys map[string]JsonNode
+type PathIndex int
+type PathKey string
+type PathSet struct{}
+type PathMultiset struct{}
+type PathSetKeys map[string]JsonNode
+type PathMultisetKeys map[string]JsonNode
 
-func (_ pathIndex) isPathElement() {}
-func (_ pathKey) isPathElement() {}
-func (_ pathSet) isPathElement() {}
-func (_ pathMultiset) isPathElement()  {}
-func (_ pathSetKeys) isPathElement() {}
-func (_ pathMultisetKeys) isPathElement()  {}
+func (_ PathIndex) isPathElement() {}
+func (_ PathKey) isPathElement() {}
+func (_ PathSet) isPathElement() {}
+func (_ PathMultiset) isPathElement()  {}
+func (_ PathSetKeys) isPathElement() {}
+func (_ PathMultisetKeys) isPathElement()  {}
 
 type Path []PathElement
 
@@ -82,7 +82,7 @@ func (p Path) JsonNode() JsonNode {
 	return a
 }
 
-func (p Path) next() (JsonNode, []Option, Path) {
+func (p Path) next() (PathElement, []Option, Path) {
 	if len(p) == 0 {
 		return jsonVoid{}, nil, nil
 	}

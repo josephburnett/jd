@@ -22,7 +22,7 @@ func (a jsonMultiset) raw() interface{} {
 }
 
 func (a1 jsonMultiset) Equals(n JsonNode, options ...Option) bool {
-	n = dispatch(n, metadata)
+	n = dispatch(n, options)
 	a2, ok := n.(jsonMultiset)
 	if !ok {
 		return false
@@ -30,7 +30,7 @@ func (a1 jsonMultiset) Equals(n JsonNode, options ...Option) bool {
 	if len(a1) != len(a2) {
 		return false
 	}
-	if a1.hashCode(metadata) == a2.hashCode(metadata) {
+	if a1.hashCode(options) == a2.hashCode(options) {
 		return true
 	} else {
 		return false
@@ -40,7 +40,7 @@ func (a1 jsonMultiset) Equals(n JsonNode, options ...Option) bool {
 func (a jsonMultiset) hashCode(options []Option) [8]byte {
 	h := make(hashCodes, 0, len(a))
 	for _, v := range a {
-		h = append(h, v.hashCode(metadata))
+		h = append(h, v.hashCode(options))
 	}
 	sort.Sort(h)
 	b := make([]byte, 0, len(a)*8)
@@ -51,7 +51,7 @@ func (a jsonMultiset) hashCode(options []Option) [8]byte {
 }
 
 func (a jsonMultiset) Diff(n JsonNode, options ...Option) Diff {
-	return a.diff(n, nil, metadata, getPatchStrategy(metadata))
+	return a.diff(n, nil, options, getPatchStrategy(options))
 }
 
 func (a1 jsonMultiset) diff(
@@ -68,46 +68,44 @@ func (a1 jsonMultiset) diff(
 		switch strategy {
 		case mergePatchStrategy:
 			e = DiffElement{
-				Path:      path.prependMetadataMerge(),
-				NewValues: nodeList(n),
+				Path: path.clone(),
+				Add:  nodeList(n),
 			}
 		default:
 			e = DiffElement{
-				Path:      path.clone(),
-				OldValues: nodeList(a1),
-				NewValues: nodeList(n),
+				Path:   path.clone(),
+				Remove: nodeList(a1),
+				Add:    nodeList(n),
 			}
 		}
 		return append(d, e)
 	}
 	if strategy == mergePatchStrategy && !a1.Equals(n) {
 		e := DiffElement{
-			Path:      path.prependMetadataMerge(),
-			NewValues: nodeList(n),
+			Path: path.clone(),
+			Add:  nodeList(n),
 		}
 		return append(d, e)
 	}
 	a1Counts := make(map[[8]byte]int)
 	a1Map := make(map[[8]byte]JsonNode)
 	for _, v := range a1 {
-		hc := v.hashCode(metadata)
+		hc := v.hashCode(options)
 		a1Counts[hc]++
 		a1Map[hc] = v
 	}
 	a2Counts := make(map[[8]byte]int)
 	a2Map := make(map[[8]byte]JsonNode)
 	for _, v := range a2 {
-		hc := v.hashCode(metadata)
+		hc := v.hashCode(options)
 		a2Counts[hc]++
 		a2Map[hc] = v
 	}
-	// TODO: cast directly to jsonObject when jsonObject drops idKeys.
-	o, _ := NewJsonNode(map[string]interface{}{})
-	pathWithMultiset := path.appendIndex(o.(jsonObject), metadata).clone()
+	pathWithMultiset := append(path.clone(), PathMultiset{})
 	e := DiffElement{
-		Path:      pathWithMultiset,
-		OldValues: nodeList(),
-		NewValues: nodeList(),
+		Path:   pathWithMultiset,
+		Remove: nodeList(),
+		Add:    nodeList(),
 	}
 	a1Hashes := make(hashCodes, 0)
 	for hc := range a1Counts {
@@ -128,7 +126,7 @@ func (a1 jsonMultiset) diff(
 		removed := a1Count - a2Count
 		if removed > 0 {
 			for i := 0; i < removed; i++ {
-				e.OldValues = append(e.OldValues, a1Map[hc])
+				e.Remove = append(e.Remove, a1Map[hc])
 			}
 		}
 	}
@@ -141,11 +139,11 @@ func (a1 jsonMultiset) diff(
 		added := a2Count - a1Count
 		if added > 0 {
 			for i := 0; i < added; i++ {
-				e.NewValues = append(e.NewValues, a2Map[hc])
+				e.Add = append(e.Add, a2Map[hc])
 			}
 		}
 	}
-	if len(e.OldValues) > 0 || len(e.NewValues) > 0 {
+	if len(e.Remove) > 0 || len(e.Add) > 0 {
 		d = append(d, e)
 	}
 	return d
@@ -164,7 +162,7 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []J
 
 	// Strict patch strategy
 	// Base case
-	if pathAhead.isLeaf() {
+	if len(pathAhead) == 0 {
 		if len(oldValues) > 1 || len(newValues) > 1 {
 			return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 		}
@@ -177,14 +175,10 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []J
 	}
 	// Unrolled recursive case
 	n, metadata, _ := pathAhead.next()
-	o, ok := n.(jsonObject)
+	_, ok := n.(PathMultiset)
 	if !ok {
 		return nil, fmt.Errorf(
 			"invalid path element %v: expected map[string]interface{}", n)
-	}
-	if len(o) != 0 {
-		return nil, fmt.Errorf(
-			"invalid path element %v: expected empty object", n)
 	}
 	aCounts := make(map[[8]byte]int)
 	aMap := make(map[[8]byte]JsonNode)

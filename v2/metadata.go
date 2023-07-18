@@ -6,5 +6,9 @@ type Metadata struct {
 }
 
 func (m Metadata) Options() []Option {
-
+	if m.Merge {
+		return []Option{MERGE}
+	} else {
+		return []Option{}
+	}
 }

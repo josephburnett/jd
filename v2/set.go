@@ -20,7 +20,7 @@ func (s jsonSet) Yaml(_ ...Option) string {
 func (s jsonSet) raw() interface{} {
 	sMap := make(map[[8]byte]JsonNode)
 	for _, n := range s {
-		hc := n.hashCode([]Metadata{SET})
+		hc := n.hashCode([]Option{setOption{}})
 		sMap[hc] = n
 	}
 	hashes := make(hashCodes, 0, len(sMap))
@@ -36,12 +36,12 @@ func (s jsonSet) raw() interface{} {
 }
 
 func (s1 jsonSet) Equals(n JsonNode, options ...Option) bool {
-	n = dispatch(n, metadata)
+	n = dispatch(n, options)
 	s2, ok := n.(jsonSet)
 	if !ok {
 		return false
 	}
-	if s1.hashCode(metadata) == s2.hashCode(metadata) {
+	if s1.hashCode(options) == s2.hashCode(options) {
 		return true
 	} else {
 		return false
@@ -51,8 +51,8 @@ func (s1 jsonSet) Equals(n JsonNode, options ...Option) bool {
 func (s jsonSet) hashCode(options []Option) [8]byte {
 	sMap := make(map[[8]byte]bool)
 	for _, v := range s {
-		v = dispatch(v, metadata)
-		hc := v.hashCode(metadata)
+		v = dispatch(v, options)
+		hc := v.hashCode(options)
 		sMap[hc] = true
 	}
 	hashes := make(hashCodes, 0, len(sMap))
@@ -62,8 +62,8 @@ func (s jsonSet) hashCode(options []Option) [8]byte {
 	return hashes.combine()
 }
 
-func (s jsonSet) Diff(j JsonNode, option ...Option) Diff {
-	return s.diff(j, make(path, 0), metadata, getPatchStrategy(metadata))
+func (s jsonSet) Diff(j JsonNode, options ...Option) Diff {
+	return s.diff(j, make(Path, 0), options, getPatchStrategy(options))
 }
 
 func (s1 jsonSet) diff(
@@ -80,22 +80,22 @@ func (s1 jsonSet) diff(
 		switch strategy {
 		case mergePatchStrategy:
 			e = DiffElement{
-				Path:      path.prependMetadataMerge(),
-				NewValues: nodeList(n),
+				Path: path.clone(),
+				Add:  nodeList(n),
 			}
 		default:
 			e = DiffElement{
-				Path:      path.clone(),
-				OldValues: nodeList(s1),
-				NewValues: nodeList(n),
+				Path:   path.clone(),
+				Remove: nodeList(s1),
+				Add:    nodeList(n),
 			}
 		}
 		return append(d, e)
 	}
 	if strategy == mergePatchStrategy && !s1.Equals(n) {
 		e := DiffElement{
-			Path:      path.prependMetadataMerge(),
-			NewValues: nodeList(n),
+			Path: path.clone(),
+			Add:  nodeList(n),
 		}
 		return append(d, e)
 	}
@@ -104,10 +104,10 @@ func (s1 jsonSet) diff(
 		var hc [8]byte
 		if o, ok := v.(jsonObject); ok {
 			// Hash objects by their identity.
-			hc = o.ident(metadata)
+			hc = o.ident(options)
 		} else {
 			// Everything else by full content.
-			hc = v.hashCode(metadata)
+			hc = v.hashCode(options)
 		}
 		s1Map[hc] = v
 	}
@@ -116,10 +116,10 @@ func (s1 jsonSet) diff(
 		var hc [8]byte
 		if o, ok := v.(jsonObject); ok {
 			// Hash objects by their identity.
-			hc = o.ident(metadata)
+			hc = o.ident(options)
 		} else {
 			// Everything else by full content.
-			hc = v.hashCode(metadata)
+			hc = v.hashCode(options)
 		}
 		s2Map[hc] = v
 	}

@@ -31,13 +31,22 @@ const (
 	strictPatchStrategy patchStrategy = "strict"
 )
 
-func checkOption(options []Option, want Option) bool {
+func checkOption[T Option](options []Option) bool {
 	for _, o := range options {
-		if o == want {
+		if _, ok := o.(T); ok {
 			return true
 		}
 	}
 	return false
+}
+
+func getOption[T Option](options []Option) (*T, bool) {
+	for _, o := range options {
+		if t, ok := o.(T); ok {
+			return &t, true
+		}
+	}
+	return nil, false
 }
 
 func getPatchStrategy(options []Option) patchStrategy {

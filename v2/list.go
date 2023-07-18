@@ -18,8 +18,8 @@ func (l jsonList) raw() interface{} {
 	return jsonArray(l).raw()
 }
 
-func (l1 jsonList) Equals(n JsonNode, option ...Option) bool {
-	n2 := dispatch(n, metadata)
+func (l1 jsonList) Equals(n JsonNode, options ...Option) bool {
+	n2 := dispatch(n, options)
 	l2, ok := n2.(jsonList)
 	if !ok {
 		return false
@@ -29,7 +29,7 @@ func (l1 jsonList) Equals(n JsonNode, option ...Option) bool {
 	}
 	for i, v1 := range l1 {
 		v2 := l2[i]
-		if !v1.Equals(v2, metadata...) {
+		if !v1.Equals(v2, options...) {
 			return false
 		}
 	}
@@ -39,14 +39,14 @@ func (l1 jsonList) Equals(n JsonNode, option ...Option) bool {
 func (l jsonList) hashCode(options []Option) [8]byte {
 	b := make([]byte, 0, len(l)*8)
 	for _, n := range l {
-		h := n.hashCode(metadata)
+		h := n.hashCode(options)
 		b = append(b, h[:]...)
 	}
 	return hash(b)
 }
 
 func (l jsonList) Diff(n JsonNode, options ...Option) Diff {
-	return l.diff(n, make(path, 0), metadata, getPatchStrategy(metadata))
+	return l.diff(n, make(Path, 0), options, getPatchStrategy(options))
 }
 
 func (a1 jsonList) diff(
@@ -63,24 +63,24 @@ func (a1 jsonList) diff(
 		switch strategy {
 		case mergePatchStrategy:
 			e = DiffElement{
-				Path:      path.prependMetadataMerge(),
-				NewValues: jsonArray{n},
+				Path: path.clone(),
+				Add:  jsonArray{n},
 			}
 		default:
 			e = DiffElement{
-				Path:      path.clone(),
-				OldValues: nodeList(a1),
-				NewValues: nodeList(n),
+				Path:   path.clone(),
+				Remove: nodeList(a1),
+				Add:    nodeList(n),
 			}
 		}
 		return append(d, e)
 	}
 	if strategy == mergePatchStrategy {
 		// Merge patches do not recurse into lists
-		if !a1.Equals(a2, metadata...) {
+		if !a1.Equals(a2, options...) {
 			e := DiffElement{
-				Path:      path.prependMetadataMerge(),
-				NewValues: nodeList(n),
+				Path: path.clone(),
+				Add:  nodeList(n),
 			}
 			return append(d, e)
 		}
@@ -96,27 +96,27 @@ func (a1 jsonList) diff(
 	for i := from; i != to; i = i + by {
 		a1Has := i < len(a1)
 		a2Has := i < len(a2)
-		subPath := append(path, jsonNumber(i))
+		subPath := append(path, PathIndex(i))
 		if a1Has && a2Has {
-			n1 := dispatch(a1[i], metadata)
-			n2 := dispatch(a2[i], metadata)
-			subDiff := n1.diff(n2, subPath, metadata, strategy)
+			n1 := dispatch(a1[i], options)
+			n2 := dispatch(a2[i], options)
+			subDiff := n1.diff(n2, subPath, options, strategy)
 			d = append(d, subDiff...)
 		}
 		if a1Has && !a2Has {
 			e := DiffElement{
-				Path:      subPath.clone(),
-				OldValues: nodeList(a1[i]),
-				NewValues: nodeList(),
+				Path:   subPath.clone(),
+				Remove: nodeList(a1[i]),
+				Add:    nodeList(),
 			}
 			d = append(d, e)
 		}
 		if !a1Has && a2Has {
-			appendPath := append(path, jsonNumber(-1))
+			appendPath := append(path, PathIndex(-1))
 			e := DiffElement{
-				Path:      appendPath.clone(),
-				OldValues: nodeList(),
-				NewValues: nodeList(a2[i]),
+				Path:   appendPath.clone(),
+				Remove: nodeList(),
+				Add:    nodeList(a2[i]),
 			}
 			d = append(d, e)
 		}
@@ -151,7 +151,7 @@ func (l jsonList) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonN
 	}
 	// Recursive case
 	n, _, rest := pathAhead.next()
-	jn, ok := n.(jsonNumber)
+	jn, ok := n.(PathIndex)
 	if !ok {
 		return nil, fmt.Errorf(
 			"invalid path element %T: expected float64", n)
