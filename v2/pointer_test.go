@@ -39,10 +39,10 @@ func TestReadPointer(t *testing.T) {
 			t.Errorf("Wanted no err. Got %v", err)
 		}
 		want, _ := ReadJsonString(tc.output)
-		if !(jsonArray)(got).Equals(want) {
+		if !got.JsonNode().Equals(want) {
 			t.Errorf("Wanted %v. Got %v", tc.output, got)
 		}
-		back, err := writePointer(got)
+		back, err := writePointer(got.JsonNode().(jsonArray))
 		if err != nil {
 			t.Errorf("Wanted no err on back translation. Got %v", err)
 		}

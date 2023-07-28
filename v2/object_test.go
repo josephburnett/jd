@@ -167,7 +167,7 @@ func TestObjectDiff(t *testing.T) {
 			`@ [["MERGE"],"a"]`,
 			`+ 2`,
 		),
-		ctx: newTestContext(t).withMetadata(MERGE),
+		ctx: newTestContext(t).withOptions(MERGE),
 	}, {
 		a: `{"a":1}`,
 		b: `{"a":null}`,
@@ -175,7 +175,7 @@ func TestObjectDiff(t *testing.T) {
 			`@ [["MERGE"],"a"]`,
 			`+ null`,
 		),
-		ctx: newTestContext(t).withMetadata(MERGE),
+		ctx: newTestContext(t).withOptions(MERGE),
 	}, {
 		a: `{"a":1}`,
 		b: `{}`,
@@ -183,7 +183,7 @@ func TestObjectDiff(t *testing.T) {
 			`@ [["MERGE"],"a"]`,
 			`+`,
 		),
-		ctx: newTestContext(t).withMetadata(MERGE),
+		ctx: newTestContext(t).withOptions(MERGE),
 	}, {
 		a: `{"a":1}`,
 		b: `{"b":1}`,
@@ -193,7 +193,7 @@ func TestObjectDiff(t *testing.T) {
 			`@ [["MERGE"],"b"]`,
 			`+ 1`,
 		),
-		ctx: newTestContext(t).withMetadata(MERGE),
+		ctx: newTestContext(t).withOptions(MERGE),
 	}}
 
 	for _, tt := range tests {

@@ -29,7 +29,7 @@ func (s jsonString) hashCode(_ []Option) [8]byte {
 }
 
 func (s jsonString) Diff(n JsonNode, options ...Option) Diff {
-	return s.diff(n, make(path, 0), metadata, getPatchStrategy(metadata))
+	return s.diff(n, make(Path, 0), options, getPatchStrategy(options))
 }
 
 func (s1 jsonString) diff(
@@ -38,7 +38,7 @@ func (s1 jsonString) diff(
 	options []Option,
 	strategy patchStrategy,
 ) Diff {
-	return diff(s1, n, path, metadata, strategy)
+	return diff(s1, n, path, options, strategy)
 }
 
 func (s jsonString) Patch(d Diff) (JsonNode, error) {

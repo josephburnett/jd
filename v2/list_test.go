@@ -193,7 +193,7 @@ func TestListDiff(t *testing.T) {
 			`@ [["MERGE"]]`,
 			`+ [1,4,3]`,
 		),
-		ctx: newTestContext(t).withMetadata(MERGE),
+		ctx: newTestContext(t).withOptions(MERGE),
 	}, {
 		a: `[1,2,3]`,
 		b: `{}`,
@@ -201,7 +201,7 @@ func TestListDiff(t *testing.T) {
 			`@ [["MERGE"]]`,
 			`+ {}`,
 		),
-		ctx: newTestContext(t).withMetadata(MERGE),
+		ctx: newTestContext(t).withOptions(MERGE),
 	}}
 
 	for _, tt := range tests {

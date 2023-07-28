@@ -6,12 +6,14 @@ type Option interface {
 
 type mergeOption struct{}
 type setOption struct{}
+type setKeysOption []string
 type multisetOption struct{}
 type renderColorOption struct{}
 
 func (o mergeOption) isOption()       {}
 func (o mergeOption) string() string  { return "MERGE" }
 func (o setOption) isOption()         {}
+func (o setKeysOption) isOption()     {}
 func (o multisetOption) isOption()    {}
 func (o renderColorOption) isOption() {}
 
@@ -23,6 +25,10 @@ var (
 	COLOR = colorOption{}
 	MERGE = mergeOption{}
 )
+
+func SetKeys(keys ...string) Option {
+	return setKeysOption(keys)
+}
 
 type patchStrategy string
 
@@ -50,10 +56,8 @@ func getOption[T Option](options []Option) (*T, bool) {
 }
 
 func getPatchStrategy(options []Option) patchStrategy {
-	for _, o := range options {
-		if o == mergeOption {
-			return mergePatchStrategy
-		}
+	if checkOption[mergeOption](options) {
+		return mergePatchStrategy
 	}
 	return strictPatchStrategy
 }
@@ -61,11 +65,13 @@ func getPatchStrategy(options []Option) patchStrategy {
 func dispatch(n JsonNode, options []Option) JsonNode {
 	switch n := n.(type) {
 	case jsonArray:
-		if metadata.Set {
-			return jsonSet(n)
-		}
-		if metadata.Multiset {
-			return jsonMultiset(n)
+		for _, o := range options {
+			switch o.(type) {
+			case setOption, setKeysOption:
+				return jsonSet(n)
+			case multisetOption:
+				return jsonMultiset(n)
+			}
 		}
 		return jsonList(n)
 	}

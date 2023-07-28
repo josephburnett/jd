@@ -36,9 +36,9 @@ func TestReadDiff(t *testing.T) {
 	checkReadDiff(t,
 		Diff{
 			DiffElement{
-				Path:      p("a"),
-				OldValues: []JsonNode{jsonNumber(1)},
-				NewValues: []JsonNode{jsonNumber(2)},
+				Path:   p("a"),
+				Remove: []JsonNode{jsonNumber(1)},
+				Add:    []JsonNode{jsonNumber(2)},
 			},
 		},
 		`@ ["a"]`,
@@ -47,9 +47,9 @@ func TestReadDiff(t *testing.T) {
 	checkReadDiff(t,
 		Diff{
 			DiffElement{
-				Path:      p("a", 1.0, "b"),
-				OldValues: []JsonNode{jsonNumber(1)},
-				NewValues: []JsonNode{jsonNumber(2)},
+				Path:   p("a", 1.0, "b"),
+				Remove: []JsonNode{jsonNumber(1)},
+				Add:    []JsonNode{jsonNumber(2)},
 			},
 		},
 		`@ ["a",1,"b"]`,
@@ -58,14 +58,14 @@ func TestReadDiff(t *testing.T) {
 	checkReadDiff(t,
 		Diff{
 			DiffElement{
-				Path:      p(),
-				OldValues: []JsonNode{jsonNumber(1)},
-				NewValues: []JsonNode{jsonNumber(2)},
+				Path:   p(),
+				Remove: []JsonNode{jsonNumber(1)},
+				Add:    []JsonNode{jsonNumber(2)},
 			},
 			DiffElement{
-				Path:      p(),
-				OldValues: []JsonNode{jsonNumber(2)},
-				NewValues: []JsonNode{jsonNumber(3)},
+				Path:   p(),
+				Remove: []JsonNode{jsonNumber(2)},
+				Add:    []JsonNode{jsonNumber(3)},
 			},
 		},
 		`@ []`,
@@ -133,7 +133,7 @@ func checkReadDiffError(t *testing.T, diffLines ...string) {
 }
 
 func p(elements ...interface{}) Path {
-	var path path
+	var path jsonArray
 	for _, e := range elements {
 		n, err := NewJsonNode(e)
 		if err != nil {
@@ -141,5 +141,9 @@ func p(elements ...interface{}) Path {
 		}
 		path = append(path, n)
 	}
-	return path
+	p, err := NewPath(path)
+	if err != nil {
+		panic(err)
+	}
+	return p
 }

@@ -6,7 +6,7 @@ import (
 
 func TestMultisetJson(t *testing.T) {
 	ctx := newTestContext(t).
-		withMetadata(MULTISET)
+		withOptions(multisetOption{})
 	cases := []struct {
 		name  string
 		given string
@@ -42,7 +42,7 @@ func TestMultisetJson(t *testing.T) {
 
 func TestMultisetEquals(t *testing.T) {
 	ctx := newTestContext(t).
-		withMetadata(MULTISET)
+		withOptions(multisetOption{})
 	cases := []struct {
 		name string
 		a    string
@@ -82,7 +82,7 @@ func TestMultisetEquals(t *testing.T) {
 
 func TestMultisetNotEquals(t *testing.T) {
 	ctx := newTestContext(t).
-		withMetadata(MULTISET)
+		withOptions(multisetOption{})
 	cases := []struct {
 		name     string
 		metadata Metadata
@@ -115,7 +115,7 @@ func TestMultisetNotEquals(t *testing.T) {
 
 func TestMultisetDiff(t *testing.T) {
 	ctx := newTestContext(t).
-		withMetadata(MULTISET)
+		withOptions(multisetOption{})
 	cases := []struct {
 		name string
 		a    string
@@ -215,13 +215,13 @@ func TestMultisetDiff(t *testing.T) {
 			`@ [["MERGE"]]`,
 			`+ {}`,
 		),
-		ctx: newTestContext(t).withMetadata(MERGE, MULTISET),
+		ctx: newTestContext(t).withOptions(MERGE, multisetOption{}),
 	}, {
 		name: "merge outputs no diff when equal",
 		a:    `[1,2,2,3]`,
 		b:    `[2,1,3,2]`,
 		want: ss(),
-		ctx:  newTestContext(t).withMetadata(MERGE, MULTISET),
+		ctx:  newTestContext(t).withOptions(MERGE, multisetOption{}),
 	}, {
 		name: "merge replaces entire multiset when not equal",
 		a:    `[1,2,2,3]`,
@@ -230,7 +230,7 @@ func TestMultisetDiff(t *testing.T) {
 			`@ [["MERGE"]]`,
 			`+ [2,1,3,3]`,
 		),
-		ctx: newTestContext(t).withMetadata(MERGE, MULTISET),
+		ctx: newTestContext(t).withOptions(MERGE, multisetOption{}),
 	}}
 
 	for _, tt := range cases {
@@ -246,7 +246,7 @@ func TestMultisetDiff(t *testing.T) {
 
 func TestMultisetPatch(t *testing.T) {
 	ctx := newTestContext(t).
-		withMetadata(MULTISET)
+		withOptions(multisetOption{})
 	cases := []struct {
 		name  string
 		given string
@@ -364,7 +364,7 @@ func TestMultisetPatch(t *testing.T) {
 
 func TestMultisetPatchError(t *testing.T) {
 	ctx := newTestContext(t).
-		withMetadata(MULTISET)
+		withOptions(multisetOption{})
 	cases := []struct {
 		name  string
 		given string

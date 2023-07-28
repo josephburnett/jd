@@ -133,25 +133,24 @@ func (s1 jsonSet) diff(
 		s2Hashes = append(s2Hashes, hc)
 	}
 	sort.Sort(s2Hashes)
-	o, _ := NewJsonNode(map[string]interface{}{})
 	e := DiffElement{
-		Path:      path.appendIndex(o.(jsonObject), metadata).clone(),
-		OldValues: nodeList(),
-		NewValues: nodeList(),
+		Path:   append(path.clone(), PathSet{}),
+		Remove: nodeList(),
+		Add:    nodeList(),
 	}
 	for _, hc := range s1Hashes {
 		n2, ok := s2Map[hc]
 		if !ok {
 			// Deleted value.
-			e.OldValues = append(e.OldValues, s1Map[hc])
+			e.Remove = append(e.Remove, s1Map[hc])
 		} else {
 			// Changed value.
 			o1, isObject1 := s1Map[hc].(jsonObject)
 			o2, isObject2 := n2.(jsonObject)
 			if isObject1 && isObject2 {
 				// Sub diff objects with same identity.
-				p := path.appendIndex(o1, metadata)
-				subDiff := o1.diff(o2, p, metadata, strategy)
+				p := append(path.clone(), PathSetKeys(o1))
+				subDiff := o1.diff(o2, p, options, strategy)
 				d = append(d, subDiff...)
 			}
 		}
@@ -160,10 +159,10 @@ func (s1 jsonSet) diff(
 		_, ok := s1Map[hc]
 		if !ok {
 			// Added value.
-			e.NewValues = append(e.NewValues, s2Map[hc])
+			e.Add = append(e.Add, s2Map[hc])
 		}
 	}
-	if len(e.OldValues) > 0 || len(e.NewValues) > 0 {
+	if len(e.Remove) > 0 || len(e.Remove) > 0 {
 		d = append(d, e)
 	}
 	return d
@@ -186,7 +185,7 @@ func (s jsonSet) patch(
 
 	// Strict patch strategy
 	// Base case
-	if pathAhead.isLeaf() {
+	if len(pathAhead) == 0 {
 		if len(oldValues) > 1 || len(newValues) > 1 {
 			return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 		}
@@ -199,24 +198,24 @@ func (s jsonSet) patch(
 	}
 	// Unrolled recursive case
 	n, metadata, rest := pathAhead.next()
-	pathObject, ok := n.(jsonObject)
+	pathObject, ok := n.(PathSetKeys)
 	if !ok {
 		return nil, fmt.Errorf(
 			"invalid path element %v: expected jsonObject", n)
 	}
 	if len(rest) > 0 {
 		// Recurse into a specific object.
-		lookingFor := pathObject.ident(metadata)
+		lookingFor := jsonObject(pathObject).ident(metadata)
 		for _, v := range s {
 			if o, ok := v.(jsonObject); ok {
-				id := o.pathIdent(pathObject, metadata)
+				id := o.pathIdent(jsonObject(pathObject), metadata)
 				if id == lookingFor {
 					v.patch(append(pathBehind, n), rest, oldValues, newValues, strategy)
 					return s, nil
 				}
 			}
 		}
-		return nil, fmt.Errorf("invalid diff: expected object with id %v but found none", pathObject.Json())
+		return nil, fmt.Errorf("invalid diff: expected object with id %v but found none", jsonObject(pathObject).Json())
 	}
 	// Patch set
 	aMap := make(map[[8]byte]JsonNode)

@@ -58,7 +58,7 @@ const (
 )
 
 func checkDiffAndPatchSuccessSet(t *testing.T, a, b, c, expect string) {
-	err := checkDiffAndPatch(t, formatJd, a, b, c, expect, SET)
+	err := checkDiffAndPatch(t, formatJd, a, b, c, expect, setOption{})
 	if err != nil {
 		t.Errorf("error round-tripping jd format: %v", err)
 	}
@@ -87,7 +87,7 @@ func checkDiffAndPatchError(t *testing.T, a, b, c string) {
 	}
 }
 
-func checkDiffAndPatch(t *testing.T, f format, a, b, c, expect string, metadata ...Metadata) error {
+func checkDiffAndPatch(t *testing.T, f format, a, b, c, expect string, options ...Option) error {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		return err

@@ -13,18 +13,18 @@ type PathMultiset struct{}
 type PathSetKeys map[string]JsonNode
 type PathMultisetKeys map[string]JsonNode
 
-func (_ PathIndex) isPathElement() {}
-func (_ PathKey) isPathElement() {}
-func (_ PathSet) isPathElement() {}
-func (_ PathMultiset) isPathElement()  {}
-func (_ PathSetKeys) isPathElement() {}
-func (_ PathMultisetKeys) isPathElement()  {}
+func (_ PathIndex) isPathElement()        {}
+func (_ PathKey) isPathElement()          {}
+func (_ PathSet) isPathElement()          {}
+func (_ PathMultiset) isPathElement()     {}
+func (_ PathSetKeys) isPathElement()      {}
+func (_ PathMultisetKeys) isPathElement() {}
 
 type Path []PathElement
 
 func NewPath(n JsonNode) (Path, error) {
 	if n == nil {
-		return 
+		return nil, nil
 	}
 	a, ok := n.(jsonArray)
 	if !ok {
@@ -34,23 +34,23 @@ func NewPath(n JsonNode) (Path, error) {
 	for i, e := range a {
 		switch e := e.(type) {
 		case jsonNumber:
-			p[i] = pathIndex(jsonNumber)
+			p[i] = PathIndex(e)
 		case jsonObject:
 			if len(e) == 0 {
-				p[i] = pathSet{}
+				p[i] = PathSet{}
 			} else {
-				p[i] = pathSetKeys(e)
+				p[i] = PathSetKeys(e)
 			}
 		case jsonArray:
 			switch len(e) {
 			case 0:
-				p[i] = pathMultiset{}
+				p[i] = PathMultiset{}
 			case 1:
 				o, ok := e[0].(jsonObject)
 				if !ok {
 					return nil, fmt.Errorf("multiset keys must be an object. got %T", e[0])
 				}
-				p[i] = pathMultisetKeys(e[0])
+				p[i] = PathMultisetKeys(o)
 			default:
 				return nil, fmt.Errorf("multiset path element must have length 0 or 1. got %v", len(e))
 			}
@@ -65,16 +65,16 @@ func (p Path) JsonNode() JsonNode {
 	a := make(jsonArray, len(p))
 	for i, e := range p {
 		switch e := e.(type) {
-		case pathIndex:
+		case PathIndex:
 			a[i] = jsonNumber(e)
-		case pathSet:
+		case PathSet:
 			a[i] = jsonObject{}
-		case pathMultiset:
+		case PathMultiset:
 			a[i] = jsonMultiset{}
-		case pathSetKeys:
+		case PathSetKeys:
 			a[i] = jsonObject(e)
-		case pathMultisetKeys:
-			a[i] = jsonArray{jsonOject(e)}
+		case PathMultisetKeys:
+			a[i] = jsonArray{jsonObject(e)}
 		default:
 			panic(fmt.Sprintf("path element should be a closed set. got %T", e))
 		}
@@ -84,20 +84,15 @@ func (p Path) JsonNode() JsonNode {
 
 func (p Path) next() (PathElement, []Option, Path) {
 	if len(p) == 0 {
-		return jsonVoid{}, nil, nil
+		return nil, nil, nil
 	}
 	rest := p[1:]
 	switch e := p[0].(type) {
-	case jsonObject:
+	case PathKey:
+		return p[0], []Option{}, rest
+	case PathSetKeys:
 		return p[0], []Option{setOption{}}, rest
-	case jsonArray:
-		if len(e) == 0 {
-			return p[0], []Option{multisetOption{}}, rest
-		}
-		if len(e) == 1 && _, ok := e[0].(jsonObject); ok {
-			return p[0], []Option{multisetOption{}}, rest
-		}
-	case jsonNumber:
+	case PathIndex:
 		return p[0], nil, rest
 	default:
 		panic(fmt.Sprintf("path element should be a closed set. got %T", e))

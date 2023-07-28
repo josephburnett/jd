@@ -43,7 +43,7 @@ func TestBoolDiff(t *testing.T) {
 		`@ []`,
 		`- false`,
 		`+ true`)
-	ctx = ctx.withMetadata(MERGE)
+	ctx = ctx.withOptions(MERGE)
 	checkDiff(ctx, `true`, `false`,
 		`@ [["MERGE"]]`,
 		`+ false`)

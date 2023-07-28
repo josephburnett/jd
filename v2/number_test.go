@@ -44,7 +44,7 @@ func TestNumberDiff(t *testing.T) {
 	checkDiff(ctx, `0`, ``,
 		`@ []`,
 		`- 0`)
-	ctx = ctx.withMetadata(MERGE)
+	ctx = ctx.withOptions(MERGE)
 	checkDiff(ctx, `1`, `2`,
 		`@ [["MERGE"]]`,
 		`+ 2`)

@@ -90,23 +90,23 @@ func fuzz(t *testing.T, aStr, bStr string) {
 				continue
 			}
 		}
-		var metadata []Metadata
+		var options []Option
 		switch format[0] {
 		case "jd":
 			switch format[1] {
 			case "set":
-				metadata = append(metadata, SET)
+				options = append(options, setOption{})
 			case "mset":
-				metadata = append(metadata, MULTISET)
+				options = append(options, multisetOption{})
 			default: // list
 			}
 		case "merge":
-			metadata = append(metadata, MERGE)
+			options = append(options, mergeOption{})
 		default: // patch
 		}
 
 		// Diff A and B.
-		d := a.Diff(b, metadata...)
+		d := a.Diff(b, options...)
 		if d == nil {
 			t.Errorf("nil diff of a and b")
 			return
@@ -145,7 +145,7 @@ func fuzz(t *testing.T, aStr, bStr string) {
 			t.Errorf("applying patch %v to %v should give %v. Got err: %v", diffAB.Render(), aStr, bStr, err)
 			return
 		}
-		if !patchedA.Equals(b, metadata...) {
+		if !patchedA.Equals(b, options...) {
 			t.Errorf("applying patch %v to %v should give %v. Got: %v", diffAB.Render(), aStr, bStr, patchedA)
 			return
 		}
@@ -156,7 +156,7 @@ func fuzz(t *testing.T, aStr, bStr string) {
 func hasUnsupportedObjectKey(diff Diff) bool {
 	for _, d := range diff {
 		for _, p := range d.Path {
-			if s, ok := p.(jsonString); ok {
+			if s, ok := p.(PathKey); ok {
 				// Object key that looks like number is interpretted incorrectly as array index.
 				if _, err := strconv.Atoi(string(s)); err == nil {
 					return true

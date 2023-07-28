@@ -10,7 +10,7 @@ func checkJson(ctx *testContext, a, b string) {
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	nodeAJson := nodeA.Json(ctx.metadata...)
+	nodeAJson := nodeA.Json(ctx.options...)
 	if nodeAJson != b {
 		ctx.t.Errorf("%v.Json() = %v. Want %v.", nodeA, nodeAJson, b)
 	}
@@ -25,16 +25,16 @@ func checkEqual(ctx *testContext, a, b string) {
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	if !nodeA.Equals(nodeB, ctx.metadata...) {
+	if !nodeA.Equals(nodeB, ctx.options...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
-	if !nodeB.Equals(nodeA, ctx.metadata...) {
+	if !nodeB.Equals(nodeA, ctx.options...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
-	if !nodeA.Equals(nodeA, ctx.metadata...) {
+	if !nodeA.Equals(nodeA, ctx.options...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
-	if !nodeB.Equals(nodeB, ctx.metadata...) {
+	if !nodeB.Equals(nodeB, ctx.options...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
 	}
 }
@@ -48,10 +48,10 @@ func checkNotEqual(ctx *testContext, a, b string) {
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	if nodeA.Equals(nodeB, ctx.metadata...) {
+	if nodeA.Equals(nodeB, ctx.options...) {
 		ctx.t.Errorf("nodeA.Equals(nodeB) == true. Want false.")
 	}
-	if nodeB.Equals(nodeA, ctx.metadata...) {
+	if nodeB.Equals(nodeA, ctx.options...) {
 		ctx.t.Errorf("nodeB.Equals(nodeA) == true. Want false.")
 	}
 }
@@ -65,8 +65,8 @@ func checkHash(ctx *testContext, a, b string, wantSame bool) {
 	if err != nil {
 		ctx.t.Fatalf(err.Error())
 	}
-	hashA := nodeA.hashCode(ctx.metadata)
-	hashB := nodeB.hashCode(ctx.metadata)
+	hashA := nodeA.hashCode(ctx.options)
+	hashB := nodeB.hashCode(ctx.options)
 	if wantSame && hashA != hashB {
 		ctx.t.Errorf("%v.hashCode = %v. %v.hashCode = %v. Want the same.",
 			a, hashA, b, hashB)
@@ -90,7 +90,7 @@ func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
 	for _, dl := range diffLines {
 		diff += dl + "\n"
 	}
-	d := nodeA.Diff(nodeB, ctx.metadata...)
+	d := nodeA.Diff(nodeB, ctx.options...)
 	got := d.Render()
 	if got != diff {
 		ctx.t.Errorf("%v.Diff(%v) = \n%v. Want %v.", nodeA, nodeB, got, diff)
@@ -118,7 +118,7 @@ func checkPatch(ctx *testContext, a, e string, diffLines ...string) {
 	if err != nil {
 		ctx.t.Errorf(err.Error())
 	}
-	if !expect.Equals(b, ctx.metadata...) {
+	if !expect.Equals(b, ctx.options...) {
 		ctx.t.Errorf("%v.Patch(%v) = %v. Want %v.",
 			a, diffLines, b, e)
 	}
@@ -154,24 +154,24 @@ func ss(s ...string) []string {
 	return s
 }
 
-func m(m ...Metadata) []Metadata {
+func m(m ...Option) []Option {
 	return m
 }
 
 type testContext struct {
-	t        *testing.T
-	metadata []Metadata
-	opts     []Option
+	t       *testing.T
+	options []Option
+	opts    []Option
 }
 
 func newTestContext(t *testing.T) *testContext {
 	return &testContext{
-		t:        t,
-		metadata: make([]Metadata, 0),
+		t:       t,
+		options: make([]Option, 0),
 	}
 }
 
-func (tc *testContext) withMetadata(metadata ...Metadata) *testContext {
-	tc.metadata = append(tc.metadata, metadata...)
+func (tc *testContext) withOptions(options ...Option) *testContext {
+	tc.options = append(tc.options, options...)
 	return tc
 }

@@ -74,44 +74,40 @@ func (o jsonObject) hashCode(options []Option) [8]byte {
 // ident is the identity of the json object based on either the hash of a
 // given set of keys or the full object if no keys are present.
 func (o jsonObject) ident(options []Option) [8]byte {
-	keys := map[string]bool{}
-	if meta := getSetkeysMetadata(metadata); meta != nil {
-		keys = meta.keys
-	}
-	if len(keys) == 0 {
-		return o.hashCode(metadata)
+	keys, ok := getOption[setKeysOption](options)
+	if !ok {
+		return o.hashCode(options)
 	}
 	hashes := hashCodes{
 		// We start with a constant hash to distinguish between
 		// an empty object and an empty array.
-		[8]byte{0x4B, 0x08, 0xD2, 0x0F, 0xBD, 0xC8, 0xDE, 0x9A}, // random bytes
+		[8]byte{0x4B, 0x08, 0xD2, 0x0F, 0xBD, 0xC8, 0xDE, 0x9A}, // randomly chosen bytes
 	}
-	for key := range keys {
+	for _, key := range []string(*keys) {
 		v, ok := o[key]
 		if ok {
-			hashes = append(hashes, v.hashCode(metadata))
+			hashes = append(hashes, v.hashCode(options))
 		}
 	}
 	if len(hashes) == 0 {
-		return o.hashCode(metadata)
+		return o.hashCode(options)
 	}
 	return hashes.combine()
 }
 
 func (o jsonObject) pathIdent(pathObject jsonObject, options []Option) [8]byte {
-	idKeys := map[string]bool{}
+	keys := []string{}
 	for k := range pathObject {
-		idKeys[k] = true
+		keys = append(keys, k)
 	}
-	keys := getSetkeysMetadata(metadata).mergeKeys(idKeys)
 	id := make(map[string]interface{})
-	for key := range keys {
+	for _, key := range keys {
 		if value, ok := o[key]; ok {
 			id[key] = value
 		}
 	}
 	e, _ := NewJsonNode(id)
-	return e.hashCode([]Metadata{})
+	return e.hashCode([]Option{})
 }
 
 func (o jsonObject) Diff(n JsonNode, options ...Option) Diff {
@@ -217,7 +213,7 @@ func (o jsonObject) patch(
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}
 	// Base case
-	if pathAhead.isLeaf() {
+	if len(pathAhead) == 0 {
 		newValue := singleValue(newValues)
 		if strategy == mergePatchStrategy {
 			return newValue, nil
@@ -230,7 +226,7 @@ func (o jsonObject) patch(
 	}
 	// Recursive case
 	n, _, rest := pathAhead.next()
-	pe, ok := n.(jsonString)
+	pe, ok := n.(PathKey)
 	if !ok {
 		return nil, fmt.Errorf(
 			"found %v at %v: expected JSON object",
@@ -241,7 +237,7 @@ func (o jsonObject) patch(
 		switch strategy {
 		case mergePatchStrategy:
 			// Create objects
-			if rest.isLeaf() {
+			if len(rest) == 0 {
 				nextNode = voidNode{}
 			} else {
 				nextNode = newJsonObject()

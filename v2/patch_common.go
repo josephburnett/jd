@@ -7,8 +7,11 @@ import (
 func patchAll(n JsonNode, d Diff) (JsonNode, error) {
 	var err error
 	for _, de := range d {
-		strategy := path(de.Path).getPatchStrategy()
-		n, err = n.patch(make(path, 0), de.Path, de.OldValues, de.NewValues, strategy)
+		strategy := strictPatchStrategy
+		if de.Metadata.Merge {
+			strategy = mergePatchStrategy
+		}
+		n, err = n.patch(make(Path, 0), de.Path, de.Remove, de.Add, strategy)
 		if err != nil {
 			return nil, err
 		}
@@ -22,12 +25,12 @@ func patch(
 	oldValues, newValues []JsonNode,
 	strategy patchStrategy,
 ) (JsonNode, error) {
-	if !pathAhead.isLeaf() {
+	if len(pathAhead) > 0 {
 		if strategy != mergePatchStrategy {
 			return patchErrExpectColl(node, pathAhead[0])
 		}
 		next, _, rest := pathAhead.next()
-		key, ok := next.(jsonString)
+		key, ok := next.(PathKey)
 		if !ok {
 			return nil, fmt.Errorf("merge patch path must be composed of only strings: found %v", next)
 		}
@@ -36,7 +39,7 @@ func patch(
 		if err != nil {
 			return nil, err
 		}
-		if !isVoid(value) || !rest.isLeaf() {
+		if !isVoid(value) || len(rest) > 0 {
 			o[string(key)] = value
 		}
 		return o, nil
