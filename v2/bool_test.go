@@ -36,16 +36,20 @@ func TestBoolDiff(t *testing.T) {
 	checkDiff(ctx, `true`, `true`)
 	checkDiff(ctx, `false`, `false`)
 	checkDiff(ctx, `true`, `false`,
+		`^ {"Version":2}`,
 		`@ []`,
 		`- true`,
 		`+ false`)
 	checkDiff(ctx, `false`, `true`,
+		`^ {"Version":2}`,
 		`@ []`,
 		`- false`,
 		`+ true`)
 	ctx = ctx.withOptions(MERGE)
 	checkDiff(ctx, `true`, `false`,
-		`@ [["MERGE"]]`,
+		`^ {"Version":2}`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+ false`)
 }
 

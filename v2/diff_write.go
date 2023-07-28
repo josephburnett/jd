@@ -16,6 +16,7 @@ func (d DiffElement) Render(opts ...Option) string {
 	isColor := checkOption[colorOption](opts)
 	isMerge := checkOption[mergeOption](opts)
 	b := bytes.NewBuffer(nil)
+	b.WriteString(d.Metadata.Render())
 	b.WriteString("@ ")
 	b.Write([]byte(d.Path.JsonNode().Json()))
 	b.WriteString("\n")

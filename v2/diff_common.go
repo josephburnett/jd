@@ -14,11 +14,18 @@ func diff(
 	switch strategy {
 	case mergePatchStrategy:
 		de = DiffElement{
+			Metadata: Metadata{
+				Version: 2,
+				Merge:   true,
+			},
 			Path: p.clone(),
 			Add:  jsonArray{b},
 		}
 	default:
 		de = DiffElement{
+			Metadata: Metadata{
+				Version: 2,
+			},
 			Path:   p.clone(),
 			Remove: nodeList(a),
 			Add:    nodeList(b),
