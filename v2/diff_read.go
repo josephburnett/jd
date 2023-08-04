@@ -26,6 +26,7 @@ func readDiff(s string) (Diff, error) {
 	diffLines := strings.Split(s, "\n")
 	const (
 		INIT = iota
+		META = iota
 		AT   = iota
 		OLD  = iota
 		NEW  = iota
@@ -40,8 +41,12 @@ func readDiff(s string) (Diff, error) {
 		// Validate state transition.
 		switch state {
 		case INIT:
-			if header != "@" {
-				return errorAt(i, "Unexpected %c. Expecteding @.", dl[0])
+			if header != "@" && header != "^" {
+				return errorAt(i, "Unexpected %c. Expecteding @ or ^.", dl[0])
+			}
+		case META:
+			if header != "@" && header != "^" {
+				return errorAt(i, "Unexpected %c. Expecting @ or ^.", dl[0])
 			}
 		case AT:
 			if header != "-" && header != "+" {
@@ -58,12 +63,31 @@ func readDiff(s string) (Diff, error) {
 		}
 		// Process line.
 		switch header {
-		case "@":
-			if state != INIT {
+		case "^":
+			if state == NEW || state == OLD {
 				// Save the previous diff element.
-				errString := checkDiffElement(de)
-				if errString != "" {
-					return errorAt(i, errString)
+				err := checkDiffElement(de)
+				if err != nil {
+					return errorAt(i, err.Error())
+				}
+				diff = append(diff, de)
+			}
+			n, err := ReadJsonString(dl[1:])
+			if err != nil {
+				return errorAt(i, "Invalid Metadata. %v", err.Error())
+			}
+			m, err := readMetadata(n)
+			if err != nil {
+				return errorAt(i, "Invalid Metadata. %v", err.Error())
+			}
+			de.Metadata = de.Metadata.merge(m)
+			state = META
+		case "@":
+			if state == NEW || state == OLD {
+				// Save the previous diff element.
+				err := checkDiffElement(de)
+				if err != nil {
+					return errorAt(i, err.Error())
 				}
 				diff = append(diff, de)
 			}
@@ -75,11 +99,9 @@ func readDiff(s string) (Diff, error) {
 			if err != nil {
 				errorAt(i, err.Error())
 			}
-			de = DiffElement{
-				Path:   path,
-				Remove: []JsonNode{},
-				Add:    []JsonNode{},
-			}
+			de.Path = path
+			de.Remove = []JsonNode{}
+			de.Add = []JsonNode{}
 			state = AT
 		case "-":
 			v, err := ReadJsonString(dl[1:])
@@ -99,6 +121,10 @@ func readDiff(s string) (Diff, error) {
 			errorAt(i, "Unexpected %v.", dl[0])
 		}
 	}
+	if state == META {
+		// ^ is not a valid terminal state.
+		return errorAt(len(diffLines), "Unexpected end of diff. Expecting ^ or @.")
+	}
 	if state == AT {
 		// @ is not a valid terminal state.
 		return errorAt(len(diffLines), "Unexpected end of diff. Expecting - or +.")
@@ -106,26 +132,26 @@ func readDiff(s string) (Diff, error) {
 	if state != INIT {
 		// Save the last diff element.
 		// Empty string diff is valid so state could be INIT
-		errString := checkDiffElement(de)
-		if errString != "" {
-			return errorAt(len(diffLines), errString)
+		err := checkDiffElement(de)
+		if err != nil {
+			return errorAt(len(diffLines), err.Error())
 		}
 		diff = append(diff, de)
 	}
 	return diff, nil
 }
 
-func checkDiffElement(de DiffElement) string {
+func checkDiffElement(de DiffElement) error {
 	if len(de.Add) > 1 || len(de.Add) > 1 {
 		// Must be a set.
 		if len(de.Path) == 0 {
-			return "expected path to end with {} for sets."
+			return fmt.Errorf("expected path to end with {} for sets.")
 		}
 		if _, ok := de.Path[len(de.Path)-1].(PathSet); !ok {
-			return "expected path to end with {} for sets."
+			return fmt.Errorf("expected path to end with {} for sets.")
 		}
 	}
-	return ""
+	return nil
 }
 
 func errorAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
@@ -150,11 +176,12 @@ func ReadPatchFile(filename string) (Diff, error) {
 // the strict patching strategy of a native jd patch.
 //
 // For example:
-//   [
-//     {"op":"test","path":"/foo","value":"bar"},
-//     {"op":"remove","path":"/foo","value":"bar"},
-//     {"op":"add","path":"/foo","value":"baz"}
-//   ]
+//
+//	[
+//	  {"op":"test","path":"/foo","value":"bar"},
+//	  {"op":"remove","path":"/foo","value":"bar"},
+//	  {"op":"add","path":"/foo","value":"baz"}
+//	]
 func ReadPatchString(s string) (Diff, error) {
 	var patch []patchElement
 	err := json.Unmarshal([]byte(s), &patch)

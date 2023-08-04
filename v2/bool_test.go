@@ -66,13 +66,16 @@ func TestBoolPatch(t *testing.T) {
 		`- false`,
 		`+ true`)
 	checkPatch(ctx, `false`, `true`,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+ true`)
 	checkPatch(ctx, `true`, `false`,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+ false`)
 	checkPatch(ctx, `true`, ``,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+`)
 }
 
