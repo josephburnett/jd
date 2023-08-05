@@ -162,11 +162,18 @@ func (o1 jsonObject) diff(
 			switch strategy {
 			case mergePatchStrategy:
 				e = DiffElement{
+					Metadata: Metadata{
+						Version: 2,
+						Merge:   true,
+					},
 					Path: append(path, PathKey(k1)).clone(),
 					Add:  []JsonNode{voidNode{}},
 				}
 			default:
 				e = DiffElement{
+					Metadata: Metadata{
+						Version: 2,
+					},
 					Path:   append(path, PathKey(k1)).clone(),
 					Remove: nodeList(v1),
 					Add:    nodeList(),
@@ -183,12 +190,19 @@ func (o1 jsonObject) diff(
 			switch strategy {
 			case mergePatchStrategy:
 				e = DiffElement{
+					Metadata: Metadata{
+						Version: 2,
+						Merge:   true,
+					},
 					Path:   append(path, PathKey(k2)).clone(),
 					Remove: nodeList(),
 					Add:    nodeList(v2),
 				}
 			default:
 				e = DiffElement{
+					Metadata: Metadata{
+						Version: 2,
+					},
 					Path:   append(path, PathKey(k2)).clone(),
 					Remove: nodeList(),
 					Add:    nodeList(v2),

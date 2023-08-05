@@ -270,7 +270,7 @@ func ReadMergeString(s string) (Diff, error) {
 		return nil, err
 	}
 	d := Diff{}
-	p, err := NewPath(jsonArray{jsonString(MERGE.string())})
+	p, err := NewPath(jsonArray{})
 	if err != nil {
 		return nil, err
 	}
@@ -296,6 +296,9 @@ func readMergeInto(d Diff, p Path, n JsonNode) Diff {
 			n = voidNode{}
 		}
 		return append(d, DiffElement{
+			Metadata: Metadata{
+				Merge: true,
+			},
 			Path: p.clone(),
 			Add:  []JsonNode{n},
 		})

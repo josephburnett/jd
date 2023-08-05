@@ -88,11 +88,13 @@ func TestBoolPatchError(t *testing.T) {
 		`@ []`,
 		`- true`)
 	checkPatchError(ctx, `true`,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`- true`,
 		`+ false`)
 	checkPatchError(ctx, `false`,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`- false`,
 		`+ true`)
 }

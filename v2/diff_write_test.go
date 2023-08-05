@@ -6,21 +6,27 @@ import (
 
 func TestDiffRender(t *testing.T) {
 	checkDiffRender(t, `{"a":1}`, `{"a":2}`,
+		`^ {"Version":2}`,
 		`@ ["a"]`,
 		`- 1`,
 		`+ 2`)
 	checkDiffRender(t, `{"a":{"b":1}}`, `{"a":{"b":2}}`,
+		`^ {"Version":2}`,
 		`@ ["a","b"]`,
 		`- 1`,
 		`+ 2`)
 	checkDiffRender(t, `{"a":{"b":1}}`, `{"a":{"c":2}}`,
+		`^ {"Version":2}`,
 		`@ ["a","b"]`,
 		`- 1`,
+		`^ {"Version":2}`,
 		`@ ["a","c"]`,
 		`+ 2`)
 	checkDiffRender(t, `{"a":{"b":1}}`, `{"c":{"b":1}}`,
+		`^ {"Version":2}`,
 		`@ ["a"]`,
 		`- {"b":1}`,
+		`^ {"Version":2}`,
 		`@ ["c"]`,
 		`+ {"b":1}`)
 }
@@ -99,13 +105,15 @@ func TestDiffRenderMerge(t *testing.T) {
 		merge string
 	}{{
 		diff: s(
-			`@ [["MERGE"]]`,
+			`^ {"Merge":true}`,
+			`@ []`,
 			`+ 1`,
 		),
 		merge: `1`,
 	}, {
 		diff: s(
-			`@ [["MERGE"],"foo"]`,
+			`^ {"Merge":true}`,
+			`@ ["foo"]`,
 			`+ 1`,
 		),
 		merge: `{"foo":1}`,

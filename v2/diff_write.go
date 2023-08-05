@@ -14,7 +14,7 @@ const (
 
 func (d DiffElement) Render(opts ...Option) string {
 	isColor := checkOption[colorOption](opts)
-	isMerge := checkOption[mergeOption](opts)
+	isMerge := checkOption[mergeOption](opts) || d.Metadata.Merge
 	b := bytes.NewBuffer(nil)
 	b.WriteString(d.Metadata.Render())
 	b.WriteString("@ ")
@@ -112,8 +112,8 @@ func (d Diff) RenderPatch() (string, error) {
 
 func (d Diff) RenderMerge() (string, error) {
 	for _, e := range d {
-		if len(e.Path) == 0 || !(jsonArray{jsonString(MERGE.string())}).Equals(e.Path.JsonNode().(jsonArray)[0]) {
-			return "", fmt.Errorf("diff must be composed entirely of paths with merge metadata to be rendered as a merge patch")
+		if !e.Metadata.Merge {
+			return "", fmt.Errorf("cannot render non-merge element as merge")
 		}
 		for i := range e.Add {
 			if isVoid(e.Add[i]) {

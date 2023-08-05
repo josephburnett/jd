@@ -33,6 +33,8 @@ func NewPath(n JsonNode) (Path, error) {
 	p := make(Path, len(a))
 	for i, e := range a {
 		switch e := e.(type) {
+		case jsonString:
+			p[i] = PathKey(e)
 		case jsonNumber:
 			p[i] = PathIndex(e)
 		case jsonObject:
@@ -65,6 +67,8 @@ func (p Path) JsonNode() JsonNode {
 	a := make(jsonArray, len(p))
 	for i, e := range p {
 		switch e := e.(type) {
+		case PathKey:
+			a[i] = jsonString(e)
 		case PathIndex:
 			a[i] = jsonNumber(e)
 		case PathSet:
