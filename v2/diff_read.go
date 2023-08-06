@@ -53,11 +53,11 @@ func readDiff(s string) (Diff, error) {
 				return errorAt(i, "Unexpected %c. Expecting - or +.", dl[0])
 			}
 		case OLD:
-			if header != "@" && header != "-" && header != "+" {
+			if header != "@" && header != "-" && header != "+" && header != "^" {
 				return errorAt(i, "Unexpected %c. Expecting + or @.", dl[0])
 			}
 		case NEW:
-			if header != "+" && header != "@" {
+			if header != "+" && header != "@" && header != "^" {
 				return errorAt(i, "Unexpected %c. Expecteding + or @.", dl[0])
 			}
 		}
@@ -97,7 +97,7 @@ func readDiff(s string) (Diff, error) {
 			}
 			path, err := NewPath(p)
 			if err != nil {
-				errorAt(i, err.Error())
+				return errorAt(i, err.Error())
 			}
 			de.Path = path
 			de.Remove = []JsonNode{}
@@ -142,13 +142,16 @@ func readDiff(s string) (Diff, error) {
 }
 
 func checkDiffElement(de DiffElement) error {
-	if len(de.Add) > 1 || len(de.Add) > 1 {
+	if len(de.Add) > 1 || len(de.Remove) > 1 {
 		// Must be a set.
 		if len(de.Path) == 0 {
-			return fmt.Errorf("expected path to end with {} for sets.")
+			return fmt.Errorf("expected path to then with {} for sets.")
 		}
-		if _, ok := de.Path[len(de.Path)-1].(PathSet); !ok {
-			return fmt.Errorf("expected path to end with {} for sets.")
+		switch de.Path[len(de.Path)-1].(type) {
+		case PathSet, PathSetKeys, PathMultiset, PathMultisetKeys:
+			return nil
+		default:
+			return fmt.Errorf("expected path to then with {} for sets.")
 		}
 	}
 	return nil

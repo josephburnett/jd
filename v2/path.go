@@ -74,7 +74,7 @@ func (p Path) JsonNode() JsonNode {
 		case PathSet:
 			a[i] = jsonObject{}
 		case PathMultiset:
-			a[i] = jsonMultiset{}
+			a[i] = jsonArray{jsonObject{}}
 		case PathSetKeys:
 			a[i] = jsonObject(e)
 		case PathMultisetKeys:
@@ -94,12 +94,33 @@ func (p Path) next() (PathElement, []Option, Path) {
 	switch e := p[0].(type) {
 	case PathKey:
 		return p[0], []Option{}, rest
-	case PathSetKeys:
-		return p[0], []Option{setOption{}}, rest
 	case PathIndex:
 		return p[0], nil, rest
+	case PathSet:
+		return p[0], []Option{setOption{}}, rest
+	case PathMultiset:
+		return p[0], []Option{multisetOption{}}, rest
+	case PathSetKeys:
+		return p[0], []Option{setOption{}}, rest
+	case PathMultisetKeys:
+		return p[0], []Option{multisetOption{}}, rest
 	default:
 		panic(fmt.Sprintf("path element should be a closed set. got %T", e))
+	}
+}
+
+func (p Path) isLeaf() bool {
+	if len(p) == 0 {
+		return true
+	}
+	if len(p) > 1 {
+		return false
+	}
+	switch p[0].(type) {
+	case PathSet, PathSetKeys, PathMultiset, PathMultisetKeys:
+		return true
+	default:
+		return false
 	}
 }
 

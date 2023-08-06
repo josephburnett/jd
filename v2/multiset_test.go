@@ -132,7 +132,8 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1]`,
 		b:    `[1,2]`,
 		want: ss(
-			`@ [["multiset"],{}]`,
+			`^ {"Version":2}`,
+			`@ [[{}]]`,
 			`+ 2`,
 		),
 	}, {
@@ -145,7 +146,8 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1]`,
 		b:    `[1,2,2]`,
 		want: ss(
-			`@ [["multiset"],{}]`,
+			`^ {"Version":2}`,
+			`@ [[{}]]`,
 			`+ 2`,
 			`+ 2`,
 		),
@@ -154,7 +156,8 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1,2,3]`,
 		b:    `[1,3]`,
 		want: ss(
-			`@ [["multiset"],{}]`,
+			`^ {"Version":2}`,
+			`@ [[{}]]`,
 			`- 2`,
 		),
 	}, {
@@ -162,7 +165,8 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[{"a":1}]`,
 		b:    `[{"a":2}]`,
 		want: ss(
-			`@ [["multiset"],{}]`,
+			`^ {"Version":2}`,
+			`@ [[{}]]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
 		),
@@ -171,7 +175,8 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[{"a":1},{"a":1}]`,
 		b:    `[{"a":2}]`,
 		want: ss(
-			`@ [["multiset"],{}]`,
+			`^ {"Version":2}`,
+			`@ [[{}]]`,
 			`- {"a":1}`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -181,7 +186,8 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `["foo","foo","bar"]`,
 		b:    `["baz"]`,
 		want: ss(
-			`@ [["multiset"],{}]`,
+			`^ {"Version":2}`,
+			`@ [[{}]]`,
 			`- "bar"`,
 			`- "foo"`,
 			`- "foo"`,
@@ -192,7 +198,8 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `["foo"]`,
 		b:    `["bar","baz","bar"]`,
 		want: ss(
-			`@ [["multiset"],{}]`,
+			`^ {"Version":2}`,
+			`@ [[{}]]`,
 			`- "foo"`,
 			`+ "bar"`,
 			`+ "bar"`,
@@ -203,6 +210,7 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `{}`,
 		b:    `[]`,
 		want: ss(
+			`^ {"Version":2}`,
 			`@ []`,
 			`- {}`,
 			`+ []`,
@@ -212,7 +220,9 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1,2,2,3]`,
 		b:    `{}`,
 		want: ss(
-			`@ [["MERGE"]]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ []`,
 			`+ {}`,
 		),
 		ctx: newTestContext(t).withOptions(MERGE, multisetOption{}),
@@ -227,7 +237,9 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1,2,2,3]`,
 		b:    `[2,1,3,3]`,
 		want: ss(
-			`@ [["MERGE"]]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ []`,
 			`+ [2,1,3,3]`,
 		),
 		ctx: newTestContext(t).withOptions(MERGE, multisetOption{}),
@@ -245,8 +257,6 @@ func TestMultisetDiff(t *testing.T) {
 }
 
 func TestMultisetPatch(t *testing.T) {
-	ctx := newTestContext(t).
-		withOptions(multisetOption{})
 	cases := []struct {
 		name  string
 		given string
@@ -261,7 +271,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "add a number",
 		given: `[1]`,
 		patch: ss(
-			`@ [["multiset"],{}]`,
+			`@ [[]]`,
 			`+ 2`,
 		),
 		want: `[1,2]`,
@@ -274,7 +284,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "add two numbers",
 		given: `[1]`,
 		patch: ss(
-			`@ [["multiset"],{}]`,
+			`@ [[]]`,
 			`+ 2`,
 			`+ 2`,
 		),
@@ -283,7 +293,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "remove a number",
 		given: `[1,2,3]`,
 		patch: ss(
-			`@ [["multiset"],{}]`,
+			`@ [[]]`,
 			`- 2`,
 		),
 		want: `[1,3]`,
@@ -291,7 +301,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "replace one object with another",
 		given: `[{"a":1}]`,
 		patch: ss(
-			`@ [["multiset"],{}]`,
+			`@ [[]]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
 		),
@@ -300,7 +310,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "remove two objects and add one",
 		given: `[{"a":1},{"a":1}]`,
 		patch: ss(
-			`@ [["multiset"],{}]`,
+			`@ [[]]`,
 			`- {"a":1}`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -310,7 +320,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "remove three objects repeated and add one",
 		given: `["foo","foo","bar"]`,
 		patch: ss(
-			`@ [["multiset"],{}]`,
+			`@ [[]]`,
 			`- "bar"`,
 			`- "foo"`,
 			`- "foo"`,
@@ -321,7 +331,7 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "remove one object and add three repeated",
 		given: `["foo"]`,
 		patch: ss(
-			`@ [["multiset"],{}]`,
+			`@ [[]]`,
 			`- "foo"`,
 			`+ "bar"`,
 			`+ "bar"`,
@@ -341,7 +351,8 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "merge replaces entire set",
 		given: `[1,2,3]`,
 		patch: ss(
-			`@ [["MERGE","multiset"]]`,
+			`^ {"Merge":true}`,
+			`@ [[]]`,
 			`+ [4,5,6]`,
 		),
 		want: `[4,5,6]`,
@@ -349,7 +360,8 @@ func TestMultisetPatch(t *testing.T) {
 		name:  "void deletes a node",
 		given: `[1,2,3]`,
 		patch: ss(
-			`@ [["MERGE","multiset"]]`,
+			`^ {"Merge":true}`,
+			`@ [[]]`,
 			`+`,
 		),
 		want: ``,
@@ -357,14 +369,14 @@ func TestMultisetPatch(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			ctx := newTestContext(t).
+				withOptions(multisetOption{})
 			checkPatch(ctx, c.given, c.want, c.patch...)
 		})
 	}
 }
 
 func TestMultisetPatchError(t *testing.T) {
-	ctx := newTestContext(t).
-		withOptions(multisetOption{})
 	cases := []struct {
 		name  string
 		given string
@@ -395,6 +407,8 @@ func TestMultisetPatchError(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			ctx := newTestContext(t).
+				withOptions(multisetOption{})
 			checkPatchError(ctx, c.given, c.patch...)
 		})
 	}

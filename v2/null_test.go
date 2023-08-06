@@ -31,17 +31,23 @@ func TestNullDiff(t *testing.T) {
 	ctx := newTestContext(t)
 	checkDiff(ctx, `null`, `null`)
 	checkDiff(ctx, `null`, ``,
+		`^ {"Version":2}`,
 		`@ []`,
 		`- null`)
 	checkDiff(ctx, ``, `null`,
+		`^ {"Version":2}`,
 		`@ []`,
 		`+ null`)
 	ctx = ctx.withOptions(MERGE)
 	checkDiff(ctx, `true`, `null`,
-		`@ [["MERGE"]]`,
+		`^ {"Version":2}`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+ null`)
 	checkDiff(ctx, `null`, `true`,
-		`@ [["MERGE"]]`,
+		`^ {"Version":2}`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+ true`)
 }
 
@@ -55,7 +61,8 @@ func TestNullPatch(t *testing.T) {
 		`@ []`,
 		`+ null`)
 	checkPatch(ctx, `null`, ``,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+`)
 }
 

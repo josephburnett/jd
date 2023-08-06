@@ -77,12 +77,11 @@ func TestListHash(t *testing.T) {
 }
 
 func TestListDiff(t *testing.T) {
-	ctx := newTestContext(t)
 	tests := []struct {
-		a    string
-		b    string
-		diff []string
-		ctx  *testContext
+		a       string
+		b       string
+		diff    []string
+		options []Option
 	}{{
 		a:    `[]`,
 		b:    `[]`,
@@ -91,6 +90,7 @@ func TestListDiff(t *testing.T) {
 		a: `[1]`,
 		b: `[]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [0]`,
 			`- 1`,
 		),
@@ -98,6 +98,7 @@ func TestListDiff(t *testing.T) {
 		a: `[[]]`,
 		b: `[[1]]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [0,-1]`,
 			`+ 1`,
 		),
@@ -105,6 +106,7 @@ func TestListDiff(t *testing.T) {
 		a: `[1]`,
 		b: `[2]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [0]`,
 			`- 1`,
 			`+ 2`,
@@ -113,6 +115,7 @@ func TestListDiff(t *testing.T) {
 		a: `[]`,
 		b: `[2]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 2`,
 		),
@@ -120,6 +123,7 @@ func TestListDiff(t *testing.T) {
 		a: `[[]]`,
 		b: `[{}]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [0]`,
 			`- []`,
 			`+ {}`,
@@ -128,6 +132,7 @@ func TestListDiff(t *testing.T) {
 		a: `[{"a":[1]}]`,
 		b: `[{"a":[2]}]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [0,"a",0]`,
 			`- 1`,
 			`+ 2`,
@@ -136,6 +141,7 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[1,2]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [2]`,
 			`- 3`,
 		),
@@ -143,6 +149,7 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[1,4,3]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [1]`,
 			`- 2`,
 			`+ 4`,
@@ -151,6 +158,7 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[1,null,3]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [1]`,
 			`- 2`,
 			`+ null`,
@@ -159,8 +167,10 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2]`,
 		b: `[1,2,3,4]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 3`,
+			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 4`,
 		),
@@ -168,10 +178,13 @@ func TestListDiff(t *testing.T) {
 		a: `[]`,
 		b: `[3,4,5]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 3`,
+			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 4`,
+			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 5`,
 		),
@@ -179,10 +192,13 @@ func TestListDiff(t *testing.T) {
 		a: `[null,null,null]`,
 		b: `[]`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [2]`,
 			`- null`,
+			`^ {"Version":2}`,
 			`@ [1]`,
 			`- null`,
+			`^ {"Version":2}`,
 			`@ [0]`,
 			`- null`,
 		),
@@ -190,31 +206,34 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[1,4,3]`,
 		diff: ss(
-			`@ [["MERGE"]]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ []`,
 			`+ [1,4,3]`,
 		),
-		ctx: newTestContext(t).withOptions(MERGE),
+		options: []Option{MERGE},
 	}, {
 		a: `[1,2,3]`,
 		b: `{}`,
 		diff: ss(
-			`@ [["MERGE"]]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ []`,
 			`+ {}`,
 		),
-		ctx: newTestContext(t).withOptions(MERGE),
+		options: []Option{MERGE},
 	}}
 
 	for _, tt := range tests {
-		c := tt.ctx
-		if c == nil {
-			c = ctx
+		ctx := newTestContext(t)
+		if len(tt.options) > 0 {
+			ctx = ctx.withOptions(tt.options...)
 		}
-		checkDiff(c, tt.a, tt.b, tt.diff...)
+		checkDiff(ctx, tt.a, tt.b, tt.diff...)
 	}
 }
 
 func TestListPatch(t *testing.T) {
-	ctx := newTestContext(t)
 	tests := []struct {
 		a    string
 		b    string
@@ -375,25 +394,29 @@ func TestListPatch(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[4,5,6]`,
 		diff: ss(
-			`@ [["MERGE"]]`,
+			`^ {"Merge":true}`,
+			`@ []`,
 			`+ [4,5,6]`,
 		),
 	}, {
 		a: `[1,2,3]`,
 		b: ``,
 		diff: ss(
-			`@ [["MERGE"]]`,
+			`^ {"Merge":true}`,
+			`@ []`,
 			`+`,
 		),
 	}}
 
 	for _, tt := range tests {
-		checkPatch(ctx, tt.a, tt.b, tt.diff...)
+		t.Run(tt.a+tt.b, func(t *testing.T) {
+			ctx := newTestContext(t)
+			checkPatch(ctx, tt.a, tt.b, tt.diff...)
+		})
 	}
 }
 
 func TestListPatchError(t *testing.T) {
-	ctx := newTestContext(t)
 	tests := []struct {
 		a    string
 		diff []string
@@ -418,25 +441,31 @@ func TestListPatchError(t *testing.T) {
 	}, {
 		a: `[1,2,3]`,
 		diff: ss(
-			`@ [["MERGE"],1]`,
+			`^ {"Merge":true}`,
+			`@ [1]`,
 			`+ 4`,
 		),
 	}, {
 		a: `[1,2,3]`,
 		diff: ss(
-			`@ [["MERGE"],1]`,
+			`^ {"Merge":true}`,
+			`@ [1]`,
 			`- 2`,
 			`+ 4`,
 		),
 	}, {
 		a: `[1,2,3]`,
 		diff: ss(
-			`@ [["MERGE"],-1]`,
+			`^ {"Merge":true}`,
+			`@ [-1]`,
 			`+ 4`,
 		),
 	}}
 
 	for _, tt := range tests {
-		checkPatchError(ctx, tt.a, tt.diff...)
+		t.Run(tt.a, func(t *testing.T) {
+			ctx := newTestContext(t)
+			checkPatchError(ctx, tt.a, tt.diff...)
+		})
 	}
 }

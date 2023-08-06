@@ -25,14 +25,14 @@ func patch(
 	oldValues, newValues []JsonNode,
 	strategy patchStrategy,
 ) (JsonNode, error) {
-	if len(pathAhead) > 0 {
+	if !pathAhead.isLeaf() {
 		if strategy != mergePatchStrategy {
 			return patchErrExpectColl(node, pathAhead[0])
 		}
 		next, _, rest := pathAhead.next()
 		key, ok := next.(PathKey)
 		if !ok {
-			return nil, fmt.Errorf("merge patch path must be composed of only strings: found %v", next)
+			return nil, fmt.Errorf("merge patch path must be composed of only strings: found %T", next)
 		}
 		o := newJsonObject()
 		value, err := node.patch(append(pathBehind.clone(), key), rest, oldValues, newValues, strategy)

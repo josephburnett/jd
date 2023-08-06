@@ -38,15 +38,19 @@ func TestNumberDiff(t *testing.T) {
 	ctx := newTestContext(t)
 	checkDiff(ctx, `0`, `0`)
 	checkDiff(ctx, `0`, `1`,
+		`^ {"Version":2}`,
 		`@ []`,
 		`- 0`,
 		`+ 1`)
 	checkDiff(ctx, `0`, ``,
+		`^ {"Version":2}`,
 		`@ []`,
 		`- 0`)
 	ctx = ctx.withOptions(MERGE)
 	checkDiff(ctx, `1`, `2`,
-		`@ [["MERGE"]]`,
+		`^ {"Version":2}`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+ 2`)
 }
 
@@ -61,10 +65,12 @@ func TestNumberPatch(t *testing.T) {
 		`@ []`,
 		`- 0`)
 	checkPatch(ctx, `0`, `1`,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+ 1`)
 	checkPatch(ctx, `1`, ``,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+`)
 }
 
@@ -77,7 +83,8 @@ func TestNumberPatchError(t *testing.T) {
 		`@ []`,
 		`- 0`)
 	checkPatchError(ctx, `0`,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`- 0`,
 		`+ 1`)
 }
