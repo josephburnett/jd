@@ -38,10 +38,12 @@ func TestStringDiff(t *testing.T) {
 	ctx := newTestContext(t)
 	checkDiff(ctx, `""`, `""`)
 	checkDiff(ctx, `""`, `1`,
+		`^ {"Version":2}`,
 		`@ []`,
 		`- ""`,
 		`+ 1`)
 	checkDiff(ctx, `null`, `"abc"`,
+		`^ {"Version":2}`,
 		`@ []`,
 		`- null`,
 		`+ "abc"`)
@@ -59,10 +61,12 @@ func TestStringPatch(t *testing.T) {
 		`- null`,
 		`+ "abc"`)
 	checkPatch(ctx, `"def"`, `"abc"`,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+ "abc"`)
 	checkPatch(ctx, `"abc"`, ``,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+`)
 }
 

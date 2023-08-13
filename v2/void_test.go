@@ -33,9 +33,11 @@ func TestVoidDiff(t *testing.T) {
 	ctx := newTestContext(t)
 	checkDiff(ctx, ``, ``)
 	checkDiff(ctx, ``, `1`,
+		`^ {"Version":2}`,
 		`@ []`,
 		`+ 1`)
 	checkDiff(ctx, `1`, ``,
+		`^ {"Version":2}`,
 		`@ []`,
 		`- 1`)
 }
@@ -50,10 +52,12 @@ func TestVoidPatch(t *testing.T) {
 		`@ []`,
 		`- 1`)
 	checkPatch(ctx, ``, `1`,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+ 1`)
 	checkPatch(ctx, ``, ``,
-		`@ [["MERGE"]]`,
+		`^ {"Merge":true}`,
+		`@ []`,
 		`+`)
 }
 
