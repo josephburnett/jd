@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	jd "github.com/josephburnett/jd/lib"
+	jd "github.com/josephburnett/jd/v2"
 	"github.com/josephburnett/jd/web/serve"
 )
 
@@ -45,12 +45,12 @@ func main() {
 		}
 		return
 	}
-	metadata, err := parseMetadata()
+	options, err := parseMetadata()
 	if err != nil {
 		errorAndExit(err.Error())
 	}
 	if *gitDiffDriver {
-		err := printGitDiffDriver(metadata)
+		err := printGitDiffDriver(options)
 		if err != nil {
 			panic(err)
 		}
@@ -92,11 +92,11 @@ func main() {
 	}
 	switch mode {
 	case diffMode:
-		printDiff(a, b, metadata)
+		printDiff(a, b, options)
 	case patchMode:
-		printPatch(a, b, metadata)
+		printPatch(a, b, options)
 	case translateMode:
-		printTranslation(a, metadata)
+		printTranslation(a, options)
 	}
 }
 
@@ -117,13 +117,13 @@ func serveWeb(port string) error {
 	return http.ListenAndServe(":"+port, nil)
 }
 
-func parseMetadata() ([]jd.Metadata, error) {
-	metadata := make([]jd.Metadata, 0)
+func parseMetadata() ([]jd.Option, error) {
+	options := make([]jd.Option, 0)
 	if *set {
-		metadata = append(metadata, jd.SET)
+		options = append(options, jd.SET)
 	}
 	if *mset {
-		metadata = append(metadata, jd.MULTISET)
+		options = append(options, jd.MULTISET)
 	}
 	if *setkeys != "" {
 		keys := make([]string, 0)
@@ -135,12 +135,12 @@ func parseMetadata() ([]jd.Metadata, error) {
 			}
 			keys = append(keys, trimmed)
 		}
-		metadata = append(metadata, jd.Setkeys(keys...))
+		options = append(options, jd.SetKeys(keys...))
 	}
 	if *format == "merge" {
-		metadata = append(metadata, jd.MERGE)
+		options = append(options, jd.MERGE)
 	}
-	return metadata, nil
+	return options, nil
 }
 
 func printUsageAndExit() {
@@ -185,8 +185,8 @@ func printUsageAndExit() {
 	os.Exit(2)
 }
 
-func printDiff(a, b string, metadata []jd.Metadata) {
-	str, err := diff(a, b, metadata)
+func printDiff(a, b string, options []jd.Option) {
+	str, err := diff(a, b, options)
 	if err != nil {
 		errorAndExit(err.Error())
 	}
@@ -205,13 +205,13 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 	}
 }
 
-func printGitDiffDriver(metadata []jd.Metadata) error {
+func printGitDiffDriver(options []jd.Option) error {
 	if len(flag.Args()) != 7 {
 		return fmt.Errorf("Git diff driver expects exactly 7 arguments.")
 	}
 	a := readFile(flag.Arg(1))
 	b := readFile(flag.Arg(4))
-	str, err := diff(a, b, metadata)
+	str, err := diff(a, b, options)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func printGitDiffDriver(metadata []jd.Metadata) error {
 	return nil
 }
 
-func diff(a, b string, metadata []jd.Metadata) (string, error) {
+func diff(a, b string, options []jd.Option) (string, error) {
 	var aNode, bNode jd.JsonNode
 	var err error
 	if *yaml {
@@ -239,8 +239,8 @@ func diff(a, b string, metadata []jd.Metadata) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	diff := aNode.Diff(bNode, metadata...)
-	var renderOptions []jd.RenderOption
+	diff := aNode.Diff(bNode, options...)
+	var renderOptions []jd.Option
 	if *color {
 		renderOptions = append(renderOptions, jd.COLOR)
 	}
@@ -264,7 +264,7 @@ func diff(a, b string, metadata []jd.Metadata) (string, error) {
 	return str, nil
 }
 
-func printPatch(p, a string, metadata []jd.Metadata) {
+func printPatch(p, a string, options []jd.Option) {
 	var diff jd.Diff
 	var err error
 	switch *format {
@@ -295,9 +295,9 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 	}
 	var out string
 	if *yaml {
-		out = bNode.Yaml(metadata...)
+		out = bNode.Yaml(options...)
 	} else {
-		out = bNode.Json(metadata...)
+		out = bNode.Json(options...)
 	}
 	if *output == "" {
 		if out == "" {
@@ -314,7 +314,7 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 	}
 }
 
-func printTranslation(a string, metadata []jd.Metadata) {
+func printTranslation(a string, options []jd.Option) {
 	var out string
 	switch *translate {
 	case "jd2patch":
