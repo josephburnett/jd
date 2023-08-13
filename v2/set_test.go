@@ -143,7 +143,8 @@ func TestSetDiff(t *testing.T) {
 		a:       `[1]`,
 		b:       `[1,2]`,
 		want: ss(
-			`@ [["set"],{}]`,
+			`^ {"Version":2}`,
+			`@ [{}]`,
 			`+ 2`,
 		),
 	}, {
@@ -158,7 +159,8 @@ func TestSetDiff(t *testing.T) {
 		a:       `[1]`,
 		b:       `[1,2,2]`,
 		want: ss(
-			`@ [["set"],{}]`,
+			`^ {"Version":2}`,
+			`@ [{}]`,
 			`+ 2`,
 		),
 	}, {
@@ -167,7 +169,8 @@ func TestSetDiff(t *testing.T) {
 		a:       `[1,2,3]`,
 		b:       `[1,3]`,
 		want: ss(
-			`@ [["set"],{}]`,
+			`^ {"Version":2}`,
+			`@ [{}]`,
 			`- 2`,
 		),
 	}, {
@@ -176,7 +179,8 @@ func TestSetDiff(t *testing.T) {
 		a:       `[{"a":1}]`,
 		b:       `[{"a":2}]`,
 		want: ss(
-			`@ [["set"],{}]`,
+			`^ {"Version":2}`,
+			`@ [{}]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
 		),
@@ -186,7 +190,8 @@ func TestSetDiff(t *testing.T) {
 		a:       `[{"a":1},{"a":1}]`,
 		b:       `[{"a":2}]`,
 		want: ss(
-			`@ [["set"],{}]`,
+			`^ {"Version":2}`,
+			`@ [{}]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
 		),
@@ -196,7 +201,8 @@ func TestSetDiff(t *testing.T) {
 		a:       `["foo","foo","bar"]`,
 		b:       `["baz"]`,
 		want: ss(
-			`@ [["set"],{}]`,
+			`^ {"Version":2}`,
+			`@ [{}]`,
 			`- "bar"`,
 			`- "foo"`,
 			`+ "baz"`,
@@ -207,7 +213,8 @@ func TestSetDiff(t *testing.T) {
 		a:       `["foo"]`,
 		b:       `["bar","baz","bar"]`,
 		want: ss(
-			`@ [["set"],{}]`,
+			`^ {"Version":2}`,
+			`@ [{}]`,
 			`- "foo"`,
 			`+ "bar"`,
 			`+ "baz"`,
@@ -218,6 +225,7 @@ func TestSetDiff(t *testing.T) {
 		a:       `{}`,
 		b:       `[]`,
 		want: ss(
+			`^ {"Version":2}`,
 			`@ []`,
 			`- {}`,
 			`+ []`,
@@ -231,7 +239,8 @@ func TestSetDiff(t *testing.T) {
 		a: `[{"id":"foo"}]`,
 		b: `[{"id":"foo","bar":"baz"}]`,
 		want: ss(
-			`@ [["set","setkeys=id"],{"id":"foo"},"bar"]`,
+			`^ {"Version":2}`,
+			`@ [{"id":"foo"},"bar"]`,
 			`+ "baz"`,
 		),
 	}, {
@@ -243,7 +252,8 @@ func TestSetDiff(t *testing.T) {
 		a: `[{},{},{"id":"foo"},{}]`,
 		b: `[{},{"id":"foo","bar":"baz"},{},{}]`,
 		want: ss(
-			`@ [["set","setkeys=id"],{"id":"foo"},"bar"]`,
+			`^ {"Version":2}`,
+			`@ [{"id":"foo"},"bar"]`,
 			`+ "baz"`,
 		),
 	}, {
@@ -255,7 +265,8 @@ func TestSetDiff(t *testing.T) {
 		a: `[{},{"id1":"foo","id2":"zap"},{}]`,
 		b: `[{},{"id1":"foo","id2":"zap","bar":"baz"},{}]`,
 		want: ss(
-			`@ [["set","setkeys=id1,id2"],{"id1":"foo","id2":"zap"},"bar"]`,
+			`^ {"Version":2}`,
+			`@ [{"id1":"foo","id2":"zap"},"bar"]`,
 			`+ "baz"`,
 		),
 	}, {
@@ -267,7 +278,8 @@ func TestSetDiff(t *testing.T) {
 		a: `[{"id":"foo"},{"id":"bar"}]`,
 		b: `[{"id":"foo","baz":"zap"},{"id":"bar"}]`,
 		want: ss(
-			`@ [["set","setkeys=id"],{"id":"foo"},"baz"]`,
+			`^ {"Version":2}`,
+			`@ [{"id":"foo"},"baz"]`,
 			`+ "zap"`,
 		),
 	}, {
@@ -279,7 +291,8 @@ func TestSetDiff(t *testing.T) {
 		a: `[{"id":"foo"}]`,
 		b: `[{"id":"bar"}]`,
 		want: ss(
-			`@ [["set","setkeys=id"],{}]`,
+			`^ {"Version":2}`,
+			`@ [{}]`,
 			`- {"id":"foo"}`,
 			`+ {"id":"bar"}`,
 		),
@@ -295,7 +308,9 @@ func TestSetDiff(t *testing.T) {
 		a:       `[1,2,3]`,
 		b:       `{}`,
 		want: ss(
-			`@ [["MERGE"]]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ []`,
 			`+ {}`,
 		),
 	}, {
@@ -310,7 +325,9 @@ func TestSetDiff(t *testing.T) {
 		a:       `[1,2,3]`,
 		b:       `[2,1,4]`,
 		want: ss(
-			`@ [["MERGE"]]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ []`,
 			`+ [2,1,4]`,
 		),
 	}}
@@ -407,7 +424,7 @@ func TestSetPatch(t *testing.T) {
 		name:  "patch property to object in set",
 		given: `[{"id":"foo"}]`,
 		patch: ss(
-			`@ [["set"],{"id":"foo"},"bar"]`,
+			`@ [{"id":"foo"},"bar"]`,
 			`+ "baz"`,
 		),
 		want: `[{"id":"foo","bar":"baz"}]`,
@@ -415,7 +432,7 @@ func TestSetPatch(t *testing.T) {
 		name:  "patch object among empty objects",
 		given: `[{},{},{"id":"foo"},{}]`,
 		patch: ss(
-			`@ [["set","setkeys=id"],{"id":"foo"},"bar"]`,
+			`@ [{"id":"foo"},"bar"]`,
 			`+ "baz"`,
 		),
 		want: `[{},{"id":"foo","bar":"baz"},{},{}]`,
@@ -423,7 +440,7 @@ func TestSetPatch(t *testing.T) {
 		name:  "patch object by multiple ids",
 		given: `[{},{"id1":"foo","id2":"zap"},{}]`,
 		patch: ss(
-			`@ [["set","setkeys=id1,id2"],{"id1":"foo","id2":"zap"},"bar"]`,
+			`@ [{"id1":"foo","id2":"zap"},"bar"]`,
 			`+ "baz"`,
 		),
 		want: `[{},{"id1":"foo","id2":"zap","bar":"baz"},{}]`,
@@ -431,7 +448,7 @@ func TestSetPatch(t *testing.T) {
 		name:  "patch object by id among other",
 		given: `[{"id":"foo"},{"id":"bar"}]`,
 		patch: ss(
-			`@ [["set","setkeys=id"],{"id":"foo"},"baz"]`,
+			`@ [{"id":"foo"},"baz"]`,
 			`+ "zap"`,
 		),
 		want: `[{"id":"foo","baz":"zap"},{"id":"bar"}]`,
@@ -439,7 +456,7 @@ func TestSetPatch(t *testing.T) {
 		name:  "replace two objects with diffent ids",
 		given: `[{"id":"foo"}]`,
 		patch: ss(
-			`@ [["set","setkeys=id"],{}]`,
+			`@ [{}]`,
 			`- {"id":"foo"}`,
 			`+ {"id":"bar"}`,
 		),
@@ -448,7 +465,8 @@ func TestSetPatch(t *testing.T) {
 		name:  "merge replaces entire set",
 		given: `[1,2,3]`,
 		patch: ss(
-			`@ [["MERGE","set"]]`,
+			`^ {"Merge":true}`,
+			`@ [{}]`,
 			`+ [4,5,6]`,
 		),
 		want: `[4,5,6]`,
@@ -456,7 +474,8 @@ func TestSetPatch(t *testing.T) {
 		name:  "void deletes a node",
 		given: `[1,2,3]`,
 		patch: ss(
-			`@ [["MERGE","set"]]`,
+			`^ {"Merge":true}`,
+			`@ [{}]`,
 			`+`,
 		),
 		want: ``,

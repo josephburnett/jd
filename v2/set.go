@@ -176,7 +176,7 @@ func (s1 jsonSet) diff(
 			e.Add = append(e.Add, s2Map[hc])
 		}
 	}
-	if len(e.Remove) > 0 || len(e.Remove) > 0 {
+	if len(e.Remove) > 0 || len(e.Add) > 0 {
 		d = append(d, e)
 	}
 	return d
@@ -212,24 +212,25 @@ func (s jsonSet) patch(
 	}
 	// Unrolled recursive case
 	n, metadata, rest := pathAhead.next()
-	pathObject, ok := n.(PathSetKeys)
-	if !ok {
-		return nil, fmt.Errorf(
-			"invalid path element %v: expected jsonObject", n)
-	}
-	if len(rest) > 0 {
+	pathSetKeys, ok := n.(PathSetKeys)
+	if ok && len(rest) > 0 {
 		// Recurse into a specific object.
-		lookingFor := jsonObject(pathObject).ident(metadata)
+		lookingFor := jsonObject(pathSetKeys).ident(metadata)
 		for _, v := range s {
 			if o, ok := v.(jsonObject); ok {
-				id := o.pathIdent(jsonObject(pathObject), metadata)
+				id := o.pathIdent(jsonObject(pathSetKeys), metadata)
 				if id == lookingFor {
 					v.patch(append(pathBehind, n), rest, oldValues, newValues, strategy)
 					return s, nil
 				}
 			}
 		}
-		return nil, fmt.Errorf("invalid diff: expected object with id %v but found none", jsonObject(pathObject).Json())
+		return nil, fmt.Errorf("invalid diff: expected object with id %v but found none", jsonObject(pathSetKeys).Json())
+	}
+	_, ok = n.(PathSet)
+	if !ok {
+		return nil, fmt.Errorf(
+			"invalid path element %v: expected jsonObject", n)
 	}
 	// Patch set
 	aMap := make(map[[8]byte]JsonNode)

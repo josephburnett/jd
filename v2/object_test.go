@@ -105,12 +105,11 @@ func TestObjectHash(t *testing.T) {
 }
 
 func TestObjectDiff(t *testing.T) {
-	ctx := newTestContext(t)
 	tests := []struct {
-		a    string
-		b    string
-		diff []string
-		ctx  *testContext
+		a       string
+		b       string
+		diff    []string
+		options []Option
 	}{{
 		a: `{}`,
 		b: `{}`,
@@ -121,6 +120,7 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"a":2}`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ ["a"]`,
 			`- 1`,
 			`+ 2`,
@@ -132,8 +132,10 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"":1}`,
 		b: `{"a":2}`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [""]`,
 			`- 1`,
+			`^ {"Version":2}`,
 			`@ ["a"]`,
 			`+ 2`,
 		),
@@ -141,8 +143,10 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":{"b":{}}}`,
 		b: `{"a":{"b":{"c":1},"d":2}}`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ ["a","b","c"]`,
 			`+ 1`,
+			`^ {"Version":2}`,
 			`@ ["a","d"]`,
 			`+ 2`,
 		),
@@ -151,12 +155,15 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"R": [{"I": [{"T": [{"V": "t","K": "N"},{"V": "T","K": "I"}]}]}]}`,
 		b: `{"R": [{"I": [{"T": [{"V": "t","K": "N"},{"V": "Q","K": "C"},{"V": "T","K": "I"}]}]}]}`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ ["R",0,"I",0,"T",1,"K"]`,
 			`- "I"`,
 			`+ "C"`,
+			`^ {"Version":2}`,
 			`@ ["R",0,"I",0,"T",1,"V"]`,
 			`- "T"`,
 			`+ "Q"`,
+			`^ {"Version":2}`,
 			`@ ["R",0,"I",0,"T",-1]`,
 			`+ {"K":"I","V":"T"}`,
 		),
@@ -164,49 +171,58 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"a":2}`,
 		diff: ss(
-			`@ [["MERGE"],"a"]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ ["a"]`,
 			`+ 2`,
 		),
-		ctx: newTestContext(t).withOptions(MERGE),
+		options: []Option{MERGE},
 	}, {
 		a: `{"a":1}`,
 		b: `{"a":null}`,
 		diff: ss(
-			`@ [["MERGE"],"a"]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ ["a"]`,
 			`+ null`,
 		),
-		ctx: newTestContext(t).withOptions(MERGE),
+		options: []Option{MERGE},
 	}, {
 		a: `{"a":1}`,
 		b: `{}`,
 		diff: ss(
-			`@ [["MERGE"],"a"]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ ["a"]`,
 			`+`,
 		),
-		ctx: newTestContext(t).withOptions(MERGE),
+		options: []Option{MERGE},
 	}, {
 		a: `{"a":1}`,
 		b: `{"b":1}`,
 		diff: ss(
-			`@ [["MERGE"],"a"]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ ["a"]`,
 			`+`,
-			`@ [["MERGE"],"b"]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ ["b"]`,
 			`+ 1`,
 		),
-		ctx: newTestContext(t).withOptions(MERGE),
+		options: []Option{MERGE},
 	}}
 
 	for _, tt := range tests {
-		c := tt.ctx
-		if c == nil {
-			c = ctx
+		ctx := newTestContext(t)
+		if len(tt.options) > 0 {
+			ctx = ctx.withOptions(tt.options...)
 		}
-		checkDiff(c, tt.a, tt.b, tt.diff...)
+		checkDiff(ctx, tt.a, tt.b, tt.diff...)
 	}
 }
 
 func TestObjectPatch(t *testing.T) {
-	ctx := newTestContext(t)
 	tests := []struct {
 		a    string
 		b    string
@@ -221,6 +237,7 @@ func TestObjectPatch(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"a":2}`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ ["a"]`,
 			`- 1`,
 			`+ 2`,
@@ -232,8 +249,10 @@ func TestObjectPatch(t *testing.T) {
 		a: `{"":1}`,
 		b: `{"a":2}`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ [""]`,
 			`- 1`,
+			`^ {"Version":2}`,
 			`@ ["a"]`,
 			`+ 2`,
 		),
@@ -241,8 +260,10 @@ func TestObjectPatch(t *testing.T) {
 		a: `{"a":{"b":{}}}`,
 		b: `{"a":{"b":{"c":1},"d":2}}`,
 		diff: ss(
+			`^ {"Version":2}`,
 			`@ ["a","b","c"]`,
 			`+ 1`,
+			`^ {"Version":2}`,
 			`@ ["a","d"]`,
 			`+ 2`,
 		),
@@ -250,27 +271,36 @@ func TestObjectPatch(t *testing.T) {
 		a: `{"foo":1}`,
 		b: `{"foo":2}`,
 		diff: ss(
-			`@ [["MERGE"],"foo"]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ ["foo"]`,
 			`+ 2`,
 		),
 	}, {
 		a: `{"foo":[1,2,3]}`,
 		b: `{"foo":[4,5,6]}`,
 		diff: ss(
-			`@ [["MERGE"],"foo"]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ ["foo"]`,
 			`+ [4,5,6]`,
 		),
 	}, {
 		a: `{}`,
 		b: `{"foo":{"bar":1}}`,
 		diff: ss(
-			`@ [["MERGE"],"foo","bar"]`,
+			`^ {"Version":2}`,
+			`^ {"Merge":true}`,
+			`@ ["foo","bar"]`,
 			`+ 1`,
 		),
 	}}
 
 	for _, tt := range tests {
-		checkPatch(ctx, tt.a, tt.b, tt.diff...)
+		t.Run(tt.a+tt.b, func(t *testing.T) {
+			ctx := newTestContext(t)
+			checkPatch(ctx, tt.a, tt.b, tt.diff...)
+		})
 	}
 }
 
