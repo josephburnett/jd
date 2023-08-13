@@ -64,17 +64,13 @@ func (a1 jsonList) diff(
 		case mergePatchStrategy:
 			e = DiffElement{
 				Metadata: Metadata{
-					Version: 2,
-					Merge:   true,
+					Merge: true,
 				},
 				Path: path.clone(),
 				Add:  jsonArray{n},
 			}
 		default:
 			e = DiffElement{
-				Metadata: Metadata{
-					Version: 2,
-				},
 				Path:   path.clone(),
 				Remove: nodeList(a1),
 				Add:    nodeList(n),
@@ -87,8 +83,7 @@ func (a1 jsonList) diff(
 		if !a1.Equals(a2, options...) {
 			e := DiffElement{
 				Metadata: Metadata{
-					Version: 2,
-					Merge:   true,
+					Merge: true,
 				},
 				Path: path.clone(),
 				Add:  nodeList(n),
@@ -116,9 +111,6 @@ func (a1 jsonList) diff(
 		}
 		if a1Has && !a2Has {
 			e := DiffElement{
-				Metadata: Metadata{
-					Version: 2,
-				},
 				Path:   subPath.clone(),
 				Remove: nodeList(a1[i]),
 				Add:    nodeList(),
@@ -128,9 +120,6 @@ func (a1 jsonList) diff(
 		if !a1Has && a2Has {
 			appendPath := append(path, PathIndex(-1))
 			e := DiffElement{
-				Metadata: Metadata{
-					Version: 2,
-				},
 				Path:   appendPath.clone(),
 				Remove: nodeList(),
 				Add:    nodeList(a2[i]),

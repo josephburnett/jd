@@ -120,7 +120,6 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"a":2}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ ["a"]`,
 			`- 1`,
 			`+ 2`,
@@ -132,10 +131,8 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"":1}`,
 		b: `{"a":2}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [""]`,
 			`- 1`,
-			`^ {"Version":2}`,
 			`@ ["a"]`,
 			`+ 2`,
 		),
@@ -143,10 +140,8 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":{"b":{}}}`,
 		b: `{"a":{"b":{"c":1},"d":2}}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ ["a","b","c"]`,
 			`+ 1`,
-			`^ {"Version":2}`,
 			`@ ["a","d"]`,
 			`+ 2`,
 		),
@@ -155,15 +150,12 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"R": [{"I": [{"T": [{"V": "t","K": "N"},{"V": "T","K": "I"}]}]}]}`,
 		b: `{"R": [{"I": [{"T": [{"V": "t","K": "N"},{"V": "Q","K": "C"},{"V": "T","K": "I"}]}]}]}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ ["R",0,"I",0,"T",1,"K"]`,
 			`- "I"`,
 			`+ "C"`,
-			`^ {"Version":2}`,
 			`@ ["R",0,"I",0,"T",1,"V"]`,
 			`- "T"`,
 			`+ "Q"`,
-			`^ {"Version":2}`,
 			`@ ["R",0,"I",0,"T",-1]`,
 			`+ {"K":"I","V":"T"}`,
 		),
@@ -171,7 +163,6 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"a":2}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ ["a"]`,
 			`+ 2`,
@@ -181,7 +172,6 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"a":null}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ ["a"]`,
 			`+ null`,
@@ -191,7 +181,6 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ ["a"]`,
 			`+`,
@@ -201,11 +190,9 @@ func TestObjectDiff(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"b":1}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ ["a"]`,
 			`+`,
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ ["b"]`,
 			`+ 1`,
@@ -237,7 +224,6 @@ func TestObjectPatch(t *testing.T) {
 		a: `{"a":1}`,
 		b: `{"a":2}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ ["a"]`,
 			`- 1`,
 			`+ 2`,
@@ -249,10 +235,8 @@ func TestObjectPatch(t *testing.T) {
 		a: `{"":1}`,
 		b: `{"a":2}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [""]`,
 			`- 1`,
-			`^ {"Version":2}`,
 			`@ ["a"]`,
 			`+ 2`,
 		),
@@ -260,10 +244,8 @@ func TestObjectPatch(t *testing.T) {
 		a: `{"a":{"b":{}}}`,
 		b: `{"a":{"b":{"c":1},"d":2}}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ ["a","b","c"]`,
 			`+ 1`,
-			`^ {"Version":2}`,
 			`@ ["a","d"]`,
 			`+ 2`,
 		),
@@ -271,7 +253,6 @@ func TestObjectPatch(t *testing.T) {
 		a: `{"foo":1}`,
 		b: `{"foo":2}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ ["foo"]`,
 			`+ 2`,
@@ -280,7 +261,6 @@ func TestObjectPatch(t *testing.T) {
 		a: `{"foo":[1,2,3]}`,
 		b: `{"foo":[4,5,6]}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ ["foo"]`,
 			`+ [4,5,6]`,
@@ -289,7 +269,6 @@ func TestObjectPatch(t *testing.T) {
 		a: `{}`,
 		b: `{"foo":{"bar":1}}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ ["foo","bar"]`,
 			`+ 1`,

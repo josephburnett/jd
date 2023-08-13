@@ -38,17 +38,14 @@ func TestNumberDiff(t *testing.T) {
 	ctx := newTestContext(t)
 	checkDiff(ctx, `0`, `0`)
 	checkDiff(ctx, `0`, `1`,
-		`^ {"Version":2}`,
 		`@ []`,
 		`- 0`,
 		`+ 1`)
 	checkDiff(ctx, `0`, ``,
-		`^ {"Version":2}`,
 		`@ []`,
 		`- 0`)
 	ctx = ctx.withOptions(MERGE)
 	checkDiff(ctx, `1`, `2`,
-		`^ {"Version":2}`,
 		`^ {"Merge":true}`,
 		`@ []`,
 		`+ 2`)

@@ -132,7 +132,6 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1]`,
 		b:    `[1,2]`,
 		want: ss(
-			`^ {"Version":2}`,
 			`@ [[]]`,
 			`+ 2`,
 		),
@@ -146,7 +145,6 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1]`,
 		b:    `[1,2,2]`,
 		want: ss(
-			`^ {"Version":2}`,
 			`@ [[]]`,
 			`+ 2`,
 			`+ 2`,
@@ -156,7 +154,6 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1,2,3]`,
 		b:    `[1,3]`,
 		want: ss(
-			`^ {"Version":2}`,
 			`@ [[]]`,
 			`- 2`,
 		),
@@ -165,7 +162,6 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[{"a":1}]`,
 		b:    `[{"a":2}]`,
 		want: ss(
-			`^ {"Version":2}`,
 			`@ [[]]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -175,7 +171,6 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[{"a":1},{"a":1}]`,
 		b:    `[{"a":2}]`,
 		want: ss(
-			`^ {"Version":2}`,
 			`@ [[]]`,
 			`- {"a":1}`,
 			`- {"a":1}`,
@@ -186,7 +181,6 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `["foo","foo","bar"]`,
 		b:    `["baz"]`,
 		want: ss(
-			`^ {"Version":2}`,
 			`@ [[]]`,
 			`- "bar"`,
 			`- "foo"`,
@@ -198,7 +192,6 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `["foo"]`,
 		b:    `["bar","baz","bar"]`,
 		want: ss(
-			`^ {"Version":2}`,
 			`@ [[]]`,
 			`- "foo"`,
 			`+ "bar"`,
@@ -210,7 +203,6 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `{}`,
 		b:    `[]`,
 		want: ss(
-			`^ {"Version":2}`,
 			`@ []`,
 			`- {}`,
 			`+ []`,
@@ -220,7 +212,6 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1,2,2,3]`,
 		b:    `{}`,
 		want: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ []`,
 			`+ {}`,
@@ -237,7 +228,6 @@ func TestMultisetDiff(t *testing.T) {
 		a:    `[1,2,2,3]`,
 		b:    `[2,1,3,3]`,
 		want: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ []`,
 			`+ [2,1,3,3]`,

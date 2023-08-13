@@ -81,17 +81,13 @@ func (s1 jsonSet) diff(
 		case mergePatchStrategy:
 			e = DiffElement{
 				Metadata: Metadata{
-					Version: 2,
-					Merge:   true,
+					Merge: true,
 				},
 				Path: path.clone(),
 				Add:  nodeList(n),
 			}
 		default:
 			e = DiffElement{
-				Metadata: Metadata{
-					Version: 2,
-				},
 				Path:   path.clone(),
 				Remove: nodeList(s1),
 				Add:    nodeList(n),
@@ -102,8 +98,7 @@ func (s1 jsonSet) diff(
 	if strategy == mergePatchStrategy && !s1.Equals(n) {
 		e := DiffElement{
 			Metadata: Metadata{
-				Version: 2,
-				Merge:   true,
+				Merge: true,
 			},
 			Path: path.clone(),
 			Add:  nodeList(n),
@@ -145,9 +140,6 @@ func (s1 jsonSet) diff(
 	}
 	sort.Sort(s2Hashes)
 	e := DiffElement{
-		Metadata: Metadata{
-			Version: 2,
-		},
 		Path:   append(path.clone(), PathSet{}),
 		Remove: nodeList(),
 		Add:    nodeList(),

@@ -206,11 +206,7 @@ func ReadPatchString(s string) (Diff, error) {
 }
 
 func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, error) {
-	d := DiffElement{
-		Metadata: Metadata{
-			Version: 2,
-		},
-	}
+	d := DiffElement{}
 	if len(patch) == 0 {
 		return d, nil, fmt.Errorf("unexpected end of JSON Patch")
 	}
@@ -293,8 +289,7 @@ func readMergeInto(d Diff, p Path, n JsonNode) Diff {
 		if len(n) == 0 {
 			return append(d, DiffElement{
 				Metadata: Metadata{
-					Version: 2,
-					Merge:   true,
+					Merge: true,
 				},
 				Path: p.clone(),
 				Add:  []JsonNode{newJsonObject()},
@@ -308,8 +303,7 @@ func readMergeInto(d Diff, p Path, n JsonNode) Diff {
 		}
 		return append(d, DiffElement{
 			Metadata: Metadata{
-				Version: 2,
-				Merge:   true,
+				Merge: true,
 			},
 			Path: p.clone(),
 			Add:  []JsonNode{n},

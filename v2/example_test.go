@@ -9,7 +9,6 @@ func ExampleJsonNode_Diff() {
 	b, _ := ReadJsonString(`{"foo":"baz"}`)
 	fmt.Print(a.Diff(b).Render())
 	// Output:
-	// ^ {"Version":2}
 	// @ ["foo"]
 	// - "bar"
 	// + "baz"

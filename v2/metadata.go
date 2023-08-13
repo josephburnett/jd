@@ -7,8 +7,7 @@ import (
 )
 
 type Metadata struct {
-	Version int
-	Merge   bool
+	Merge bool
 }
 
 func readMetadata(n JsonNode) (Metadata, error) {
@@ -19,12 +18,6 @@ func readMetadata(n JsonNode) (Metadata, error) {
 	}
 	for k, v := range o {
 		switch k {
-		case "Version":
-			n, ok := v.(jsonNumber)
-			if !ok {
-				return Metadata{}, fmt.Errorf("version must be a number. got %T", v)
-			}
-			m.Version = int(n)
 		case "Merge":
 			b, ok := v.(jsonBool)
 			if !ok {
@@ -39,9 +32,6 @@ func readMetadata(n JsonNode) (Metadata, error) {
 }
 
 func (m Metadata) merge(m2 Metadata) Metadata {
-	if m2.Version != 0 {
-		m.Version = m2.Version
-	}
 	if m2.Merge != false {
 		m.Merge = m2.Merge
 	}
@@ -57,12 +47,6 @@ func renderMetadataField(m metadataField) string {
 	return fmt.Sprintf("^ %v\n", string(s))
 }
 
-type metadataVersion struct {
-	Version int
-}
-
-func (m metadataVersion) isMetadataField() {}
-
 type metadataMerge struct {
 	Merge bool
 }
@@ -71,10 +55,6 @@ func (m metadataMerge) isMetadataField() {}
 
 func (m Metadata) Render() string {
 	b := bytes.NewBuffer(nil)
-	if m.Version != 0 {
-		s := renderMetadataField(metadataVersion{Version: m.Version})
-		b.WriteString(s)
-	}
 	if m.Merge != false {
 		s := renderMetadataField(metadataMerge{Merge: m.Merge})
 		b.WriteString(s)

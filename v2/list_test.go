@@ -90,7 +90,6 @@ func TestListDiff(t *testing.T) {
 		a: `[1]`,
 		b: `[]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [0]`,
 			`- 1`,
 		),
@@ -98,7 +97,6 @@ func TestListDiff(t *testing.T) {
 		a: `[[]]`,
 		b: `[[1]]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [0,-1]`,
 			`+ 1`,
 		),
@@ -106,7 +104,6 @@ func TestListDiff(t *testing.T) {
 		a: `[1]`,
 		b: `[2]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [0]`,
 			`- 1`,
 			`+ 2`,
@@ -115,7 +112,6 @@ func TestListDiff(t *testing.T) {
 		a: `[]`,
 		b: `[2]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 2`,
 		),
@@ -123,7 +119,6 @@ func TestListDiff(t *testing.T) {
 		a: `[[]]`,
 		b: `[{}]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [0]`,
 			`- []`,
 			`+ {}`,
@@ -132,7 +127,6 @@ func TestListDiff(t *testing.T) {
 		a: `[{"a":[1]}]`,
 		b: `[{"a":[2]}]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [0,"a",0]`,
 			`- 1`,
 			`+ 2`,
@@ -141,7 +135,6 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[1,2]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [2]`,
 			`- 3`,
 		),
@@ -149,7 +142,6 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[1,4,3]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [1]`,
 			`- 2`,
 			`+ 4`,
@@ -158,7 +150,6 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[1,null,3]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [1]`,
 			`- 2`,
 			`+ null`,
@@ -167,10 +158,8 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2]`,
 		b: `[1,2,3,4]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 3`,
-			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 4`,
 		),
@@ -178,13 +167,10 @@ func TestListDiff(t *testing.T) {
 		a: `[]`,
 		b: `[3,4,5]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 3`,
-			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 4`,
-			`^ {"Version":2}`,
 			`@ [-1]`,
 			`+ 5`,
 		),
@@ -192,13 +178,10 @@ func TestListDiff(t *testing.T) {
 		a: `[null,null,null]`,
 		b: `[]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`@ [2]`,
 			`- null`,
-			`^ {"Version":2}`,
 			`@ [1]`,
 			`- null`,
-			`^ {"Version":2}`,
 			`@ [0]`,
 			`- null`,
 		),
@@ -206,7 +189,6 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `[1,4,3]`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ []`,
 			`+ [1,4,3]`,
@@ -216,7 +198,6 @@ func TestListDiff(t *testing.T) {
 		a: `[1,2,3]`,
 		b: `{}`,
 		diff: ss(
-			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ []`,
 			`+ {}`,

@@ -69,17 +69,13 @@ func (a1 jsonMultiset) diff(
 		case mergePatchStrategy:
 			e = DiffElement{
 				Metadata: Metadata{
-					Version: 2,
-					Merge:   true,
+					Merge: true,
 				},
 				Path: path.clone(),
 				Add:  nodeList(n),
 			}
 		default:
 			e = DiffElement{
-				Metadata: Metadata{
-					Version: 2,
-				},
 				Path:   path.clone(),
 				Remove: nodeList(a1),
 				Add:    nodeList(n),
@@ -90,8 +86,7 @@ func (a1 jsonMultiset) diff(
 	if strategy == mergePatchStrategy && !a1.Equals(n) {
 		e := DiffElement{
 			Metadata: Metadata{
-				Version: 2,
-				Merge:   true,
+				Merge: true,
 			},
 			Path: path.clone(),
 			Add:  nodeList(n),
@@ -114,9 +109,6 @@ func (a1 jsonMultiset) diff(
 	}
 	pathWithMultiset := append(path.clone(), PathMultiset{})
 	e := DiffElement{
-		Metadata: Metadata{
-			Version: 2,
-		},
 		Path:   pathWithMultiset,
 		Remove: nodeList(),
 		Add:    nodeList(),

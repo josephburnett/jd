@@ -38,12 +38,10 @@ func TestStringDiff(t *testing.T) {
 	ctx := newTestContext(t)
 	checkDiff(ctx, `""`, `""`)
 	checkDiff(ctx, `""`, `1`,
-		`^ {"Version":2}`,
 		`@ []`,
 		`- ""`,
 		`+ 1`)
 	checkDiff(ctx, `null`, `"abc"`,
-		`^ {"Version":2}`,
 		`@ []`,
 		`- null`,
 		`+ "abc"`)

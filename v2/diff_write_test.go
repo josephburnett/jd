@@ -6,27 +6,21 @@ import (
 
 func TestDiffRender(t *testing.T) {
 	checkDiffRender(t, `{"a":1}`, `{"a":2}`,
-		`^ {"Version":2}`,
 		`@ ["a"]`,
 		`- 1`,
 		`+ 2`)
 	checkDiffRender(t, `{"a":{"b":1}}`, `{"a":{"b":2}}`,
-		`^ {"Version":2}`,
 		`@ ["a","b"]`,
 		`- 1`,
 		`+ 2`)
 	checkDiffRender(t, `{"a":{"b":1}}`, `{"a":{"c":2}}`,
-		`^ {"Version":2}`,
 		`@ ["a","b"]`,
 		`- 1`,
-		`^ {"Version":2}`,
 		`@ ["a","c"]`,
 		`+ 2`)
 	checkDiffRender(t, `{"a":{"b":1}}`, `{"c":{"b":1}}`,
-		`^ {"Version":2}`,
 		`@ ["a"]`,
 		`- {"b":1}`,
-		`^ {"Version":2}`,
 		`@ ["c"]`,
 		`+ {"b":1}`)
 }
