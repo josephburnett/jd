@@ -74,7 +74,7 @@ func (p Path) JsonNode() JsonNode {
 		case PathSet:
 			a[i] = jsonObject{}
 		case PathMultiset:
-			a[i] = jsonArray{jsonObject{}}
+			a[i] = jsonArray{}
 		case PathSetKeys:
 			a[i] = jsonObject(e)
 		case PathMultisetKeys:

@@ -10,6 +10,7 @@ func TestReadPatch(t *testing.T) {
 	}{{
 		patch: s(`[{"op":"add","path":"/foo","value":1}]`),
 		diff: s(
+			`^ {"Version":2}`,
 			`@ ["foo"]`,
 			`+ 1`,
 		),
@@ -19,6 +20,7 @@ func TestReadPatch(t *testing.T) {
 			`{"op":"remove","path":"/foo","value":1}]`,
 		),
 		diff: s(
+			`^ {"Version":2}`,
 			`@ ["foo"]`,
 			`- 1`,
 		),
@@ -29,14 +31,17 @@ func TestReadPatch(t *testing.T) {
 			`{"op":"remove","path":"/foo","value":1}]`,
 		),
 		diff: s(
+			`^ {"Version":2}`,
 			`@ ["foo"]`,
 			`+ 1`,
+			`^ {"Version":2}`,
 			`@ ["foo"]`,
 			`- 1`,
 		),
 	}, {
 		patch: s(`[{"op":"add","path":"/foo/-","value":2}]`),
 		diff: s(
+			`^ {"Version":2}`,
 			`@ ["foo",-1]`,
 			`+ 2`,
 		),
@@ -49,21 +54,23 @@ func TestReadPatch(t *testing.T) {
 	}}
 
 	for _, tc := range cases {
-		diff, err := ReadPatchString(tc.patch)
-		if err != nil && !tc.wantErr {
-			t.Errorf("Wanted no error. Got %v", err)
-		}
-		if err == nil && tc.wantErr {
-			t.Errorf("Wanted an error. Got nil")
-		}
-		if err != nil && tc.wantErr {
-			// Everything is okay
-			continue
-		}
-		got := diff.Render()
-		if got != tc.diff {
-			t.Errorf("Wanted \n%q. Got \n%q", tc.diff, got)
-		}
+		t.Run(tc.patch, func(t *testing.T) {
+			diff, err := ReadPatchString(tc.patch)
+			if err != nil && !tc.wantErr {
+				t.Errorf("Wanted no error. Got %v", err)
+			}
+			if err == nil && tc.wantErr {
+				t.Errorf("Wanted an error. Got nil")
+			}
+			if err != nil && tc.wantErr {
+				// Everything is okay
+				return
+			}
+			got := diff.Render()
+			if got != tc.diff {
+				t.Errorf("Wanted \n%q. Got \n%q", tc.diff, got)
+			}
+		})
 	}
 }
 
@@ -74,6 +81,7 @@ func TestReadMerge(t *testing.T) {
 	}{{
 		patch: `{"a":1}`,
 		diff: s(
+			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ ["a"]`,
 			`+ 1`,
@@ -84,6 +92,7 @@ func TestReadMerge(t *testing.T) {
 	}, {
 		patch: `null`,
 		diff: s(
+			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ []`,
 			`+`,
@@ -91,6 +100,7 @@ func TestReadMerge(t *testing.T) {
 	}, {
 		patch: `[1,2,3]`,
 		diff: s(
+			`^ {"Version":2}`,
 			`^ {"Merge":true}`,
 			`@ []`,
 			`+ [1,2,3]`,

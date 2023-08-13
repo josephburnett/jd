@@ -133,7 +133,7 @@ func TestMultisetDiff(t *testing.T) {
 		b:    `[1,2]`,
 		want: ss(
 			`^ {"Version":2}`,
-			`@ [[{}]]`,
+			`@ [[]]`,
 			`+ 2`,
 		),
 	}, {
@@ -147,7 +147,7 @@ func TestMultisetDiff(t *testing.T) {
 		b:    `[1,2,2]`,
 		want: ss(
 			`^ {"Version":2}`,
-			`@ [[{}]]`,
+			`@ [[]]`,
 			`+ 2`,
 			`+ 2`,
 		),
@@ -157,7 +157,7 @@ func TestMultisetDiff(t *testing.T) {
 		b:    `[1,3]`,
 		want: ss(
 			`^ {"Version":2}`,
-			`@ [[{}]]`,
+			`@ [[]]`,
 			`- 2`,
 		),
 	}, {
@@ -166,7 +166,7 @@ func TestMultisetDiff(t *testing.T) {
 		b:    `[{"a":2}]`,
 		want: ss(
 			`^ {"Version":2}`,
-			`@ [[{}]]`,
+			`@ [[]]`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
 		),
@@ -176,7 +176,7 @@ func TestMultisetDiff(t *testing.T) {
 		b:    `[{"a":2}]`,
 		want: ss(
 			`^ {"Version":2}`,
-			`@ [[{}]]`,
+			`@ [[]]`,
 			`- {"a":1}`,
 			`- {"a":1}`,
 			`+ {"a":2}`,
@@ -187,7 +187,7 @@ func TestMultisetDiff(t *testing.T) {
 		b:    `["baz"]`,
 		want: ss(
 			`^ {"Version":2}`,
-			`@ [[{}]]`,
+			`@ [[]]`,
 			`- "bar"`,
 			`- "foo"`,
 			`- "foo"`,
@@ -199,7 +199,7 @@ func TestMultisetDiff(t *testing.T) {
 		b:    `["bar","baz","bar"]`,
 		want: ss(
 			`^ {"Version":2}`,
-			`@ [[{}]]`,
+			`@ [[]]`,
 			`- "foo"`,
 			`+ "bar"`,
 			`+ "bar"`,
@@ -385,14 +385,14 @@ func TestMultisetPatchError(t *testing.T) {
 		name:  "remove number from empty multiset",
 		given: `[]`,
 		patch: ss(
-			`@ [{}]`,
+			`@ [[]]`,
 			`- 1`,
 		),
 	}, {
 		name:  "remove a single number twice",
 		given: `[1]`,
 		patch: ss(
-			`@ [{}]`,
+			`@ [[]]`,
 			`- 1`,
 			`- 1`,
 		),
@@ -400,7 +400,7 @@ func TestMultisetPatchError(t *testing.T) {
 		name:  "remove an object when there is a multiset",
 		given: `[]`,
 		patch: ss(
-			`@ []`,
+			`@ [[]]`,
 			`- {}`,
 		),
 	}}
