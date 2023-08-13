@@ -17,6 +17,11 @@ func (o setKeysOption) isOption()     {}
 func (o multisetOption) isOption()    {}
 func (o renderColorOption) isOption() {}
 
+var (
+	SET      = setOption{}
+	MULTISET = multisetOption{}
+)
+
 type colorOption struct{}
 
 func (o colorOption) isOption() {}
