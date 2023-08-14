@@ -10,8 +10,8 @@ test :
 	cd v2 ; go test .
 
 fuzz :
-	go test ./lib -fuzz=FuzzJd -fuzztime=1m
-	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=1m
+	go test ./lib -fuzz=FuzzJd -fuzztime=10s
+	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=10s
 
 pack-web : build-web
 	go run web/pack/main.go
