@@ -1,6 +1,10 @@
 package jd
 
-import "fmt"
+import (
+	"fmt"
+
+	lcs "github.com/yudai/golcs"
+)
 
 type jsonList []JsonNode
 
@@ -49,14 +53,14 @@ func (l jsonList) Diff(n JsonNode, options ...Option) Diff {
 	return l.diff(n, make(Path, 0), options, getPatchStrategy(options))
 }
 
-func (a1 jsonList) diff(
+func (a jsonList) diff(
 	n JsonNode,
 	path Path,
 	options []Option,
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)
-	a2, ok := n.(jsonList)
+	b, ok := n.(jsonList)
 	if !ok {
 		// Different types
 		var e DiffElement
@@ -72,7 +76,7 @@ func (a1 jsonList) diff(
 		default:
 			e = DiffElement{
 				Path:   path.clone(),
-				Remove: nodeList(a1),
+				Remove: nodeList(a),
 				Add:    nodeList(n),
 			}
 		}
@@ -80,7 +84,7 @@ func (a1 jsonList) diff(
 	}
 	if strategy == mergePatchStrategy {
 		// Merge patches do not recurse into lists
-		if !a1.Equals(a2, options...) {
+		if !a.Equals(b, options...) {
 			e := DiffElement{
 				Metadata: Metadata{
 					Merge: true,
@@ -91,43 +95,134 @@ func (a1 jsonList) diff(
 			return append(d, e)
 		}
 	}
-	maxLen := len(a1)
-	if len(a1) < len(a2) {
-		maxLen = len(a2)
+	aHashes := make([]interface{}, len(a))
+	bHashes := make([]interface{}, len(b))
+	for i, v := range a {
+		aHashes[i] = v.hashCode(options)
 	}
-	from, to, by := maxLen-1, -1, -1
-	if len(a1) < len(a2) {
-		from, to, by = 0, maxLen, 1
+	for i, v := range b {
+		bHashes[i] = v.hashCode(options)
 	}
-	for i := from; i != to; i = i + by {
-		a1Has := i < len(a1)
-		a2Has := i < len(a2)
-		subPath := append(path, PathIndex(i))
-		if a1Has && a2Has {
-			n1 := dispatch(a1[i], options)
-			n2 := dispatch(a2[i], options)
-			subDiff := n1.diff(n2, subPath, options, strategy)
-			d = append(d, subDiff...)
+	sequence := lcs.New([]interface{}(aHashes), []interface{}(bHashes)).Values()
+	aCursor, bCursor, pathCursor := 0, 0, 0
+	lastACursor, lastBCursor := -1, -1
+	for _, hash := range sequence {
+		// Advanced to the next common element accumulating diff elements.
+		currentDiffElement := DiffElement{
+			Path: append(path.clone(), PathIndex(pathCursor)),
 		}
-		if a1Has && !a2Has {
-			e := DiffElement{
-				Path:   subPath.clone(),
-				Remove: nodeList(a1[i]),
-				Add:    nodeList(),
+		for aHashes[aCursor] != hash || bHashes[bCursor] != hash {
+			if aCursor == lastACursor && bCursor == lastBCursor {
+				panic("a and b cursors are not advancing")
 			}
-			d = append(d, e)
-		}
-		if !a1Has && a2Has {
-			appendPath := append(path, PathIndex(-1))
-			e := DiffElement{
-				Path:   appendPath.clone(),
-				Remove: nodeList(),
-				Add:    nodeList(a2[i]),
+			lastACursor = aCursor
+			lastBCursor = bCursor
+			switch {
+			case aHashes[aCursor] == hash:
+				// A is done. The rest of B are new values.
+				for bHashes[bCursor] != hash {
+					currentDiffElement.Add = append(currentDiffElement.Add, b[bCursor])
+					bCursor++
+					pathCursor++
+				}
+			case bHashes[bCursor] == hash:
+				// B is done. The rest of A are old values.
+				for aHashes[aCursor] != hash {
+					currentDiffElement.Remove = append(currentDiffElement.Remove, a[aCursor])
+					aCursor++
+					pathCursor--
+				}
+			case sameContainerType(a[aCursor], b[bCursor], options):
+				// Add what we have.
+				if len(currentDiffElement.Add) != 0 || len(currentDiffElement.Remove) != 0 {
+					d = append(d, currentDiffElement)
+				}
+				// Recurse and add the subdiff.
+				subDiff := a[aCursor].diff(b[bCursor], append(path.clone(), PathIndex(pathCursor)), options, strategy)
+				if len(subDiff) > 0 {
+					d = append(d, subDiff...)
+				}
+				// Continue after subdiff.
+				aCursor++
+				bCursor++
+				pathCursor++
+				currentDiffElement = DiffElement{
+					Path: append(path.clone(), PathIndex(pathCursor)),
+				}
+			default:
+				currentDiffElement.Remove = append(currentDiffElement.Remove, a[aCursor])
+				currentDiffElement.Add = append(currentDiffElement.Add, b[bCursor])
+				aCursor++
+				bCursor++
 			}
-			d = append(d, e)
+		}
+		if len(currentDiffElement.Add) > 0 || len(currentDiffElement.Remove) > 0 {
+			d = append(d, currentDiffElement)
+		}
+		// // Advance past common element
+		// aCursor++
+		// bCursor++
+		// pathCursor++
+	}
+	// Recurse into remaining containers
+	isSameContainerType := true
+	for aCursor < len(a) && bCursor < len(b) && isSameContainerType {
+		isSameContainerType = sameContainerType(a[aCursor], b[bCursor], options)
+		if isSameContainerType {
+			// Recurse and add the subdiff.
+			subDiff := a[aCursor].diff(b[bCursor], append(path.clone(), PathIndex(pathCursor)), options, strategy)
+			if len(subDiff) > 0 {
+				d = append(d, subDiff...)
+			}
+			// Continue after subdiff.
+			aCursor++
+			bCursor++
+			pathCursor++
 		}
 	}
+	// Add all remaining elements to the diff.
+	e := DiffElement{
+		Path: append(path.clone(), PathIndex(pathCursor)),
+	}
+	for aCursor < len(a) {
+		e.Remove = append(e.Remove, a[aCursor])
+		aCursor++
+	}
+	for bCursor < len(b) {
+		e.Add = append(e.Add, b[bCursor])
+		bCursor++
+	}
+	if len(e.Add) != 0 || len(e.Remove) != 0 {
+		d = append(d, e)
+	}
+
 	return d
+}
+
+func sameContainerType(n1, n2 JsonNode, options []Option) bool {
+	c1 := dispatch(n1, options)
+	c2 := dispatch(n2, options)
+	switch c1.(type) {
+	case jsonObject:
+		if _, ok := c2.(jsonObject); ok {
+			return true
+		}
+	case jsonList:
+		if _, ok := c2.(jsonList); ok {
+			return true
+		}
+	case jsonSet:
+		if _, ok := c2.(jsonSet); ok {
+			return true
+		}
+	case jsonMultiset:
+		if _, ok := c2.(jsonMultiset); ok {
+			return true
+		}
+	default:
+		return false
+	}
+	return false
 }
 
 func (l jsonList) Patch(d Diff) (JsonNode, error) {
