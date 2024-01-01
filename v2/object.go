@@ -61,7 +61,7 @@ func (o jsonObject) hashCode(options []Option) [8]byte {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	a := make([]byte, 0, len(o)*16)
+	a := []byte{0x00, 0x5D, 0x39, 0xA4, 0x18, 0x10, 0xEA, 0xD5} // random bytes
 	for _, k := range keys {
 		keyHash := hash([]byte(k))
 		a = append(a, keyHash[:]...)

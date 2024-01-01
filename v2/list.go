@@ -41,7 +41,7 @@ func (l1 jsonList) Equals(n JsonNode, options ...Option) bool {
 }
 
 func (l jsonList) hashCode(options []Option) [8]byte {
-	b := make([]byte, 0, len(l)*8)
+	b := []byte{0xF5, 0x18, 0x0A, 0x71, 0xA4, 0xC4, 0x03, 0xF3} // random bytes
 	for _, n := range l {
 		h := n.hashCode(options)
 		b = append(b, h[:]...)
@@ -159,10 +159,10 @@ func (a jsonList) diff(
 		if len(currentDiffElement.Add) > 0 || len(currentDiffElement.Remove) > 0 {
 			d = append(d, currentDiffElement)
 		}
-		// // Advance past common element
-		// aCursor++
-		// bCursor++
-		// pathCursor++
+		// Advance past common element
+		aCursor++
+		bCursor++
+		pathCursor++
 	}
 	// Recurse into remaining containers
 	isSameContainerType := true

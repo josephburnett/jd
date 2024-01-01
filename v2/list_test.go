@@ -97,7 +97,7 @@ func TestListDiff(t *testing.T) {
 		a: `[[]]`,
 		b: `[[1]]`,
 		diff: ss(
-			`@ [0,-1]`,
+			`@ [0,0]`,
 			`+ 1`,
 		),
 	}, {
@@ -112,7 +112,7 @@ func TestListDiff(t *testing.T) {
 		a: `[]`,
 		b: `[2]`,
 		diff: ss(
-			`@ [-1]`,
+			`@ [0]`,
 			`+ 2`,
 		),
 	}, {
@@ -206,11 +206,13 @@ func TestListDiff(t *testing.T) {
 	}}
 
 	for _, tt := range tests {
-		ctx := newTestContext(t)
-		if len(tt.options) > 0 {
-			ctx = ctx.withOptions(tt.options...)
-		}
-		checkDiff(ctx, tt.a, tt.b, tt.diff...)
+		t.Run(tt.a+tt.b, func(t *testing.T) {
+			ctx := newTestContext(t)
+			if len(tt.options) > 0 {
+				ctx = ctx.withOptions(tt.options...)
+			}
+			checkDiff(ctx, tt.a, tt.b, tt.diff...)
+		})
 	}
 }
 
