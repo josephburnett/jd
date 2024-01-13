@@ -229,100 +229,45 @@ func (l jsonList) Patch(d Diff) (JsonNode, error) {
 	return patchAll(l, d)
 }
 
-func (l jsonList) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
-
-	if len(oldValues) > 1 || len(newValues) > 1 {
-		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
-	}
+func (l jsonList) patch(pathBehind, pathAhead Path, removeValues, addValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
 
 	if strategy == mergePatchStrategy {
-		return patch(l, pathBehind, pathAhead, oldValues, newValues, mergePatchStrategy)
+		return patch(l, pathBehind, pathAhead, removeValues, addValues, mergePatchStrategy)
 	}
 
-	oldValue := singleValue(oldValues)
-	newValue := singleValue(newValues)
-
-	// Strict patch strategy
-	// Base case
-	if len(pathAhead) == 0 {
-		if !l.Equals(oldValue) {
-			return patchErrExpectValue(oldValue, l, pathBehind)
-		}
-		return newValue, nil
-	}
-	// Recursive case
 	n, _, rest := pathAhead.next()
-	jn, ok := n.(PathIndex)
+	i, ok := n.(PathIndex)
 	if !ok {
-		return nil, fmt.Errorf(
-			"invalid path element %T: expected float64", n)
-	}
-	i := int(jn)
-
-	if i == -1 {
-		// Append at end of list
-		i = len(l)
+		return nil, fmt.Errorf("invalid path element %T: expected float64", n)
 	}
 
-	switch {
-	case isVoid(newValue):
-		var nextNode JsonNode = voidNode{}
-		if len(l) > i {
-			nextNode = l[i]
+	if len(rest) > 0 {
+		if int(i) > len(l)-1 {
+			return nil, fmt.Errorf("patch index out of bounds: %v", i)
 		}
-		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues, strategy)
+		patchedNode, err := l[i].patch(append(pathBehind, n), rest, removeValues, addValues, strategy)
 		if err != nil {
 			return nil, err
 		}
-		if i < 0 || i >= len(l) {
-			return nil, fmt.Errorf(
-				"deletion of element outside of array bounds")
-		}
-		if len(rest) == 0 {
-			// Delete an element (base case).
-			return append(l[:i], l[i+1:]...), nil
-		} else {
-			l[i] = patchedNode
-			return l, nil
-		}
-	case isVoid(oldValue):
-		var nextNode JsonNode = voidNode{}
-		if len(l) > i && len(rest) != 0 {
-			// Replacing an element.
-			nextNode = l[i]
-		}
-		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues, strategy)
-		if err != nil {
-			return nil, err
-		}
-		if i < 0 || i > len(l) {
-			return nil, fmt.Errorf(
-				"addition of element outside of array bounds +1")
-		}
-		if i == len(l) {
-			// Append an element.
-			return append(l, patchedNode), nil
-		}
-		if len(rest) == 0 {
-			// Insert an element (base case).
-			l = append(l[:i+1], l[i:]...)
-			l[i] = patchedNode
-		} else {
-			// Replace an element after recursion.
-			l[i] = patchedNode
-		}
-		return l, nil
-	default:
-		var nextNode JsonNode = voidNode{}
-		if len(l) > i {
-			nextNode = l[i]
-		}
-		patchedNode, err := nextNode.patch(append(pathBehind, n), rest, oldValues, newValues, strategy)
-		if err != nil {
-			return nil, err
-		}
-		// Replace an element (base case).
 		l[i] = patchedNode
 		return l, nil
 	}
+
+	for len(removeValues) > 0 {
+		if int(i) > len(l)-1 {
+			return nil, fmt.Errorf("remove values out bounds: %v", i)
+		}
+		if l[i] != removeValues[0] {
+			return nil, fmt.Errorf("invalid patch. wanted %v. found %v", removeValues[0], l[i])
+		}
+		l = append(l[:i], l[i+1:]...)
+		removeValues = removeValues[1:]
+	}
+	l2 := make(jsonList, len(l))
+	copy(l2, l)
+	l2 = append(l2, addValues...)
+	if int(i) < len(l) {
+		l2 = append(l2, l[i+1:]...)
+	}
+	return l2, nil
 }

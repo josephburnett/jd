@@ -384,6 +384,14 @@ func TestListPatch(t *testing.T) {
 			`@ []`,
 			`+`,
 		),
+	}, {
+		a: `[1,2]`,
+		b: `[1,2,3,4]`,
+		diff: ss(
+			`@ [2]`,
+			`+ 3`,
+			`+ 4`,
+		),
 	}}
 
 	for _, tt := range tests {

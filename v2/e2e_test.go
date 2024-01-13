@@ -5,21 +5,38 @@ import (
 )
 
 func TestDiffAndPatch(t *testing.T) {
-	checkDiffAndPatchSuccess(t,
-		`{"a":1}`,
-		`{"a":2}`,
-		`{"a":1,"c":3}`,
-		`{"a":2,"c":3}`)
-	checkDiffAndPatchSuccess(t,
-		`[[]]`,
-		`[[1]]`,
-		`[[],[2]]`,
-		`[[1],[2]]`)
-	checkDiffAndPatchSuccess(t,
-		`[{"a":1},{"a":1}]`,
-		`[{"a":2},{"a":3}]`,
-		`[{"a":1},{"a":1,"b":4},{"c":5}]`,
-		`[{"a":2},{"a":3,"b":4},{"c":5}]`)
+	cases := []struct {
+		a      string
+		b      string
+		c      string
+		expect string
+	}{{
+		a:      `{"a":1}`,
+		b:      `{"a":2}`,
+		c:      `{"a":1,"c":3}`,
+		expect: `{"a":2,"c":3}`,
+	}, {
+		a:      `[[]]`,
+		b:      `[[1]]`,
+		c:      `[[],[2]]`,
+		expect: `[[1],[2]]`,
+	}, {
+		a:      `[{"a":1},{"a":1}]`,
+		b:      `[{"a":2},{"a":3}]`,
+		c:      `[{"a":1},{"a":1,"b":4},{"c":5}]`,
+		expect: `[{"a":2},{"a":3,"b":4},{"c":5}]`,
+	}}
+	for _, c := range cases {
+		t.Run(c.a+c.b+c.c+c.expect, func(t *testing.T) {
+			checkDiffAndPatchSuccess(
+				t,
+				c.a,
+				c.b,
+				c.c,
+				c.expect,
+			)
+		})
+	}
 }
 
 func TestDiffAndPatchSet(t *testing.T) {
@@ -31,22 +48,37 @@ func TestDiffAndPatchSet(t *testing.T) {
 }
 
 func TestDiffAndPatchError(t *testing.T) {
-	checkDiffAndPatchError(t,
-		`{"a":1}`,
-		`{"a":2}`,
-		`{"a":3}`)
-	checkDiffAndPatchError(t,
-		`{"a":1}`,
-		`{"a":2}`,
-		`{}`)
-	checkDiffAndPatchError(t,
-		`1`,
-		`2`,
-		``)
-	checkDiffAndPatchError(t,
-		`1`,
-		``,
-		`2`)
+	cases := []struct {
+		a string
+		b string
+		c string
+	}{{
+		a: `{"a":1}`,
+		b: `{"a":2}`,
+		c: `{"a":3}`,
+	}, {
+		a: `{"a":1}`,
+		b: `{"a":2}`,
+		c: `{}`,
+	}, {
+		a: `1`,
+		b: `2`,
+		c: ``,
+	}, {
+		a: `1`,
+		b: ``,
+		c: `2`,
+	}}
+	for _, c := range cases {
+		t.Run(c.a+c.b+c.c, func(t *testing.T) {
+			checkDiffAndPatchError(
+				t,
+				c.a,
+				c.b,
+				c.c,
+			)
+		})
+	}
 }
 
 type format string

@@ -66,10 +66,6 @@ func readDiff(s string) (Diff, error) {
 		case "^":
 			if state == NEW || state == OLD {
 				// Save the previous diff element.
-				err := checkDiffElement(de)
-				if err != nil {
-					return errorAt(i, err.Error())
-				}
 				diff = append(diff, de)
 			}
 			n, err := ReadJsonString(dl[1:])
@@ -85,10 +81,6 @@ func readDiff(s string) (Diff, error) {
 		case "@":
 			if state == NEW || state == OLD {
 				// Save the previous diff element.
-				err := checkDiffElement(de)
-				if err != nil {
-					return errorAt(i, err.Error())
-				}
 				diff = append(diff, de)
 			}
 			p, err := ReadJsonString(dl[1:])
@@ -132,29 +124,9 @@ func readDiff(s string) (Diff, error) {
 	if state != INIT {
 		// Save the last diff element.
 		// Empty string diff is valid so state could be INIT
-		err := checkDiffElement(de)
-		if err != nil {
-			return errorAt(len(diffLines), err.Error())
-		}
 		diff = append(diff, de)
 	}
 	return diff, nil
-}
-
-func checkDiffElement(de DiffElement) error {
-	if len(de.Add) > 1 || len(de.Remove) > 1 {
-		// Must be a set.
-		if len(de.Path) == 0 {
-			return fmt.Errorf("expected path to then with {} for sets.")
-		}
-		switch de.Path[len(de.Path)-1].(type) {
-		case PathSet, PathSetKeys, PathMultiset, PathMultisetKeys:
-			return nil
-		default:
-			return fmt.Errorf("expected path to then with {} for sets.")
-		}
-	}
-	return nil
 }
 
 func errorAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
