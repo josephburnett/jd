@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"slices"
 )
 
 const (
@@ -92,6 +93,7 @@ func (d Diff) RenderPatch() (string, error) {
 				Value: e,
 			})
 		}
+		slices.Reverse(element.Add)
 		for _, e := range element.Add {
 			if isVoid(element.Add[0]) {
 				continue
