@@ -235,6 +235,24 @@ func (l jsonList) patch(pathBehind, pathAhead Path, removeValues, addValues []Js
 		return patch(l, pathBehind, pathAhead, removeValues, addValues, mergePatchStrategy)
 	}
 
+	// Special case for replacing the whole list
+	if len(pathAhead) == 0 {
+		if len(removeValues) > 1 || len(addValues) > 1 {
+			return nil, fmt.Errorf("cannot replace list with multiple values")
+		}
+		if len(removeValues) == 0 && strategy == strictPatchStrategy {
+			return nil, fmt.Errorf("invalid diff. must declare list to replace it")
+		}
+		if !l.Equals(removeValues[0]) {
+			return nil, fmt.Errorf("wanted %v. found %v", removeValues[0], l)
+		}
+		if len(addValues) == 0 {
+			return voidNode{}, nil
+		} else {
+			return addValues[0], nil
+		}
+	}
+
 	n, _, rest := pathAhead.next()
 	i, ok := n.(PathIndex)
 	if !ok {
