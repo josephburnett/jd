@@ -130,7 +130,6 @@ func (a jsonList) diff(
 				for aHashes[aCursor] != hash {
 					currentDiffElement.Remove = append(currentDiffElement.Remove, a[aCursor])
 					aCursor++
-					pathCursor--
 				}
 			case sameContainerType(a[aCursor], b[bCursor], options):
 				// Add what we have.
