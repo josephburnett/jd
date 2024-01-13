@@ -153,6 +153,7 @@ func (a jsonList) diff(
 				currentDiffElement.Add = append(currentDiffElement.Add, b[bCursor])
 				aCursor++
 				bCursor++
+				pathCursor++
 			}
 		}
 		if len(currentDiffElement.Add) > 0 || len(currentDiffElement.Remove) > 0 {
