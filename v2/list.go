@@ -241,6 +241,7 @@ func (l jsonList) patch(pathBehind, pathAhead Path, removeValues, addValues []Js
 		return nil, fmt.Errorf("invalid path element %T: expected float64", n)
 	}
 
+	// Recursive case
 	if len(rest) > 0 {
 		if int(i) > len(l)-1 {
 			return nil, fmt.Errorf("patch index out of bounds: %v", i)
@@ -253,21 +254,31 @@ func (l jsonList) patch(pathBehind, pathAhead Path, removeValues, addValues []Js
 		return l, nil
 	}
 
+	// Special case for appending to the end of list
+	if int(i) == -1 {
+		if len(removeValues) > 0 {
+			return nil, fmt.Errorf("invalid patch. appending to -1 index. but want to remove values")
+		}
+		l = append(l, addValues...)
+		return l, nil
+	}
+
+	// Patch list
 	for len(removeValues) > 0 {
 		if int(i) > len(l)-1 {
 			return nil, fmt.Errorf("remove values out bounds: %v", i)
 		}
-		if l[i] != removeValues[0] {
+		if !l[i].Equals(removeValues[0]) {
 			return nil, fmt.Errorf("invalid patch. wanted %v. found %v", removeValues[0], l[i])
 		}
 		l = append(l[:i], l[i+1:]...)
 		removeValues = removeValues[1:]
 	}
-	l2 := make(jsonList, len(l))
-	copy(l2, l)
+	l2 := make(jsonList, i)
+	copy(l2, l[:i])
 	l2 = append(l2, addValues...)
 	if int(i) < len(l) {
-		l2 = append(l2, l[i+1:]...)
+		l2 = append(l2, l[i:]...)
 	}
 	return l2, nil
 }
