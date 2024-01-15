@@ -106,11 +106,32 @@ func (a jsonList) diff(
 	sequence := lcs.New([]interface{}(aHashes), []interface{}(bHashes)).Values()
 	aCursor, bCursor, pathCursor := 0, 0, 0
 	lastACursor, lastBCursor := -1, -1
-	for _, hash := range sequence {
-		// Advanced to the next common element accumulating diff elements.
-		currentDiffElement := DiffElement{
+	var currentDiffElement DiffElement
+	var before, after JsonNode
+	beginCurrentDiffElement := func() {
+		before, after = voidNode{}, voidNode{}
+		currentDiffElement = DiffElement{
 			Path: append(path.clone(), PathIndex(pathCursor)),
 		}
+		if pathCursor > 0 && pathCursor < len(a) {
+			before = a[pathCursor-1]
+		}
+	}
+	finishCurrentDiffElement := func() {
+		if len(currentDiffElement.Add) == 0 && len(currentDiffElement.Remove) == 0 {
+			return
+		}
+		if pathCursor < len(a) {
+			after = a[pathCursor]
+		}
+
+		currentDiffElement.Before = append(currentDiffElement.Before, before)
+		currentDiffElement.After = append(currentDiffElement.After, after)
+		d = append(d, currentDiffElement)
+	}
+	for _, hash := range sequence {
+		// Advanced to the next common element accumulating diff elements.
+		beginCurrentDiffElement()
 		for aHashes[aCursor] != hash || bHashes[bCursor] != hash {
 			if aCursor == lastACursor && bCursor == lastBCursor {
 				panic("a and b cursors are not advancing")
@@ -133,9 +154,7 @@ func (a jsonList) diff(
 				}
 			case sameContainerType(a[aCursor], b[bCursor], options):
 				// Add what we have.
-				if len(currentDiffElement.Add) != 0 || len(currentDiffElement.Remove) != 0 {
-					d = append(d, currentDiffElement)
-				}
+				finishCurrentDiffElement()
 				// Recurse and add the subdiff.
 				subDiff := a[aCursor].diff(b[bCursor], append(path.clone(), PathIndex(pathCursor)), options, strategy)
 				if len(subDiff) > 0 {
@@ -156,9 +175,7 @@ func (a jsonList) diff(
 				pathCursor++
 			}
 		}
-		if len(currentDiffElement.Add) > 0 || len(currentDiffElement.Remove) > 0 {
-			d = append(d, currentDiffElement)
-		}
+		finishCurrentDiffElement()
 		// Advance past common element
 		aCursor++
 		bCursor++
@@ -181,20 +198,16 @@ func (a jsonList) diff(
 		}
 	}
 	// Add all remaining elements to the diff.
-	e := DiffElement{
-		Path: append(path.clone(), PathIndex(pathCursor)),
-	}
+	beginCurrentDiffElement()
 	for aCursor < len(a) {
-		e.Remove = append(e.Remove, a[aCursor])
+		currentDiffElement.Remove = append(currentDiffElement.Remove, a[aCursor])
 		aCursor++
 	}
 	for bCursor < len(b) {
-		e.Add = append(e.Add, b[bCursor])
+		currentDiffElement.Add = append(currentDiffElement.Add, b[bCursor])
 		bCursor++
 	}
-	if len(e.Add) != 0 || len(e.Remove) != 0 {
-		d = append(d, e)
-	}
+	finishCurrentDiffElement()
 
 	return d
 }

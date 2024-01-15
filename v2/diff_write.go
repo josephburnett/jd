@@ -21,6 +21,19 @@ func (d DiffElement) Render(opts ...Option) string {
 	b.WriteString("@ ")
 	b.Write([]byte(d.Path.JsonNode().Json()))
 	b.WriteString("\n")
+	for _, before := range d.Before {
+		if isVoid(before) {
+			b.WriteString("[\n")
+		} else {
+			beforeJson, err := json.Marshal(before)
+			if err != nil {
+				panic(err)
+			}
+			b.WriteString("  ")
+			b.Write(beforeJson)
+			b.WriteString("\n")
+		}
+	}
 	for _, oldValue := range d.Remove {
 		if isColor {
 			b.WriteString(colorRed)
@@ -56,6 +69,19 @@ func (d DiffElement) Render(opts ...Option) string {
 		}
 		if isColor {
 			b.WriteString(colorDefault)
+		}
+	}
+	for _, after := range d.After {
+		if isVoid(after) {
+			b.WriteString("]\n")
+		} else {
+			afterJson, err := json.Marshal(after)
+			if err != nil {
+				panic(err)
+			}
+			b.WriteString("  ")
+			b.Write(afterJson)
+			b.WriteString("\n")
 		}
 	}
 	return b.String()
