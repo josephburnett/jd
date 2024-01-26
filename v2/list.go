@@ -106,6 +106,7 @@ func (a jsonList) diff(
 	sequence := lcs.New([]interface{}(aHashes), []interface{}(bHashes)).Values()
 	aCursor, bCursor, pathCursor := 0, 0, 0
 	lastACursor, lastBCursor := -1, -1
+	lenAChange := 0
 	var currentDiffElement DiffElement
 	var before, after JsonNode
 	beginCurrentDiffElement := func() {
@@ -113,7 +114,7 @@ func (a jsonList) diff(
 		currentDiffElement = DiffElement{
 			Path: append(path.clone(), PathIndex(pathCursor)),
 		}
-		if pathCursor > 0 && pathCursor < len(a) {
+		if pathCursor > 0 && pathCursor-1 < len(a) {
 			before = a[pathCursor-1]
 		}
 	}
@@ -121,12 +122,15 @@ func (a jsonList) diff(
 		if len(currentDiffElement.Add) == 0 && len(currentDiffElement.Remove) == 0 {
 			return
 		}
-		if pathCursor < len(a) {
+		if pathCursor < len(a)+lenAChange {
 			after = a[pathCursor]
 		}
 
 		currentDiffElement.Before = append(currentDiffElement.Before, before)
 		currentDiffElement.After = append(currentDiffElement.After, after)
+		pathCursor -= len(currentDiffElement.Remove)
+		lenAChange -= len(currentDiffElement.Remove)
+		lenAChange += len(currentDiffElement.Add)
 		d = append(d, currentDiffElement)
 	}
 	for _, hash := range sequence {
@@ -151,6 +155,7 @@ func (a jsonList) diff(
 				for aHashes[aCursor] != hash {
 					currentDiffElement.Remove = append(currentDiffElement.Remove, a[aCursor])
 					aCursor++
+					pathCursor++
 				}
 			case sameContainerType(a[aCursor], b[bCursor], options):
 				// Add what we have.
@@ -202,6 +207,7 @@ func (a jsonList) diff(
 	for aCursor < len(a) {
 		currentDiffElement.Remove = append(currentDiffElement.Remove, a[aCursor])
 		aCursor++
+		pathCursor++
 	}
 	for bCursor < len(b) {
 		currentDiffElement.Add = append(currentDiffElement.Add, b[bCursor])
