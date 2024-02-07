@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 )
@@ -18,11 +19,15 @@ type setkeysMetadata struct {
 	keys map[string]bool
 }
 type mergeMetadata struct{}
+type precisionMetadata struct {
+	precision float64
+}
 
-func (setMetadata) is_metadata()      {}
-func (multisetMetadata) is_metadata() {}
-func (setkeysMetadata) is_metadata()  {}
-func (mergeMetadata) is_metadata()    {}
+func (setMetadata) is_metadata()       {}
+func (multisetMetadata) is_metadata()  {}
+func (setkeysMetadata) is_metadata()   {}
+func (mergeMetadata) is_metadata()     {}
+func (precisionMetadata) is_metadata() {}
 
 func (m setMetadata) string() string {
 	return "set"
@@ -48,6 +53,10 @@ func (m mergeMetadata) string() string {
 	return "MERGE"
 }
 
+func (m precisionMetadata) string() string {
+	return "precision=" + fmt.Sprintf("%f", m.precision)
+}
+
 var (
 	// MULTISET interprets all Arrays as Multisets (bags) during Diff
 	// and Equals operations.
@@ -71,6 +80,10 @@ func Setkeys(keys ...string) Metadata {
 	return m
 }
 
+func SetPrecision(precision float64) Metadata {
+	return precisionMetadata{precision}
+}
+
 type patchStrategy string
 
 const (
@@ -83,6 +96,15 @@ func getPatchStrategy(metadata []Metadata) patchStrategy {
 		return mergePatchStrategy
 	}
 	return strictPatchStrategy
+}
+
+func getPrecision(metadata []Metadata) float64 {
+	for _, o := range metadata {
+		if s, ok := o.(precisionMetadata); ok {
+			return s.precision
+		}
+	}
+	return 0
 }
 
 func dispatch(n JsonNode, metadata []Metadata) JsonNode {
