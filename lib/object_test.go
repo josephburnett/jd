@@ -26,10 +26,11 @@ func TestObjectJson(t *testing.T) {
 }
 
 func TestObjectEqual(t *testing.T) {
-	ctx := newTestContext(t)
+	defaultCtx := newTestContext(t)
 	tests := []struct {
-		a string
-		b string
+		a   string
+		b   string
+		ctx *testContext
 	}{{
 		a: `{"a":1}`,
 		b: `{"a":1}`,
@@ -42,10 +43,19 @@ func TestObjectEqual(t *testing.T) {
 	}, {
 		a: `{"a":"b"}`,
 		b: `{"a":"b"}`,
+	}, {
+		a: `{"a":"1.0"}`,
+		b: `{"a":"1.1"}`,
+		ctx: newTestContext(t).withMetadata(precisionMetadata{
+			precision: 0.2,
+		}),
 	}}
 
 	for _, tt := range tests {
-		checkEqual(ctx, tt.a, tt.b)
+		if tt.ctx == nil {
+			tt.ctx = defaultCtx
+		}
+		checkEqual(tt.ctx, tt.a, tt.b)
 	}
 }
 
