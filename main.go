@@ -25,6 +25,7 @@ var (
 	output        = flag.String("o", "", "Output file")
 	patch         = flag.Bool("p", false, "Patch mode")
 	port          = flag.Int("port", 0, "Serve web UI on port")
+	precision     = flag.Float64("precision", 0, "Precision for numbers")
 	set           = flag.Bool("set", false, "Arrays as sets")
 	setkeys       = flag.String("setkeys", "", "Keys to identify set objects")
 	translate     = flag.String("t", "", "Translate mode")
@@ -140,6 +141,7 @@ func parseMetadata() ([]jd.Metadata, error) {
 	if *format == "merge" {
 		metadata = append(metadata, jd.MERGE)
 	}
+	metadata = append(metadata, jd.SetPrecision(*precision))
 	return metadata, nil
 }
 
@@ -154,20 +156,22 @@ func printUsageAndExit() {
 		`When patching (-p) FILE1 is a diff.`,
 		``,
 		`Options:`,
-		`  -color     Print color diff.`,
-		`  -p         Apply patch FILE1 to FILE2 or STDIN.`,
-		`  -o=FILE3   Write to FILE3 instead of STDOUT.`,
-		`  -set       Treat arrays as sets.`,
-		`  -mset      Treat arrays as multisets (bags).`,
-		`  -setkeys   Keys to identify set objects`,
-		`  -yaml      Read and write YAML instead of JSON.`,
-		`  -port=N    Serve web UI on port N`,
-		`  -f=FORMAT  Read and write diff in FORMAT "jd" (default), "patch" (RFC 6902) or`,
-		`             "merge" (RFC 7386)`,
-		`  -t=FORMATS Translate FILE1 between FORMATS. Supported formats are "jd",`,
-		`             "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".`,
-		`             FORMATS are provided as a pair separated by "2". E.g.`,
-		`             "yaml2json" or "jd2patch".`,
+		`  -color       Print color diff.`,
+		`  -p           Apply patch FILE1 to FILE2 or STDIN.`,
+		`  -o=FILE3     Write to FILE3 instead of STDOUT.`,
+		`  -set         Treat arrays as sets.`,
+		`  -mset        Treat arrays as multisets (bags).`,
+		`  -setkeys     Keys to identify set objects`,
+		`  -yaml        Read and write YAML instead of JSON.`,
+		`  -port=N      Serve web UI on port N`,
+		`  -precision=N Precision for numbers. Positive number for decimal places or`,
+		`               negative for significant figures.`,
+		`  -f=FORMAT    Read and write diff in FORMAT "jd" (default), "patch" (RFC 6902) or`,
+		`               "merge" (RFC 7386)`,
+		`  -t=FORMATS   Translate FILE1 between FORMATS. Supported formats are "jd",`,
+		`               "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".`,
+		`               FORMATS are provided as a pair separated by "2". E.g.`,
+		`               "yaml2json" or "jd2patch".`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,
