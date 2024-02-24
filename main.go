@@ -119,6 +119,9 @@ func serveWeb(port string) error {
 }
 
 func parseMetadata() ([]jd.Metadata, error) {
+	if *precision != 0.0 && (*set || *mset) {
+		return nil, fmt.Errorf("-precision cannot be used with -set or -mset because they use hashcodes")
+	}
 	metadata := make([]jd.Metadata, 0)
 	if *set {
 		metadata = append(metadata, jd.SET)
