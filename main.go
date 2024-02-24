@@ -110,7 +110,7 @@ const (
 
 func serveWeb(port string) error {
 	if serve.Handle == nil {
-		return fmt.Errorf("the web UI wasn't include in this build: use `make release` to include it")
+		return fmt.Errorf("the web UI wasn't include in this build: use `make build` to include it")
 	}
 	http.HandleFunc("/", serve.Handle)
 	log.Printf("Listening on http://localhost:%v...", port)
