@@ -236,6 +236,12 @@ func (o jsonObject) patch(pathBehind, pathAhead path, oldValues, newValues []Jso
 	}
 	// Recursive case
 	n, _, rest := pathAhead.next()
+	// Special case for jsonStringOrInteger
+	sori, ok := n.(jsonStringOrInteger)
+	if ok {
+		n = jsonString(sori)
+	}
+	// Path entries for objects must be a string
 	pe, ok := n.(jsonString)
 	if !ok {
 		return nil, fmt.Errorf(
