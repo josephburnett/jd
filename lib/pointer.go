@@ -18,9 +18,9 @@ func readPointer(s string) ([]JsonNode, error) {
 	for i, t := range tokens {
 		var element JsonNode
 		var err error
-		number, err := strconv.Atoi(t)
-		if err == nil {
-			element, err = NewJsonNode(number)
+		if _, err := strconv.Atoi(t); err == nil {
+			// Wait to decide if we use this token as a string or integer.
+			element = jsonStringOrInteger(t)
 		} else {
 			element, err = NewJsonNode(t)
 		}
@@ -47,14 +47,13 @@ func writePointer(path []JsonNode) (string, error) {
 				b.WriteString(jsonpointer.Escape(strconv.Itoa(int(e))))
 			}
 		case jsonString:
-			if _, err := strconv.Atoi(string(e)); err == nil {
-				return "", fmt.Errorf("JSON Pointer does not support object keys that look like numbers: %v", e)
-			}
 			if string(e) == "-" {
 				return "", fmt.Errorf("JSON Pointer does not support object key '-'")
 			}
 			s := jsonpointer.Escape(string(e))
 			b.WriteString(s)
+		case jsonStringOrInteger:
+			b.WriteString(string(e))
 		case jsonArray:
 			return "", fmt.Errorf("JSON Pointer does not support jd metadata")
 		default:

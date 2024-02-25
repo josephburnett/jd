@@ -1,6 +1,9 @@
 package jd
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type jsonList []JsonNode
 
@@ -146,6 +149,14 @@ func (l jsonList) patch(pathBehind, pathAhead path, oldValues, newValues []JsonN
 	}
 	// Recursive case
 	n, _, rest := pathAhead.next()
+	// Special case for jsonStringOrInteger
+	sori, ok := n.(jsonStringOrInteger)
+	if ok {
+		if i, err := strconv.Atoi(string(sori)); err == nil {
+			n = jsonNumber(float64(i))
+		}
+	}
+	// Path entries for lists must be a number
 	jn, ok := n.(jsonNumber)
 	if !ok {
 		return nil, fmt.Errorf(
