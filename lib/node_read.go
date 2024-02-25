@@ -36,6 +36,16 @@ func ReadYamlString(s string) (JsonNode, error) {
 	return unmarshal([]byte(s), yaml.Unmarshal)
 }
 
+// ReadJsonBytes reads a byte slice as JSON and constructs a JsonNode.
+func ReadJsonBytes(b []byte) (JsonNode, error) {
+	return unmarshal(b, json.Unmarshal)
+}
+
+// ReadYamlBytes reads a byte slice as YAML and constructs a JsonNode.
+func ReadYamlBytes(b []byte) (JsonNode, error) {
+	return unmarshal(b, yaml.Unmarshal)
+}
+
 func unmarshal(bytes []byte, fn func([]byte, interface{}) error) (JsonNode, error) {
 	if strings.TrimSpace(string(bytes)) == "" {
 		return voidNode{}, nil
