@@ -1,3 +1,5 @@
+// +build windows
+
 package main
 
 import (
@@ -13,6 +15,8 @@ import (
 
 	jd "github.com/josephburnett/jd/lib"
 	"github.com/josephburnett/jd/web/serve"
+
+	"golang.org/x/sys/windows"
 )
 
 const version = "HEAD"
@@ -34,6 +38,11 @@ var (
 )
 
 func main() {
+	stdout := windows.Handle(os.Stdout.Fd())
+	var stdoutOriginalMode uint32
+	windows.GetConsoleMode(stdout, &stdoutOriginalMode)
+	windows.SetConsoleMode(stdout, stdoutOriginalMode | windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+
 	flag.Parse()
 	if *ver {
 		fmt.Printf("jd version %v\n", version)
