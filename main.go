@@ -40,9 +40,12 @@ func main() {
 		return
 	}
 	if *port != 0 {
+		if len(flag.Args()) > 0 {
+			errorAndExit("The web UI (-port) does not support arguments")
+		}
 		err := serveWeb(strconv.Itoa(*port))
 		if err != nil {
-			fmt.Println(err.Error())
+			errorAndExit(err.Error())
 		}
 		return
 	}
@@ -53,7 +56,7 @@ func main() {
 	if *gitDiffDriver {
 		err := printGitDiffDriver(metadata)
 		if err != nil {
-			panic(err)
+			errorAndExit(err.Error())
 		}
 		os.Exit(0)
 		return
