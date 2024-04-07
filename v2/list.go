@@ -59,41 +59,12 @@ func (a jsonList) diff(
 	options []Option,
 	strategy patchStrategy,
 ) Diff {
-	d := make(Diff, 0)
 	b, ok := n.(jsonList)
 	if !ok {
-		// Different types
-		var e DiffElement
-		switch strategy {
-		case mergePatchStrategy:
-			e = DiffElement{
-				Metadata: Metadata{
-					Merge: true,
-				},
-				Path: path.clone(),
-				Add:  jsonArray{n},
-			}
-		default:
-			e = DiffElement{
-				Path:   path.clone(),
-				Remove: nodeList(a),
-				Add:    nodeList(n),
-			}
-		}
-		return append(d, e)
+		return a.diffDifferentTypes(n, path, strategy)
 	}
 	if strategy == mergePatchStrategy {
-		// Merge patches do not recurse into lists
-		if !a.Equals(b, options...) {
-			e := DiffElement{
-				Metadata: Metadata{
-					Merge: true,
-				},
-				Path: path.clone(),
-				Add:  nodeList(n),
-			}
-			return append(d, e)
-		}
+		return a.diffMergePatchStrategy(b, path, options)
 	}
 	aHashes := make([]interface{}, len(a))
 	bHashes := make([]interface{}, len(b))
@@ -103,119 +74,199 @@ func (a jsonList) diff(
 	for i, v := range b {
 		bHashes[i] = v.hashCode(options)
 	}
-	sequence := lcs.New([]interface{}(aHashes), []interface{}(bHashes)).Values()
-	aCursor, bCursor, pathCursor := 0, 0, 0
-	lastACursor, lastBCursor := -1, -1
-	lenAChange := 0
-	var currentDiffElement DiffElement
-	var before, after JsonNode
-	beginCurrentDiffElement := func() {
-		before, after = voidNode{}, voidNode{}
-		currentDiffElement = DiffElement{
-			Path: append(path.clone(), PathIndex(pathCursor)),
-		}
-		if pathCursor > 0 && pathCursor-1 < len(a) {
-			before = a[pathCursor-1]
-		}
-	}
-	finishCurrentDiffElement := func() {
-		if len(currentDiffElement.Add) == 0 && len(currentDiffElement.Remove) == 0 {
-			return
-		}
-		if pathCursor < len(a)+lenAChange {
-			after = a[pathCursor]
-		}
+	commonSequence := lcs.New([]interface{}(aHashes), []interface{}(bHashes)).Values()
+	return a.diffRest(
+		0,
+		b,
+		append(path, PathIndex(0)),
+		aHashes, bHashes, commonSequence,
+		voidNode{},
+		options,
+		strategy,
+	)
+}
 
-		currentDiffElement.Before = append(currentDiffElement.Before, before)
-		currentDiffElement.After = append(currentDiffElement.After, after)
-		pathCursor -= len(currentDiffElement.Remove)
-		lenAChange -= len(currentDiffElement.Remove)
-		lenAChange += len(currentDiffElement.Add)
-		d = append(d, currentDiffElement)
+func (a jsonList) diffRest(
+	pathIndex PathIndex,
+	b jsonList,
+	path Path,
+	aHashes, bHashes, commonSequence []interface{},
+	previous JsonNode,
+	options []Option,
+	strategy patchStrategy,
+) Diff {
+	var aCursor, bCursor, commonSequenceCursor int
+	pathCursor := pathIndex
+	pathNow := func() Path {
+		return append(path.clone().drop(), pathCursor)
 	}
-	for _, hash := range sequence {
-		// Advanced to the next common element accumulating diff elements.
-		beginCurrentDiffElement()
-		for aHashes[aCursor] != hash || bHashes[bCursor] != hash {
-			if aCursor == lastACursor && bCursor == lastBCursor {
-				panic("a and b cursors are not advancing")
-			}
-			lastACursor = aCursor
-			lastBCursor = bCursor
-			switch {
-			case aHashes[aCursor] == hash:
-				// A is done. The rest of B are new values.
-				for bHashes[bCursor] != hash {
-					currentDiffElement.Add = append(currentDiffElement.Add, b[bCursor])
-					bCursor++
-					pathCursor++
-				}
-			case bHashes[bCursor] == hash:
-				// B is done. The rest of A are old values.
-				for aHashes[aCursor] != hash {
-					currentDiffElement.Remove = append(currentDiffElement.Remove, a[aCursor])
-					aCursor++
-					pathCursor++
-				}
-			case sameContainerType(a[aCursor], b[bCursor], options):
-				// Add what we have.
-				finishCurrentDiffElement()
-				// Recurse and add the subdiff.
-				subDiff := a[aCursor].diff(b[bCursor], append(path.clone(), PathIndex(pathCursor)), options, strategy)
-				if len(subDiff) > 0 {
-					d = append(d, subDiff...)
-				}
-				// Continue after subdiff.
-				aCursor++
-				bCursor++
-				pathCursor++
-				currentDiffElement = DiffElement{
-					Path: append(path.clone(), PathIndex(pathCursor)),
-				}
-			default:
-				currentDiffElement.Remove = append(currentDiffElement.Remove, a[aCursor])
-				currentDiffElement.Add = append(currentDiffElement.Add, b[bCursor])
-				aCursor++
-				bCursor++
-				pathCursor++
-			}
+	endA := func() bool {
+		return aCursor == len(a)
+	}
+	endB := func() bool {
+		return bCursor == len(b)
+	}
+	atCommonA := func() bool {
+		if endA() || len(commonSequence) == 0 {
+			return false
 		}
-		finishCurrentDiffElement()
-		// Advance past common element
-		aCursor++
-		bCursor++
-		pathCursor++
+		return aHashes[aCursor] == commonSequence[0]
 	}
-	// Recurse into remaining containers
-	isSameContainerType := true
-	for aCursor < len(a) && bCursor < len(b) && isSameContainerType {
-		isSameContainerType = sameContainerType(a[aCursor], b[bCursor], options)
-		if isSameContainerType {
-			// Recurse and add the subdiff.
-			subDiff := a[aCursor].diff(b[bCursor], append(path.clone(), PathIndex(pathCursor)), options, strategy)
-			if len(subDiff) > 0 {
-				d = append(d, subDiff...)
+	atCommonB := func() bool {
+		if endB() || len(commonSequence) == 0 {
+			return false
+		}
+		return bHashes[bCursor] == commonSequence[0]
+	}
+	d := Diff{{
+		Path: pathNow(),
+	}}
+	haveDiff := func() bool {
+		if len(d) == 0 {
+			return false
+		}
+		if len(d[0].Add) > 0 || len(d[0].Remove) > 0 {
+			return true
+		}
+		return false
+	}
+	after := func() []JsonNode {
+		i := aCursor - commonSequenceCursor
+		if i+1 > len(a) {
+			return []JsonNode{voidNode{}}
+		}
+		return []JsonNode{a[i]}
+	}
+	before := func() []JsonNode {
+		i := aCursor - commonSequenceCursor - 2
+		if i < 0 || i+1 > len(a) {
+			return []JsonNode{previous}
+		}
+		return []JsonNode{a[i]}
+	}
+
+accumulatingDiff:
+	for {
+		switch {
+		case endA():
+			// We are at the end of A so there are no more
+			// common elements. So we accumulate the rest
+			// of B as additions. The path cursor advances
+			// by 2 because the result is getting longer
+			// by 1 and we are moving to the next element.
+			for !endB() {
+				d[0].Add = append(d[0].Add, b[bCursor])
+				bCursor++
+				pathCursor += 2
 			}
-			// Continue after subdiff.
+			break accumulatingDiff
+		case endB():
+			// We are at the end of B so there are no more
+			// common elements. So we accumulate the rest
+			// of A as removals. The path cursor stays the
+			// same because the result is getting shorter
+			// by 1 but we are also moving to the next
+			// element.
+			for !endA() {
+				d[0].Remove = append(d[0].Remove, a[aCursor])
+				aCursor++
+			}
+			break accumulatingDiff
+		case atCommonA() && atCommonB():
+			// We are at a common element of A and B.
+			// All cursors advance because we are moving
+			// past a common element.
+			aCursor++
+			bCursor++
+			commonSequenceCursor++
+			pathCursor++
+			break accumulatingDiff
+		case sameContainerType(a[aCursor], b[bCursor], options):
+			// We are at compatible containers which
+			// contain additional differences. If we've
+			// accumulated differences at this level then
+			// keep them before the sub-diff.
+			subDiff := a[aCursor].diff(b[bCursor], pathNow(), options, strategy)
+			if haveDiff() {
+				d[0].After = after()
+				d = append(d, subDiff...)
+			} else {
+				d = subDiff
+			}
+			aCursor++
+			bCursor++
+			pathCursor++
+			break accumulatingDiff
+		default:
+			// We are at elements of A and B which are
+			// different. Add them to the accumulated diff
+			// and continue.
+			d[0].Remove = append(d[0].Remove, a[aCursor])
+			d[0].Add = append(d[0].Add, b[bCursor])
 			aCursor++
 			bCursor++
 			pathCursor++
 		}
 	}
-	// Add all remaining elements to the diff.
-	beginCurrentDiffElement()
-	for aCursor < len(a) {
-		currentDiffElement.Remove = append(currentDiffElement.Remove, a[aCursor])
-		aCursor++
-		pathCursor++
-	}
-	for bCursor < len(b) {
-		currentDiffElement.Add = append(currentDiffElement.Add, b[bCursor])
-		bCursor++
-	}
-	finishCurrentDiffElement()
 
-	return d
+	if !haveDiff() {
+		// Throw away temporary diff because we didn't
+		// accumulate anything.
+		d = Diff{}
+	} else {
+		// Record context of accumulated diff. If we appended
+		// a sub-diff then it already has context.
+		d[0].Before = before()
+		d[0].After = after()
+	}
+	if endA() && endB() {
+		return d
+	}
+	// Cursors point to the next elements.
+	return append(d, a[aCursor:].diffRest(
+		pathCursor,
+		b[bCursor:],
+		pathNow(),
+		aHashes[aCursor:], bHashes[bCursor:], commonSequence[commonSequenceCursor:],
+		a[aCursor-1],
+		options,
+		strategy,
+	)...)
+}
+
+func (a jsonList) diffDifferentTypes(n JsonNode, path Path, strategy patchStrategy) Diff {
+	var e DiffElement
+	switch strategy {
+	case mergePatchStrategy:
+		e = DiffElement{
+			Metadata: Metadata{
+				Merge: true,
+			},
+			Path: path.clone(),
+			Add:  jsonArray{n},
+		}
+	default:
+		e = DiffElement{
+			Path:   path.clone(),
+			Remove: nodeList(a),
+			Add:    nodeList(n),
+		}
+	}
+	return Diff{e}
+}
+
+func (a jsonList) diffMergePatchStrategy(b jsonList, path Path, options []Option) Diff {
+	if !a.Equals(b, options...) {
+		e := DiffElement{
+			Metadata: Metadata{
+				Merge: true,
+			},
+			Path: path.clone(),
+			Add:  nodeList(b),
+		}
+		return Diff{e}
+	}
+	return Diff{}
 }
 
 func sameContainerType(n1, n2 JsonNode, options []Option) bool {
