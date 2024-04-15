@@ -53,6 +53,10 @@ Examples:
   jd -f merge a.json b.json
 ```
 
+#### Command Line Option Details
+
+`setkeys` This option determines what keys are used to decide if two objects 'match'. Then the matched objects are compared, which will return a diff if there are differences in the objects themselves, their keys and/or values. You shouldn't expect this option to mask or ignore non-specified keys, it is not intended as a way to 'ignore' some differences between objects.
+
 ## Library usage
 
 Note: import only release commits (`v1.Y.Z`) because `master` can be unstable.
