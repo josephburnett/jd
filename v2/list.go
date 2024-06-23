@@ -138,11 +138,7 @@ func (a jsonList) diffRest(
 		return []JsonNode{a[i]}
 	}
 	before := func() []JsonNode {
-		i := aCursor - commonSequenceCursor - 2
-		if i < 0 || i+1 > len(a) {
-			return []JsonNode{previous}
-		}
-		return []JsonNode{a[i]}
+		return []JsonNode{previous}
 	}
 
 accumulatingDiff:
@@ -181,6 +177,22 @@ accumulatingDiff:
 			commonSequenceCursor++
 			pathCursor++
 			break accumulatingDiff
+		case atCommonA():
+			// We are at a common element in A. We need to
+			// catch up B. Add elements of B until we do.
+			for !atCommonB() {
+				d[0].Add = append(d[0].Add, b[bCursor])
+				bCursor++
+				pathCursor++
+			}
+		case atCommonB():
+			// We are at a common element in B. We need to
+			// catch up A. Remove elements of A until we
+			// do.
+			for !atCommonA() {
+				d[0].Remove = append(d[0].Remove, a[aCursor])
+				aCursor++
+			}
 		case sameContainerType(a[aCursor], b[bCursor], options):
 			// We are at compatible containers which
 			// contain additional differences. If we've
@@ -214,10 +226,14 @@ accumulatingDiff:
 		// accumulate anything.
 		d = Diff{}
 	} else {
-		// Record context of accumulated diff. If we appended
-		// a sub-diff then it already has context.
-		d[0].Before = before()
-		d[0].After = after()
+		if len(d[0].Path) > len(path) {
+			// This is a subdiff. Don't touch it.
+		} else {
+			// Record context of accumulated diff. If we appended
+			// a sub-diff then it already has context.
+			d[0].Before = before()
+			d[0].After = after()
+		}
 	}
 	if endA() && endB() {
 		return d
