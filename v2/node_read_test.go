@@ -104,6 +104,7 @@ func TestReadDiffError(t *testing.T) {
 }
 
 func checkReadDiff(t *testing.T, d Diff, diffLines ...string) {
+	t.Helper()
 	want := ""
 	for _, dl := range diffLines {
 		want += dl + "\n"
@@ -119,6 +120,7 @@ func checkReadDiff(t *testing.T, d Diff, diffLines ...string) {
 }
 
 func checkReadDiffError(t *testing.T, diffLines ...string) {
+	t.Helper()
 	diff := ""
 	for _, dl := range diffLines {
 		diff += dl + "\n"
