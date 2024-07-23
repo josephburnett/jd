@@ -91,7 +91,7 @@ func readDiff(s string) (Diff, error) {
 			de.Metadata = de.Metadata.merge(m)
 			state = META
 		case "@":
-			if state == ADD || state == REMOVE {
+			if state == ADD || state == REMOVE || state == AFTER {
 				// Save the previous diff element.
 				err := checkDiffElement(de)
 				if err != nil {
@@ -108,8 +108,10 @@ func readDiff(s string) (Diff, error) {
 				return errorAt(i, err.Error())
 			}
 			de.Path = path
+			de.Before = []JsonNode{}
 			de.Remove = []JsonNode{}
 			de.Add = []JsonNode{}
+			de.After = []JsonNode{}
 			state = AT
 		case "[":
 			if state != AT {

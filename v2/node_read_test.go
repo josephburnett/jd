@@ -74,6 +74,26 @@ func TestReadDiff(t *testing.T) {
 		`@ []`,
 		`- 2`,
 		`+ 3`)
+	checkReadDiff(t,
+		Diff{
+			DiffElement{
+				Path:   p(0),
+				Remove: []JsonNode{jsonNumber(1)},
+			},
+			DiffElement{
+				Path:   p(2),
+				Remove: []JsonNode{jsonNumber(4)},
+			},
+		},
+		`@ [0]`,
+		`[`,
+		`- 1`,
+		`  2`,
+		`@ [2]`,
+		`  3`,
+		`- 4`,
+		`]`,
+	)
 }
 
 func TestReadDiffError(t *testing.T) {
