@@ -180,13 +180,13 @@ func (s jsonSet) Patch(d Diff) (JsonNode, error) {
 
 func (s jsonSet) patch(
 	pathBehind, pathAhead Path,
-	oldValues, newValues []JsonNode,
+	before, oldValues, newValues, after []JsonNode,
 	strategy patchStrategy,
 ) (JsonNode, error) {
 
 	// Merge patch strategy
 	if strategy == mergePatchStrategy {
-		return patch(s, pathBehind, pathAhead, oldValues, newValues, mergePatchStrategy)
+		return patch(s, pathBehind, pathAhead, before, oldValues, newValues, after, mergePatchStrategy)
 	}
 
 	// Strict patch strategy
@@ -212,7 +212,7 @@ func (s jsonSet) patch(
 			if o, ok := v.(jsonObject); ok {
 				id := o.pathIdent(jsonObject(pathSetKeys), metadata)
 				if id == lookingFor {
-					v.patch(append(pathBehind, n), rest, oldValues, newValues, strategy)
+					v.patch(append(pathBehind, n), rest, before, oldValues, newValues, after, strategy)
 					return s, nil
 				}
 			}

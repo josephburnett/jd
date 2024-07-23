@@ -159,11 +159,11 @@ func (a jsonMultiset) Patch(d Diff) (JsonNode, error) {
 	return patchAll(a, d)
 }
 
-func (a jsonMultiset) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
+func (a jsonMultiset) patch(pathBehind, pathAhead Path, before, oldValues, newValues, after []JsonNode, strategy patchStrategy) (JsonNode, error) {
 
 	// Merge patch strategy
 	if strategy == mergePatchStrategy {
-		return patch(a, pathBehind, pathAhead, oldValues, newValues, mergePatchStrategy)
+		return patch(a, pathBehind, pathAhead, before, oldValues, newValues, after, mergePatchStrategy)
 	}
 
 	// Strict patch strategy

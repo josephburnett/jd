@@ -57,8 +57,8 @@ func (a jsonArray) Patch(d Diff) (JsonNode, error) {
 	return patchAll(a, d)
 }
 
-func (a jsonArray) patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
+func (a jsonArray) patch(pathBehind, pathAhead Path, before, oldValues, newValues, after []JsonNode, strategy patchStrategy) (JsonNode, error) {
 	_, metadata, _ := pathAhead.next()
 	n := dispatch(a, metadata)
-	return n.patch(pathBehind, pathAhead, oldValues, newValues, strategy)
+	return n.patch(pathBehind, pathAhead, before, oldValues, newValues, after, strategy)
 }

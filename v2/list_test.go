@@ -472,7 +472,7 @@ func TestListPatch(t *testing.T) {
 		b: `[1,3]`,
 		diff: ss(
 			`@ [1]`,
-			`[`,
+			`  1`,
 			`- 2`,
 			`  3`,
 		),
@@ -483,14 +483,14 @@ func TestListPatch(t *testing.T) {
 			`@ [0]`,
 			`[`,
 			`- 1`,
-			`  3`,
+			`  2`,
 		),
 	}, {
 		a: `[1,3]`,
 		b: `[1,2,3]`,
 		diff: ss(
 			`@ [1]`,
-			`[`,
+			`  1`,
 			`+ 2`,
 			`  3`,
 		),
@@ -573,7 +573,7 @@ func TestListPatch(t *testing.T) {
 			`@ [0]`,
 			`[`,
 			`- [1]`,
-			`  [3]`,
+			`  [2]`,
 			`@ [1]`,
 			`  [2]`,
 			`- [3]`,
@@ -586,7 +586,7 @@ func TestListPatch(t *testing.T) {
 			`@ [0]`,
 			`[`,
 			`- 1`,
-			`  3`,
+			`  2`,
 			`@ [2,1]`,
 			`  4`,
 			`- 5`,
@@ -672,6 +672,14 @@ func TestListPatchError(t *testing.T) {
 			`^ {"Merge":true}`,
 			`@ [-1]`,
 			`+ 4`,
+		),
+	}, {
+		a: `[1,2,3]`,
+		diff: ss(
+			`@ [1]`,
+			`  0`, // wrong context
+			`- 2`,
+			`  3`,
 		),
 	}}
 

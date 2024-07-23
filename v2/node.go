@@ -47,7 +47,7 @@ type jsonNodeInternals interface {
 	raw() interface{}
 	hashCode(options []Option) [8]byte
 	diff(n JsonNode, p Path, options []Option, strategy patchStrategy) Diff
-	patch(pathBehind, pathAhead Path, oldValues, newValues []JsonNode, strategy patchStrategy) (JsonNode, error)
+	patch(pathBehind, pathAhead Path, before, oldValues, newValues, after []JsonNode, strategy patchStrategy) (JsonNode, error)
 }
 
 // NewJsonNode constructs a JsonNode from native Golang objects. See the

@@ -315,10 +315,10 @@ func (l jsonList) Patch(d Diff) (JsonNode, error) {
 	return patchAll(l, d)
 }
 
-func (l jsonList) patch(pathBehind, pathAhead Path, removeValues, addValues []JsonNode, strategy patchStrategy) (JsonNode, error) {
+func (l jsonList) patch(pathBehind, pathAhead Path, before, removeValues, addValues, after []JsonNode, strategy patchStrategy) (JsonNode, error) {
 
 	if strategy == mergePatchStrategy {
-		return patch(l, pathBehind, pathAhead, removeValues, addValues, mergePatchStrategy)
+		return patch(l, pathBehind, pathAhead, before, removeValues, addValues, after, mergePatchStrategy)
 	}
 
 	// Special case for replacing the whole list
@@ -350,7 +350,7 @@ func (l jsonList) patch(pathBehind, pathAhead Path, removeValues, addValues []Js
 		if int(i) > len(l)-1 {
 			return nil, fmt.Errorf("patch index out of bounds: %v", i)
 		}
-		patchedNode, err := l[i].patch(append(pathBehind, n), rest, removeValues, addValues, strategy)
+		patchedNode, err := l[i].patch(append(pathBehind, n), rest, nil, removeValues, addValues, nil, strategy)
 		if err != nil {
 			return nil, err
 		}
@@ -365,6 +365,20 @@ func (l jsonList) patch(pathBehind, pathAhead Path, removeValues, addValues []Js
 		}
 		l = append(l, addValues...)
 		return l, nil
+	}
+
+	// Check context before
+	for j, b := range before {
+		bIndex := int(i) - (len(before) - j)
+		switch {
+		case bIndex < 0:
+			if bIndex == -1 && isVoid(b) {
+				continue
+			}
+			return nil, fmt.Errorf("invalid patch. before context %v out of bounds: %v", b, bIndex)
+		case !b.Equals(l[bIndex]):
+			return nil, fmt.Errorf("invalid patch. expected %v before. got %v", b, l[bIndex])
+		}
 	}
 
 	// Patch list
@@ -384,5 +398,20 @@ func (l jsonList) patch(pathBehind, pathAhead Path, removeValues, addValues []Js
 	if int(i) < len(l) {
 		l2 = append(l2, l[i:]...)
 	}
+
+	// Check context after
+	for j, a := range after {
+		aIndex := int(i) + j
+		if aIndex > len(l)-1 {
+			if aIndex == len(l) && isVoid(a) {
+				continue
+			}
+			return nil, fmt.Errorf("invalid patch. after context %v out of bounds: %v", a, aIndex)
+		}
+		if !a.Equals(l[aIndex]) {
+			return nil, fmt.Errorf("invalid patch. expected %v after. got %v", a, l[aIndex])
+		}
+	}
+
 	return l2, nil
 }
