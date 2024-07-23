@@ -677,9 +677,33 @@ func TestListPatchError(t *testing.T) {
 		a: `[1,2,3]`,
 		diff: ss(
 			`@ [1]`,
-			`  0`, // wrong context
+			`  0`, // wrong before context
 			`- 2`,
 			`  3`,
+		),
+	}, {
+		a: `[1,2,3]`,
+		diff: ss(
+			`@ [1]`,
+			`  1`,
+			`  -2`,
+			`  4`, // wrong after context
+		),
+	}, {
+		a: `[1,2,3]`,
+		diff: ss(
+			`@ [1]`,
+			`[`, // wrong before context
+			`- 2`,
+			`  3`,
+		),
+	}, {
+		a: `[1,2,3]`,
+		diff: ss(
+			`@ [1]`,
+			`  1`,
+			`- 2`,
+			`]`, // wrong after context
 		),
 	}}
 
