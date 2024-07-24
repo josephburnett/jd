@@ -142,7 +142,6 @@ func fuzz(t *testing.T, aStr, bStr string) {
 		// Apply diff to A to get B.
 		patchedA, err := a.Patch(diffAB)
 		if err != nil {
-			_, err := a.Patch(diffAB)
 			t.Errorf("applying patch %v to %v should give %v. Got err: %v", diffAB.Render(), aStr, bStr, err)
 			return
 		}

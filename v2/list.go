@@ -119,7 +119,8 @@ func (a jsonList) diffRest(
 		return bHashes[bCursor] == commonSequence[0]
 	}
 	d := Diff{{
-		Path: pathNow(),
+		Path:   pathNow(),
+		Before: []JsonNode{previous},
 	}}
 	haveDiff := func() bool {
 		if len(d) == 0 {
@@ -136,9 +137,6 @@ func (a jsonList) diffRest(
 			return []JsonNode{voidNode{}}
 		}
 		return []JsonNode{a[i]}
-	}
-	before := func() []JsonNode {
-		return []JsonNode{previous}
 	}
 
 accumulatingDiff:
@@ -231,8 +229,9 @@ accumulatingDiff:
 		} else {
 			// Record context of accumulated diff. If we appended
 			// a sub-diff then it already has context.
-			d[0].Before = before()
-			d[0].After = after()
+			if len(d) < 2 {
+				d[0].After = after()
+			}
 		}
 	}
 	if endA() && endB() {
