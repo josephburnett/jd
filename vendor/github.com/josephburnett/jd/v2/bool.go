@@ -52,8 +52,8 @@ func (b jsonBool) Patch(d Diff) (JsonNode, error) {
 
 func (b jsonBool) patch(
 	pathBehind, pathAhead Path,
-	oldValues, newValues []JsonNode,
+	before, oldValues, newValues, after []JsonNode,
 	strategy patchStrategy,
 ) (JsonNode, error) {
-	return patch(b, pathBehind, pathAhead, oldValues, newValues, strategy)
+	return patch(b, pathBehind, pathAhead, before, oldValues, newValues, after, strategy)
 }

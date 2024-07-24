@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"slices"
 )
 
 const (
@@ -20,6 +21,19 @@ func (d DiffElement) Render(opts ...Option) string {
 	b.WriteString("@ ")
 	b.Write([]byte(d.Path.JsonNode().Json()))
 	b.WriteString("\n")
+	for _, before := range d.Before {
+		if isVoid(before) {
+			b.WriteString("[\n")
+		} else {
+			beforeJson, err := json.Marshal(before)
+			if err != nil {
+				panic(err)
+			}
+			b.WriteString("  ")
+			b.Write(beforeJson)
+			b.WriteString("\n")
+		}
+	}
 	for _, oldValue := range d.Remove {
 		if isColor {
 			b.WriteString(colorRed)
@@ -57,6 +71,19 @@ func (d DiffElement) Render(opts ...Option) string {
 			b.WriteString(colorDefault)
 		}
 	}
+	for _, after := range d.After {
+		if isVoid(after) {
+			b.WriteString("]\n")
+		} else {
+			afterJson, err := json.Marshal(after)
+			if err != nil {
+				panic(err)
+			}
+			b.WriteString("  ")
+			b.Write(afterJson)
+			b.WriteString("\n")
+		}
+	}
 	return b.String()
 }
 func (d Diff) Render(opts ...Option) string {
@@ -74,32 +101,33 @@ func (d Diff) RenderPatch() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if len(element.Remove) > 1 {
-			return "", fmt.Errorf("cannot render more than one old value in a JSON Patch op")
-		}
-		if len(element.Add) > 1 {
-			return "", fmt.Errorf("cannot render more than one new value in a JSON Patch op")
-		}
 		if len(element.Remove) == 0 && len(element.Add) == 0 {
 			return "", fmt.Errorf("cannot render empty diff element as JSON Patch op")
 		}
-		if len(element.Remove) == 1 && !isVoid(element.Remove[0]) {
+		for _, e := range element.Remove {
+			if isVoid(element.Remove[0]) {
+				continue
+			}
 			patch = append(patch, patchElement{
 				Op:    "test",
 				Path:  path,
-				Value: element.Remove[0],
+				Value: e,
 			})
 			patch = append(patch, patchElement{
 				Op:    "remove",
 				Path:  path,
-				Value: element.Remove[0],
+				Value: e,
 			})
 		}
-		if len(element.Add) == 1 && !isVoid(element.Add[0]) {
+		slices.Reverse(element.Add)
+		for _, e := range element.Add {
+			if isVoid(element.Add[0]) {
+				continue
+			}
 			patch = append(patch, patchElement{
 				Op:    "add",
 				Path:  path,
-				Value: element.Add[0],
+				Value: e,
 			})
 		}
 	}

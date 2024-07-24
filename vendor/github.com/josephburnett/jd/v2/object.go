@@ -61,7 +61,7 @@ func (o jsonObject) hashCode(options []Option) [8]byte {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	a := make([]byte, 0, len(o)*16)
+	a := []byte{0x00, 0x5D, 0x39, 0xA4, 0x18, 0x10, 0xEA, 0xD5} // random bytes
 	for _, k := range keys {
 		keyHash := hash([]byte(k))
 		a = append(a, keyHash[:]...)
@@ -215,7 +215,7 @@ func (o jsonObject) Patch(d Diff) (JsonNode, error) {
 
 func (o jsonObject) patch(
 	pathBehind, pathAhead Path,
-	oldValues, newValues []JsonNode,
+	_, oldValues, newValues, _ []JsonNode,
 	strategy patchStrategy,
 ) (JsonNode, error) {
 	if (len(pathAhead) == 0) && (len(oldValues) > 1 || len(newValues) > 1) {
@@ -257,7 +257,7 @@ func (o jsonObject) patch(
 			return patchErrUnsupportedPatchStrategy(pathBehind, strategy)
 		}
 	}
-	patchedNode, err := nextNode.patch(append(pathBehind, pe), rest, oldValues, newValues, strategy)
+	patchedNode, err := nextNode.patch(append(pathBehind, pe), rest, nil, oldValues, newValues, nil, strategy)
 	if err != nil {
 		return nil, err
 	}

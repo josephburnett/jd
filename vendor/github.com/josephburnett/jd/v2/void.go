@@ -68,8 +68,8 @@ func (v voidNode) Patch(d Diff) (JsonNode, error) {
 
 func (v voidNode) patch(
 	pathBehind, pathAhead Path,
-	oldValues, newValues []JsonNode,
+	before, oldValues, newValues, after []JsonNode,
 	strategy patchStrategy,
 ) (JsonNode, error) {
-	return patch(v, pathBehind, pathAhead, oldValues, newValues, strategy)
+	return patch(v, pathBehind, pathAhead, before, oldValues, newValues, after, strategy)
 }

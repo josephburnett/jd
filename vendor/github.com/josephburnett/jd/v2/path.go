@@ -131,3 +131,10 @@ func (p Path) clone() Path {
 	}
 	return p2
 }
+
+func (p Path) drop() Path {
+	if len(p) > 0 {
+		return p[:len(p)-1]
+	}
+	return p
+}

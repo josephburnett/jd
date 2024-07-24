@@ -25,11 +25,13 @@ func readDiff(s string) (Diff, error) {
 	diff := Diff{}
 	diffLines := strings.Split(s, "\n")
 	const (
-		INIT = iota
-		META = iota
-		AT   = iota
-		OLD  = iota
-		NEW  = iota
+		INIT   = iota
+		META   = iota
+		BEFORE = iota
+		AT     = iota
+		REMOVE = iota
+		ADD    = iota
+		AFTER  = iota
 	)
 	var de DiffElement
 	var state = INIT
@@ -39,32 +41,38 @@ func readDiff(s string) (Diff, error) {
 		}
 		header := dl[:1]
 		// Validate state transition.
+		var transitionErr error
+		allow := func(s ...string) {
+			for _, s := range s {
+				if s == header {
+					return
+				}
+			}
+			transitionErr = fmt.Errorf("Unexpected %c. Expecting one of %v", dl[0], s)
+		}
 		switch state {
 		case INIT:
-			if header != "@" && header != "^" {
-				return errorAt(i, "Unexpected %c. Expecteding @ or ^.", dl[0])
-			}
+			allow("^", "@")
 		case META:
-			if header != "@" && header != "^" {
-				return errorAt(i, "Unexpected %c. Expecting @ or ^.", dl[0])
-			}
+			allow("^", "@")
 		case AT:
-			if header != "-" && header != "+" {
-				return errorAt(i, "Unexpected %c. Expecting - or +.", dl[0])
-			}
-		case OLD:
-			if header != "@" && header != "-" && header != "+" && header != "^" {
-				return errorAt(i, "Unexpected %c. Expecting + or @.", dl[0])
-			}
-		case NEW:
-			if header != "+" && header != "@" && header != "^" {
-				return errorAt(i, "Unexpected %c. Expecteding + or @.", dl[0])
-			}
+			allow("[", " ", "-", "+")
+		case BEFORE:
+			allow(" ", "-", "+")
+		case REMOVE:
+			allow("-", "+", " ", "]", "^", "@")
+		case ADD:
+			allow("+", " ", "]", "^", "@")
+		case AFTER:
+			allow(" ", "]", "^", "@")
+		}
+		if transitionErr != nil {
+			return errorAt(i, transitionErr.Error())
 		}
 		// Process line.
 		switch header {
 		case "^":
-			if state == NEW || state == OLD {
+			if state == ADD || state == REMOVE {
 				// Save the previous diff element.
 				err := checkDiffElement(de)
 				if err != nil {
@@ -83,7 +91,7 @@ func readDiff(s string) (Diff, error) {
 			de.Metadata = de.Metadata.merge(m)
 			state = META
 		case "@":
-			if state == NEW || state == OLD {
+			if state == ADD || state == REMOVE || state == AFTER {
 				// Save the previous diff element.
 				err := checkDiffElement(de)
 				if err != nil {
@@ -100,23 +108,58 @@ func readDiff(s string) (Diff, error) {
 				return errorAt(i, err.Error())
 			}
 			de.Path = path
+			de.Before = []JsonNode{}
 			de.Remove = []JsonNode{}
 			de.Add = []JsonNode{}
+			de.After = []JsonNode{}
 			state = AT
+		case "[":
+			if state != AT {
+				return errorAt(i, "Invalid context. [ must appear immediately after @")
+			}
+			de.Before = append(de.Before, voidNode{})
+			state = BEFORE
+		case "]":
+			if state != REMOVE && state != ADD && state != AFTER {
+				return errorAt(i, "Invalid context. ] must appear at the end of the context")
+			}
+			de.After = append(de.After, voidNode{})
+			state = BEFORE
+		case " ":
+			switch {
+			case state == AT || state == BEFORE:
+				// Accumulate before context
+				b, err := ReadJsonString(dl[1:])
+				if err != nil {
+					return errorAt(i, "Invalid context. %v", err.Error())
+				}
+				de.Before = append(de.Before, b)
+				state = BEFORE
+			case state == ADD || state == REMOVE || state == AFTER:
+				a, err := ReadJsonString(dl[1:])
+				if err != nil {
+					return errorAt(i, "Invalid context. %v", err.Error())
+				}
+				de.After = append(de.After, a)
+				// Accumulate after context
+				state = AFTER
+			default:
+				return errorAt(i, "Invalid context. Must preceed or follow + or -")
+			}
 		case "-":
 			v, err := ReadJsonString(dl[1:])
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}
 			de.Remove = append(de.Remove, v)
-			state = OLD
+			state = REMOVE
 		case "+":
 			v, err := ReadJsonString(dl[1:])
 			if err != nil {
 				return errorAt(i, "Invalid value. %v", err.Error())
 			}
 			de.Add = append(de.Add, v)
-			state = NEW
+			state = ADD
 		default:
 			errorAt(i, "Unexpected %v.", dl[0])
 		}
@@ -143,15 +186,15 @@ func readDiff(s string) (Diff, error) {
 
 func checkDiffElement(de DiffElement) error {
 	if len(de.Add) > 1 || len(de.Remove) > 1 {
-		// Must be a set.
+		// Must be an array-based type
 		if len(de.Path) == 0 {
-			return fmt.Errorf("expected path to then with {} for sets.")
+			return fmt.Errorf("zero length path with multiple add or remove")
 		}
 		switch de.Path[len(de.Path)-1].(type) {
-		case PathSet, PathSetKeys, PathMultiset, PathMultisetKeys:
+		case PathSet, PathSetKeys, PathMultiset, PathMultisetKeys, PathIndex:
 			return nil
 		default:
-			return fmt.Errorf("expected path to then with {} for sets.")
+			return fmt.Errorf("multiple add or remove in object")
 		}
 	}
 	return nil

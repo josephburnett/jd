@@ -11,7 +11,7 @@ func patchAll(n JsonNode, d Diff) (JsonNode, error) {
 		if de.Metadata.Merge {
 			strategy = mergePatchStrategy
 		}
-		n, err = n.patch(make(Path, 0), de.Path, de.Remove, de.Add, strategy)
+		n, err = n.patch(make(Path, 0), de.Path, de.Before, de.Remove, de.Add, de.After, strategy)
 		if err != nil {
 			return nil, err
 		}
@@ -22,7 +22,7 @@ func patchAll(n JsonNode, d Diff) (JsonNode, error) {
 func patch(
 	node JsonNode,
 	pathBehind, pathAhead Path,
-	oldValues, newValues []JsonNode,
+	before, oldValues, newValues, after []JsonNode,
 	strategy patchStrategy,
 ) (JsonNode, error) {
 	if !pathAhead.isLeaf() {
@@ -35,7 +35,7 @@ func patch(
 			return nil, fmt.Errorf("merge patch path must be composed of only strings: found %T", next)
 		}
 		o := newJsonObject()
-		value, err := node.patch(append(pathBehind.clone(), key), rest, oldValues, newValues, strategy)
+		value, err := node.patch(append(pathBehind.clone(), key), rest, before, oldValues, newValues, after, strategy)
 		if err != nil {
 			return nil, err
 		}
