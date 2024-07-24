@@ -3,6 +3,7 @@ package jd
 import (
 	"bytes"
 	"encoding/binary"
+	"math"
 )
 
 type jsonNumber float64
@@ -22,14 +23,14 @@ func (n jsonNumber) raw() interface{} {
 }
 
 func (n1 jsonNumber) Equals(node JsonNode, metadata ...Metadata) bool {
+
+	precision := getPrecision(metadata)
+
 	n2, ok := node.(jsonNumber)
 	if !ok {
 		return false
 	}
-	if n1 != n2 {
-		return false
-	}
-	return true
+	return math.Abs(float64(n1)-float64(n2)) <= precision
 }
 
 func (n jsonNumber) hashCode(metadata []Metadata) [8]byte {

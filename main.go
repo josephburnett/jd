@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	jd "github.com/josephburnett/jd/v2"
+	jd "github.com/josephburnett/jd/lib"
 	"github.com/josephburnett/jd/web/serve"
 )
 
@@ -25,6 +25,7 @@ var (
 	output        = flag.String("o", "", "Output file")
 	patch         = flag.Bool("p", false, "Patch mode")
 	port          = flag.Int("port", 0, "Serve web UI on port")
+	precision     = flag.Float64("precision", 0, "Precision for numbers")
 	set           = flag.Bool("set", false, "Arrays as sets")
 	setkeys       = flag.String("setkeys", "", "Keys to identify set objects")
 	translate     = flag.String("t", "", "Translate mode")
@@ -39,20 +40,23 @@ func main() {
 		return
 	}
 	if *port != 0 {
+		if len(flag.Args()) > 0 {
+			errorAndExit("The web UI (-port) does not support arguments")
+		}
 		err := serveWeb(strconv.Itoa(*port))
 		if err != nil {
-			fmt.Println(err.Error())
+			errorAndExit(err.Error())
 		}
 		return
 	}
-	options, err := parseMetadata()
+	metadata, err := parseMetadata()
 	if err != nil {
 		errorAndExit(err.Error())
 	}
 	if *gitDiffDriver {
-		err := printGitDiffDriver(options)
+		err := printGitDiffDriver(metadata)
 		if err != nil {
-			panic(err)
+			errorAndExit(err.Error())
 		}
 		os.Exit(0)
 		return
@@ -92,11 +96,11 @@ func main() {
 	}
 	switch mode {
 	case diffMode:
-		printDiff(a, b, options)
+		printDiff(a, b, metadata)
 	case patchMode:
-		printPatch(a, b, options)
+		printPatch(a, b, metadata)
 	case translateMode:
-		printTranslation(a, options)
+		printTranslation(a, metadata)
 	}
 }
 
@@ -110,20 +114,23 @@ const (
 
 func serveWeb(port string) error {
 	if serve.Handle == nil {
-		return fmt.Errorf("the web UI wasn't include in this build: use `make release` to include it")
+		return fmt.Errorf("the web UI wasn't include in this build: use `make build` to include it")
 	}
 	http.HandleFunc("/", serve.Handle)
 	log.Printf("Listening on http://localhost:%v...", port)
 	return http.ListenAndServe(":"+port, nil)
 }
 
-func parseMetadata() ([]jd.Option, error) {
-	options := make([]jd.Option, 0)
+func parseMetadata() ([]jd.Metadata, error) {
+	if *precision != 0.0 && (*set || *mset) {
+		return nil, fmt.Errorf("-precision cannot be used with -set or -mset because they use hashcodes")
+	}
+	metadata := make([]jd.Metadata, 0)
 	if *set {
-		options = append(options, jd.SET)
+		metadata = append(metadata, jd.SET)
 	}
 	if *mset {
-		options = append(options, jd.MULTISET)
+		metadata = append(metadata, jd.MULTISET)
 	}
 	if *setkeys != "" {
 		keys := make([]string, 0)
@@ -135,12 +142,13 @@ func parseMetadata() ([]jd.Option, error) {
 			}
 			keys = append(keys, trimmed)
 		}
-		options = append(options, jd.SetKeys(keys...))
+		metadata = append(metadata, jd.Setkeys(keys...))
 	}
 	if *format == "merge" {
-		options = append(options, jd.MERGE)
+		metadata = append(metadata, jd.MERGE)
 	}
-	return options, nil
+	metadata = append(metadata, jd.SetPrecision(*precision))
+	return metadata, nil
 }
 
 func printUsageAndExit() {
@@ -154,20 +162,22 @@ func printUsageAndExit() {
 		`When patching (-p) FILE1 is a diff.`,
 		``,
 		`Options:`,
-		`  -color     Print color diff.`,
-		`  -p         Apply patch FILE1 to FILE2 or STDIN.`,
-		`  -o=FILE3   Write to FILE3 instead of STDOUT.`,
-		`  -set       Treat arrays as sets.`,
-		`  -mset      Treat arrays as multisets (bags).`,
-		`  -setkeys   Keys to identify set objects`,
-		`  -yaml      Read and write YAML instead of JSON.`,
-		`  -port=N    Serve web UI on port N`,
-		`  -f=FORMAT  Read and write diff in FORMAT "jd" (default), "patch" (RFC 6902) or`,
-		`             "merge" (RFC 7386)`,
-		`  -t=FORMATS Translate FILE1 between FORMATS. Supported formats are "jd",`,
-		`             "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".`,
-		`             FORMATS are provided as a pair separated by "2". E.g.`,
-		`             "yaml2json" or "jd2patch".`,
+		`  -color       Print color diff.`,
+		`  -p           Apply patch FILE1 to FILE2 or STDIN.`,
+		`  -o=FILE3     Write to FILE3 instead of STDOUT.`,
+		`  -set         Treat arrays as sets.`,
+		`  -mset        Treat arrays as multisets (bags).`,
+		`  -setkeys     Keys to identify set objects`,
+		`  -yaml        Read and write YAML instead of JSON.`,
+		`  -port=N      Serve web UI on port N`,
+		`  -precision=N Precision for numbers. Positive number for decimal places or`,
+		`               negative for significant figures.`,
+		`  -f=FORMAT    Read and write diff in FORMAT "jd" (default), "patch" (RFC 6902) or`,
+		`               "merge" (RFC 7386)`,
+		`  -t=FORMATS   Translate FILE1 between FORMATS. Supported formats are "jd",`,
+		`               "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".`,
+		`               FORMATS are provided as a pair separated by "2". E.g.`,
+		`               "yaml2json" or "jd2patch".`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,
@@ -185,8 +195,8 @@ func printUsageAndExit() {
 	os.Exit(2)
 }
 
-func printDiff(a, b string, options []jd.Option) {
-	str, err := diff(a, b, options)
+func printDiff(a, b string, metadata []jd.Metadata) {
+	str, err := diff(a, b, metadata)
 	if err != nil {
 		errorAndExit(err.Error())
 	}
@@ -205,13 +215,13 @@ func printDiff(a, b string, options []jd.Option) {
 	}
 }
 
-func printGitDiffDriver(options []jd.Option) error {
+func printGitDiffDriver(metadata []jd.Metadata) error {
 	if len(flag.Args()) != 7 {
 		return fmt.Errorf("Git diff driver expects exactly 7 arguments.")
 	}
 	a := readFile(flag.Arg(1))
 	b := readFile(flag.Arg(4))
-	str, err := diff(a, b, options)
+	str, err := diff(a, b, metadata)
 	if err != nil {
 		return err
 	}
@@ -220,7 +230,7 @@ func printGitDiffDriver(options []jd.Option) error {
 	return nil
 }
 
-func diff(a, b string, options []jd.Option) (string, error) {
+func diff(a, b string, metadata []jd.Metadata) (string, error) {
 	var aNode, bNode jd.JsonNode
 	var err error
 	if *yaml {
@@ -239,8 +249,8 @@ func diff(a, b string, options []jd.Option) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	diff := aNode.Diff(bNode, options...)
-	var renderOptions []jd.Option
+	diff := aNode.Diff(bNode, metadata...)
+	var renderOptions []jd.RenderOption
 	if *color {
 		renderOptions = append(renderOptions, jd.COLOR)
 	}
@@ -264,7 +274,7 @@ func diff(a, b string, options []jd.Option) (string, error) {
 	return str, nil
 }
 
-func printPatch(p, a string, options []jd.Option) {
+func printPatch(p, a string, metadata []jd.Metadata) {
 	var diff jd.Diff
 	var err error
 	switch *format {
@@ -295,9 +305,9 @@ func printPatch(p, a string, options []jd.Option) {
 	}
 	var out string
 	if *yaml {
-		out = bNode.Yaml(options...)
+		out = bNode.Yaml(metadata...)
 	} else {
-		out = bNode.Json(options...)
+		out = bNode.Json(metadata...)
 	}
 	if *output == "" {
 		if out == "" {
@@ -314,7 +324,7 @@ func printPatch(p, a string, options []jd.Option) {
 	}
 }
 
-func printTranslation(a string, options []jd.Option) {
+func printTranslation(a string, metadata []jd.Metadata) {
 	var out string
 	switch *translate {
 	case "jd2patch":

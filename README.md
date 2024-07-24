@@ -139,7 +139,7 @@ Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' | 'Empty JSON Object' )* ']' 
 ## Cookbook
 
 ### Use git diff to produce a structural diff:
-```
+```diff
 git difftool -yx jd @ -- foo.json
 @ ["foo"]
 - "bar"
@@ -147,7 +147,7 @@ git difftool -yx jd @ -- foo.json
 ```
 
 ### See what changes in a Kubernetes Deployment:
-```
+```bash
 kubectl get deployment example -oyaml > a.yaml
 kubectl edit deployment example
 # change cpu resource from 100m to 200m
@@ -178,7 +178,7 @@ output:
 + 3
 ```
 apply these change to another deployment:
-```
+```bash
 # edit file "patch" to contain only the hunk updating cpu request
 kubectl patch deployment example2 --type json --patch "$(jd -t jd2patch ~/patch)"
 ```

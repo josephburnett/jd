@@ -17,6 +17,10 @@ func TestNumberEqual(t *testing.T) {
 	checkEqual(ctx, `0`, `0.0`)
 	checkEqual(ctx, `0.0001`, `0.0001`)
 	checkEqual(ctx, `123`, `123`)
+	ctx = ctx.withMetadata(precisionMetadata{
+		precision: 0.1,
+	})
+	checkEqual(ctx, `1.0`, `1.09`)
 }
 
 func TestNumberNotEqual(t *testing.T) {
@@ -24,6 +28,10 @@ func TestNumberNotEqual(t *testing.T) {
 	checkNotEqual(ctx, `0`, `1`)
 	checkNotEqual(ctx, `0`, `0.0001`)
 	checkNotEqual(ctx, `1234`, `1235`)
+	ctx = ctx.withMetadata(precisionMetadata{
+		precision: 0.1,
+	})
+	checkNotEqual(ctx, `1`, `1.2`)
 }
 
 func TestNumberHash(t *testing.T) {

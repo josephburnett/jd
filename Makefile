@@ -16,7 +16,7 @@ fuzz :
 pack-web : build-web
 	go run web/pack/main.go
 
-build-web :
+build-web : check-goroot
 	cp $$GOROOT/misc/wasm/wasm_exec.js web/assets/
 	GOOS=js GOARCH=wasm go build -o web/assets/jd.wasm ./web/ui/main.go
 
@@ -80,6 +80,11 @@ ifndef JD_VERSION
 endif
 ifndef JD_PREVIOUS_VERSION
 	$(error Set JD_PREVIOUS_VERSION for release notes)
+endif
+
+check-goroot:
+ifndef GOROOT
+	$(error Set GOROOT in order to file wasm_exec.js)
 endif
 
 find-issues :
