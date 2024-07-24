@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	jd "github.com/josephburnett/jd/lib"
+	v2 "github.com/josephburnett/jd/v2"
 	"github.com/josephburnett/jd/web/serve"
 )
 
@@ -30,6 +31,7 @@ var (
 	setkeys       = flag.String("setkeys", "", "Keys to identify set objects")
 	translate     = flag.String("t", "", "Translate mode")
 	ver           = flag.Bool("version", false, "Print version and exit")
+	libv2         = flag.Bool("v2", false, "Use the jd v2 library")
 	yaml          = flag.Bool("yaml", false, "Read and write YAML")
 )
 
@@ -49,11 +51,23 @@ func main() {
 		}
 		return
 	}
-	metadata, err := parseMetadata()
+	var (
+		metadata []jd.Metadata
+		options  []v2.Option
+		err      error
+	)
+	if *libv2 {
+		options, err = parseMetadataV2()
+	} else {
+		metadata, err = parseMetadata()
+	}
 	if err != nil {
 		errorAndExit(err.Error())
 	}
 	if *gitDiffDriver {
+		if *libv2 {
+			errorAndExit("--git-diff-driver cannot be used with --v2 yet")
+		}
 		err := printGitDiffDriver(metadata)
 		if err != nil {
 			errorAndExit(err.Error())
@@ -96,11 +110,19 @@ func main() {
 	}
 	switch mode {
 	case diffMode:
-		printDiff(a, b, metadata)
+		if *libv2 {
+			printDiffV2(a, b, options)
+		} else {
+			printDiff(a, b, metadata)
+		}
 	case patchMode:
-		printPatch(a, b, metadata)
+		if *libv2 {
+			printPatchV2(a, b, options)
+		} else {
+			printPatch(a, b, metadata)
+		}
 	case translateMode:
-		printTranslation(a, metadata)
+		printTranslation(a)
 	}
 }
 
@@ -151,6 +173,38 @@ func parseMetadata() ([]jd.Metadata, error) {
 	return metadata, nil
 }
 
+func parseMetadataV2() ([]v2.Option, error) {
+	if *precision != 0.0 {
+		errorAndExit("--precision cannot be used with --v2 yet")
+	}
+	if *precision != 0.0 && (*set || *mset) {
+		return nil, fmt.Errorf("-precision cannot be used with -set or -mset because they use hashcodes")
+	}
+	options := make([]v2.Option, 0)
+	if *set {
+		options = append(options, v2.SET)
+	}
+	if *mset {
+		options = append(options, v2.MULTISET)
+	}
+	if *setkeys != "" {
+		keys := make([]string, 0)
+		ks := strings.Split(*setkeys, ",")
+		for _, k := range ks {
+			trimmed := strings.TrimSpace(k)
+			if trimmed == "" {
+				return nil, fmt.Errorf("invalid set key: %v", k)
+			}
+			keys = append(keys, trimmed)
+		}
+		options = append(options, v2.SetKeys(keys...))
+	}
+	if *format == "merge" {
+		options = append(options, v2.MERGE)
+	}
+	return options, nil
+}
+
 func printUsageAndExit() {
 	for _, line := range []string{
 		``,
@@ -178,6 +232,7 @@ func printUsageAndExit() {
 		`               "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".`,
 		`               FORMATS are provided as a pair separated by "2". E.g.`,
 		`               "yaml2json" or "jd2patch".`,
+		`  -v2          Use the JD v2 library and format.`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,
@@ -197,6 +252,26 @@ func printUsageAndExit() {
 
 func printDiff(a, b string, metadata []jd.Metadata) {
 	str, err := diff(a, b, metadata)
+	if err != nil {
+		errorAndExit(err.Error())
+	}
+	if *output == "" {
+		if str == "" {
+			os.Exit(0)
+		}
+		fmt.Print(str)
+		os.Exit(1)
+	} else {
+		if str == "" {
+			os.Exit(0)
+		}
+		ioutil.WriteFile(*output, []byte(str), 0644)
+		os.Exit(1)
+	}
+}
+
+func printDiffV2(a, b string, options []v2.Option) {
+	str, err := diffV2(a, b, options)
 	if err != nil {
 		errorAndExit(err.Error())
 	}
@@ -274,6 +349,50 @@ func diff(a, b string, metadata []jd.Metadata) (string, error) {
 	return str, nil
 }
 
+func diffV2(a, b string, options []v2.Option) (string, error) {
+	var aNode, bNode v2.JsonNode
+	var err error
+	if *yaml {
+		aNode, err = v2.ReadYamlString(a)
+	} else {
+		aNode, err = v2.ReadJsonString(a)
+	}
+	if err != nil {
+		return "", err
+	}
+	if *yaml {
+		bNode, err = v2.ReadYamlString(b)
+	} else {
+		bNode, err = v2.ReadJsonString(b)
+	}
+	if err != nil {
+		return "", err
+	}
+	diff := aNode.Diff(bNode, options...)
+	var renderOptions []v2.Option
+	if *color {
+		renderOptions = append(renderOptions, v2.COLOR)
+	}
+	var str string
+	switch *format {
+	case "", "jd":
+		str = diff.Render(renderOptions...)
+	case "patch":
+		str, err = diff.RenderPatch()
+		if err != nil {
+			return "", err
+		}
+	case "merge":
+		str, err = diff.RenderMerge()
+		if err != nil {
+			return "", err
+		}
+	default:
+		return "", fmt.Errorf("Invalid format: %q", *format)
+	}
+	return str, nil
+}
+
 func printPatch(p, a string, metadata []jd.Metadata) {
 	var diff jd.Diff
 	var err error
@@ -324,10 +443,63 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 	}
 }
 
-func printTranslation(a string, metadata []jd.Metadata) {
+func printPatchV2(p, a string, options []v2.Option) {
+	var diff v2.Diff
+	var err error
+	switch *format {
+	case "", "jd":
+		diff, err = v2.ReadDiffString(p)
+	case "patch":
+		diff, err = v2.ReadPatchString(p)
+	case "merge":
+		diff, err = v2.ReadMergeString(p)
+	default:
+		errorAndExit(fmt.Sprintf("Invalid format: %q", *format))
+	}
+	if err != nil {
+		errorAndExit(err.Error())
+	}
+	var aNode v2.JsonNode
+	if *yaml {
+		aNode, err = v2.ReadYamlString(a)
+	} else {
+		aNode, err = v2.ReadJsonString(a)
+	}
+	if err != nil {
+		errorAndExit(err.Error())
+	}
+	bNode, err := aNode.Patch(diff)
+	if err != nil {
+		errorAndExit(err.Error())
+	}
+	var out string
+	if *yaml {
+		out = bNode.Yaml(options...)
+	} else {
+		out = bNode.Json(options...)
+	}
+	if *output == "" {
+		if out == "" {
+			os.Exit(0)
+		}
+		fmt.Print(out)
+		os.Exit(1)
+	} else {
+		if out == "" {
+			os.Exit(0)
+		}
+		ioutil.WriteFile(*output, []byte(out), 0644)
+		os.Exit(1)
+	}
+}
+
+func printTranslation(a string) {
 	var out string
 	switch *translate {
 	case "jd2patch":
+		if *libv2 {
+			errorAndExit("jd2patch translation cannot be used with --v2 yet")
+		}
 		diff, err := jd.ReadDiffString(a)
 		if err != nil {
 			errorAndExit(err.Error())
@@ -337,12 +509,18 @@ func printTranslation(a string, metadata []jd.Metadata) {
 			errorAndExit(err.Error())
 		}
 	case "patch2jd":
+		if *libv2 {
+			errorAndExit("patch2jd translation cannot be used with --v2 yet")
+		}
 		patch, err := jd.ReadPatchString(a)
 		if err != nil {
 			errorAndExit(err.Error())
 		}
 		out = patch.Render()
 	case "jd2merge":
+		if *libv2 {
+			errorAndExit("jd2merge translation cannot be used with --v2 yet")
+		}
 		diff, err := jd.ReadDiffString(a)
 		if err != nil {
 			errorAndExit(err.Error())
@@ -352,6 +530,9 @@ func printTranslation(a string, metadata []jd.Metadata) {
 			errorAndExit(err.Error())
 		}
 	case "merge2jd":
+		if *libv2 {
+			errorAndExit("merge2jd translation cannot be used with --v2 yet")
+		}
 		patch, err := jd.ReadMergeString(a)
 		if err != nil {
 			errorAndExit(err.Error())
