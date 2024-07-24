@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/go-openapi/jsonpointer v0.19.5
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	gopkg.in/yaml.v2 v2.4.0
 )
 

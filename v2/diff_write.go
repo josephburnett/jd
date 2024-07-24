@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"slices"
+	"golang.org/x/exp/slices"
 )
 
 const (
