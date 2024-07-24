@@ -1,6 +1,6 @@
 module github.com/josephburnett/jd/v2
 
-go 1.21
+go 1.18
 
 require (
 	github.com/go-openapi/jsonpointer v0.19.5
