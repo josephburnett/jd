@@ -124,7 +124,7 @@ func readDiff(s string) (Diff, error) {
 				return errorAt(i, "Invalid context. ] must appear at the end of the context")
 			}
 			de.After = append(de.After, voidNode{})
-			state = BEFORE
+			state = AFTER
 		case " ":
 			switch {
 			case state == AT || state == BEFORE:

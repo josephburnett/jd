@@ -244,7 +244,7 @@ accumulatingDiff:
 		b[bCursor:],
 		pathNow(),
 		aHashes[aCursor:], bHashes[bCursor:], commonSequence[commonSequenceCursor:],
-		a[aCursor-1],
+		b[bCursor-1],
 		options,
 		strategy,
 	)...)
