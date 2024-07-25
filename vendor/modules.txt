@@ -4,7 +4,7 @@ github.com/go-openapi/jsonpointer
 # github.com/go-openapi/swag v0.21.1
 ## explicit; go 1.11
 github.com/go-openapi/swag
-# github.com/josephburnett/jd/v2 v2.0.0-00010101000000-000000000000 => ./v2
+# github.com/josephburnett/jd/v2 v2.0.0-20240724160553-38467990808b => ./v2
 ## explicit; go 1.18
 github.com/josephburnett/jd/v2
 # github.com/josharian/intern v1.0.0

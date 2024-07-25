@@ -17,6 +17,9 @@ func TestNumberEqual(t *testing.T) {
 	checkEqual(ctx, `0`, `0.0`)
 	checkEqual(ctx, `0.0001`, `0.0001`)
 	checkEqual(ctx, `123`, `123`)
+	checkEqual(
+		newTestContext(t).withOptions(Precision(0.1)),
+		`1.0`, `1.09`)
 }
 
 func TestNumberNotEqual(t *testing.T) {
@@ -24,6 +27,9 @@ func TestNumberNotEqual(t *testing.T) {
 	checkNotEqual(ctx, `0`, `1`)
 	checkNotEqual(ctx, `0`, `0.0001`)
 	checkNotEqual(ctx, `1234`, `1235`)
+	checkNotEqual(
+		newTestContext(t).withOptions(Precision(0.1)),
+		`1`, `1.2`)
 }
 
 func TestNumberHash(t *testing.T) {

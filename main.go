@@ -174,9 +174,6 @@ func parseMetadata() ([]jd.Metadata, error) {
 }
 
 func parseMetadataV2() ([]v2.Option, error) {
-	if *precision != 0.0 {
-		errorAndExit("--precision cannot be used with --v2 yet")
-	}
 	if *precision != 0.0 && (*set || *mset) {
 		return nil, fmt.Errorf("-precision cannot be used with -set or -mset because they use hashcodes")
 	}
@@ -202,6 +199,7 @@ func parseMetadataV2() ([]v2.Option, error) {
 	if *format == "merge" {
 		options = append(options, v2.MERGE)
 	}
+	options = append(options, v2.Precision(*precision))
 	return options, nil
 }
 

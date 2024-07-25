@@ -9,6 +9,9 @@ type setOption struct{}
 type setKeysOption []string
 type multisetOption struct{}
 type renderColorOption struct{}
+type precisionOption struct {
+	precision float64
+}
 
 func (o mergeOption) isOption()       {}
 func (o mergeOption) string() string  { return "MERGE" }
@@ -16,6 +19,7 @@ func (o setOption) isOption()         {}
 func (o setKeysOption) isOption()     {}
 func (o multisetOption) isOption()    {}
 func (o renderColorOption) isOption() {}
+func (o precisionOption) isOption()   {}
 
 var (
 	SET      = setOption{}
@@ -33,6 +37,10 @@ var (
 
 func SetKeys(keys ...string) Option {
 	return setKeysOption(keys)
+}
+
+func Precision(precision float64) Option {
+	return precisionOption{precision}
 }
 
 type patchStrategy string
