@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
 	"golang.org/x/exp/slices"
 )
 
@@ -95,6 +96,10 @@ func (d Diff) Render(opts ...Option) string {
 }
 
 func (d Diff) RenderPatch() (string, error) {
+	if len(d) == 0 {
+		// A noop JSON Patch should be an empty array of operations
+		return "[]", nil
+	}
 	patch := []patchElement{}
 	for _, element := range d {
 		path, err := writePointer(element.Path.JsonNode().(jsonArray))
@@ -139,6 +144,10 @@ func (d Diff) RenderPatch() (string, error) {
 }
 
 func (d Diff) RenderMerge() (string, error) {
+	if len(d) == 0 {
+		// A noop JSON Merge Patch should be an empty object
+		return "{}", nil
+	}
 	for _, e := range d {
 		if !e.Metadata.Merge {
 			return "", fmt.Errorf("cannot render non-merge element as merge")

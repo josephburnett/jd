@@ -249,43 +249,35 @@ func printUsageAndExit() {
 }
 
 func printDiff(a, b string, metadata []jd.Metadata) {
-	str, err := diff(a, b, metadata)
+	str, haveDiff, err := diff(a, b, metadata)
 	if err != nil {
 		errorAndExit(err.Error())
 	}
 	if *output == "" {
-		if str == "" {
-			os.Exit(0)
-		}
 		fmt.Print(str)
-		os.Exit(1)
 	} else {
-		if str == "" {
-			os.Exit(0)
-		}
 		ioutil.WriteFile(*output, []byte(str), 0644)
+	}
+	if haveDiff {
 		os.Exit(1)
 	}
+	os.Exit(0)
 }
 
 func printDiffV2(a, b string, options []v2.Option) {
-	str, err := diffV2(a, b, options)
+	str, haveDiff, err := diffV2(a, b, options)
 	if err != nil {
 		errorAndExit(err.Error())
 	}
 	if *output == "" {
-		if str == "" {
-			os.Exit(0)
-		}
 		fmt.Print(str)
-		os.Exit(1)
 	} else {
-		if str == "" {
-			os.Exit(0)
-		}
 		ioutil.WriteFile(*output, []byte(str), 0644)
+	}
+	if haveDiff {
 		os.Exit(1)
 	}
+	os.Exit(0)
 }
 
 func printGitDiffDriver(metadata []jd.Metadata) error {
@@ -294,7 +286,7 @@ func printGitDiffDriver(metadata []jd.Metadata) error {
 	}
 	a := readFile(flag.Arg(1))
 	b := readFile(flag.Arg(4))
-	str, err := diff(a, b, metadata)
+	str, _, err := diff(a, b, metadata)
 	if err != nil {
 		return err
 	}
@@ -303,7 +295,7 @@ func printGitDiffDriver(metadata []jd.Metadata) error {
 	return nil
 }
 
-func diff(a, b string, metadata []jd.Metadata) (string, error) {
+func diff(a, b string, metadata []jd.Metadata) (string, bool, error) {
 	var aNode, bNode jd.JsonNode
 	var err error
 	if *yaml {
@@ -312,7 +304,7 @@ func diff(a, b string, metadata []jd.Metadata) (string, error) {
 		aNode, err = jd.ReadJsonString(a)
 	}
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	if *yaml {
 		bNode, err = jd.ReadYamlString(b)
@@ -320,34 +312,46 @@ func diff(a, b string, metadata []jd.Metadata) (string, error) {
 		bNode, err = jd.ReadJsonString(b)
 	}
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	diff := aNode.Diff(bNode, metadata...)
 	var renderOptions []jd.RenderOption
 	if *color {
 		renderOptions = append(renderOptions, jd.COLOR)
 	}
-	var str string
+	var (
+		str      string
+		haveDiff bool
+	)
 	switch *format {
 	case "", "jd":
 		str = diff.Render(renderOptions...)
+		if str != "" {
+			haveDiff = true
+		}
 	case "patch":
 		str, err = diff.RenderPatch()
 		if err != nil {
-			return "", err
+			return "", false, err
+		}
+		if str != "[]" {
+			haveDiff = true
 		}
 	case "merge":
 		str, err = diff.RenderMerge()
 		if err != nil {
-			return "", err
+			return "", false, err
+		}
+		if str != "{}" {
+			haveDiff = true
 		}
 	default:
-		return "", fmt.Errorf("Invalid format: %q", *format)
+		return "", false, fmt.Errorf("Invalid format: %q", *format)
 	}
-	return str, nil
+	return str, haveDiff, nil
 }
 
-func diffV2(a, b string, options []v2.Option) (string, error) {
+func diffV2(a, b string, options []v2.Option) (string, bool, error) {
 	var aNode, bNode v2.JsonNode
 	var err error
 	if *yaml {
@@ -356,7 +360,7 @@ func diffV2(a, b string, options []v2.Option) (string, error) {
 		aNode, err = v2.ReadJsonString(a)
 	}
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	if *yaml {
 		bNode, err = v2.ReadYamlString(b)
@@ -364,31 +368,43 @@ func diffV2(a, b string, options []v2.Option) (string, error) {
 		bNode, err = v2.ReadJsonString(b)
 	}
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	diff := aNode.Diff(bNode, options...)
 	var renderOptions []v2.Option
 	if *color {
 		renderOptions = append(renderOptions, v2.COLOR)
 	}
-	var str string
+	var (
+		str      string
+		haveDiff bool
+	)
 	switch *format {
 	case "", "jd":
 		str = diff.Render(renderOptions...)
+		if str != "" {
+			haveDiff = true
+		}
 	case "patch":
 		str, err = diff.RenderPatch()
 		if err != nil {
-			return "", err
+			return "", false, err
+		}
+		if str != "[]" {
+			haveDiff = true
 		}
 	case "merge":
 		str, err = diff.RenderMerge()
 		if err != nil {
-			return "", err
+			return "", false, err
+		}
+		if str != "{}" {
+			haveDiff = true
 		}
 	default:
-		return "", fmt.Errorf("Invalid format: %q", *format)
+		return "", false, fmt.Errorf("Invalid format: %q", *format)
 	}
-	return str, nil
+	return str, haveDiff, nil
 }
 
 func printPatch(p, a string, metadata []jd.Metadata) {

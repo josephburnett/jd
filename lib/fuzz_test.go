@@ -89,6 +89,10 @@ func fuzz(t *testing.T, aStr, bStr string) {
 			if hasUnsupportedNullValue(b) {
 				continue
 			}
+			if b.Equals(jsonObject{}) {
+				// An empty object is a JSON Merge Patch noop
+				continue
+			}
 		}
 		var metadata []Metadata
 		switch format[0] {
@@ -142,11 +146,11 @@ func fuzz(t *testing.T, aStr, bStr string) {
 		// Apply diff to A to get B.
 		patchedA, err := a.Patch(diffAB)
 		if err != nil {
-			t.Errorf("applying patch %v to %v should give %v. Got err: %v", diffAB.Render(), aStr, bStr, err)
+			t.Errorf("applying patch %v to %v should give %v. Got err: %v", diffABStr, aStr, bStr, err)
 			return
 		}
 		if !patchedA.Equals(b, metadata...) {
-			t.Errorf("applying patch %v to %v should give %v. Got: %v", diffAB.Render(), aStr, bStr, patchedA)
+			t.Errorf("applying patch %v to %v should give %v. Got: %v", diffABStr, aStr, bStr, renderJson(patchedA))
 			return
 		}
 	}

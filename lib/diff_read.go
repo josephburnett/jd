@@ -148,11 +148,12 @@ func ReadPatchFile(filename string) (Diff, error) {
 // the strict patching strategy of a native jd patch.
 //
 // For example:
-//   [
-//     {"op":"test","path":"/foo","value":"bar"},
-//     {"op":"remove","path":"/foo","value":"bar"},
-//     {"op":"add","path":"/foo","value":"baz"}
-//   ]
+//
+//	[
+//	  {"op":"test","path":"/foo","value":"bar"},
+//	  {"op":"remove","path":"/foo","value":"bar"},
+//	  {"op":"add","path":"/foo","value":"baz"}
+//	]
 func ReadPatchString(s string) (Diff, error) {
 	var patch []patchElement
 	err := json.Unmarshal([]byte(s), &patch)
@@ -160,6 +161,9 @@ func ReadPatchString(s string) (Diff, error) {
 		return nil, err
 	}
 	var diff Diff
+	if len(patch) == 0 {
+		return diff, nil
+	}
 	var element DiffElement
 	for {
 		if len(patch) == 0 {
@@ -241,6 +245,9 @@ func ReadMergeString(s string) (Diff, error) {
 		return nil, err
 	}
 	d := Diff{}
+	if n.Equals(jsonObject{}) {
+		return d, nil
+	}
 	p := []JsonNode{jsonArray{jsonString(MERGE.string())}}
 	return readMergeInto(d, p, n), nil
 }

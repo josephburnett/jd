@@ -99,6 +99,10 @@ func (d Diff) Render(opts ...RenderOption) string {
 }
 
 func (d Diff) RenderPatch() (string, error) {
+	if len(d) == 0 {
+		// A noop JSON Patch should be an empty array of operations
+		return "[]", nil
+	}
 	patch := []patchElement{}
 	for _, element := range d {
 		path, err := writePointer(element.Path)
@@ -142,6 +146,10 @@ func (d Diff) RenderPatch() (string, error) {
 }
 
 func (d Diff) RenderMerge() (string, error) {
+	if len(d) == 0 {
+		// A noop JSON Merge Patch should be an empty object
+		return "{}", nil
+	}
 	for _, e := range d {
 		if len(e.Path) == 0 || !(jsonArray{jsonString(MERGE.string())}).Equals(e.Path[0]) {
 			return "", fmt.Errorf("diff must be composed entirely of paths with merge metadata to be rendered as a merge patch")

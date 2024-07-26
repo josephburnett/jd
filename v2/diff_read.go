@@ -235,6 +235,9 @@ func ReadPatchString(s string) (Diff, error) {
 		return nil, err
 	}
 	var diff Diff
+	if len(patch) == 0 {
+		return diff, nil
+	}
 	var element DiffElement
 	for {
 		if len(patch) == 0 {
@@ -316,6 +319,9 @@ func ReadMergeString(s string) (Diff, error) {
 		return nil, err
 	}
 	d := Diff{}
+	if n.Equals(jsonObject{}) {
+		return d, nil
+	}
 	p, err := NewPath(jsonArray{})
 	if err != nil {
 		return nil, err

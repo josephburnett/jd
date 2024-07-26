@@ -49,6 +49,42 @@ func TestMain(t *testing.T) {
 			`+ "baz"`,
 		),
 		exitCode: 1,
+	}, {
+		name: "no diff in patch mode",
+		files: map[string]string{
+			"a.json": `{}`,
+			"b.json": `{}`,
+		},
+		args:     []string{"-f", "patch", "a.json", "b.json"},
+		out:      `[]`,
+		exitCode: 0,
+	}, {
+		name: "no diff in merge mode",
+		files: map[string]string{
+			"a.json": `{}`,
+			"b.json": `{}`,
+		},
+		args:     []string{"-f", "merge", "a.json", "b.json"},
+		out:      `{}`,
+		exitCode: 0,
+	}, {
+		name: "diff in patch mode",
+		files: map[string]string{
+			"a.json": `{"foo":"bar"}`,
+			"b.json": `{"foo":"baz"}`,
+		},
+		args:     []string{"-f", "patch", "a.json", "b.json"},
+		out:      `[{"op":"test","path":"/foo","value":"bar"},{"op":"remove","path":"/foo","value":"bar"},{"op":"add","path":"/foo","value":"baz"}]`,
+		exitCode: 1,
+	}, {
+		name: "diff in merge mode",
+		files: map[string]string{
+			"a.json": `{"foo":"bar"}`,
+			"b.json": `{"foo":"baz"}`,
+		},
+		args:     []string{"-f", "merge", "a.json", "b.json"},
+		out:      `{"foo":"baz"}`,
+		exitCode: 1,
 	}}
 
 	testName := t.Name()
