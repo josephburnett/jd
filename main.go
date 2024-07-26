@@ -26,7 +26,7 @@ var (
 	output        = flag.String("o", "", "Output file")
 	patch         = flag.Bool("p", false, "Patch mode")
 	port          = flag.Int("port", 0, "Serve web UI on port")
-	precision     = flag.Float64("precision", 0, "Precision for numbers")
+	precision     = flag.Float64("precision", 0, "Maximum absolute difference for numbers to be equal")
 	set           = flag.Bool("set", false, "Arrays as sets")
 	setkeys       = flag.String("setkeys", "", "Keys to identify set objects")
 	translate     = flag.String("t", "", "Translate mode")
@@ -222,8 +222,8 @@ func printUsageAndExit() {
 		`  -setkeys     Keys to identify set objects`,
 		`  -yaml        Read and write YAML instead of JSON.`,
 		`  -port=N      Serve web UI on port N`,
-		`  -precision=N Precision for numbers. Positive number for decimal places or`,
-		`               negative for significant figures.`,
+		`  -precision=N Maximum absolute difference for numbers to be equal.`,
+		`               Example: -precision=0.00001`,
 		`  -f=FORMAT    Read and write diff in FORMAT "jd" (default), "patch" (RFC 6902) or`,
 		`               "merge" (RFC 7386)`,
 		`  -t=FORMATS   Translate FILE1 between FORMATS. Supported formats are "jd",`,
