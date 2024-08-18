@@ -78,15 +78,21 @@ release-notes : check-env
 	@git log --oneline --no-decorate v$(JD_PREVIOUS_VERSION)..v$(JD_VERSION)
 
 .PHONY : check-dirty
-check-dirty :
+check-dirty : vendor
 	git diff --quiet --exit-code
 
+.PHONY : vendor
+vendor :
+	cd v2 ; go mod tidy
+	cd v2 ; go mod vendor
+	go mod tidy
+	go mod vendor
+
 .PHONY : check-version
-.ONESHELL:
 check-version : check-env
-	if ! grep -q $(JD_VERSION) main.go; then
-		@echo "Set 'const version = $(JD_VERSION)' in main.go."
-		false
+	@if ! grep -q $(JD_VERSION) main.go; then                          \
+		echo "Set 'const version = $(JD_VERSION)' in main.go." ; \
+		false                                                   ; \
 	fi
 
 .PHONY : check-env
