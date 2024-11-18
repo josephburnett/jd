@@ -186,3 +186,4 @@ apply these change to another deployment:
 # edit file "patch" to contain only the hunk updating cpu request
 kubectl patch deployment example2 --type json --patch "$(jd -t jd2patch ~/patch)"
 ```
+
