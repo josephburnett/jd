@@ -31,9 +31,19 @@ func ReadJsonString(s string) (JsonNode, error) {
 	return unmarshal([]byte(s), json.Unmarshal)
 }
 
+// ReadJsonString reads a []byte as JSON and constructs a JsonNode.
+func ReadJsonBytes(s []byte) (JsonNode, error) {
+	return unmarshal(s, json.Unmarshal)
+}
+
 // ReadJsonString reads a string as YAML and constructs a JsonNode.
 func ReadYamlString(s string) (JsonNode, error) {
 	return unmarshal([]byte(s), yaml.Unmarshal)
+}
+
+// ReadJsonString reads a string as YAML and constructs a JsonNode.
+func ReadYamlBytes(s []byte) (JsonNode, error) {
+	return unmarshal(s, yaml.Unmarshal)
 }
 
 func unmarshal(bytes []byte, fn func([]byte, interface{}) error) (JsonNode, error) {
