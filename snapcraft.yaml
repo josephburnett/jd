@@ -1,0 +1,35 @@
+name: jd
+base: core24
+adopt-info: jd
+summary: Utility to diff and patch json and yaml files
+description: |
+  jd is a commandline utility and Go library for diffing and patching JSON
+  and YAML values. It supports a native jd format (similar to unified format)
+  as well as JSON Merge Patch (RFC 7386) and a subset of JSON Patch (RFC 6902).
+  Try it out at http://play.jd-tool.io/.
+
+grade: stable # must be 'stable' to release into candidate/stable channels
+confinement: strict # use 'strict' once you have the right plugs and slots
+
+apps:
+  jd:
+    command: jd
+    plugs: &standard [home, network-bind]
+
+parts:
+  jd:
+    plugin: dump
+    build-snaps:
+    - go
+    source: .
+    override-build: |
+      craftctl default
+      export GOROOT="$(go env GOROOT)"
+      make build
+      ls
+      mv release/jd $CRAFT_PART_INSTALL/
+      # extract the version from main.go and set it as the snap version
+      VERSION=`grep "const version" main.go | grep -oP '"[\w\.-]+"' | grep -oP "[\w\.-]+"`
+      craftctl set version=${VERSION:-unknown}
+    stage:
+      - jd
