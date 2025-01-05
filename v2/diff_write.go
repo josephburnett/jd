@@ -109,6 +109,71 @@ func (d Diff) RenderPatch() (string, error) {
 		if len(element.Remove) == 0 && len(element.Add) == 0 {
 			return "", fmt.Errorf("cannot render empty diff element as JSON Patch op")
 		}
+		// Test context before
+		lenBefore := len(element.Before)
+		if lenBefore > 1 {
+			return "", fmt.Errorf("only one line of before context supported. got %v", lenBefore)
+		}
+		if len(element.Before) == 1 {
+			if isVoid(element.Before[0]) {
+				// There is no way to test for the beginning of an array in JSON Patch
+				continue
+			}
+			if len(element.Path) == 0 {
+				return "", fmt.Errorf("expected path. got empty path")
+			}
+			index, ok := element.Path[len(element.Path)-1].(PathIndex)
+			if !ok {
+				return "", fmt.Errorf("wanted path index. got %T", element.Path[len(element.Path)-1])
+			}
+			prevIndex := index - 1
+			if prevIndex < 0 {
+				// Index -1 means the end of the array in JSON Patch
+				continue
+			}
+			prevPath := element.Path.clone()
+			prevPath[len(prevPath)-1] = prevIndex
+			prevPathStr, err := writePointer(element.Path.JsonNode().(jsonArray))
+			if err != nil {
+				return "", err
+			}
+			patch = append(patch, patchElement{
+				Op:    "test",
+				Path:  prevPathStr,
+				Value: element.Before[0],
+			})
+		}
+		// Test context after
+		lenAfter := len(element.After)
+		if lenAfter > 1 {
+			return "", fmt.Errorf("only one line of after context supported. got %v", lenAfter)
+		}
+		if len(element.After) == 1 {
+			if isVoid(element.After[0]) {
+				// There is no way to test for the end of an array in JSON Patch
+				continue
+			}
+			if len(element.Path) == 0 {
+				return "", fmt.Errorf("expected path. got empty path")
+			}
+			index, ok := element.Path[len(element.Path)-1].(PathIndex)
+			if !ok {
+				return "", fmt.Errorf("wanted path index. got %T", element.Path[len(element.Path)-1])
+			}
+			nextIndex := index + 1
+			nextPath := element.Path.clone()
+			nextPath[len(nextPath)-1] = nextIndex
+			nextPathStr, err := writePointer(element.Path.JsonNode().(jsonArray))
+			if err != nil {
+				return "", err
+			}
+			patch = append(patch, patchElement{
+				Op:    "test",
+				Path:  nextPathStr,
+				Value: element.After[0],
+			})
+		}
+		// Test value to replace / remove
 		for _, e := range element.Remove {
 			if isVoid(element.Remove[0]) {
 				continue

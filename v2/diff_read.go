@@ -251,6 +251,128 @@ func ReadPatchString(s string) (Diff, error) {
 	}
 }
 
+// setPatchDiffElementContext detects before and/or after context and
+// sets it on the diff element. It returns what remains of the
+// patch. We expect exactly zero or one test before and zero or one
+// test after, both array indices, followed by either a test and
+// replacement or add operation, also array indices. This is
+// ridiculously specific and strict, but mostly here just so we can
+// automate round-trip testing of the JSON Patch format.
+func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchElement, error) {
+	if len(patch) == 0 {
+		return nil, fmt.Errorf("unexpected end of JSON Patch")
+	}
+	if len(patch) == 1 || patch[0].Op != "test" {
+		// No before or after context.
+		d.Before = []JsonNode{voidNode{}}
+		d.After = []JsonNode{voidNode{}}
+		return patch, nil
+	}
+	// To tell if this has context and a change or just lines of
+	// change, we need to compare the indices.
+	path, err := readPointer(patch[0].Path)
+	if err != nil {
+		return nil, err
+	}
+	if len(path) == 0 {
+		return nil, fmt.Errorf("empty path: %q", patch[0].Path)
+	}
+	firstIndex, ok := path[len(path)-1].(PathIndex)
+	if !ok {
+		return nil, fmt.Errorf("expected path for array. got %q", patch[0].Path)
+	}
+	path, err = readPointer(patch[1].Path)
+	if err != nil {
+		return nil, err
+	}
+	if len(path) == 0 {
+		return nil, fmt.Errorf("empty path: %q", patch[1].Path)
+	}
+	secondIndex, ok := path[len(path)-1].(PathIndex)
+	if !ok {
+		return nil, fmt.Errorf("expected path for array. got %q", patch[1].Path)
+	}
+	switch {
+	case firstIndex == secondIndex && (patch[1].Op == "replace" || patch[1].Op == "remove"):
+		// No before or after context.
+		d.Before = []JsonNode{voidNode{}}
+		d.After = []JsonNode{voidNode{}}
+		return patch, nil
+	case firstIndex == secondIndex && (patch[1].Op == "add"):
+		// After context with add, which inserts before,
+		// moving the rest of the array forward.
+		d.Before = []JsonNode{voidNode{}}
+		after, err := NewJsonNode(patch[0].Value)
+		if err != nil {
+			return nil, err
+		}
+		d.After = []JsonNode{after}
+		return patch[1:], nil
+	case firstIndex == secondIndex-1 && patch[1].Op == "add":
+		// Before context with add, which inserts right after.
+		before, err := NewJsonNode(patch[0].Value)
+		if err != nil {
+			return nil, err
+		}
+		d.Before = []JsonNode{before}
+		d.After = []JsonNode{voidNode{}}
+		return patch[1:], nil
+	default:
+		if len(patch) == 2 {
+			// Something else. Let the rest of the read
+			// functions point out the error.
+			return patch, nil
+		}
+	}
+	path, err = readPointer(patch[2].Path)
+	if err != nil {
+		return nil, err
+	}
+	if len(path) == 0 {
+		return nil, fmt.Errorf("empty path: %q", patch[2].Path)
+	}
+	thirdIndex, ok := path[len(path)-1].(PathIndex)
+	if !ok {
+		return nil, fmt.Errorf("expected path for array. got %q", patch[2].Path)
+	}
+	switch {
+	case (patch[2].Op == "test" || patch[2].Op == "add") && thirdIndex <= secondIndex:
+		// Before and after context.
+		before, err := NewJsonNode(patch[0].Value)
+		if err != nil {
+			return nil, err
+		}
+		d.Before = []JsonNode{before}
+		after, err := NewJsonNode(patch[1].Value)
+		if err != nil {
+			return nil, err
+		}
+		d.After = []JsonNode{after}
+		return patch[2:], nil
+	case patch[1].Op == "test" && (patch[2].Op == "replace" || patch[2].Op == "remove") && firstIndex > secondIndex:
+		// After context with replace / remove.
+		d.Before = []JsonNode{voidNode{}}
+		after, err := NewJsonNode(patch[1].Value)
+		if err != nil {
+			return nil, err
+		}
+		d.After = []JsonNode{after}
+		return patch[1:], nil
+	case patch[1].Op == "test" && (patch[2].Op == "replace" || patch[2].Op == "remove") && firstIndex < secondIndex:
+		// Before context with replace / remove.
+		before, err := NewJsonNode(patch[0].Value)
+		if err != nil {
+			return nil, err
+		}
+		d.Before = []JsonNode{before}
+		d.After = []JsonNode{voidNode{}}
+		return patch[1:], nil
+	default:
+		// Something else.
+		return patch, nil
+	}
+}
+
 func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, error) {
 	d := DiffElement{}
 	if len(patch) == 0 {
@@ -258,6 +380,10 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 	}
 	p := patch[0]
 	var err error
+	// Maybe read before and after context
+	if p.Op == "test" {
+		patch, err = setPatchDiffElementContext(patch, &d)
+	}
 	switch p.Op {
 	case "test":
 		// Read path.
