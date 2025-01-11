@@ -1,6 +1,10 @@
 package jd
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func TestReadPatch(t *testing.T) {
 	cases := []struct {
@@ -107,5 +111,65 @@ func TestReadMerge(t *testing.T) {
 		if got := diff.Render(); got != c.diff {
 			t.Errorf("Wanted %s. Got %s", c.diff, got)
 		}
+	}
+}
+
+func TestSetPatchDiffElementContext(t *testing.T) {
+	cases := []struct {
+		name         string
+		patch        []patchElement
+		diffElement  *DiffElement
+		wantBefore   JsonNode
+		wantAfter    JsonNode
+		wantConsumed int
+		wantErr      bool
+	}{{
+		name: "context before and after replacement",
+		patch: []patchElement{{
+			Op:    "test",
+			Path:  "/0",
+			Value: 1,
+		}, {
+			Op:    "test",
+			Path:  "/2",
+			Value: 3,
+		}, {
+			Op:    "test",
+			Path:  "/1",
+			Value: 2,
+		}, {
+			Op:    "replace",
+			Path:  "/1",
+			Value: 4,
+		}},
+		wantBefore:   jsonNumber(1),
+		wantAfter:    jsonNumber(3),
+		wantConsumed: 2,
+	}}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			d := &DiffElement{}
+			rest, err := setPatchDiffElementContext(c.patch, d)
+			if c.wantErr {
+				require.Error(t, err)
+				require.Nil(t, rest)
+			} else {
+				require.NoError(t, err)
+				if c.wantBefore == nil {
+					require.Nil(t, d.Before)
+				} else {
+					require.Len(t, d.Before, 1)
+					require.True(t, d.Before[0].Equals(c.wantBefore))
+				}
+				if c.wantAfter == nil {
+					require.Nil(t, d.After)
+				} else {
+					require.Len(t, d.After, 1)
+					require.True(t, d.After[0].Equals(c.wantAfter))
+				}
+				require.Equal(t, c.patch[c.wantConsumed:], rest)
+			}
+		})
 	}
 }
