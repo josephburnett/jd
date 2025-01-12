@@ -279,7 +279,8 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 	}
 	firstIndex, ok := path[len(path)-1].(PathIndex)
 	if !ok {
-		return nil, fmt.Errorf("expected path for array. got %q", patch[0].Path)
+		// Not an aray
+		return patch, nil
 	}
 	path, err = readPointer(patch[1].Path)
 	if err != nil {
@@ -290,7 +291,8 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 	}
 	secondIndex, ok := path[len(path)-1].(PathIndex)
 	if !ok {
-		return nil, fmt.Errorf("expected path for array. got %q", patch[1].Path)
+		// Not an aray
+		return patch, nil
 	}
 	switch {
 	case firstIndex == secondIndex && (patch[1].Op == "replace" || patch[1].Op == "remove"):
@@ -383,6 +385,9 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 	// Maybe read before and after context
 	if p.Op == "test" {
 		patch, err = setPatchDiffElementContext(patch, &d)
+	}
+	if err != nil {
+		return d, nil, err
 	}
 	switch p.Op {
 	case "test":

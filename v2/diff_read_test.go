@@ -188,7 +188,7 @@ func TestSetPatchDiffElementContext(t *testing.T) {
 			Path:  "/0",
 			Value: 1,
 		}, {
-			Op:    "test",
+			Op:    "add",
 			Path:  "/0",
 			Value: 2,
 		}},
@@ -242,6 +242,20 @@ func TestSetPatchDiffElementContext(t *testing.T) {
 		wantAfter:    voidNode{},
 		wantConsumed: 0,
 	}, {
+		name: "no context with remove",
+		patch: []patchElement{{
+			Op:    "test",
+			Path:  "/0",
+			Value: 1,
+		}, {
+			Op:    "remove",
+			Path:  "/0",
+			Value: 1,
+		}},
+		wantBefore:   voidNode{},
+		wantAfter:    voidNode{},
+		wantConsumed: 0,
+	}, {
 		name: "no context with add into empty array",
 		patch: []patchElement{{
 			Op:    "add",
@@ -250,6 +264,18 @@ func TestSetPatchDiffElementContext(t *testing.T) {
 		}},
 		wantBefore:   voidNode{},
 		wantAfter:    voidNode{},
+		wantConsumed: 0,
+	}, {
+		name: "not an array",
+		patch: []patchElement{{
+			Op:    "test",
+			Path:  "/foo",
+			Value: 1,
+		}, {
+			Op:    "replace",
+			Path:  "/foo",
+			Value: 2,
+		}},
 		wantConsumed: 0,
 	}}
 
@@ -262,10 +288,18 @@ func TestSetPatchDiffElementContext(t *testing.T) {
 				require.Nil(t, rest)
 			} else {
 				require.NoError(t, err)
-				require.Len(t, d.Before, 1)
-				require.True(t, d.Before[0].Equals(c.wantBefore), "got %v, want %v", d.Before[0], c.wantBefore)
-				require.Len(t, d.After, 1)
-				require.True(t, d.After[0].Equals(c.wantAfter), "got %v. want %v", d.After[0], c.wantAfter)
+				if c.wantBefore == nil {
+					require.Nil(t, d.Before)
+				} else {
+					require.Len(t, d.Before, 1)
+					require.True(t, d.Before[0].Equals(c.wantBefore), "got %v, want %v", d.Before[0], c.wantBefore)
+				}
+				if c.wantAfter == nil {
+					require.Nil(t, d.After)
+				} else {
+					require.Len(t, d.After, 1)
+					require.True(t, d.After[0].Equals(c.wantAfter), "got %v. want %v", d.After[0], c.wantAfter)
+				}
 				require.Equal(t, c.patch[c.wantConsumed:], rest)
 			}
 		})
