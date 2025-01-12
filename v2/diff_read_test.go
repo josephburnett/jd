@@ -145,6 +145,112 @@ func TestSetPatchDiffElementContext(t *testing.T) {
 		wantBefore:   jsonNumber(1),
 		wantAfter:    jsonNumber(3),
 		wantConsumed: 2,
+	}, {
+		name: "context before and after insert",
+		patch: []patchElement{{
+			Op:    "test",
+			Path:  "/0",
+			Value: 1,
+		}, {
+			Op:    "test",
+			Path:  "/1",
+			Value: 3,
+		}, {
+			Op:    "add",
+			Path:  "/1",
+			Value: 2,
+		}},
+		wantBefore:   jsonNumber(1),
+		wantAfter:    jsonNumber(3),
+		wantConsumed: 2,
+	}, {
+		name: "context after replacement of first element",
+		patch: []patchElement{{
+			Op:    "test",
+			Path:  "/1",
+			Value: 2,
+		}, {
+			Op:    "test",
+			Path:  "/0",
+			Value: 1,
+		}, {
+			Op:    "replace",
+			Path:  "/0",
+			Value: 3,
+		}},
+		wantBefore:   voidNode{},
+		wantAfter:    jsonNumber(2),
+		wantConsumed: 1,
+	}, {
+		name: "context after add at first element",
+		patch: []patchElement{{
+			Op:    "test",
+			Path:  "/0",
+			Value: 1,
+		}, {
+			Op:    "test",
+			Path:  "/0",
+			Value: 2,
+		}},
+		wantBefore:   voidNode{},
+		wantAfter:    jsonNumber(1),
+		wantConsumed: 1,
+	}, {
+		name: "context before replacement",
+		patch: []patchElement{{
+			Op:    "test",
+			Path:  "/0",
+			Value: 1,
+		}, {
+			Op:    "test",
+			Path:  "/1",
+			Value: 2,
+		}, {
+			Op:    "replace",
+			Path:  "/1",
+			Value: 3,
+		}},
+		wantBefore:   jsonNumber(1),
+		wantAfter:    voidNode{},
+		wantConsumed: 1,
+	}, {
+		name: "context before add at the end",
+		patch: []patchElement{{
+			Op:    "test",
+			Path:  "/0",
+			Value: 1,
+		}, {
+			Op:    "add",
+			Path:  "/1",
+			Value: 2,
+		}},
+		wantBefore:   jsonNumber(1),
+		wantAfter:    voidNode{},
+		wantConsumed: 1,
+	}, {
+		name: "no context with replacement",
+		patch: []patchElement{{
+			Op:    "test",
+			Path:  "/0",
+			Value: 1,
+		}, {
+			Op:    "replace",
+			Path:  "/0",
+			Value: 2,
+		}},
+		wantBefore:   voidNode{},
+		wantAfter:    voidNode{},
+		wantConsumed: 0,
+	}, {
+		name: "no context with add into empty array",
+		patch: []patchElement{{
+			Op:    "add",
+			Path:  "/0",
+			Value: 1,
+		}},
+		wantBefore:   voidNode{},
+		wantAfter:    voidNode{},
+		wantConsumed: 0,
 	}}
 
 	for _, c := range cases {
@@ -156,18 +262,10 @@ func TestSetPatchDiffElementContext(t *testing.T) {
 				require.Nil(t, rest)
 			} else {
 				require.NoError(t, err)
-				if c.wantBefore == nil {
-					require.Nil(t, d.Before)
-				} else {
-					require.Len(t, d.Before, 1)
-					require.True(t, d.Before[0].Equals(c.wantBefore))
-				}
-				if c.wantAfter == nil {
-					require.Nil(t, d.After)
-				} else {
-					require.Len(t, d.After, 1)
-					require.True(t, d.After[0].Equals(c.wantAfter))
-				}
+				require.Len(t, d.Before, 1)
+				require.True(t, d.Before[0].Equals(c.wantBefore), "got %v, want %v", d.Before[0], c.wantBefore)
+				require.Len(t, d.After, 1)
+				require.True(t, d.After[0].Equals(c.wantAfter), "got %v. want %v", d.After[0], c.wantAfter)
 				require.Equal(t, c.patch[c.wantConsumed:], rest)
 			}
 		})

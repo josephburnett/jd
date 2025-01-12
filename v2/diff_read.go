@@ -352,7 +352,7 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 	case patch[1].Op == "test" && (patch[2].Op == "replace" || patch[2].Op == "remove") && firstIndex > secondIndex:
 		// After context with replace / remove.
 		d.Before = []JsonNode{voidNode{}}
-		after, err := NewJsonNode(patch[1].Value)
+		after, err := NewJsonNode(patch[0].Value)
 		if err != nil {
 			return nil, err
 		}
