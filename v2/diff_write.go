@@ -114,11 +114,8 @@ func (d Diff) RenderPatch() (string, error) {
 		if lenBefore > 1 {
 			return "", fmt.Errorf("only one line of before context supported. got %v", lenBefore)
 		}
-		if len(element.Before) == 1 {
-			if isVoid(element.Before[0]) {
-				// There is no way to test for the beginning of an array in JSON Patch
-				continue
-			}
+		// There is no way to test for the beginning of an array in JSON Patch
+		if len(element.Before) == 1 && !isVoid(element.Before[0]) {
 			if len(element.Path) == 0 {
 				return "", fmt.Errorf("expected path. got empty path")
 			}
@@ -127,13 +124,9 @@ func (d Diff) RenderPatch() (string, error) {
 				return "", fmt.Errorf("wanted path index. got %T", element.Path[len(element.Path)-1])
 			}
 			prevIndex := index - 1
-			if prevIndex < 0 {
-				// Index -1 means the end of the array in JSON Patch
-				continue
-			}
 			prevPath := element.Path.clone()
 			prevPath[len(prevPath)-1] = prevIndex
-			prevPathStr, err := writePointer(element.Path.JsonNode().(jsonArray))
+			prevPathStr, err := writePointer(prevPath.JsonNode().(jsonArray))
 			if err != nil {
 				return "", err
 			}
@@ -148,11 +141,8 @@ func (d Diff) RenderPatch() (string, error) {
 		if lenAfter > 1 {
 			return "", fmt.Errorf("only one line of after context supported. got %v", lenAfter)
 		}
-		if len(element.After) == 1 {
-			if isVoid(element.After[0]) {
-				// There is no way to test for the end of an array in JSON Patch
-				continue
-			}
+		// There is no way to test for the end of an array in JSON Patch
+		if len(element.After) == 1 && !isVoid(element.After[0]) {
 			if len(element.Path) == 0 {
 				return "", fmt.Errorf("expected path. got empty path")
 			}
@@ -163,7 +153,7 @@ func (d Diff) RenderPatch() (string, error) {
 			nextIndex := index + 1
 			nextPath := element.Path.clone()
 			nextPath[len(nextPath)-1] = nextIndex
-			nextPathStr, err := writePointer(element.Path.JsonNode().(jsonArray))
+			nextPathStr, err := writePointer(nextPath.JsonNode().(jsonArray))
 			if err != nil {
 				return "", err
 			}

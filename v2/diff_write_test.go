@@ -50,21 +50,43 @@ func TestDiffRenderPatch(t *testing.T) {
 		patch   string
 		wantErr bool
 	}{{
-		diff: `@ ["foo"]` + "\n" +
-			`+ 1`,
-		patch: `[{"op":"add","path":"/foo","value":1}]`,
+		diff: s(`@ ["foo"]`,
+			`+ 1`),
+		patch: s(`[{"op":"add","path":"/foo","value":1}]`),
 	}, {
-		diff: `@ ["foo"]` + "\n" +
+		diff: s(`@ ["foo"]`,
+			`- 1`),
+		patch: s(`[`,
+			`{"op":"test","path":"/foo","value":1},`,
+			`{"op":"remove","path":"/foo","value":1}`,
+			`]`),
+	}, {
+		diff: s(`@ ["foo"]`,
 			`- 1`,
-		patch: `[{"op":"test","path":"/foo","value":1},` +
-			`{"op":"remove","path":"/foo","value":1}]`,
+			`+ 2`),
+		patch: s(`[`,
+			`{"op":"test","path":"/foo","value":1},`,
+			`{"op":"remove","path":"/foo","value":1},`,
+			`{"op":"add","path":"/foo","value":2}`,
+			`]`),
 	}, {
-		diff: `@ ["foo"]` + "\n" +
-			`- 1` + "\n" +
-			`+ 2`,
-		patch: `[{"op":"test","path":"/foo","value":1},` +
-			`{"op":"remove","path":"/foo","value":1},` +
-			`{"op":"add","path":"/foo","value":2}]`,
+		diff: s(`@ [0]`,
+			`[`,
+			`- {}`,
+			`+ 0`,
+			`  []`,
+			`@ [2]`,
+			`  []`,
+			`- 0`),
+		patch: s(`[`,
+			`{"op":"test","path":"/1","value":[]},`,
+			`{"op":"test","path":"/0","value":{}},`,
+			`{"op":"remove","path":"/0","value":{}},`,
+			`{"op":"add","path":"/0","value":0},`,
+			`{"op":"test","path":"/1","value":[]},`,
+			`{"op":"test","path":"/2","value":0},`,
+			`{"op":"remove","path":"/2","value":0}`,
+			`]`),
 	}}
 
 	for _, tc := range testCases {
@@ -88,7 +110,7 @@ func TestDiffRenderPatch(t *testing.T) {
 			t.Errorf("Error reading patch: %v", err)
 		}
 		if !want.Equals(got) {
-			t.Errorf("Want %v. Got %v", want, got)
+			t.Errorf("Want %v. Got %v", tc.patch, gotJson)
 		}
 	}
 }
