@@ -387,6 +387,10 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 	// Maybe read before and after context
 	if p.Op == "test" {
 		patch, err = setPatchDiffElementContext(patch, &d)
+		if len(patch) == 0 {
+			return d, nil, fmt.Errorf("unexpected end of JSON Patch")
+		}
+		p = patch[0]
 	}
 	if err != nil {
 		return d, nil, err
