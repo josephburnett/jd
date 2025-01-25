@@ -275,11 +275,12 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 		return nil, err
 	}
 	if len(path) == 0 {
-		return nil, fmt.Errorf("empty path: %q", patch[0].Path)
+		// Not an array
+		return patch, nil
 	}
 	firstIndex, ok := path[len(path)-1].(PathIndex)
 	if !ok {
-		// Not an aray
+		// Not an array
 		return patch, nil
 	}
 	path, err = readPointer(patch[1].Path)
@@ -287,11 +288,12 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 		return nil, err
 	}
 	if len(path) == 0 {
-		return nil, fmt.Errorf("empty path: %q", patch[1].Path)
+		// Not an array
+		return patch, nil
 	}
 	secondIndex, ok := path[len(path)-1].(PathIndex)
 	if !ok {
-		// Not an aray
+		// Not an array
 		return patch, nil
 	}
 	switch {
