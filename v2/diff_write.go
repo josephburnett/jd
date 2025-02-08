@@ -150,7 +150,8 @@ func (d Diff) RenderPatch() (string, error) {
 			if !ok {
 				return "", fmt.Errorf("wanted path index. got %T", element.Path[len(element.Path)-1])
 			}
-			nextIndex := index + 1
+			indexDelta := len(element.Remove)
+			nextIndex := index + PathIndex(indexDelta)
 			nextPath := element.Path.clone()
 			nextPath[len(nextPath)-1] = nextIndex
 			nextPathStr, err := writePointer(nextPath.JsonNode().(jsonArray))

@@ -81,78 +81,80 @@ func fuzz(t *testing.T, aStr, bStr string) {
 	}, {
 		"merge", "list",
 	}} {
-		a, _ = ReadJsonString(aStr) // Fresh parsed copy.
-		if format[0] == "merge" {
-			if hasUnsupportedNullValue(a) {
-				continue
+		t.Run(format[0]+"_"+format[1], func(t *testing.T) {
+			a, _ = ReadJsonString(aStr) // Fresh parsed copy.
+			if format[0] == "merge" {
+				if hasUnsupportedNullValue(a) {
+					return
+				}
+				if hasUnsupportedNullValue(b) {
+					return
+				}
+				if b.Equals(jsonObject{}) {
+					// An empty object is a JSON Merge patch noop
+					return
+				}
 			}
-			if hasUnsupportedNullValue(b) {
-				continue
+			var options []Option
+			switch format[0] {
+			case "jd":
+				switch format[1] {
+				case "set":
+					options = append(options, setOption{})
+				case "mset":
+					options = append(options, multisetOption{})
+				default: // list
+				}
+			case "merge":
+				options = append(options, mergeOption{})
+			default: // patch
 			}
-			if b.Equals(jsonObject{}) {
-				// An empty object is a JSON Merge patch noop
-				continue
-			}
-		}
-		var options []Option
-		switch format[0] {
-		case "jd":
-			switch format[1] {
-			case "set":
-				options = append(options, setOption{})
-			case "mset":
-				options = append(options, multisetOption{})
-			default: // list
-			}
-		case "merge":
-			options = append(options, mergeOption{})
-		default: // patch
-		}
 
-		// Diff A and B.
-		d := a.Diff(b, options...)
-		if d == nil {
-			t.Errorf("nil diff of a and b")
-			return
-		}
-		if format[0] == "patch" && hasUnsupportedObjectKey(d) {
-			continue
-		}
-		var diffABStr string
-		var diffAB Diff
-		switch format[0] {
-		case "jd":
-			diffABStr = d.Render(options...)
-			diffAB, err = ReadDiffString(diffABStr)
-		case "patch":
-			diffABStr, err = d.RenderPatch()
-			if err != nil {
-				t.Errorf("could not render diff %v as patch: %v", d, err)
+			// Diff A and B.
+			d := a.Diff(b, options...)
+			if d == nil {
+				t.Errorf("nil diff of a and b")
 				return
 			}
-			diffAB, err = ReadPatchString(diffABStr)
-		case "merge":
-			diffABStr, err = d.RenderMerge()
-			if err != nil {
-				t.Errorf("could not render diff %v as merge: %v", d, err)
+			if format[0] == "patch" && hasUnsupportedObjectKey(d) {
 				return
 			}
-			diffAB, err = ReadMergeString(diffABStr)
-		}
-		if err != nil {
-			t.Errorf("error parsing diff string %q: %v", diffABStr, err)
-			return
-		}
-		// Apply diff to A to get B.
-		patchedA, err := a.Patch(diffAB)
-		if err != nil {
-			t.Errorf("applying patch %v to %v should give %v. Got err: %v", diffABStr, aStr, bStr, err)
-			return
-		}
-		if !patchedA.Equals(b, options...) {
-			t.Errorf("applying patch %v to %v should give %v. Got: %v", diffABStr, aStr, bStr, renderJson(patchedA))
-			return
-		}
+			var diffABStr string
+			var diffAB Diff
+			switch format[0] {
+			case "jd":
+				diffABStr = d.Render(options...)
+				diffAB, err = ReadDiffString(diffABStr)
+			case "patch":
+				diffABStr, err = d.RenderPatch()
+				if err != nil {
+					t.Errorf("could not render diff %v as patch: %v", d, err)
+					return
+				}
+				diffAB, err = ReadPatchString(diffABStr)
+			case "merge":
+				diffABStr, err = d.RenderMerge()
+				if err != nil {
+					t.Errorf("could not render diff %v as merge: %v", d, err)
+					return
+				}
+				diffAB, err = ReadMergeString(diffABStr)
+			}
+			if err != nil {
+				t.Errorf("error parsing diff string %q: %v", diffABStr, err)
+				return
+			}
+			// Apply diff to A to get B.
+			patchedA, err := a.Patch(diffAB)
+			if err != nil {
+				t.Errorf("applying patch %v to %v should give %v. Got err: %v", diffABStr, aStr, bStr, err)
+				return
+			}
+			if !patchedA.Equals(b, options...) {
+				t.Errorf("applying patch %v to %v should give %v. Got: %v", diffABStr, aStr, bStr, renderJson(patchedA))
+				return
+			}
+		})
 	}
 
 }
