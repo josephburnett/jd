@@ -355,7 +355,7 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 			return nil, err
 		}
 		d.After = []JsonNode{after}
-		return patch[3:], nil
+		return patch[2:], nil
 	case patch[1].Op == "test" && (patch[2].Op == "replace" || patch[2].Op == "remove") && firstIndex > secondIndex:
 		// After context with replace / remove.
 		d.Before = []JsonNode{voidNode{}}
@@ -364,7 +364,7 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 			return nil, err
 		}
 		d.After = []JsonNode{after}
-		return patch[3:], nil
+		return patch[1:], nil
 	case patch[1].Op == "test" && (patch[2].Op == "replace" || patch[2].Op == "remove") && firstIndex < secondIndex:
 		// Before context with replace / remove.
 		before, err := NewJsonNode(patch[0].Value)
@@ -373,7 +373,7 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 		}
 		d.Before = []JsonNode{before}
 		d.After = []JsonNode{voidNode{}}
-		return patch[3:], nil
+		return patch[1:], nil
 	default:
 		// Something else.
 		return patch, nil
