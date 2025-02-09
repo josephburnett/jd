@@ -28,15 +28,14 @@ func TestReadPatch(t *testing.T) {
 		),
 	}, {
 		patch: s(
-			`[{"op":"add","path":"/foo","value":1},`,
-			`{"op":"test","path":"/foo","value":1},`,
-			`{"op":"remove","path":"/foo","value":1}]`,
+			`[{"op":"test","path":"/foo","value":1},`,
+			`{"op":"remove","path":"/foo","value":1},`,
+			`{"op":"add","path":"/foo","value":1}]`,
 		),
 		diff: s(
 			`@ ["foo"]`,
-			`+ 1`,
-			`@ ["foo"]`,
 			`- 1`,
+			`+ 1`,
 		),
 	}, {
 		patch: s(`[{"op":"add","path":"/foo/-","value":2}]`),
