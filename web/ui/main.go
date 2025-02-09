@@ -6,7 +6,7 @@ import (
 	"sync"
 	"syscall/js"
 
-	jd "github.com/josephburnett/jd/lib"
+	jd "github.com/josephburnett/jd/v2"
 )
 
 const (
@@ -34,8 +34,8 @@ const (
 	unfocusStyle      = "border:solid 3px #ccc"
 	halfWidthStyle    = "width:97%"
 	fullWidthStyle    = "width:98.5%"
-	placeholderA      = `{"foo":["bar"]}`
-	placeholderB      = `{"foo":["baz"]}`
+	placeholderA      = `{"foo":["bar","baz"]}`
+	placeholderB      = `{"foo":["bar","baz","bam"]}`
 )
 
 func main() {
@@ -199,6 +199,8 @@ var (
 	jdPlaceholderMset string
 	patchPlaceholder  string
 	mergePlaceholder  string
+	yamlPlaceholderA  string
+	yamlPlaceholderB  string
 )
 
 func init() {
@@ -220,6 +222,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	yamlPlaceholderA = a.Yaml()
+	yamlPlaceholderB = b.Yaml()
 }
 
 func (a *app) setPlaceholder() {
@@ -239,10 +243,20 @@ func (a *app) setPlaceholder() {
 	case diffFormatMergeId:
 		d.Set("placeholder", mergePlaceholder)
 	}
+	aInput := a.getElementById(aJsonId)
+	bInput := a.getElementById(bJsonId)
+	switch a.format {
+	case formatJsonId:
+		aInput.Set("placeholder", placeholderA)
+		bInput.Set("placeholder", placeholderB)
+	case formatYamlId:
+		aInput.Set("placeholder", yamlPlaceholderA)
+		bInput.Set("placeholder", yamlPlaceholderB)
+	}
 }
 
 func (a *app) setCommandLabel() {
-	command := "jd"
+	command := "jd -v2"
 	switch a.mode {
 	case modePatchId:
 		command += " -p"
@@ -268,9 +282,17 @@ func (a *app) setCommandLabel() {
 	}
 	switch a.mode {
 	case modeDiffId:
-		command += " a.json b.json"
+		if a.format == formatJsonId {
+			command += " a.json b.json"
+		} else {
+			command += " a.yaml b.yaml"
+		}
 	case modePatchId:
-		command += " diff a.json"
+		if a.format == formatJsonId {
+			command += " diff a.json"
+		} else {
+			command += " diff a.yaml"
+		}
 	default:
 	}
 	a.setLabel(commandId, command)
@@ -323,27 +345,26 @@ func (a *app) setInputsEnabled() {
 	}
 }
 
-func (a *app) getMetadata() []jd.Metadata {
-	metadata := []jd.Metadata{}
+func (a *app) getMetadata() []jd.Option {
+	options := []jd.Option{}
 	switch a.array {
 	case arraySetId:
-		metadata = append(metadata, jd.SET)
+		options = append(options, jd.SET)
 	case arrayMsetId:
-		metadata = append(metadata, jd.MULTISET)
+		options = append(options, jd.MULTISET)
 	default:
 	}
 	switch a.diffFormat {
 	case diffFormatMergeId:
-		metadata = append(metadata, jd.MERGE)
+		options = append(options, jd.MERGE)
 	}
-	return metadata
+	return options
 }
 
-func (a *app) parseAndTranslate(id string) (jd.JsonNode, error) {
+func (a *app) parseAndTranslate(id, formatLast string) (jd.JsonNode, error) {
 	change := false
-	if a.format != a.formatLast {
+	if a.format != formatLast {
 		change = true
-		a.formatLast = a.format
 	}
 	value := a.getElementById(id)
 	nodeJson, errJson := jd.ReadJsonString(value.Get("value").String())
@@ -440,7 +461,7 @@ func (a *app) printDiff() {
 	metadata := a.getMetadata()
 	var fail bool
 	// Read a
-	aNode, err := a.parseAndTranslate(aJsonId)
+	aNode, err := a.parseAndTranslate(aJsonId, a.formatLast)
 	if err != nil {
 		a.setLabel(aErrorId, err.Error())
 		fail = true
@@ -448,13 +469,15 @@ func (a *app) printDiff() {
 		a.setLabel(aErrorId, "")
 	}
 	// Read b
-	bNode, err := a.parseAndTranslate(bJsonId)
+	bNode, err := a.parseAndTranslate(bJsonId, a.formatLast)
 	if err != nil {
 		a.setLabel(bErrorId, err.Error())
 		fail = true
 	} else {
 		a.setLabel(bErrorId, "")
 	}
+	// Mark clean translation
+	a.formatLast = a.format
 	if fail {
 		a.setTextarea(diffId, "")
 		return
@@ -486,13 +509,14 @@ func (a *app) printPatch() {
 	metadata := a.getMetadata()
 	var fail bool
 	// Read a
-	aNode, err := a.parseAndTranslate(aJsonId)
+	aNode, err := a.parseAndTranslate(aJsonId, a.formatLast)
 	if err != nil {
 		a.setLabel(aErrorId, err.Error())
 		fail = true
 	} else {
 		a.setLabel(aErrorId, "")
 	}
+	a.formatLast = a.format
 	// Read diff
 	diff, err := a.parseAndTranslateDiff()
 	if err != nil {
