@@ -105,7 +105,7 @@ some differences between objects.
 
 ## Library usage
 
-Note: import only release commits (`v1.Y.Z`) because `master` can be unstable.
+Note: import only release commits (`v2.Y.Z`) because `master` can be unstable.
 
 Note: the `v2` library replaces the v1 (`lib`) library. V2 adds diff
 context, minimal array diffs and hunk-level metadata. However the
