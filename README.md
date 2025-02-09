@@ -2,9 +2,47 @@
 
 # JSON diff and patch
 
-`jd` is a commandline utility and Go library for diffing and patching JSON and YAML values. It supports a native `jd` format (similar to unified format) as well as JSON Merge Patch ([RFC 7386](https://datatracker.ietf.org/doc/html/rfc7386)) and a subset of JSON Patch ([RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902)). Try it out at http://play.jd-tool.io/.
+`jd` is a commandline utility and Go library for diffing and patching
+JSON and YAML values. It supports a native `jd` format (similar to
+unified format) as well as JSON Merge Patch ([RFC
+7386](https://datatracker.ietf.org/doc/html/rfc7386)) and a subset of
+JSON Patch ([RFC
+6902](https://datatracker.ietf.org/doc/html/rfc6902)). Try it out at
+http://play.jd-tool.io/.
 
 ![jd logo](logo_small.png)
+
+## Example
+
+Diff `jd -v2 a.json b.json`:
+
+```json
+{"foo":["bar","baz"]}
+```
+
+```json
+{"foo":["bar","bam","boom"]}
+```
+
+Output:
+
+```diff
+@ ["foo",1]
+  "bar"
+- "baz"
++ "bam"
++ "boom"
+]
+```
+
+## Features
+
+1. Human-friendly format, similar to Unified Diff.
+2. Produces a minimal diff between array elements using LCS algorithm.
+3. Adds context before and after when modifying an array to prevent bad patches.
+4. Create and apply structural patches in jd, patch (RFC 6902) and merge (RFC 7386) patch formats.
+5. Translates between patch formats.
+6. Includes Web Assembly-based UI (no network calls).
 
 ## Installation
 
@@ -17,6 +55,8 @@ To get the `jd` commandline utility:
 To use the `jd` web UI:
 * visit http://play.jd-tool.io/, or
 * run `jd -port 8080` and visit http://localhost:8080.
+
+Note: to include the UI when building from source, use the Makefile.
 
 ## Command line usage
 
