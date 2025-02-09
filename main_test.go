@@ -20,12 +20,16 @@ func TestMain(t *testing.T) {
 		main()
 	}
 
+	ref := func(s string) *string {
+		return &s
+	}
+
 	testCases := []struct {
 		name     string
 		files    map[string]string
 		args     []string
 		exitCode int
-		out      string
+		out      *string
 		outFile  string
 	}{{
 		name: "no diff",
@@ -34,7 +38,7 @@ func TestMain(t *testing.T) {
 			"b.json": `{"foo":"bar"}`,
 		},
 		args:     []string{"a.json", "b.json"},
-		out:      "",
+		out:      ref(""),
 		exitCode: 0,
 	}, {
 		name: "diff",
@@ -43,11 +47,11 @@ func TestMain(t *testing.T) {
 			"b.json": `{"foo":"baz"}`,
 		},
 		args: []string{"a.json", "b.json"},
-		out: s(
+		out: ref(s(
 			`@ ["foo"]`,
 			`- "bar"`,
 			`+ "baz"`,
-		),
+		)),
 		exitCode: 1,
 	}, {
 		name: "no diff in patch mode",
@@ -56,7 +60,7 @@ func TestMain(t *testing.T) {
 			"b.json": `{}`,
 		},
 		args:     []string{"-f", "patch", "a.json", "b.json"},
-		out:      `[]`,
+		out:      ref(`[]`),
 		exitCode: 0,
 	}, {
 		name: "no diff in merge mode",
@@ -65,7 +69,7 @@ func TestMain(t *testing.T) {
 			"b.json": `{}`,
 		},
 		args:     []string{"-f", "merge", "a.json", "b.json"},
-		out:      `{}`,
+		out:      ref(`{}`),
 		exitCode: 0,
 	}, {
 		name: "diff in patch mode",
@@ -74,7 +78,7 @@ func TestMain(t *testing.T) {
 			"b.json": `{"foo":"baz"}`,
 		},
 		args:     []string{"-f", "patch", "a.json", "b.json"},
-		out:      `[{"op":"test","path":"/foo","value":"bar"},{"op":"remove","path":"/foo","value":"bar"},{"op":"add","path":"/foo","value":"baz"}]`,
+		out:      ref(`[{"op":"test","path":"/foo","value":"bar"},{"op":"remove","path":"/foo","value":"bar"},{"op":"add","path":"/foo","value":"baz"}]`),
 		exitCode: 1,
 	}, {
 		name: "diff in merge mode",
@@ -83,8 +87,33 @@ func TestMain(t *testing.T) {
 			"b.json": `{"foo":"baz"}`,
 		},
 		args:     []string{"-f", "merge", "a.json", "b.json"},
-		out:      `{"foo":"baz"}`,
+		out:      ref(`{"foo":"baz"}`),
 		exitCode: 1,
+	}, {
+		name: "exit 0 on successful patch",
+		files: map[string]string{
+			"a.json": `{"foo":"bar"}`,
+			"patch": `
+@ ["foo"]
+- "bar"
++ "baz"
+`,
+		},
+		args:     []string{"-p", "patch", "a.json"},
+		out:      ref(`{"foo":"baz"}`),
+		exitCode: 0,
+	}, {
+		name: "exit 1 on unsuccessful patch",
+		files: map[string]string{
+			"a.json": `{"foo":"bar"}`,
+			"patch": `
+@ ["foo"]
+- "zap"
++ "baz"
+`,
+		},
+		args:     []string{"-p", "patch", "a.json"},
+		exitCode: 2,
 	}}
 
 	testName := t.Name()
@@ -116,8 +145,8 @@ func TestMain(t *testing.T) {
 			cmd := exec.Command(os.Args[0], "-test.run", testName)
 			cmd.Env = append(os.Environ(), jdFlags+"="+strings.Join(args, " "))
 			out, _ := cmd.CombinedOutput()
-			if string(out) != tc.out {
-				t.Errorf("wanted out %q. got %q", tc.out, string(out))
+			if tc.out != nil && string(out) != *tc.out {
+				t.Errorf("wanted out %q. got %q", *tc.out, string(out))
 			}
 			if exitCode := cmd.ProcessState.ExitCode(); exitCode != tc.exitCode {
 				t.Errorf("wanted exit code %v. got %v", tc.exitCode, exitCode)

@@ -443,18 +443,11 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 		out = bNode.Json(metadata...)
 	}
 	if *output == "" {
-		if out == "" {
-			os.Exit(0)
-		}
 		fmt.Print(out)
-		os.Exit(1)
 	} else {
-		if out == "" {
-			os.Exit(0)
-		}
 		ioutil.WriteFile(*output, []byte(out), 0644)
-		os.Exit(1)
 	}
+	os.Exit(0)
 }
 
 func printPatchV2(p, a string, options []v2.Option) {
@@ -493,18 +486,11 @@ func printPatchV2(p, a string, options []v2.Option) {
 		out = bNode.Json(options...)
 	}
 	if *output == "" {
-		if out == "" {
-			os.Exit(0)
-		}
 		fmt.Print(out)
-		os.Exit(1)
 	} else {
-		if out == "" {
-			os.Exit(0)
-		}
 		ioutil.WriteFile(*output, []byte(out), 0644)
-		os.Exit(1)
 	}
+	os.Exit(0)
 }
 
 func printTranslation(a string) {
