@@ -16,17 +16,17 @@ http://play.jd-tool.io/.
 
 Diff `jd -v2 a.json b.json`:
 
-```json
+```JSON
 {"foo":["bar","baz"]}
 ```
 
-```json
+```JSON
 {"foo":["bar","bam","boom"]}
 ```
 
 Output:
 
-```diff
+```DIFF
 @ ["foo",1]
   "bar"
 - "baz"
@@ -69,20 +69,23 @@ When FILE2 is omitted the second input is read from STDIN.
 When patching (-p) FILE1 is a diff.
 
 Options:
-  -color     Print color diff.
-  -p         Apply patch FILE1 to FILE2 or STDIN.
-  -o=FILE3   Write to FILE3 instead of STDOUT.
-  -set       Treat arrays as sets.
-  -mset      Treat arrays as multisets (bags).
-  -setkeys   Keys to identify set objects
-  -yaml      Read and write YAML instead of JSON.
-  -port=N    Serve web UI on port N
-  -f=FORMAT  Produce diff in FORMAT "jd" (default), "patch" (RFC 6902) or
-             "merge" (RFC 7386)
-  -t=FORMATS Translate FILE1 between FORMATS. Supported formats are "jd",
-             "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".
-             FORMATS are provided as a pair separated by "2". E.g.
-             "yaml2json" or "jd2patch".
+  -color       Print color diff.
+  -p           Apply patch FILE1 to FILE2 or STDIN.
+  -o=FILE3     Write to FILE3 instead of STDOUT.
+  -set         Treat arrays as sets.
+  -mset        Treat arrays as multisets (bags).
+  -setkeys     Keys to identify set objects
+  -yaml        Read and write YAML instead of JSON.
+  -port=N      Serve web UI on port N
+  -precision=N Maximum absolute difference for numbers to be equal.
+               Example: -precision=0.00001
+  -f=FORMAT    Read and write diff in FORMAT "jd" (default), "patch" (RFC 6902) or
+               "merge" (RFC 7386)
+  -t=FORMATS   Translate FILE1 between FORMATS. Supported formats are "jd",
+               "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".
+               FORMATS are provided as a pair separated by "2". E.g.
+               "yaml2json" or "jd2patch".
+  -v2          Use the JD v2 library and format.
 
 Examples:
   jd a.json b.json
@@ -95,33 +98,47 @@ Examples:
 
 #### Command Line Option Details
 
-`setkeys` This option determines what keys are used to decide if two objects 'match'. Then the matched objects are compared, which will return a diff if there are differences in the objects themselves, their keys and/or values. You shouldn't expect this option to mask or ignore non-specified keys, it is not intended as a way to 'ignore' some differences between objects.
+`setkeys` This option determines what keys are used to decide if two
+objects 'match'. Then the matched objects are compared, which will
+return a diff if there are differences in the objects themselves,
+their keys and/or values. You shouldn't expect this option to mask or
+ignore non-specified keys, it is not intended as a way to 'ignore'
+some differences between objects.
 
 ## Library usage
 
 Note: import only release commits (`v1.Y.Z`) because `master` can be unstable.
 
-```Go
+Note: the `v2` library replaces the v1 (`lib`) library. V2 adds diff
+context, minimal array diffs and hunk-level metadata. However the
+format is not backward compatable. You should use `v2`.
+
+```GO
 import (
 	"fmt"
-	jd "github.com/josephburnett/jd/lib"
+	jd "github.com/josephburnett/jd/v2"
 )
 
 func ExampleJsonNode_Diff() {
-	a, _ := jd.ReadJsonString(`{"foo":"bar"}`)
-	b, _ := jd.ReadJsonString(`{"foo":"baz"}`)
+	a, _ := jd.ReadJsonString(`{"foo":["bar"]}`)
+	b, _ := jd.ReadJsonString(`{"foo":["baz"]}`)
 	fmt.Print(a.Diff(b).Render())
 	// Output:
-	// @ ["foo"]
+	// @ ["foo",0]
+	// [
 	// - "bar"
 	// + "baz"
+	// ]
 }
 
 func ExampleJsonNode_Patch() {
 	a, _ := jd.ReadJsonString(`["foo"]`)
-	diff, _ := jd.ReadDiffString(`` +
-		`@ [1]` + "\n" +
-		`+ "bar"` + "\n")
+	diff, _ := jd.ReadDiffString(`
+@ [1]
+  "foo"
++ "bar"
+]
+`
 	b, _ := a.Patch(diff)
 	fmt.Print(b.Json())
 	// Output:
@@ -130,6 +147,8 @@ func ExampleJsonNode_Patch() {
 ```
 
 ## Diff language
+
+Note: this is the v1 grammar. Needs to be updated with v2.
 
 ![Railroad diagram of EBNF](/ebnf.png)
 
@@ -159,7 +178,9 @@ Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' | 'Empty JSON Object' )* ']' 
 
 ```DIFF
 @ [2]
+[
 + {"foo":"bar"}
+]
 ```
 
 ```DIFF
@@ -170,7 +191,9 @@ Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' | 'Empty JSON Object' )* ']' 
 - "Peter Sellers"
 + "Mike Myers"
 @ ["Movies",102]
+  {"Title":"Terminator","Actors":{"Terminator":"Arnold"}}
 + {"Title":"Austin Powers","Actors":{"Austin Powers":"Mike Myers"}}
+]
 ```
 
 ```DIFF

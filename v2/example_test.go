@@ -2,23 +2,29 @@ package jd
 
 import (
 	"fmt"
+	"testing"
 )
 
-func ExampleJsonNode_Diff() {
-	a, _ := ReadJsonString(`{"foo":"bar"}`)
-	b, _ := ReadJsonString(`{"foo":"baz"}`)
+func TestExampleJsonNode_Diff(t *testing.T) {
+	a, _ := ReadJsonString(`{"foo":["bar"]}`)
+	b, _ := ReadJsonString(`{"foo":["baz"]}`)
 	fmt.Print(a.Diff(b).Render())
 	// Output:
-	// @ ["foo"]
+	// @ ["foo",0]
+	// [
 	// - "bar"
 	// + "baz"
+	// ]
 }
 
-func ExampleJsonNode_Patch() {
+func TestExampleJsonNode_Patch(t *testing.T) {
 	a, _ := ReadJsonString(`["foo"]`)
-	diff, _ := ReadDiffString(`` +
-		`@ [1]` + "\n" +
-		`+ "bar"` + "\n")
+	diff, _ := ReadDiffString(`
+@ [1]
+  "foo"
++ "bar"
+]
+`)
 	b, _ := a.Patch(diff)
 	fmt.Print(b.Json())
 	// Output:
