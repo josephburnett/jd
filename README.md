@@ -10,8 +10,6 @@ JSON Patch ([RFC
 6902](https://datatracker.ietf.org/doc/html/rfc6902)). Try it out at
 http://play.jd-tool.io/.
 
-![jd logo](logo_small.png)
-
 ## Example
 
 Diff `jd -v2 a.json b.json`:
