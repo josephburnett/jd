@@ -12,7 +12,7 @@ http://play.jd-tool.io/.
 
 ## Example
 
-Diff `jd -v2 a.json b.json`:
+Diff `jd a.json b.json`:
 
 ```JSON
 {"foo":["bar","baz"]}

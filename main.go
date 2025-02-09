@@ -31,7 +31,7 @@ var (
 	setkeys       = flag.String("setkeys", "", "Keys to identify set objects")
 	translate     = flag.String("t", "", "Translate mode")
 	ver           = flag.Bool("version", false, "Print version and exit")
-	libv2         = flag.Bool("v2", false, "Use the jd v2 library")
+	libv2         = flag.Bool("v2", true, "Use the jd v2 library")
 	yaml          = flag.Bool("yaml", false, "Read and write YAML")
 )
 
@@ -234,7 +234,7 @@ func printUsageAndExit() {
 		`               "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".`,
 		`               FORMATS are provided as a pair separated by "2". E.g.`,
 		`               "yaml2json" or "jd2patch".`,
-		`  -v2          Use the JD v2 library and format.`,
+		`  -v2          Use the JD v2 library and format (defaults true).`,
 		``,
 		`Examples:`,
 		`  jd a.json b.json`,

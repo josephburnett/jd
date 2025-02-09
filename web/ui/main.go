@@ -256,7 +256,7 @@ func (a *app) setPlaceholder() {
 }
 
 func (a *app) setCommandLabel() {
-	command := "jd -v2"
+	command := "jd"
 	switch a.mode {
 	case modePatchId:
 		command += " -p"
