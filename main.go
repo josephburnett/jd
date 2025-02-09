@@ -122,7 +122,11 @@ func main() {
 			printPatch(a, b, metadata)
 		}
 	case translateMode:
-		printTranslation(a)
+		if *libv2 {
+			printTranslationV2(a)
+		} else {
+			printTranslation(a)
+		}
 	}
 }
 
@@ -560,6 +564,51 @@ func printTranslation(a string) {
 		out = node.Yaml()
 	case "yaml2json":
 		node, err := jd.ReadYamlString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out = node.Json()
+	default:
+		errorAndExit("unsupported translation: %q", *translate)
+	}
+	if *output == "" {
+		fmt.Print(out)
+	} else {
+		ioutil.WriteFile(*output, []byte(out), 0644)
+	}
+	os.Exit(0)
+}
+
+func printTranslationV2(a string) {
+	var out string
+	switch *translate {
+	case "jd2patch":
+		diff, err := v2.ReadDiffString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out, err = diff.RenderPatch()
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+	case "patch2jd":
+		patch, err := v2.ReadPatchString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out = patch.Render()
+	case "jd2merge":
+		errorAndExit("jd2merge translation cannot be used with --v2 yet")
+	case "merge2jd":
+		errorAndExit("merge2jd translation cannot be used with --v2 yet")
+	case "json2yaml":
+		node, err := v2.ReadJsonString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out = node.Yaml()
+	case "yaml2json":
+		node, err := v2.ReadYamlString(a)
 		if err != nil {
 			errorAndExit(err.Error())
 		}
