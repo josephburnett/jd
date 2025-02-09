@@ -515,9 +515,6 @@ func printTranslation(a string) {
 	var out string
 	switch *translate {
 	case "jd2patch":
-		if *libv2 {
-			errorAndExit("jd2patch translation cannot be used with --v2 yet")
-		}
 		diff, err := jd.ReadDiffString(a)
 		if err != nil {
 			errorAndExit(err.Error())
@@ -527,18 +524,12 @@ func printTranslation(a string) {
 			errorAndExit(err.Error())
 		}
 	case "patch2jd":
-		if *libv2 {
-			errorAndExit("patch2jd translation cannot be used with --v2 yet")
-		}
 		patch, err := jd.ReadPatchString(a)
 		if err != nil {
 			errorAndExit(err.Error())
 		}
 		out = patch.Render()
 	case "jd2merge":
-		if *libv2 {
-			errorAndExit("jd2merge translation cannot be used with --v2 yet")
-		}
 		diff, err := jd.ReadDiffString(a)
 		if err != nil {
 			errorAndExit(err.Error())
@@ -548,9 +539,6 @@ func printTranslation(a string) {
 			errorAndExit(err.Error())
 		}
 	case "merge2jd":
-		if *libv2 {
-			errorAndExit("merge2jd translation cannot be used with --v2 yet")
-		}
 		patch, err := jd.ReadMergeString(a)
 		if err != nil {
 			errorAndExit(err.Error())
@@ -598,9 +586,20 @@ func printTranslationV2(a string) {
 		}
 		out = patch.Render()
 	case "jd2merge":
-		errorAndExit("jd2merge translation cannot be used with --v2 yet")
+		diff, err := v2.ReadDiffString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out, err = diff.RenderMerge()
+		if err != nil {
+			errorAndExit(err.Error())
+		}
 	case "merge2jd":
-		errorAndExit("merge2jd translation cannot be used with --v2 yet")
+		patch, err := v2.ReadMergeString(a)
+		if err != nil {
+			errorAndExit(err.Error())
+		}
+		out = patch.Render()
 	case "json2yaml":
 		node, err := v2.ReadJsonString(a)
 		if err != nil {
