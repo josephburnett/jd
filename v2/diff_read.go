@@ -238,19 +238,28 @@ func ReadPatchString(s string) (Diff, error) {
 	if len(patch) == 0 {
 		return diff, nil
 	}
-	var element DiffElement
+	var e DiffElement
 	for {
 		if len(patch) == 0 {
 			return diff, nil
 		}
-		element, patch, err = readPatchDiffElement(patch)
+		e, patch, err = readPatchDiffElement(patch)
 		if err != nil {
 			return nil, err
 		}
-		// TODO coalece to previous diff element
-		// if new element has no context and is
-		// a continuation of a remove or add seq.
-		diff = append(diff, element)
+		// Coalece diff elements on the same path.
+		if len(diff) == 0 {
+			diff = append(diff, e)
+		} else {
+			i := len(diff) - 1
+			if diff[i].Path.JsonNode().Equals(e.Path.JsonNode()) {
+				diff[i].Remove = append(diff[i].Remove, e.Remove...)
+				// Must be done in reverse order
+				diff[i].Add = append(e.Add, diff[i].Add...)
+			} else {
+				diff = append(diff, e)
+			}
+		}
 	}
 }
 
