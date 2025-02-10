@@ -48,7 +48,7 @@ build-docker : check-env test
 	docker build -t josephburnett/jd:v$(JD_VERSION) .
 
 .PHONY : release-push
-release-push : check-env push-github push-docker push-latest deploy release-notes
+release-push : check-env push-github push-docker release-notes
 	@echo
 	@echo "Upload release/jd-* to Github as release $(JD_VERSION) with release notes above."
 	@echo
