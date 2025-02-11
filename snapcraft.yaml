@@ -1,5 +1,4 @@
 name: jd
-base: core24
 adopt-info: jd
 summary: Utility to diff and patch json and yaml files
 description: |
@@ -8,13 +7,23 @@ description: |
   as well as JSON Merge Patch (RFC 7386) and a subset of JSON Patch (RFC 6902).
   Try it out at http://play.jd-tool.io/.
 
-grade: stable # must be 'stable' to release into candidate/stable channels
-confinement: strict # use 'strict' once you have the right plugs and slots
+base: core24
+grade: stable
+confinement: strict
+compression: lzo
+
+website: https://github.com/josephburnett/jd
+contact: https://github.com/josephburnett/jd/issues
+issues: https://github.com/josephburnett/jd/issues
+source-code: https://github.com/josephburnett/jd
 
 apps:
   jd:
     command: jd
-    plugs: &standard [home, network-bind]
+    plugs:
+        - home
+        - removable-media
+        - network-bind
 
 parts:
   jd:
