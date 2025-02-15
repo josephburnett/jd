@@ -7,6 +7,6 @@ RUN set -eux; \
   make build
 RUN cd release ; ln -s jd jd-github-action
 FROM scratch
-COPY --from=build release/jd /jd
-COPY --from=build release/jd-github-action /jd-github-action
+COPY --from=build /go/src/github.com/josephburnett/jd/release/jd /jd
+COPY --from=build /go/src/github.com/josephburnett/jd/release/jd-github-action /jd-github-action
 ENTRYPOINT ["/jd"]
