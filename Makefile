@@ -94,8 +94,8 @@ check-version : check-env
 		echo "Set 'const version = $(JD_VERSION)' in main.go." ; \
 		false                                                   ; \
 	fi
-	@if ! grep -q $(JD_VERSION) action.yml; then                          \
-		echo "Set 'docker://josephburnett/jd:$(JD_VERSION)' in action.yml." ; \
+	@if ! grep -q "v$(JD_VERSION)" action.yml; then                          \
+		echo "Set 'docker://josephburnett/jd:v$(JD_VERSION)' in action.yml." ; \
 		false                                                   ; \
 	fi
 
