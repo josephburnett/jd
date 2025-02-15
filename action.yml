@@ -1,0 +1,15 @@
+name: 'jd - JSON diff and patch'
+description: 'jd is a commandline utility and Go library for diffing and patching JSON and YAML values. It supports a native jd format (similar to unified format) as well as JSON Merge Patch (RFC 7386) and a subset of JSON Patch (RFC 6902).'
+inputs:
+  args:
+    description: 'jd commandline arguments'
+    required: true
+outputs:
+  output:
+    description: 'The output of the jd command'
+runs:
+  using: 'docker'
+  image: 'docker://josephburnett/jd:latest'
+  entrypoint: '/jd-github-action'
+  args:
+    - ${{ inputs.args }}

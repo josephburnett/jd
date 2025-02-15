@@ -5,8 +5,8 @@ COPY . .
 RUN set -eux; \
   export GOROOT="$(go env GOROOT)"; \
   make build
-  make build-action
+RUN cd release ; ln -s jd jd-github-action
 FROM scratch
-COPY --from=build /go/src/github.com/josephburnett/jd/release/jd /jd
-COPY --from=build /go/src/github.com/josephburnett/jd/release/jd-acion /jd-action
+COPY --from=build release/jd /jd
+COPY --from=build release/jd-github-action /jd-github-action
 ENTRYPOINT ["/jd"]

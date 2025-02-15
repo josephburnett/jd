@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -36,6 +38,10 @@ var (
 )
 
 func main() {
+	if os.Args[0] == "jd-github-action" {
+		runAsGitHubAction()
+		return
+	}
 	flag.Parse()
 	if *ver {
 		fmt.Printf("jd version %v\n", version)
@@ -628,4 +634,26 @@ func readStdin() string {
 		os.Exit(2)
 	}
 	return string(bytes)
+}
+
+func runAsGitHubAction() {
+	gitHubOutput := os.Getenv("GITHUB_OUTPUT")
+	if gitHubOutput == "" {
+		errorAndExit("GITHUB_OUTPUT no set. Are you running in GitHub CI?")
+	}
+	file, err := os.OpenFile(gitHubOutput, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		errorAndExit(err.Error())
+	}
+	defer file.Close()
+	cmd := exec.Command("jd", os.Args[2:]...)
+	out, err := cmd.CombinedOutput()
+	delimiter := strconv.Itoa(rand.Int())
+	file.WriteString("output<<" + delimiter + "\n")
+	if err != nil {
+		file.WriteString(err.Error() + "\n")
+	}
+	file.WriteString(string(out))
+	file.WriteString(delimiter)
+	os.Exit(cmd.ProcessState.ExitCode())
 }

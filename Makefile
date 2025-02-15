@@ -27,10 +27,6 @@ build-web :
 serve : pack-web
 	go run -tags include_web main.go -port 8080
 
-.PHONY : build-action
-build-action :
-	CGO_ENABLED=0 go build ./github-action -o jd-action main.go
-
 .PHONY : release-build
 release-build : check-env check-version check-dirty build-all build-docker
 	@echo
