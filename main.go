@@ -65,10 +65,7 @@ func main() {
 		errorAndExit(err.Error())
 	}
 	if *gitDiffDriver {
-		if *libv2 {
-			errorAndExit("--git-diff-driver cannot be used with --v2 yet")
-		}
-		err := printGitDiffDriver(metadata)
+		err := printGitDiffDriver(options)
 		if err != nil {
 			errorAndExit(err.Error())
 		}
@@ -284,13 +281,13 @@ func printDiffV2(a, b string, options []v2.Option) {
 	os.Exit(0)
 }
 
-func printGitDiffDriver(metadata []jd.Metadata) error {
+func printGitDiffDriver(options []v2.Option) error {
 	if len(flag.Args()) != 7 {
 		return fmt.Errorf("Git diff driver expects exactly 7 arguments.")
 	}
 	a := readFile(flag.Arg(1))
 	b := readFile(flag.Arg(4))
-	str, _, err := diff(a, b, metadata)
+	str, _, err := diffV2(a, b, options)
 	if err != nil {
 		return err
 	}
