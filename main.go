@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -38,7 +39,8 @@ var (
 )
 
 func main() {
-	if os.Args[0] == "jd-github-action" {
+	if filepath.Base(os.Args[0]) == "jd-github-action" {
+		fmt.Println("Running as GitHub Action...")
 		runAsGitHubAction()
 		return
 	}
@@ -646,7 +648,12 @@ func runAsGitHubAction() {
 		errorAndExit(err.Error())
 	}
 	defer file.Close()
-	cmd := exec.Command("jd", os.Args[2:]...)
+	if len(os.Args) < 2 {
+		errorAndExit("Running GitHub Action requires args")
+	}
+	// Actions do not accept list inputs so args must be string split.
+	args := strings.Fields(os.Args[1])
+	cmd := exec.Command("jd", args...)
 	out, err := cmd.CombinedOutput()
 	delimiter := strconv.Itoa(rand.Int())
 	file.WriteString("output<<" + delimiter + "\n")
@@ -654,6 +661,7 @@ func runAsGitHubAction() {
 		file.WriteString(err.Error() + "\n")
 	}
 	file.WriteString(string(out))
-	file.WriteString(delimiter)
-	os.Exit(cmd.ProcessState.ExitCode())
+	file.WriteString(delimiter + "\n")
+	file.WriteString("exit_code::" + strconv.Itoa(cmd.ProcessState.ExitCode()) + "\n")
+	os.Exit(0)
 }
