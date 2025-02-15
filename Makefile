@@ -19,8 +19,8 @@ pack-web : build-web
 	go run web/pack/main.go
 
 .PHONY : build-web
-build-web : check-goroot
-	cp $$GOROOT/misc/wasm/wasm_exec.js web/assets/
+build-web :
+	cp $$(go env GOROOT)/misc/wasm/wasm_exec.js web/assets/
 	GOOS=js GOARCH=wasm go build -o web/assets/jd.wasm ./web/ui/main.go
 
 .PHONY : serve
@@ -102,12 +102,6 @@ ifndef JD_VERSION
 endif
 ifndef JD_PREVIOUS_VERSION
 	$(error Set JD_PREVIOUS_VERSION for release notes)
-endif
-
-.PHONY : check-goroot
-check-goroot:
-ifndef GOROOT
-	$(error Set GOROOT in order to file wasm_exec.js)
 endif
 
 .PHONY : find-issues
