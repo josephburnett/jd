@@ -654,6 +654,7 @@ func runAsGitHubAction() {
 	// Actions do not accept list inputs so args must be string split.
 	args := strings.Fields(os.Args[1])
 	cmd := exec.Command("/jd", args...)
+	cmd.Dir = ("/github/workspace")
 	out, err := cmd.CombinedOutput()
 	delimiter := strconv.Itoa(rand.Int())
 	file.WriteString("output<<" + delimiter + "\n")
