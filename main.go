@@ -662,6 +662,6 @@ func runAsGitHubAction() {
 	}
 	file.WriteString(string(out))
 	file.WriteString(delimiter + "\n")
-	file.WriteString("exit_code::" + strconv.Itoa(cmd.ProcessState.ExitCode()) + "\n")
+	file.WriteString("exit_code=" + strconv.Itoa(cmd.ProcessState.ExitCode()) + "\n")
 	os.Exit(0)
 }
