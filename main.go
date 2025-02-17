@@ -657,10 +657,10 @@ func runAsGitHubAction() {
 	cmd.Dir = ("/github/workspace")
 	out, err := cmd.CombinedOutput()
 	delimiter := strconv.Itoa(rand.Int())
-	file.WriteString("output<<" + delimiter + "\n")
 	if err != nil {
 		file.WriteString(err.Error() + "\n")
 	}
+	file.WriteString("output<<" + delimiter + "\n")
 	file.WriteString(string(out))
 	file.WriteString(delimiter + "\n")
 	file.WriteString("exit_code=" + strconv.Itoa(cmd.ProcessState.ExitCode()) + "\n")
