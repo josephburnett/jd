@@ -44,6 +44,13 @@ Output:
 
 ## Installation
 
+GitHub Action:
+
+```yaml
+- name: jd
+  uses: josephburnett/jd@v2.1.2
+```
+
 To get the `jd` commandline utility:
 * run `brew install jd`, or
 * run `go install github.com/josephburnett/jd@latest`, or
