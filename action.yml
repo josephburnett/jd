@@ -7,6 +7,8 @@ inputs:
 outputs:
   output:
     description: 'The output of the jd command'
+  exit_code:
+    description: 'The exit code of the jd command'
 runs:
   using: 'docker'
   image: 'docker://josephburnett/jd:v2.1.0'
