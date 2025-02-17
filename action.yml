@@ -1,5 +1,8 @@
 name: 'jd - JSON diff and patch'
-description: 'jd is a commandline utility and Go library for diffing and patching JSON and YAML values. It supports a native jd format (similar to unified format) as well as JSON Merge Patch (RFC 7386) and a subset of JSON Patch (RFC 6902).'
+description: 'jd is a utility for diffing and patching JSON and YAML values. It also supports JSON Merge Patch and a subset of JSON Patch'
+branding:
+  icon: at-sign
+  color: green
 inputs:
   args:
     description: 'jd commandline arguments'
