@@ -47,8 +47,15 @@ Output:
 GitHub Action:
 
 ```yaml
-- name: jd
-  uses: josephburnett/jd@v2.1.2
+    - name: Diff A and B
+      id: diff
+      uses: josephburnett/jd@v2.1.2
+      with:
+        args: a.json b.json
+    - name: Print the diff
+      run: echo '${{ steps.diff.outputs.output }}'
+    - name: Check the exit code
+      run: if [ "${{ steps.diff.outputs.exit_code }}" != "1" ]; then exit 1; fi
 ```
 
 To get the `jd` commandline utility:
