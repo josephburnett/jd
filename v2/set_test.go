@@ -316,7 +316,7 @@ func TestSetDiff(t *testing.T) {
 			`+ [2,1,4]`,
 		),
 	}, {
-		name: "nested set diff",
+		name: "pod set diff regression", // github.com/josephburnett/jd/issues/82
 		options: m(
 			SET,
 			SetKeys("name"),
@@ -327,6 +327,25 @@ func TestSetDiff(t *testing.T) {
 			`@ ["spec","containers",{"name":"nginx"},"ports",{"name":null},"containerPort"]`,
 			`- 80`,
 			`+ 8080`,
+		),
+	}, {
+		name: "complex set key diff",
+		options: m(
+			SET,
+			SetKeys("a", "b"),
+		),
+		a: `[{"a":1,"b":2,"c":3},{"a":1,"b":5,"c":3},{"a":1,"c":6}]`,
+		b: `[{"a":1,"b":2,"c":4},{"a":1,"b":5,"c":4},{"a":1,"c":7}]`,
+		want: ss(
+			`@ [{"a":1,"b":5},"c"]`,
+			`- 3`,
+			`+ 4`,
+			`@ [{"a":1,"b":2},"c"]`,
+			`- 3`,
+			`+ 4`,
+			`@ [{"a":1,"b":null},"c"]`,
+			`- 6`,
+			`+ 7`,
 		),
 	}}
 
