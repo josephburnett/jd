@@ -155,7 +155,7 @@ func (s1 jsonSet) diff(
 			o2, isObject2 := n2.(jsonObject)
 			if isObject1 && isObject2 {
 				// Sub diff objects with same identity.
-				p := append(path.clone(), PathSetKeys(o1))
+				p := append(path.clone(), newPathSetKeys(o1, options))
 				subDiff := o1.diff(o2, p, options, strategy)
 				d = append(d, subDiff...)
 			}

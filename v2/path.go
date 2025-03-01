@@ -20,6 +20,23 @@ func (_ PathMultiset) isPathElement()     {}
 func (_ PathSetKeys) isPathElement()      {}
 func (_ PathMultisetKeys) isPathElement() {}
 
+func newPathSetKeys(o jsonObject, options []Option) PathSetKeys {
+	setKeys, ok := getOption[setKeysOption](options)
+	if !ok || setKeys == nil {
+		return PathSetKeys(o)
+	}
+	key := newJsonObject()
+	for _, k := range *setKeys {
+		v, ok := o[k]
+		if ok {
+			key[k] = v
+		} else {
+			key[k] = jsonNull{}
+		}
+	}
+	return PathSetKeys(key)
+}
+
 type Path []PathElement
 
 func NewPath(n JsonNode) (Path, error) {

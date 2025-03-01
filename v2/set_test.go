@@ -315,6 +315,19 @@ func TestSetDiff(t *testing.T) {
 			`@ []`,
 			`+ [2,1,4]`,
 		),
+	}, {
+		name: "nested set diff",
+		options: m(
+			SET,
+			SetKeys("name"),
+		),
+		a: `{"apiVersion":"v1","kind":"Pod","metadata":{"name":"nginx"},"spec":{"containers":[{"name":"nginx","image":"nginx:1.14.2","ports":[{"containerPort":80}]}]}}`,
+		b: `{"apiVersion":"v1","kind":"Pod","metadata":{"name":"nginx"},"spec":{"containers":[{"name":"nginx","image":"nginx:1.14.2","ports":[{"containerPort":8080}]}]}}`,
+		want: ss(
+			`@ ["spec","containers",{"name":"nginx"},"ports",{"name":null},"containerPort"]`,
+			`- 80`,
+			`+ 8080`,
+		),
 	}}
 
 	for _, c := range cases {
