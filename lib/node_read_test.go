@@ -18,14 +18,14 @@ func TestUnmarshal(t *testing.T) {
 func checkUnmarshal(t *testing.T, s string, n JsonNode) {
 	node, err := ReadJsonString(s)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("%v", err.Error())
 	}
 	if !n.Equals(node) {
 		t.Errorf("ReadJsonString(%v) = %v. Want %v.", s, node, n)
 	}
 	node, err = ReadYamlString(s)
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatalf("%v", err.Error())
 	}
 	if !n.Equals(node) {
 		t.Errorf("ReadYamlString(%v) = %v. Want %v.", s, node, n)
@@ -110,7 +110,7 @@ func checkReadDiff(t *testing.T, d Diff, diffLines ...string) {
 	}
 	actual, err := readDiff(want)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err.Error())
 	}
 	got := actual.Render()
 	if got != want {

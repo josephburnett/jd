@@ -8,7 +8,7 @@ import (
 func checkJson(ctx *testContext, a, b string) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	nodeAJson := nodeA.Json(ctx.options...)
 	if nodeAJson != b {
@@ -19,11 +19,11 @@ func checkJson(ctx *testContext, a, b string) {
 func checkEqual(ctx *testContext, a, b string) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	nodeB, err := ReadJsonString(b)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	if !nodeA.Equals(nodeB, ctx.options...) {
 		ctx.t.Errorf("%v.Equals(%v) == false. Want true.", nodeA, nodeB)
@@ -42,11 +42,11 @@ func checkEqual(ctx *testContext, a, b string) {
 func checkNotEqual(ctx *testContext, a, b string) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	nodeB, err := ReadJsonString(b)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	if nodeA.Equals(nodeB, ctx.options...) {
 		ctx.t.Errorf("nodeA.Equals(nodeB) == true. Want false.")
@@ -59,11 +59,11 @@ func checkNotEqual(ctx *testContext, a, b string) {
 func checkHash(ctx *testContext, a, b string, wantSame bool) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
-		ctx.t.Fatalf(err.Error())
+		ctx.t.Fatalf("%v", err.Error())
 	}
 	nodeB, err := ReadJsonString(b)
 	if err != nil {
-		ctx.t.Fatalf(err.Error())
+		ctx.t.Fatalf("%v", err.Error())
 	}
 	hashA := nodeA.hashCode(ctx.options)
 	hashB := nodeB.hashCode(ctx.options)
@@ -80,11 +80,11 @@ func checkHash(ctx *testContext, a, b string, wantSame bool) {
 func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
-		ctx.t.Fatalf(err.Error())
+		ctx.t.Fatalf("%v", err.Error())
 	}
 	nodeB, err := ReadJsonString(b)
 	if err != nil {
-		ctx.t.Fatalf(err.Error())
+		ctx.t.Fatalf("%v", err.Error())
 	}
 	diff := ""
 	for _, dl := range diffLines {
@@ -104,19 +104,19 @@ func checkPatch(ctx *testContext, a, e string, diffLines ...string) {
 	}
 	initial, err := ReadJsonString(a)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	diff, err := ReadDiffString(diffString)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	expect, err := ReadJsonString(e)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	b, err := initial.Patch(diff)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	if !expect.Equals(b, ctx.options...) {
 		ctx.t.Errorf("%v.Patch(%v) = %v. Want %v.",
@@ -131,11 +131,11 @@ func checkPatchError(ctx *testContext, a string, diffLines ...string) {
 	}
 	initial, err := ReadJsonString(a)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	diff, err := ReadDiffString(diffString)
 	if err != nil {
-		ctx.t.Errorf(err.Error())
+		ctx.t.Errorf("%v", err.Error())
 	}
 	b, err := initial.Patch(diff)
 	if b != nil {

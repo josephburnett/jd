@@ -45,24 +45,24 @@ func TestPatchJsonStringOrInteger(t *testing.T) {
 		diffString := strings.Join(tt.diff, "\n")
 		initial, err := ReadJsonString(tt.a)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Errorf("%v", err.Error())
 		}
 		diff, err := ReadDiffString(diffString)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Errorf("%v", err.Error())
 		}
 		expect, err := ReadJsonString(tt.b)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Errorf("%v", err.Error())
 		}
 		// Coerce to patch format so we'll create a jsonStringOrNumber object when reading the diff.
 		patchString, err := diff.RenderPatch()
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Errorf("%v", err.Error())
 		}
 		patchDiff, err := ReadPatchString(patchString)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Errorf("%v", err.Error())
 		}
 		b, err := initial.Patch(patchDiff)
 		if tt.wantError && err == nil {

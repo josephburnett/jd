@@ -67,7 +67,7 @@ func readDiff(s string) (Diff, error) {
 			allow(" ", "]", "^", "@")
 		}
 		if transitionErr != nil {
-			return errorAt(i, transitionErr.Error())
+			return errorAt(i, transitionErr)
 		}
 		// Process line.
 		switch header {
@@ -76,17 +76,17 @@ func readDiff(s string) (Diff, error) {
 				// Save the previous diff element.
 				err := checkDiffElement(de)
 				if err != nil {
-					return errorAt(i, err.Error())
+					return errorAt(i, err)
 				}
 				diff = append(diff, de)
 			}
 			n, err := ReadJsonString(dl[1:])
 			if err != nil {
-				return errorAt(i, "Invalid Metadata. %v", err.Error())
+				return errorfAt(i, "Invalid Metadata. %v", err.Error())
 			}
 			m, err := readMetadata(n)
 			if err != nil {
-				return errorAt(i, "Invalid Metadata. %v", err.Error())
+				return errorfAt(i, "Invalid Metadata. %v", err.Error())
 			}
 			de.Metadata = de.Metadata.merge(m)
 			state = META
@@ -95,17 +95,17 @@ func readDiff(s string) (Diff, error) {
 				// Save the previous diff element.
 				err := checkDiffElement(de)
 				if err != nil {
-					return errorAt(i, err.Error())
+					return errorAt(i, err)
 				}
 				diff = append(diff, de)
 			}
 			p, err := ReadJsonString(dl[1:])
 			if err != nil {
-				return errorAt(i, "Invalid path. %v", err.Error())
+				return errorfAt(i, "Invalid path. %v", err.Error())
 			}
 			path, err := NewPath(p)
 			if err != nil {
-				return errorAt(i, err.Error())
+				return errorAt(i, err)
 			}
 			de.Path = path
 			de.Before = []JsonNode{}
@@ -115,13 +115,13 @@ func readDiff(s string) (Diff, error) {
 			state = AT
 		case "[":
 			if state != AT {
-				return errorAt(i, "Invalid context. [ must appear immediately after @")
+				return errorfAt(i, "Invalid context. [ must appear immediately after @")
 			}
 			de.Before = append(de.Before, voidNode{})
 			state = BEFORE
 		case "]":
 			if state != REMOVE && state != ADD && state != AFTER {
-				return errorAt(i, "Invalid context. ] must appear at the end of the context")
+				return errorfAt(i, "Invalid context. ] must appear at the end of the context")
 			}
 			de.After = append(de.After, voidNode{})
 			state = AFTER
@@ -131,53 +131,53 @@ func readDiff(s string) (Diff, error) {
 				// Accumulate before context
 				b, err := ReadJsonString(dl[1:])
 				if err != nil {
-					return errorAt(i, "Invalid context. %v", err.Error())
+					return errorfAt(i, "Invalid context. %v", err.Error())
 				}
 				de.Before = append(de.Before, b)
 				state = BEFORE
 			case state == ADD || state == REMOVE || state == AFTER:
 				a, err := ReadJsonString(dl[1:])
 				if err != nil {
-					return errorAt(i, "Invalid context. %v", err.Error())
+					return errorfAt(i, "Invalid context. %v", err.Error())
 				}
 				de.After = append(de.After, a)
 				// Accumulate after context
 				state = AFTER
 			default:
-				return errorAt(i, "Invalid context. Must preceed or follow + or -")
+				return errorfAt(i, "Invalid context. Must preceed or follow + or -")
 			}
 		case "-":
 			v, err := ReadJsonString(dl[1:])
 			if err != nil {
-				return errorAt(i, "Invalid value. %v", err.Error())
+				return errorfAt(i, "Invalid value. %v", err.Error())
 			}
 			de.Remove = append(de.Remove, v)
 			state = REMOVE
 		case "+":
 			v, err := ReadJsonString(dl[1:])
 			if err != nil {
-				return errorAt(i, "Invalid value. %v", err.Error())
+				return errorfAt(i, "Invalid value. %v", err.Error())
 			}
 			de.Add = append(de.Add, v)
 			state = ADD
 		default:
-			errorAt(i, "Unexpected %v.", dl[0])
+			errorfAt(i, "Unexpected %v.", dl[0])
 		}
 	}
 	if state == META {
 		// ^ is not a valid terminal state.
-		return errorAt(len(diffLines), "Unexpected end of diff. Expecting ^ or @.")
+		return errorfAt(len(diffLines), "Unexpected end of diff. Expecting ^ or @.")
 	}
 	if state == AT {
 		// @ is not a valid terminal state.
-		return errorAt(len(diffLines), "Unexpected end of diff. Expecting - or +.")
+		return errorfAt(len(diffLines), "Unexpected end of diff. Expecting - or +.")
 	}
 	if state != INIT {
 		// Save the last diff element.
 		// Empty string diff is valid so state could be INIT
 		err := checkDiffElement(de)
 		if err != nil {
-			return errorAt(len(diffLines), err.Error())
+			return errorAt(len(diffLines), err)
 		}
 		diff = append(diff, de)
 	}
@@ -200,7 +200,11 @@ func checkDiffElement(de DiffElement) error {
 	return nil
 }
 
-func errorAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
+func errorAt(lineZeroIndex int, err error) (Diff, error) {
+	return errorfAt(lineZeroIndex, "%v", err.Error())
+}
+
+func errorfAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
 	line := lineZeroIndex + 1
 	e := fmt.Sprintf(err, i...)
 	return nil, fmt.Errorf("invalid diff at line %v. %v", line, e)

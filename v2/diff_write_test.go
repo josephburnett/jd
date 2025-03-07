@@ -32,11 +32,11 @@ func checkDiffRender(t *testing.T, a, b string, diffLines ...string) {
 	}
 	aJson, err := ReadJsonString(a)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err.Error())
 	}
 	bJson, err := ReadJsonString(b)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err.Error())
 	}
 	d := aJson.diff(bJson, nil, []Option{}, strictPatchStrategy).Render()
 	if d != diff {

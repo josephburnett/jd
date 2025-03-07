@@ -51,11 +51,11 @@ func main() {
 	}
 	if *port != 0 {
 		if len(flag.Args()) > 0 {
-			errorAndExit("The web UI (-port) does not support arguments")
+			errorfAndExit("The web UI (-port) does not support arguments")
 		}
 		err := serveWeb(strconv.Itoa(*port))
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		return
 	}
@@ -70,12 +70,12 @@ func main() {
 		metadata, err = parseMetadata()
 	}
 	if err != nil {
-		errorAndExit(err.Error())
+		errorAndExit(err)
 	}
 	if *gitDiffDriver {
 		err := printGitDiffDriver(options)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		os.Exit(0)
 		return
@@ -88,7 +88,7 @@ func main() {
 		mode = translateMode
 	}
 	if *patch && *translate != "" {
-		errorAndExit("Patch and translate modes cannot be used together.")
+		errorfAndExit("Patch and translate modes cannot be used together.")
 	}
 	var a, b string
 	switch mode {
@@ -260,7 +260,7 @@ func printUsageAndExit() {
 func printDiff(a, b string, metadata []jd.Metadata) {
 	str, haveDiff, err := diff(a, b, metadata)
 	if err != nil {
-		errorAndExit(err.Error())
+		errorAndExit(err)
 	}
 	if *output == "" {
 		fmt.Print(str)
@@ -276,7 +276,7 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 func printDiffV2(a, b string, options []v2.Option) {
 	str, haveDiff, err := diffV2(a, b, options)
 	if err != nil {
-		errorAndExit(err.Error())
+		errorAndExit(err)
 	}
 	if *output == "" {
 		fmt.Print(str)
@@ -427,10 +427,10 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 	case "merge":
 		diff, err = jd.ReadMergeString(p)
 	default:
-		errorAndExit(fmt.Sprintf("Invalid format: %q", *format))
+		errorfAndExit("Invalid format: %q", *format)
 	}
 	if err != nil {
-		errorAndExit(err.Error())
+		errorAndExit(err)
 	}
 	var aNode jd.JsonNode
 	if *yaml {
@@ -439,11 +439,11 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 		aNode, err = jd.ReadJsonString(a)
 	}
 	if err != nil {
-		errorAndExit(err.Error())
+		errorAndExit(err)
 	}
 	bNode, err := aNode.Patch(diff)
 	if err != nil {
-		errorAndExit(err.Error())
+		errorAndExit(err)
 	}
 	var out string
 	if *yaml {
@@ -470,10 +470,10 @@ func printPatchV2(p, a string, options []v2.Option) {
 	case "merge":
 		diff, err = v2.ReadMergeString(p)
 	default:
-		errorAndExit(fmt.Sprintf("Invalid format: %q", *format))
+		errorfAndExit("Invalid format: %q", *format)
 	}
 	if err != nil {
-		errorAndExit(err.Error())
+		errorAndExit(err)
 	}
 	var aNode v2.JsonNode
 	if *yaml {
@@ -482,11 +482,11 @@ func printPatchV2(p, a string, options []v2.Option) {
 		aNode, err = v2.ReadJsonString(a)
 	}
 	if err != nil {
-		errorAndExit(err.Error())
+		errorAndExit(err)
 	}
 	bNode, err := aNode.Patch(diff)
 	if err != nil {
-		errorAndExit(err.Error())
+		errorAndExit(err)
 	}
 	var out string
 	if *yaml {
@@ -508,47 +508,47 @@ func printTranslation(a string) {
 	case "jd2patch":
 		diff, err := jd.ReadDiffString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out, err = diff.RenderPatch()
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 	case "patch2jd":
 		patch, err := jd.ReadPatchString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out = patch.Render()
 	case "jd2merge":
 		diff, err := jd.ReadDiffString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out, err = diff.RenderMerge()
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 	case "merge2jd":
 		patch, err := jd.ReadMergeString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out = patch.Render()
 	case "json2yaml":
 		node, err := jd.ReadJsonString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out = node.Yaml()
 	case "yaml2json":
 		node, err := jd.ReadYamlString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out = node.Json()
 	default:
-		errorAndExit("unsupported translation: %q", *translate)
+		errorfAndExit("unsupported translation: %q", *translate)
 	}
 	if *output == "" {
 		fmt.Print(out)
@@ -564,47 +564,47 @@ func printTranslationV2(a string) {
 	case "jd2patch":
 		diff, err := v2.ReadDiffString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out, err = diff.RenderPatch()
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 	case "patch2jd":
 		patch, err := v2.ReadPatchString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out = patch.Render()
 	case "jd2merge":
 		diff, err := v2.ReadDiffString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out, err = diff.RenderMerge()
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 	case "merge2jd":
 		patch, err := v2.ReadMergeString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out = patch.Render()
 	case "json2yaml":
 		node, err := v2.ReadJsonString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out = node.Yaml()
 	case "yaml2json":
 		node, err := v2.ReadYamlString(a)
 		if err != nil {
-			errorAndExit(err.Error())
+			errorAndExit(err)
 		}
 		out = node.Json()
 	default:
-		errorAndExit("unsupported translation: %q", *translate)
+		errorfAndExit("unsupported translation: %q", *translate)
 	}
 	if *output == "" {
 		fmt.Print(out)
@@ -614,7 +614,11 @@ func printTranslationV2(a string) {
 	os.Exit(0)
 }
 
-func errorAndExit(msg string, args ...interface{}) {
+func errorAndExit(err error) {
+	errorfAndExit("%v", err.Error())
+}
+
+func errorfAndExit(msg string, args ...interface{}) {
 	log.Printf(msg, args...)
 	os.Exit(2)
 }
@@ -641,15 +645,15 @@ func readStdin() string {
 func runAsGitHubAction() {
 	gitHubOutput := os.Getenv("GITHUB_OUTPUT")
 	if gitHubOutput == "" {
-		errorAndExit("GITHUB_OUTPUT no set. Are you running in GitHub CI?")
+		errorfAndExit("GITHUB_OUTPUT no set. Are you running in GitHub CI?")
 	}
 	file, err := os.OpenFile(gitHubOutput, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		errorAndExit(err.Error())
+		errorAndExit(err)
 	}
 	defer file.Close()
 	if len(os.Args) < 2 {
-		errorAndExit("Running GitHub Action requires args")
+		errorfAndExit("Running GitHub Action requires args")
 	}
 	// Actions do not accept list inputs so args must be string split.
 	args := strings.Fields(os.Args[1])

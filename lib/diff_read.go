@@ -41,19 +41,19 @@ func readDiff(s string) (Diff, error) {
 		switch state {
 		case INIT:
 			if header != "@" {
-				return errorAt(i, "Unexpected %c. Expecteding @.", dl[0])
+				return errorfAt(i, "Unexpected %c. Expecteding @.", dl[0])
 			}
 		case AT:
 			if header != "-" && header != "+" {
-				return errorAt(i, "Unexpected %c. Expecting - or +.", dl[0])
+				return errorfAt(i, "Unexpected %c. Expecting - or +.", dl[0])
 			}
 		case OLD:
 			if header != "@" && header != "-" && header != "+" {
-				return errorAt(i, "Unexpected %c. Expecting + or @.", dl[0])
+				return errorfAt(i, "Unexpected %c. Expecting + or @.", dl[0])
 			}
 		case NEW:
 			if header != "+" && header != "@" {
-				return errorAt(i, "Unexpected %c. Expecteding + or @.", dl[0])
+				return errorfAt(i, "Unexpected %c. Expecteding + or @.", dl[0])
 			}
 		}
 		// Process line.
@@ -63,17 +63,17 @@ func readDiff(s string) (Diff, error) {
 				// Save the previous diff element.
 				errString := checkDiffElement(de)
 				if errString != "" {
-					return errorAt(i, errString)
+					return errorfAt(i, "%v", errString)
 				}
 				diff = append(diff, de)
 			}
 			p, err := ReadJsonString(dl[1:])
 			if err != nil {
-				return errorAt(i, "Invalid path. %v", err.Error())
+				return errorfAt(i, "Invalid path. %v", err.Error())
 			}
 			pa, ok := p.(jsonArray)
 			if !ok {
-				return errorAt(i, "Invalid path. Want JSON list. Got %T.", p)
+				return errorfAt(i, "Invalid path. Want JSON list. Got %T.", p)
 			}
 			de = DiffElement{
 				Path:      path(pa).clone(),
@@ -84,31 +84,31 @@ func readDiff(s string) (Diff, error) {
 		case "-":
 			v, err := ReadJsonString(dl[1:])
 			if err != nil {
-				return errorAt(i, "Invalid value. %v", err.Error())
+				return errorfAt(i, "Invalid value. %v", err.Error())
 			}
 			de.OldValues = append(de.OldValues, v)
 			state = OLD
 		case "+":
 			v, err := ReadJsonString(dl[1:])
 			if err != nil {
-				return errorAt(i, "Invalid value. %v", err.Error())
+				return errorfAt(i, "Invalid value. %v", err.Error())
 			}
 			de.NewValues = append(de.NewValues, v)
 			state = NEW
 		default:
-			errorAt(i, "Unexpected %v.", dl[0])
+			errorfAt(i, "Unexpected %v.", dl[0])
 		}
 	}
 	if state == AT {
 		// @ is not a valid terminal state.
-		return errorAt(len(diffLines), "Unexpected end of diff. Expecting - or +.")
+		return errorfAt(len(diffLines), "Unexpected end of diff. Expecting - or +.")
 	}
 	if state != INIT {
 		// Save the last diff element.
 		// Empty string diff is valid so state could be INIT
 		errString := checkDiffElement(de)
 		if errString != "" {
-			return errorAt(len(diffLines), errString)
+			return errorfAt(len(diffLines), "%v", errString)
 		}
 		diff = append(diff, de)
 	}
@@ -126,7 +126,11 @@ func checkDiffElement(de DiffElement) string {
 	return ""
 }
 
-func errorAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
+func errorAt(lineZeroIndex int, err error) (Diff, error) {
+	return errorfAt(lineZeroIndex, "%v", err.Error())
+}
+
+func errorfAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
 	line := lineZeroIndex + 1
 	e := fmt.Sprintf(err, i...)
 	return nil, fmt.Errorf("invalid diff at line %v. %v", line, e)
