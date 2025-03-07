@@ -2,8 +2,6 @@ module github.com/josephburnett/jd
 
 go 1.23.0
 
-toolchain go1.24.0
-
 require (
 	github.com/go-openapi/jsonpointer v0.21.0
 	github.com/josephburnett/jd/v2 v2.0.0-00010101000000-000000000000
