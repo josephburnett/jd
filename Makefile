@@ -20,7 +20,7 @@ pack-web : build-web
 
 .PHONY : build-web
 build-web :
-	cp $$(go env GOROOT)/misc/wasm/wasm_exec.js web/assets/
+	cp $$(go env GOROOT)/lib/wasm/wasm_exec.js web/assets/
 	GOOS=js GOARCH=wasm go build -o web/assets/jd.wasm ./web/ui/main.go
 
 .PHONY : serve
