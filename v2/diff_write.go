@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	lcs "github.com/yudai/golcs"
 	"golang.org/x/exp/slices"
 )
 
@@ -22,6 +23,28 @@ func (d DiffElement) Render(opts ...Option) string {
 	b.WriteString("@ ")
 	b.Write([]byte(d.Path.JsonNode().Json()))
 	b.WriteString("\n")
+
+	// Check if this is a single string diff. If so, compute
+	// the common seqeuence for a character level diff.
+	var commonSequence []interface{}
+	isSingleStringDiff := false
+	if len(d.Remove) == 1 && len(d.Add) == 1 {
+		oldStr, oldOk := d.Remove[0].(jsonString)
+		newStr, newOk := d.Add[0].(jsonString)
+		if oldOk && newOk {
+			oldChars := make([]interface{}, len(string(oldStr)))
+			for i, c := range string(oldStr) {
+				oldChars[i] = c
+			}
+			newChars := make([]interface{}, len(string(newStr)))
+			for i, c := range string(newStr) {
+				newChars[i] = c
+			}
+			commonSequence = lcs.New(oldChars, newChars).Values()
+			isSingleStringDiff = true
+		}
+	}
+
 	for _, before := range d.Before {
 		if isVoid(before) {
 			b.WriteString("[\n")
@@ -36,40 +59,82 @@ func (d DiffElement) Render(opts ...Option) string {
 		}
 	}
 	for _, oldValue := range d.Remove {
-		if isColor {
-			b.WriteString(colorRed)
-		}
 		if !isVoid(oldValue) {
-			oldValueJson, err := json.Marshal(oldValue)
-			if err != nil {
-				panic(err)
+			if oldStr, ok := oldValue.(jsonString); ok && isSingleStringDiff {
+				// Color the string diff on character level
+				oldRunes := []rune(string(oldStr))
+				lcsIndex := 0
+				b.WriteString(`- "`)
+				for i := 0; i < len(oldRunes); i++ {
+					if lcsIndex < len(commonSequence) && oldRunes[i] == commonSequence[lcsIndex].(rune) {
+						b.WriteRune(oldRunes[i])
+						lcsIndex++
+					} else {
+						b.WriteString(colorRed)
+						b.WriteRune(oldRunes[i])
+						b.WriteString(colorDefault)
+					}
+				}
+				b.WriteString("\"\n")
+			} else {
+				if isColor {
+					b.WriteString(colorRed)
+				}
+				oldValueJson, err := json.Marshal(oldValue)
+				if err != nil {
+					panic(err)
+				}
+				b.WriteString("- ")
+				b.Write(oldValueJson)
+				b.WriteString("\n")
+				if isColor {
+					b.WriteString(colorDefault)
+				}
 			}
-			b.WriteString("- ")
-			b.Write(oldValueJson)
-			b.WriteString("\n")
-		}
-		if isColor {
-			b.WriteString(colorDefault)
 		}
 	}
 	for _, newValue := range d.Add {
-		if isColor {
-			b.WriteString(colorGreen)
-		}
 		if !isVoid(newValue) {
-			newValueJson, err := json.Marshal(newValue)
-			if err != nil {
-				panic(err)
+			if newStr, ok := newValue.(jsonString); ok && isSingleStringDiff {
+				// Color the string on character level
+				newRunes := []rune(string(newStr))
+				lcsIndex := 0
+				b.WriteString(`+ "`)
+				for i := 0; i < len(newRunes); i++ {
+					if lcsIndex < len(commonSequence) && newRunes[i] == commonSequence[lcsIndex].(rune) {
+						b.WriteRune(newRunes[i])
+						lcsIndex++
+					} else {
+						b.WriteString(colorGreen)
+						b.WriteRune(newRunes[i])
+						b.WriteString(colorDefault)
+					}
+				}
+				b.WriteString("\"\n")
+			} else {
+				if isColor {
+					b.WriteString(colorGreen)
+				}
+				newValueJson, err := json.Marshal(newValue)
+				if err != nil {
+					panic(err)
+				}
+				b.WriteString("+ ")
+				b.Write(newValueJson)
+				b.WriteString("\n")
+				if isColor {
+					b.WriteString(colorDefault)
+				}
 			}
-			b.WriteString("+ ")
-			b.Write(newValueJson)
-			b.WriteString("\n")
 		} else if isMerge {
 			// Merge deletion is writing void to a node.
+			if isColor {
+				b.WriteString(colorGreen)
+			}
 			b.WriteString("+\n")
-		}
-		if isColor {
-			b.WriteString(colorDefault)
+			if isColor {
+				b.WriteString(colorDefault)
+			}
 		}
 	}
 	for _, after := range d.After {
