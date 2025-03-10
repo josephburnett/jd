@@ -56,6 +56,10 @@ type precisionOption struct {
 	precision float64
 }
 
+func Precision(precision float64) Option {
+	return precisionOption{precision}
+}
+
 func (o precisionOption) isOption() {}
 func (o precisionOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]float64{
@@ -74,8 +78,12 @@ func (o precisionOption) UnmarshalJSON(b []byte) error {
 }
 
 type pathOption struct {
-	at  Path   `json:"at"`
-	opt Option `json:"opt"`
+	At  Path   `json:"at"`
+	Opt Option `json:"opt"`
+}
+
+func PathOption(at Path, opt Option) Option {
+	return pathOption{at, opt}
 }
 
 type detypedPathOption pathOption
@@ -91,6 +99,10 @@ func (o pathOption) UnmarshalJSON(b []byte) error {
 }
 
 type setKeysOption []string
+
+func SetKeys(keys ...string) Option {
+	return setKeysOption(keys)
+}
 
 func (o setKeysOption) isOption() {}
 func (o setKeysOption) MarshalJSON() ([]byte, error) {
@@ -156,14 +168,6 @@ var (
 	MULTISET = multisetOption{}
 	SET      = setOption{}
 )
-
-func SetKeys(keys ...string) Option {
-	return setKeysOption(keys)
-}
-
-func Precision(precision float64) Option {
-	return precisionOption{precision}
-}
 
 type patchStrategy string
 
