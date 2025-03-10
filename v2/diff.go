@@ -12,19 +12,13 @@ type DiffElement struct {
 	Metadata Metadata
 
 	// Path elements can be strings to index Objects, numbers to
-	// index Lists and objects to index Sets and Multisets. Path
-	// elements can be preceeded by an Array of Metadata strings to
-	// change how the structure is interpretted. Metadata in lower
-	// case applies to the following path element. Metadata in upper
-	// case applies to the rest of the path.
+	// index Lists and objects to index Sets and Multisets.
 	//
 	// For example:
 	//   ["foo","bar"]               // indexes to 1 in {"foo":{"bar":1}}
 	//   ["foo",0]                   // indexes to 1 in {"foo":[1]}
 	//   ["foo",{}]                  // indexes a set under "foo" in {"foo":[1]}
-	//   ["foo",["multiset"],{}]     // indexes a multiset under "foo" in {"foo":[1,1]}
 	//   ["foo",{"id":"bar"},"baz"]  // indexes to 1 in {"foo":[{"id":"bar","baz":1}]}
-	//   [["MERGE"],"foo","bar"]     // indexes to 1 in {"foo":{"bar":1}} with merge semantics
 	Path Path
 
 	// Before are the required context which should appear before

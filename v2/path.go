@@ -8,17 +8,21 @@ type PathElement interface {
 
 type PathIndex int
 type PathKey string
+type PathAllKeys struct{}
 type PathSet struct{}
 type PathMultiset struct{}
 type PathSetKeys map[string]JsonNode
 type PathMultisetKeys map[string]JsonNode
+type PathAllValues struct{}
 
 func (_ PathIndex) isPathElement()        {}
 func (_ PathKey) isPathElement()          {}
+func (_ PathAllKeys) isPathElement()      {}
 func (_ PathSet) isPathElement()          {}
 func (_ PathMultiset) isPathElement()     {}
 func (_ PathSetKeys) isPathElement()      {}
 func (_ PathMultisetKeys) isPathElement() {}
+func (_ PathAllValues) isPathElement()    {}
 
 func newPathSetKeys(o jsonObject, options []Option) PathSetKeys {
 	setKeys, ok := getOption[setKeysOption](options)
