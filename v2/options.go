@@ -7,11 +7,11 @@ import (
 
 type Option interface {
 	isOption()
-	MarshalJSON() ([]byte, error)
-	UnmarshalJSON([]byte) error
 }
 
 type mergeOption struct{}
+
+var MERGE = mergeOption{}
 
 func (o mergeOption) isOption() {}
 func (o mergeOption) MarshalJSON() ([]byte, error) {
@@ -20,9 +20,11 @@ func (o mergeOption) MarshalJSON() ([]byte, error) {
 func (o mergeOption) UnmarshalJSON(b []byte) error {
 	return unmarshalAsString("MERGE", b)
 }
-func (o mergeOption) string() string { return "MERGE" }
+func (o mergeOption) String() string { return "MERGE" }
 
 type setOption struct{}
+
+var SET = setOption{}
 
 func (o setOption) isOption() {}
 func (o setOption) MarshalJSON() ([]byte, error) {
@@ -34,6 +36,8 @@ func (o setOption) UnmarshalJSON(b []byte) error {
 
 type multisetOption struct{}
 
+var MULTISET = multisetOption{}
+
 func (o multisetOption) isOption() {}
 func (o multisetOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal("MULTISET")
@@ -43,6 +47,8 @@ func (o multisetOption) UnmarshalJSON(b []byte) error {
 }
 
 type colorOption struct{}
+
+var COLOR = colorOption{}
 
 func (o colorOption) isOption() {}
 func (o colorOption) MarshalJSON() ([]byte, error) {
@@ -59,15 +65,14 @@ type precisionOption struct {
 func Precision(precision float64) Option {
 	return precisionOption{precision}
 }
-
 func (o precisionOption) isOption() {}
 func (o precisionOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]float64{
-		"Precision": o.precision,
+		"precision": o.precision,
 	})
 }
 func (o precisionOption) UnmarshalJSON(b []byte) error {
-	f, err := unmarshalObjectKeyAs[float64](b, "Precision")
+	f, err := unmarshalObjectKeyAs[float64](b, "precision")
 	if err != nil {
 		return err
 	}
@@ -85,25 +90,13 @@ type pathOption struct {
 func PathOption(at Path, opt Option) Option {
 	return pathOption{at, opt}
 }
-
-type detypedPathOption pathOption
-
 func (o pathOption) isOption() {}
-func (o pathOption) MarshalJSON() ([]byte, error) {
-	d := detypedPathOption(o)
-	return json.Marshal(d)
-}
-func (o pathOption) UnmarshalJSON(b []byte) error {
-	var d detypedPathOption
-	return json.Unmarshal(b, &d)
-}
 
 type setKeysOption []string
 
 func SetKeys(keys ...string) Option {
 	return setKeysOption(keys)
 }
-
 func (o setKeysOption) isOption() {}
 func (o setKeysOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string][]string{
@@ -161,13 +154,6 @@ func unmarshalObjectKeyAs[T any](b []byte, key string) (*T, error) {
 	}
 	return &t, nil
 }
-
-var (
-	COLOR    = colorOption{}
-	MERGE    = mergeOption{}
-	MULTISET = multisetOption{}
-	SET      = setOption{}
-)
 
 type patchStrategy string
 
