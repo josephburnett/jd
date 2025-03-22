@@ -89,7 +89,7 @@ tidy :
 
 .PHONY : check-version
 check-version : check-env
-	@if ! grep -q $(JD_VERSION) v2/main.go; then                          \
+	@if ! grep -q $(JD_VERSION) v2/cmd/main.go; then                          \
 		echo "Set 'const version = $(JD_VERSION)' in main.go." ; \
 		false                                                   ; \
 	fi
