@@ -97,7 +97,6 @@ Options:
                "patch" (RFC 6902), "merge" (RFC 7386), "json" and "yaml".
                FORMATS are provided as a pair separated by "2". E.g.
                "yaml2json" or "jd2patch".
-  -v2          Use the JD v2 library and format.
 
 Examples:
   jd a.json b.json
