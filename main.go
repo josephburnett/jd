@@ -22,7 +22,7 @@ import (
 // WARNING: this is the v1 main.go. It is no longer being developed.
 // Please add new features to the v2 main.go located at /v2/cmd.
 
-const version = "HEAD"
+const version = "deprecated"
 
 var (
 	color         = flag.Bool("color", false, "Print color diff")
