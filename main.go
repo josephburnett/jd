@@ -16,8 +16,11 @@ import (
 
 	jd "github.com/josephburnett/jd/lib"
 	v2 "github.com/josephburnett/jd/v2"
-	"github.com/josephburnett/jd/web/serve"
+	"github.com/josephburnett/jd/v2/web/serve"
 )
+
+// WARNING: this is the v1 main.go. It is no longer being developed.
+// Please add new features to the v2 main.go located at /v2/cmd.
 
 const version = "HEAD"
 
@@ -34,7 +37,7 @@ var (
 	setkeys       = flag.String("setkeys", "", "Keys to identify set objects")
 	translate     = flag.String("t", "", "Translate mode")
 	ver           = flag.Bool("version", false, "Print version and exit")
-	libv2         = flag.Bool("v2", true, "Use the jd v2 library")
+	libv2         = flag.Bool("v2", true, "Use the jd v2 library (deprecated, has no effect)")
 	yaml          = flag.Bool("yaml", false, "Read and write YAML")
 )
 

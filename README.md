@@ -60,7 +60,7 @@ GitHub Action:
 
 To get the `jd` commandline utility:
 * run `brew install jd`, or
-* run `go install github.com/josephburnett/jd@latest`, or
+* run `go install github.com/josephburnett/jd/v2/cmd@latest`, or
 * visit https://github.com/josephburnett/jd/releases/latest and download the pre-built binary for your architecture/os, or
 * run in a Docker image `jd(){ docker run --rm -i -v $PWD:$PWD -w $PWD josephburnett/jd "$@"; }`.
 
