@@ -1,14 +1,14 @@
 .PHONY : build
 build : test pack-web
 	mkdir -p release
-	cd v2/cmd ; CGO_ENABLED=0 go build -tags include_web -o ../../release/jd main.go
+	cd v2/jd ; CGO_ENABLED=0 go build -tags include_web -o ../../release/jd main.go
 
 .PHONY : test
 test :
 	go test .
 	go test ./lib
 	cd v2 ; go test .
-	cd v2 ; go test ./cmd
+	cd v2 ; go test ./jd
 
 .PHONY : fuzz
 fuzz :
@@ -37,12 +37,12 @@ release-build : check-env check-version check-dirty build-all build-docker
 .PHONY : build-all
 build-all : test pack-web
 	mkdir -p release
-	cd v2/cmd ; GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-amd64-linux main.go
-	cd v2/cmd ; GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-amd64-darwin main.go
-	cd v2/cmd ; GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-amd64-windows.exe main.go
-	cd v2/cmd ; GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-arm64-linux main.go
-	cd v2/cmd ; GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-arm64-darwin main.go
-	cd v2/cmd ; GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-arm64-windows.exe main.go
+	cd v2/jd ; GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-amd64-linux main.go
+	cd v2/jd ; GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-amd64-darwin main.go
+	cd v2/jd ; GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-amd64-windows.exe main.go
+	cd v2/jd ; GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-arm64-linux main.go
+	cd v2/jd ; GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-arm64-darwin main.go
+	cd v2/jd ; GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-arm64-windows.exe main.go
 
 .PHONY : build-docker
 build-docker : check-env test
@@ -89,7 +89,7 @@ tidy :
 
 .PHONY : check-version
 check-version : check-env
-	@if ! grep -q $(JD_VERSION) v2/cmd/main.go; then                          \
+	@if ! grep -q $(JD_VERSION) v2/jd/main.go; then                          \
 		echo "Set 'const version = $(JD_VERSION)' in main.go." ; \
 		false                                                   ; \
 	fi
