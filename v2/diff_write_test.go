@@ -66,6 +66,11 @@ func TestDiffRender(t *testing.T) {
 		`- "foo"`,
 		`@ ["b"]`,
 		`+ "foo"`)
+	// Unicode string diff
+	checkDiffRender(t, `{"a":"こんにちは"}`, `{"a":"さようなら"}`,
+		`@ ["a"]`,
+		`- "こんにちは"`,
+		`+ "さようなら"`)
 }
 
 func checkDiffRender(t *testing.T, a, b string, diffLines ...string) {
@@ -118,48 +123,51 @@ func checkDiffRender(t *testing.T, a, b string, diffLines ...string) {
 
 // removeColoredParts returns the string with the colored parts (including the text between color codes) removed
 func removeColoredParts(s string) string {
-	result := ""
+	var result strings.Builder
 	inColor := false
-	for i := 0; i < len(s); i++ {
+	runes := []rune(s)
+
+	for i := 0; i < len(runes); i++ {
 		// detect a color code (starts coloring)
-		if !inColor && i+1 < len(s) && s[i] == '\033' && s[i+1] == '[' {
+		if !inColor && i+1 < len(runes) && runes[i] == '\033' && runes[i+1] == '[' {
 			inColor = true
 			i++ // skip '['
 			continue
 		}
 		// if not colored, add the character to the result
 		if !inColor {
-			result += string(s[i])
+			result.WriteRune(runes[i])
 		}
 		// detect the reset color code (ends coloring)
-		if inColor && i+1 < len(s) && s[i] == '[' && s[i+1] == '0' && i+2 < len(s) && s[i+2] == 'm' {
+		if inColor && i+2 < len(runes) && runes[i] == '[' && runes[i+1] == '0' && runes[i+2] == 'm' {
 			inColor = false
 			i += 2
 		}
 	}
-	return result
+	return result.String()
 }
 
 // stripAnsiCodes removes ANSI color escape sequences from a string
 func stripAnsiCodes(s string) string {
-	result := ""
+	var result strings.Builder
 	inEscape := false
+	runes := []rune(s)
 
-	for i := 0; i < len(s); i++ {
-		if !inEscape && i+1 < len(s) && s[i] == '\033' && s[i+1] == '[' {
+	for i := 0; i < len(runes); i++ {
+		if !inEscape && i+1 < len(runes) && runes[i] == '\033' && runes[i+1] == '[' {
 			inEscape = true
 			i++ // skip the '['
 			continue
 		}
 		if inEscape {
-			if s[i] == 'm' {
+			if runes[i] == 'm' {
 				inEscape = false
 			}
 			continue
 		}
-		result += string(s[i])
+		result.WriteRune(runes[i])
 	}
-	return result
+	return result.String()
 }
 
 func TestDiffRenderPatch(t *testing.T) {

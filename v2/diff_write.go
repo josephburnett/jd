@@ -51,12 +51,15 @@ func (d DiffElement) Render(opts ...Option) string {
 		oldStr, oldOk := d.Remove[0].(jsonString)
 		newStr, newOk := d.Add[0].(jsonString)
 		if oldOk && newOk {
-			oldChars := make([]interface{}, len(string(oldStr)))
-			for i, c := range string(oldStr) {
+			oldRunes := []rune(oldStr)
+			newRunes := []rune(newStr)
+
+			oldChars := make([]interface{}, len(oldRunes))
+			for i, c := range oldRunes {
 				oldChars[i] = c
 			}
-			newChars := make([]interface{}, len(string(newStr)))
-			for i, c := range string(newStr) {
+			newChars := make([]interface{}, len(newRunes))
+			for i, c := range newRunes {
 				newChars[i] = c
 			}
 			commonSequence = lcs.New(oldChars, newChars).Values()
