@@ -26,7 +26,7 @@ build-web :
 
 .PHONY : serve
 serve : pack-web
-	cd v2 ; go run -tags include_web main.go -port 8080
+	cd v2 ; go run -tags include_web jd/main.go -port 8080
 
 .PHONY : release-build
 release-build : check-env check-version check-dirty build-all build-docker
