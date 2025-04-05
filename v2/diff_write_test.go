@@ -147,29 +147,6 @@ func removeColoredParts(s string) string {
 	return result.String()
 }
 
-// stripAnsiCodes removes ANSI color escape sequences from a string
-func stripAnsiCodes(s string) string {
-	var result strings.Builder
-	inEscape := false
-	runes := []rune(s)
-
-	for i := 0; i < len(runes); i++ {
-		if !inEscape && i+1 < len(runes) && runes[i] == '\033' && runes[i+1] == '[' {
-			inEscape = true
-			i++ // skip the '['
-			continue
-		}
-		if inEscape {
-			if runes[i] == 'm' {
-				inEscape = false
-			}
-			continue
-		}
-		result.WriteRune(runes[i])
-	}
-	return result.String()
-}
-
 func TestDiffRenderPatch(t *testing.T) {
 	testCases := []struct {
 		diff    string

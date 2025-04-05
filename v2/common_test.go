@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -174,4 +175,11 @@ func newTestContext(t *testing.T) *testContext {
 func (tc *testContext) withOptions(options ...Option) *testContext {
 	tc.options = append(tc.options, options...)
 	return tc
+}
+
+// stripAnsiCodes removes ANSI color escape sequences from a string
+func stripAnsiCodes(input string) string {
+	// Regular expression to match ANSI escape codes
+	re := regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
+	return re.ReplaceAllString(input, "")
 }

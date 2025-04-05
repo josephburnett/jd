@@ -77,6 +77,8 @@ func fuzz(t *testing.T, aStr, bStr string) {
 	}, {
 		"jd", "mset",
 	}, {
+		"jd", "color",
+	}, {
 		"patch", "list",
 	}, {
 		"merge", "list",
@@ -103,6 +105,8 @@ func fuzz(t *testing.T, aStr, bStr string) {
 					options = append(options, setOption{})
 				case "mset":
 					options = append(options, multisetOption{})
+				case "color":
+					options = append(options, COLOR)
 				default: // list
 				}
 			case "merge":
@@ -124,6 +128,9 @@ func fuzz(t *testing.T, aStr, bStr string) {
 			switch format[0] {
 			case "jd":
 				diffABStr = d.Render(options...)
+				if format[1] == "color" {
+					diffABStr = stripAnsiCodes(diffABStr)
+				}
 				diffAB, err = ReadDiffString(diffABStr)
 			case "patch":
 				diffABStr, err = d.RenderPatch()
