@@ -15,22 +15,26 @@ const (
 	colorGreen   = "\033[32m"
 )
 
-// colorStringDiff returns a colored string diff where characters not in the common sequence
-// are colored with the provided color code
-func colorStringDiff(str string, commonSequence []interface{}, colorCode string) string {
+// colorStringDiff renders a string as JSON, adding the provided color
+// around all runes not in the common sequence of runes.
+func colorStringMarshal(str jsonString, commonSequence []any, colorCode string) string {
+	sJson, _ := json.Marshal(str)
+	// Strip enclosing quotes which are not part of the common sequence.
+	sRaw := string(sJson)[1 : len(sJson)-1]
 	var b bytes.Buffer
-	runes := []rune(str)
+	b.WriteRune('"')
 	lcsIndex := 0
-	for i := 0; i < len(runes); i++ {
-		if lcsIndex < len(commonSequence) && runes[i] == commonSequence[lcsIndex].(rune) {
-			b.WriteRune(runes[i])
+	for _, r := range sRaw {
+		if lcsIndex < len(commonSequence) && r == commonSequence[lcsIndex] {
+			b.WriteRune(r)
 			lcsIndex++
 		} else {
 			b.WriteString(colorCode)
-			b.WriteRune(runes[i])
+			b.WriteRune(r)
 			b.WriteString(colorDefault)
 		}
 	}
+	b.WriteRune('"')
 	return b.String()
 }
 
@@ -45,24 +49,21 @@ func (d DiffElement) Render(opts ...Option) string {
 
 	// Check if this is a single string diff. If so, compute the common sequence for a character
 	// level diff.
-	var commonSequence []interface{}
+	var commonSequence []any
 	isSingleStringDiff := false
 	if len(d.Remove) == 1 && len(d.Add) == 1 {
 		oldStr, oldOk := d.Remove[0].(jsonString)
 		newStr, newOk := d.Add[0].(jsonString)
 		if oldOk && newOk {
-			oldRunes := []rune(oldStr)
-			newRunes := []rune(newStr)
-
-			oldChars := make([]interface{}, len(oldRunes))
-			for i, c := range oldRunes {
-				oldChars[i] = c
+			oldAny := []any{}
+			for _, c := range oldStr {
+				oldAny = append(oldAny, c)
 			}
-			newChars := make([]interface{}, len(newRunes))
-			for i, c := range newRunes {
-				newChars[i] = c
+			newAny := []any{}
+			for _, c := range newStr {
+				newAny = append(newAny, c)
 			}
-			commonSequence = lcs.New(oldChars, newChars).Values()
+			commonSequence = lcs.New(oldAny, newAny).Values()
 			isSingleStringDiff = true
 		}
 	}
@@ -85,10 +86,10 @@ func (d DiffElement) Render(opts ...Option) string {
 			continue
 		}
 		if isSingleStringDiff && isColor {
-			oldStr := string(oldValue.(jsonString))
-			b.WriteString("- \"")
-			b.WriteString(colorStringDiff(oldStr, commonSequence, colorRed))
-			b.WriteString("\"\n")
+			oldStr := oldValue.(jsonString)
+			b.WriteString("- ")
+			b.WriteString(colorStringMarshal(oldStr, commonSequence, colorRed))
+			b.WriteString("\n")
 		} else {
 			if isColor {
 				b.WriteString(colorRed)
@@ -120,10 +121,10 @@ func (d DiffElement) Render(opts ...Option) string {
 			continue
 		}
 		if isSingleStringDiff && isColor {
-			newStr := string(newValue.(jsonString))
-			b.WriteString("+ \"")
-			b.WriteString(colorStringDiff(newStr, commonSequence, colorGreen))
-			b.WriteString("\"\n")
+			newStr := newValue.(jsonString)
+			b.WriteString("+ ")
+			b.WriteString(colorStringMarshal(newStr, commonSequence, colorGreen))
+			b.WriteString("\n")
 		} else {
 			if isColor {
 				b.WriteString(colorGreen)
