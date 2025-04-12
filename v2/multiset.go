@@ -21,8 +21,9 @@ func (a jsonMultiset) raw() interface{} {
 	return jsonArray(a).raw()
 }
 
-func (a1 jsonMultiset) Equals(n JsonNode, options ...Option) bool {
-	n = dispatch(n, options)
+func (a1 jsonMultiset) Equals(n JsonNode, opts ...Option) bool {
+	o := refine(&options{retain: opts}, nil)
+	n = dispatch(n, o)
 	a2, ok := n.(jsonMultiset)
 	if !ok {
 		return false
@@ -30,17 +31,17 @@ func (a1 jsonMultiset) Equals(n JsonNode, options ...Option) bool {
 	if len(a1) != len(a2) {
 		return false
 	}
-	if a1.hashCode(options) == a2.hashCode(options) {
+	if a1.hashCode(options) == a2.hashCode(o) {
 		return true
 	} else {
 		return false
 	}
 }
 
-func (a jsonMultiset) hashCode(options []Option) [8]byte {
+func (a jsonMultiset) hashCode(opts *options) [8]byte {
 	h := make(hashCodes, 0, len(a))
 	for _, v := range a {
-		h = append(h, v.hashCode(options))
+		h = append(h, v.hashCode(opts))
 	}
 	sort.Sort(h)
 	b := make([]byte, 0, len(a)*8)
@@ -50,14 +51,15 @@ func (a jsonMultiset) hashCode(options []Option) [8]byte {
 	return hash(b)
 }
 
-func (a jsonMultiset) Diff(n JsonNode, options ...Option) Diff {
-	return a.diff(n, nil, options, getPatchStrategy(options))
+func (a jsonMultiset) Diff(n JsonNode, opts ...Option) Diff {
+	o := refine(&options{retain: opts}, nil)
+	return a.diff(n, nil, o, getPatchStrategy(opts))
 }
 
 func (a1 jsonMultiset) diff(
 	n JsonNode,
 	path Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)

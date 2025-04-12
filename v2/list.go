@@ -22,8 +22,9 @@ func (l jsonList) raw() interface{} {
 	return jsonArray(l).raw()
 }
 
-func (l1 jsonList) Equals(n JsonNode, options ...Option) bool {
-	n2 := dispatch(n, options)
+func (l1 jsonList) Equals(n JsonNode, opts ...Option) bool {
+	o := refine(&options{retain: opts}, nil)
+	n2 := dispatch(n, o)
 	l2, ok := n2.(jsonList)
 	if !ok {
 		return false
@@ -40,23 +41,24 @@ func (l1 jsonList) Equals(n JsonNode, options ...Option) bool {
 	return true
 }
 
-func (l jsonList) hashCode(options []Option) [8]byte {
+func (l jsonList) hashCode(opts *options) [8]byte {
 	b := []byte{0xF5, 0x18, 0x0A, 0x71, 0xA4, 0xC4, 0x03, 0xF3} // random bytes
 	for _, n := range l {
-		h := n.hashCode(options)
+		h := n.hashCode(opts)
 		b = append(b, h[:]...)
 	}
 	return hash(b)
 }
 
-func (l jsonList) Diff(n JsonNode, options ...Option) Diff {
-	return l.diff(n, make(Path, 0), options, getPatchStrategy(options))
+func (l jsonList) Diff(n JsonNode, opts ...Option) Diff {
+	o := refine(&options{retain: opts}, nil)
+	return l.diff(n, o, getPatchStrategy(opts))
 }
 
 func (a jsonList) diff(
 	n JsonNode,
 	path Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	b, ok := n.(jsonList)

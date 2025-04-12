@@ -3,7 +3,7 @@ package jd
 func diff(
 	a, b JsonNode,
 	p Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)

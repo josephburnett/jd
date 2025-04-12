@@ -25,21 +25,22 @@ func (n jsonNull) Equals(node JsonNode, options ...Option) bool {
 	}
 }
 
-func (n jsonNull) hashCode(_ []Option) [8]byte {
+func (n jsonNull) hashCode(_ *options) [8]byte {
 	return hash([]byte{0xFE, 0x73, 0xAB, 0xCC, 0xE6, 0x32, 0xE0, 0x88}) // random bytes
 }
 
-func (n jsonNull) Diff(node JsonNode, options ...Option) Diff {
-	return n.diff(node, make(Path, 0), options, getPatchStrategy(options))
+func (n jsonNull) Diff(node JsonNode, opts ...Option) Diff {
+	o := refine(&options{retain: opts}, nil)
+	return n.diff(node, make(Path, 0), o, getPatchStrategy(opts))
 }
 
 func (n jsonNull) diff(
 	node JsonNode,
 	path Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
-	return diff(n, node, path, options, strategy)
+	return diff(n, node, path, opts, strategy)
 }
 
 func (n jsonNull) Patch(d Diff) (JsonNode, error) {

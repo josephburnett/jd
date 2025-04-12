@@ -30,9 +30,9 @@ func (a1 jsonArray) Equals(n JsonNode, options ...Option) bool {
 	return n1.Equals(n2, options...)
 }
 
-func (a jsonArray) hashCode(options []Option) [8]byte {
-	n := dispatch(a, options)
-	return n.hashCode(options)
+func (a jsonArray) hashCode(opts *options) [8]byte {
+	n := dispatch(a, opts)
+	return n.hashCode(opts)
 }
 
 func (a jsonArray) Diff(n JsonNode, options ...Option) Diff {
@@ -45,12 +45,12 @@ func (a jsonArray) Diff(n JsonNode, options ...Option) Diff {
 func (a jsonArray) diff(
 	n JsonNode,
 	path Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
-	n1 := dispatch(a, options)
-	n2 := dispatch(n, options)
-	return n1.diff(n2, path, options, strategy)
+	n1 := dispatch(a, opts)
+	n2 := dispatch(n, opts)
+	return n1.diff(n2, path, opts, strategy)
 }
 
 func (a jsonArray) Patch(d Diff) (JsonNode, error) {

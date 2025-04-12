@@ -283,10 +283,10 @@ func getPatchStrategy(options []Option) patchStrategy {
 	return strictPatchStrategy
 }
 
-func dispatch(n JsonNode, options []Option) JsonNode {
+func dispatch(n JsonNode, opts *options) JsonNode {
 	switch n := n.(type) {
 	case jsonArray:
-		for _, o := range options {
+		for _, o := range opts.apply {
 			switch o.(type) {
 			case setOption, setKeysOption:
 				return jsonSet(n)
@@ -304,7 +304,7 @@ type options struct {
 	retain []Option
 }
 
-func (o *options) recurse(p PathElement) *options {
+func refine(o *options, p PathElement) *options {
 	var apply, retain []Option
 	// Only recurse on retained options. Applied options are consumed.
 	for _, o := range o.retain {
@@ -329,6 +329,7 @@ func (o *options) recurse(p PathElement) *options {
 					leaf = true
 				}
 			}
+
 			if leaf {
 				if len(o.At) > 0 && o.At[0] != p {
 					// Ignore options targetting other paths.
@@ -337,13 +338,20 @@ func (o *options) recurse(p PathElement) *options {
 				// Apply payload of options.
 				apply = append(apply, o.Then...)
 			}
-			// Consume one element of path and retain.
-			if len(o.At) == 0 {
+			// Ignore invalid case
+			if len(o.At) == 0 && p != nil {
 				continue
 			}
+			// Retain options to be used later.
 			if !leaf {
+				var nextAt Path
+				if p == nil {
+					nextAt = o.At
+				} else {
+					nextAt = o.At[1:]
+				}
 				retain = append(retain, pathOption{
-					At:   o.At[1:],
+					At:   nextAt,
 					Then: o.Then,
 				})
 			}

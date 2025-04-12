@@ -36,24 +36,25 @@ func (n1 jsonNumber) Equals(node JsonNode, options ...Option) bool {
 	return math.Abs(float64(n1)-float64(n2)) <= precision
 }
 
-func (n jsonNumber) hashCode(options []Option) [8]byte {
+func (n jsonNumber) hashCode(opts *options) [8]byte {
 	a := make([]byte, 0, 8)
 	b := bytes.NewBuffer(a)
 	binary.Write(b, binary.LittleEndian, n)
 	return hash(b.Bytes())
 }
 
-func (n jsonNumber) Diff(node JsonNode, options ...Option) Diff {
-	return n.diff(node, make(Path, 0), options, getPatchStrategy(options))
+func (n jsonNumber) Diff(node JsonNode, opts ...Option) Diff {
+	o := refine(&options{retain: opts}, nil)
+	return n.diff(node, make(Path, 0), o, getPatchStrategy(opts))
 }
 
 func (n jsonNumber) diff(
 	node JsonNode,
 	path Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
-	return diff(n, node, path, options, strategy)
+	return diff(n, node, path, opts, strategy)
 }
 
 func (n jsonNumber) Patch(d Diff) (JsonNode, error) {

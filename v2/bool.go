@@ -24,7 +24,7 @@ func (b1 jsonBool) Equals(n JsonNode, options ...Option) bool {
 	return b1 == b2
 }
 
-func (b jsonBool) hashCode(_ []Option) [8]byte {
+func (b jsonBool) hashCode(_ *options) [8]byte {
 	if b {
 		return [8]byte{0x24, 0x6B, 0xE3, 0xE4, 0xAF, 0x59, 0xDC, 0x1C} // Randomly chosen bytes
 	} else {
@@ -40,7 +40,7 @@ func (b jsonBool) Diff(n JsonNode, options ...Option) Diff {
 func (b jsonBool) diff(
 	n JsonNode,
 	path Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	return diff(b, n, path, options, strategy)
