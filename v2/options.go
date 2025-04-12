@@ -9,13 +9,109 @@ type Option interface {
 	isOption()
 }
 
+func unmarshalOption(data []byte) (Option, error) {
+	var a any
+	err := json.Unmarshal(data, &a)
+	if err != nil {
+		return nil, err
+	}
+	return NewOption(a)
+}
+
+func NewOption(a any) (Option, error) {
+	switch a := a.(type) {
+	case string:
+		switch a {
+		case "MERGE":
+			return MERGE, nil
+		case "SET":
+			return SET, nil
+		case "MULTISET":
+			return MULTISET, nil
+		case "COLOR":
+			return COLOR, nil
+		default:
+			return nil, fmt.Errorf("unrecognized string: %v", a)
+		}
+	case map[string]any:
+		switch len(a) {
+		case 1:
+			var prec float64
+			for k, v := range a {
+				switch k {
+				case "precision":
+					f, ok := v.(float64)
+					if !ok {
+						return nil, fmt.Errorf("wanted float64. got %T", v)
+					}
+					prec = f
+					return Precision(prec), nil
+				case "setkeys":
+					untypedKeys, ok := v.([]any)
+					if !ok {
+						return nil, fmt.Errorf("wanted []string. got %T", v)
+					}
+					keys := []string{}
+					for _, untypedKey := range untypedKeys {
+						key, ok := untypedKey.(string)
+						if !ok {
+							return nil, fmt.Errorf("wanted string. got %T", untypedKey)
+						}
+						keys = append(keys, key)
+					}
+					return SetKeys(keys...), nil
+				default:
+					return nil, fmt.Errorf("unrecognized option: %v", a)
+				}
+			}
+			return nil, fmt.Errorf("unrecognized option: %v", a)
+		case 2:
+			var at Path
+			var then []Option
+			for k, v := range a {
+				switch k {
+				case "at":
+					n, err := NewJsonNode(v)
+					if err != nil {
+						return nil, err
+					}
+					p, err := NewPath(n)
+					if err != nil {
+						return nil, err
+					}
+					at = p
+				case "then":
+					a, ok := v.([]any)
+					if !ok {
+						return nil, fmt.Errorf("expected []any. got %T", v)
+					}
+					for _, v := range a {
+						o, err := NewOption(v)
+						if err != nil {
+							return nil, err
+						}
+						then = append(then, o)
+					}
+				default:
+					return nil, fmt.Errorf("unrecognized option: %v", a)
+				}
+			}
+			return PathOption(at, then...), nil
+		default:
+			return nil, fmt.Errorf("unrecognized option: %v", a)
+		}
+	default:
+		return nil, fmt.Errorf("unrecognized option: %v", a)
+	}
+}
+
 type mergeOption struct{}
 
 var MERGE = mergeOption{}
 
 func (o mergeOption) isOption() {}
 func (o mergeOption) MarshalJSON() ([]byte, error) {
-	return []byte("MERGE"), nil
+	return json.Marshal("MERGE")
 }
 func (o mergeOption) UnmarshalJSON(b []byte) error {
 	return unmarshalAsString("MERGE", b)
@@ -83,12 +179,12 @@ func (o precisionOption) UnmarshalJSON(b []byte) error {
 }
 
 type pathOption struct {
-	At  Path   `json:"at"`
-	Opt Option `json:"opt"`
+	At   Path     `json:"at"`
+	Then []Option `json:"then"`
 }
 
-func PathOption(at Path, opt Option) Option {
-	return pathOption{at, opt}
+func PathOption(at Path, then ...Option) Option {
+	return pathOption{at, then}
 }
 func (o pathOption) isOption() {}
 
@@ -100,11 +196,11 @@ func SetKeys(keys ...string) Option {
 func (o setKeysOption) isOption() {}
 func (o setKeysOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string][]string{
-		"SetKeys": []string(o),
+		"setkeys": []string(o),
 	})
 }
 func (o setKeysOption) UnmarshalJSON(b []byte) error {
-	a, err := unmarshalObjectKeyAs[[]any](b, "SetKeys")
+	a, err := unmarshalObjectKeyAs[[]any](b, "setkeys")
 	if err != nil {
 		return err
 	}
@@ -201,4 +297,50 @@ func dispatch(n JsonNode, options []Option) JsonNode {
 		return jsonList(n)
 	}
 	return n
+}
+
+func recurse(p PathElement, opts ...Option) (apply, rest []Option) {
+	for _, o := range opts {
+		switch o := o.(type) {
+		// Global options always to every path.
+		case mergeOption, setOption, multisetOption, colorOption, precisionOption:
+			apply = append(apply, o)
+			rest = append(rest, o)
+		case pathOption:
+			leaf := false
+			if len(o.At) < 2 {
+				leaf = true
+			}
+			if len(o.At) == 2 {
+				// Apply options inferred from the path.
+				switch o.At[1].(type) {
+				case PathSet:
+					apply = append(apply, SET)
+					leaf = true
+				case PathMultiset:
+					apply = append(apply, MULTISET)
+					leaf = true
+				}
+			}
+			if leaf {
+				if len(o.At) > 0 && o.At[0] != p {
+					// Ignore options targetting other paths.
+					continue
+				}
+				// Apply payload of options.
+				apply = append(apply, o.Then...)
+			}
+			// Consume one element of path and retain.
+			if len(o.At) == 0 {
+				continue
+			}
+			if !leaf {
+				rest = append(rest, pathOption{
+					At:   o.At[1:],
+					Then: o.Then,
+				})
+			}
+		}
+	}
+	return apply, rest
 }
