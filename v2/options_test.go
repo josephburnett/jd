@@ -84,9 +84,10 @@ func TestRecurse(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			apply, rest := recurse(c.element, c.opts...)
-			require.Equal(t, c.wantApply, apply)
-			require.Equal(t, c.wantRest, rest)
+			o := &options{retain: c.opts}
+			o = o.recurse(c.element)
+			require.Equal(t, c.wantApply, o.apply)
+			require.Equal(t, c.wantRest, o.retain)
 		})
 	}
 }

@@ -299,13 +299,20 @@ func dispatch(n JsonNode, options []Option) JsonNode {
 	return n
 }
 
-func recurse(p PathElement, opts ...Option) (apply, rest []Option) {
-	for _, o := range opts {
+type options struct {
+	apply  []Option
+	retain []Option
+}
+
+func (o *options) recurse(p PathElement) *options {
+	var apply, retain []Option
+	// Only recurse on retained options. Applied options are consumed.
+	for _, o := range o.retain {
 		switch o := o.(type) {
 		// Global options always to every path.
 		case mergeOption, setOption, multisetOption, colorOption, precisionOption:
 			apply = append(apply, o)
-			rest = append(rest, o)
+			retain = append(retain, o)
 		case pathOption:
 			leaf := false
 			if len(o.At) < 2 {
@@ -335,12 +342,15 @@ func recurse(p PathElement, opts ...Option) (apply, rest []Option) {
 				continue
 			}
 			if !leaf {
-				rest = append(rest, pathOption{
+				retain = append(retain, pathOption{
 					At:   o.At[1:],
 					Then: o.Then,
 				})
 			}
 		}
 	}
-	return apply, rest
+	return &options{
+		apply:  apply,
+		retain: retain,
+	}
 }
