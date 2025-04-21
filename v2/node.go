@@ -46,6 +46,7 @@ type JsonNode interface {
 type jsonNodeInternals interface {
 	raw() interface{}
 	hashCode(opts *options) [8]byte
+	equals(n JsonNode, o *options) bool
 	diff(n JsonNode, p Path, opts *options, strategy patchStrategy) Diff
 	patch(pathBehind, pathAhead Path, before, oldValues, newValues, after []JsonNode, strategy patchStrategy) (JsonNode, error)
 }

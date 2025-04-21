@@ -16,7 +16,11 @@ func (n jsonNull) raw() interface{} {
 	return nil
 }
 
-func (n jsonNull) Equals(node JsonNode, options ...Option) bool {
+func (n jsonNull) Equals(node JsonNode, _ ...Option) bool {
+	return n.equals(node, nil)
+}
+
+func (n jsonNull) equals(node JsonNode, _ *options) bool {
 	switch node.(type) {
 	case jsonNull:
 		return true
@@ -31,7 +35,7 @@ func (n jsonNull) hashCode(_ *options) [8]byte {
 
 func (n jsonNull) Diff(node JsonNode, opts ...Option) Diff {
 	o := refine(&options{retain: opts}, nil)
-	return n.diff(node, make(Path, 0), o, getPatchStrategy(opts))
+	return n.diff(node, make(Path, 0), o, getPatchStrategy(o))
 }
 
 func (n jsonNull) diff(

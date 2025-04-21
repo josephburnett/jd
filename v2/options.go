@@ -258,8 +258,8 @@ const (
 	strictPatchStrategy patchStrategy = "strict"
 )
 
-func checkOption[T Option](options []Option) bool {
-	for _, o := range options {
+func checkOption[T Option](opts *options) bool {
+	for _, o := range opts.retain {
 		if _, ok := o.(T); ok {
 			return true
 		}
@@ -267,8 +267,8 @@ func checkOption[T Option](options []Option) bool {
 	return false
 }
 
-func getOption[T Option](options []Option) (*T, bool) {
-	for _, o := range options {
+func getOption[T Option](opts *options) (*T, bool) {
+	for _, o := range opts.apply {
 		if t, ok := o.(T); ok {
 			return &t, true
 		}
@@ -276,8 +276,8 @@ func getOption[T Option](options []Option) (*T, bool) {
 	return nil, false
 }
 
-func getPatchStrategy(options []Option) patchStrategy {
-	if checkOption[mergeOption](options) {
+func getPatchStrategy(opts *options) patchStrategy {
+	if checkOption[mergeOption](opts) {
 		return mergePatchStrategy
 	}
 	return strictPatchStrategy
@@ -310,7 +310,7 @@ func refine(o *options, p PathElement) *options {
 	for _, o := range o.retain {
 		switch o := o.(type) {
 		// Global options always to every path.
-		case mergeOption, setOption, multisetOption, colorOption, precisionOption:
+		case mergeOption, setOption, multisetOption, colorOption, precisionOption, setKeysOption:
 			apply = append(apply, o)
 			retain = append(retain, o)
 		case pathOption:

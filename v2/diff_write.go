@@ -39,8 +39,9 @@ func colorStringMarshal(str jsonString, commonSequence []any, colorCode string) 
 }
 
 func (d DiffElement) Render(opts ...Option) string {
-	isColor := checkOption[colorOption](opts)
-	isMerge := checkOption[mergeOption](opts) || d.Metadata.Merge
+	o := refine(&options{retain: opts}, nil)
+	isColor := checkOption[colorOption](o)
+	isMerge := checkOption[mergeOption](o) || d.Metadata.Merge
 	b := bytes.NewBuffer(nil)
 	b.WriteString(d.Metadata.Render())
 	b.WriteString("@ ")

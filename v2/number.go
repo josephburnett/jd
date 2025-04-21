@@ -22,10 +22,14 @@ func (n jsonNumber) raw() interface{} {
 	return float64(n)
 }
 
-func (n1 jsonNumber) Equals(node JsonNode, options ...Option) bool {
+func (n1 jsonNumber) Equals(node JsonNode, opts ...Option) bool {
+	o := refine(&options{retain: opts}, nil)
+	return n1.equals(node, o)
+}
 
+func (n1 jsonNumber) equals(node JsonNode, o *options) bool {
 	precision := 0.0
-	if p, ok := getOption[precisionOption](options); ok {
+	if p, ok := getOption[precisionOption](o); ok {
 		precision = p.precision
 	}
 
@@ -45,7 +49,7 @@ func (n jsonNumber) hashCode(opts *options) [8]byte {
 
 func (n jsonNumber) Diff(node JsonNode, opts ...Option) Diff {
 	o := refine(&options{retain: opts}, nil)
-	return n.diff(node, make(Path, 0), o, getPatchStrategy(opts))
+	return n.diff(node, make(Path, 0), o, getPatchStrategy(o))
 }
 
 func (n jsonNumber) diff(

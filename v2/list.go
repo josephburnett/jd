@@ -24,6 +24,10 @@ func (l jsonList) raw() interface{} {
 
 func (l1 jsonList) Equals(n JsonNode, opts ...Option) bool {
 	o := refine(&options{retain: opts}, nil)
+	return l1.equals(n, o)
+}
+
+func (l1 jsonList) equals(n JsonNode, o *options) bool {
 	n2 := dispatch(n, o)
 	l2, ok := n2.(jsonList)
 	if !ok {
@@ -34,7 +38,7 @@ func (l1 jsonList) Equals(n JsonNode, opts ...Option) bool {
 	}
 	for i, v1 := range l1 {
 		v2 := l2[i]
-		if !v1.Equals(v2, options...) {
+		if !v1.equals(v2, o) {
 			return false
 		}
 	}
@@ -52,7 +56,7 @@ func (l jsonList) hashCode(opts *options) [8]byte {
 
 func (l jsonList) Diff(n JsonNode, opts ...Option) Diff {
 	o := refine(&options{retain: opts}, nil)
-	return l.diff(n, o, getPatchStrategy(opts))
+	return l.diff(n, make(Path, 0), o, getPatchStrategy(o))
 }
 
 func (a jsonList) diff(
@@ -66,15 +70,15 @@ func (a jsonList) diff(
 		return a.diffDifferentTypes(n, path, strategy)
 	}
 	if strategy == mergePatchStrategy {
-		return a.diffMergePatchStrategy(b, path, options)
+		return a.diffMergePatchStrategy(b, path, opts)
 	}
 	aHashes := make([]interface{}, len(a))
 	bHashes := make([]interface{}, len(b))
 	for i, v := range a {
-		aHashes[i] = v.hashCode(options)
+		aHashes[i] = v.hashCode(opts)
 	}
 	for i, v := range b {
-		bHashes[i] = v.hashCode(options)
+		bHashes[i] = v.hashCode(opts)
 	}
 	commonSequence := lcs.New([]interface{}(aHashes), []interface{}(bHashes)).Values()
 	return a.diffRest(
@@ -83,7 +87,7 @@ func (a jsonList) diff(
 		append(path, PathIndex(0)),
 		aHashes, bHashes, commonSequence,
 		voidNode{},
-		options,
+		opts,
 		strategy,
 	)
 }
@@ -94,7 +98,7 @@ func (a jsonList) diffRest(
 	path Path,
 	aHashes, bHashes, commonSequence []interface{},
 	previous JsonNode,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	var aCursor, bCursor, commonSequenceCursor int
@@ -193,12 +197,12 @@ accumulatingDiff:
 				d[0].Remove = append(d[0].Remove, a[aCursor])
 				aCursor++
 			}
-		case sameContainerType(a[aCursor], b[bCursor], options):
+		case sameContainerType(a[aCursor], b[bCursor], opts):
 			// We are at compatible containers which
 			// contain additional differences. If we've
 			// accumulated differences at this level then
 			// keep them before the sub-diff.
-			subDiff := a[aCursor].diff(b[bCursor], pathNow(), options, strategy)
+			subDiff := a[aCursor].diff(b[bCursor], pathNow(), opts, strategy)
 			if haveDiff() {
 				d[0].After = after()
 				d = append(d, subDiff...)
@@ -246,7 +250,7 @@ accumulatingDiff:
 		pathNow(),
 		aHashes[aCursor:], bHashes[bCursor:], commonSequence[commonSequenceCursor:],
 		b[bCursor-1],
-		options,
+		opts,
 		strategy,
 	)...)
 }
@@ -272,8 +276,8 @@ func (a jsonList) diffDifferentTypes(n JsonNode, path Path, strategy patchStrate
 	return Diff{e}
 }
 
-func (a jsonList) diffMergePatchStrategy(b jsonList, path Path, options []Option) Diff {
-	if !a.Equals(b, options...) {
+func (a jsonList) diffMergePatchStrategy(b jsonList, path Path, opts *options) Diff {
+	if !a.equals(b, opts) {
 		e := DiffElement{
 			Metadata: Metadata{
 				Merge: true,
@@ -286,9 +290,9 @@ func (a jsonList) diffMergePatchStrategy(b jsonList, path Path, options []Option
 	return Diff{}
 }
 
-func sameContainerType(n1, n2 JsonNode, options []Option) bool {
-	c1 := dispatch(n1, options)
-	c2 := dispatch(n2, options)
+func sameContainerType(n1, n2 JsonNode, opts *options) bool {
+	c1 := dispatch(n1, opts)
+	c2 := dispatch(n2, opts)
 	switch c1.(type) {
 	case jsonObject:
 		if _, ok := c2.(jsonObject); ok {

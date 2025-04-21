@@ -20,7 +20,7 @@ func (s jsonSet) Yaml(_ ...Option) string {
 func (s jsonSet) raw() interface{} {
 	sMap := make(map[[8]byte]JsonNode)
 	for _, n := range s {
-		hc := n.hashCode([]Option{setOption{}})
+		hc := n.hashCode(&options{retain: []Option{setOption{}}})
 		sMap[hc] = n
 	}
 	hashes := make(hashCodes, 0, len(sMap))
@@ -35,24 +35,29 @@ func (s jsonSet) raw() interface{} {
 	return set
 }
 
-func (s1 jsonSet) Equals(n JsonNode, options ...Option) bool {
-	n = dispatch(n, options)
+func (s1 jsonSet) Equals(n JsonNode, opts ...Option) bool {
+	o := refine(&options{retain: opts}, nil)
+	return s1.equals(n, o)
+}
+
+func (s1 jsonSet) equals(n JsonNode, o *options) bool {
+	n = dispatch(n, o)
 	s2, ok := n.(jsonSet)
 	if !ok {
 		return false
 	}
-	if s1.hashCode(options) == s2.hashCode(options) {
+	if s1.hashCode(o) == s2.hashCode(o) {
 		return true
 	} else {
 		return false
 	}
 }
 
-func (s jsonSet) hashCode(options []Option) [8]byte {
+func (s jsonSet) hashCode(opts *options) [8]byte {
 	sMap := make(map[[8]byte]bool)
 	for _, v := range s {
-		v = dispatch(v, options)
-		hc := v.hashCode(options)
+		v = dispatch(v, opts)
+		hc := v.hashCode(opts)
 		sMap[hc] = true
 	}
 	hashes := make(hashCodes, 0, len(sMap))
@@ -62,14 +67,15 @@ func (s jsonSet) hashCode(options []Option) [8]byte {
 	return hashes.combine()
 }
 
-func (s jsonSet) Diff(j JsonNode, options ...Option) Diff {
-	return s.diff(j, make(Path, 0), options, getPatchStrategy(options))
+func (s jsonSet) Diff(j JsonNode, opts ...Option) Diff {
+	o := refine(&options{retain: opts}, nil)
+	return s.diff(j, make(Path, 0), o, getPatchStrategy(o))
 }
 
 func (s1 jsonSet) diff(
 	n JsonNode,
 	path Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)
@@ -110,10 +116,10 @@ func (s1 jsonSet) diff(
 		var hc [8]byte
 		if o, ok := v.(jsonObject); ok {
 			// Hash objects by their identity.
-			hc = o.ident(options)
+			hc = o.ident(opts)
 		} else {
 			// Everything else by full content.
-			hc = v.hashCode(options)
+			hc = v.hashCode(opts)
 		}
 		s1Map[hc] = v
 	}
@@ -122,10 +128,10 @@ func (s1 jsonSet) diff(
 		var hc [8]byte
 		if o, ok := v.(jsonObject); ok {
 			// Hash objects by their identity.
-			hc = o.ident(options)
+			hc = o.ident(opts)
 		} else {
 			// Everything else by full content.
-			hc = v.hashCode(options)
+			hc = v.hashCode(opts)
 		}
 		s2Map[hc] = v
 	}
@@ -155,8 +161,8 @@ func (s1 jsonSet) diff(
 			o2, isObject2 := n2.(jsonObject)
 			if isObject1 && isObject2 {
 				// Sub diff objects with same identity.
-				p := append(path.clone(), newPathSetKeys(o1, options))
-				subDiff := o1.diff(o2, p, options, strategy)
+				p := append(path.clone(), newPathSetKeys(o1, opts))
+				subDiff := o1.diff(o2, p, opts, strategy)
 				d = append(d, subDiff...)
 			}
 		}
@@ -203,14 +209,16 @@ func (s jsonSet) patch(
 		return newValue, nil
 	}
 	// Unrolled recursive case
-	n, metadata, rest := pathAhead.next()
+	n, o, rest := pathAhead.next()
+	opts := refine(&options{retain: o}, nil)
+
 	pathSetKeys, ok := n.(PathSetKeys)
 	if ok && len(rest) > 0 {
 		// Recurse into a specific object.
-		lookingFor := jsonObject(pathSetKeys).ident(metadata)
+		lookingFor := jsonObject(pathSetKeys).ident(opts)
 		for _, v := range s {
 			if o, ok := v.(jsonObject); ok {
-				id := o.pathIdent(jsonObject(pathSetKeys), metadata)
+				id := o.pathIdent(jsonObject(pathSetKeys), opts)
 				if id == lookingFor {
 					v.patch(append(pathBehind, n), rest, before, oldValues, newValues, after, strategy)
 					return s, nil
@@ -230,10 +238,10 @@ func (s jsonSet) patch(
 		var hc [8]byte
 		if o, ok := v.(jsonObject); ok {
 			// Hash objects by their identitiy.
-			hc = o.ident(metadata)
+			hc = o.ident(opts)
 		} else {
 			// Everything else by full content.
-			hc = v.hashCode(metadata)
+			hc = v.hashCode(opts)
 		}
 		aMap[hc] = v
 	}
@@ -241,10 +249,10 @@ func (s jsonSet) patch(
 		var hc [8]byte
 		if o, ok := v.(jsonObject); ok {
 			// Find objects by their identitiy.
-			hc = o.ident(metadata)
+			hc = o.ident(opts)
 		} else {
 			// Everything else by full content.
-			hc = v.hashCode(metadata)
+			hc = v.hashCode(opts)
 		}
 		toDelete, ok := aMap[hc]
 		if !ok {
@@ -252,7 +260,7 @@ func (s jsonSet) patch(
 				"invalid diff: expected %v at %v but found nothing",
 				v.Json(), pathBehind)
 		}
-		if !toDelete.Equals(v, metadata...) {
+		if !toDelete.equals(v, opts) {
 			return nil, fmt.Errorf(
 				"invalid diff: expected %v at %v but found %v",
 				v.Json(), pathBehind, toDelete.Json())
@@ -264,10 +272,10 @@ func (s jsonSet) patch(
 		var hc [8]byte
 		if o, ok := v.(jsonObject); ok {
 			// Hash objects by their identitiy.
-			hc = o.ident(metadata)
+			hc = o.ident(opts)
 		} else {
 			// Everything else by full content.
-			hc = v.hashCode(metadata)
+			hc = v.hashCode(opts)
 		}
 		aMap[hc] = v
 	}
