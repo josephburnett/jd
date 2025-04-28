@@ -12,45 +12,46 @@ func TestOptionJSON(t *testing.T) {
 		json   string
 		option Option
 	}{{
-		json:   `"MERGE"`,
+		json:   `["MERGE"]`,
 		option: MERGE,
 	}, {
-		json:   `"SET"`,
+		json:   `["SET"]`,
 		option: SET,
 	}, {
-		json:   `"MULTISET"`,
+		json:   `["MULTISET"]`,
 		option: MULTISET,
 	}, {
-		json:   `"COLOR"`,
+		json:   `["COLOR"]`,
 		option: COLOR,
 	}, {
-		json:   `{"precision":1.01}`,
+		json:   `[{"precision":1.01}]`,
 		option: Precision(1.01),
 	}, {
-		json:   `{"setkeys":["foo","bar"]}`,
+		json:   `[{"setkeys":["foo","bar"]}]`,
 		option: SetKeys("foo", "bar"),
 	}, {
-		json:   `{"at":["foo"],"then":["SET"]}`,
+		json:   `[{"at":["foo"],"then":["SET"]}]`,
 		option: PathOption(Path{PathKey("foo")}, SET),
 	}, {
-		json:   `{"at":["foo"],"then":[{"at":["bar"],"then":["SET"]}]}`,
+		json:   `[{"at":["foo"],"then":[{"at":["bar"],"then":["SET"]}]}]`,
 		option: PathOption(Path{PathKey("foo")}, PathOption(Path{PathKey("bar")}, SET)),
 	}}
 	for _, c := range cases {
 		t.Run(c.json, func(t *testing.T) {
-			o, err := unmarshalOption([]byte(c.json))
+			opts, err := UnmarshalOptions([]byte(c.json))
 			require.NoError(t, err)
-			s, err := json.Marshal(o)
+			s, err := json.Marshal(opts)
 			require.NoError(t, err)
 			require.Equal(t, c.json, string(s))
-			s, err = json.Marshal(c.option)
+			gotOpts := []any{c.option}
+			s, err = json.Marshal(gotOpts)
 			require.NoError(t, err)
 			require.Equal(t, c.json, string(s))
 		})
 	}
 }
 
-func TestRecurse(t *testing.T) {
+func TestRefine(t *testing.T) {
 	cases := []struct {
 		name      string
 		opts      []Option

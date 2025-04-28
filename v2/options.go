@@ -9,13 +9,25 @@ type Option interface {
 	isOption()
 }
 
-func unmarshalOption(data []byte) (Option, error) {
+func UnmarshalOptions(data []byte) ([]Option, error) {
 	var a any
 	err := json.Unmarshal(data, &a)
 	if err != nil {
 		return nil, err
 	}
-	return NewOption(a)
+	l, ok := a.([]any)
+	if !ok {
+		return nil, fmt.Errorf("wanted []any. got %T", a)
+	}
+	opts := []Option{}
+	for _, e := range l {
+		o, err := NewOption(e)
+		if err != nil {
+			return nil, err
+		}
+		opts = append(opts, o)
+	}
+	return opts, nil
 }
 
 func NewOption(a any) (Option, error) {
