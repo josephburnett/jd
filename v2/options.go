@@ -82,7 +82,7 @@ func NewOption(a any) (Option, error) {
 			var then []Option
 			for k, v := range a {
 				switch k {
-				case "at":
+				case "@":
 					n, err := NewJsonNode(v)
 					if err != nil {
 						return nil, err
@@ -92,7 +92,7 @@ func NewOption(a any) (Option, error) {
 						return nil, err
 					}
 					at = p
-				case "then":
+				case "^":
 					a, ok := v.([]any)
 					if !ok {
 						return nil, fmt.Errorf("expected []any. got %T", v)
@@ -191,8 +191,8 @@ func (o precisionOption) UnmarshalJSON(b []byte) error {
 }
 
 type pathOption struct {
-	At   Path     `json:"at"`
-	Then []Option `json:"then"`
+	At   Path     `json:"@"`
+	Then []Option `json:"^"`
 }
 
 func PathOption(at Path, then ...Option) Option {

@@ -30,10 +30,10 @@ func TestOptionJSON(t *testing.T) {
 		json:   `[{"setkeys":["foo","bar"]}]`,
 		option: SetKeys("foo", "bar"),
 	}, {
-		json:   `[{"at":["foo"],"then":["SET"]}]`,
+		json:   `[{"@":["foo"],"^":["SET"]}]`,
 		option: PathOption(Path{PathKey("foo")}, SET),
 	}, {
-		json:   `[{"at":["foo"],"then":[{"at":["bar"],"then":["SET"]}]}]`,
+		json:   `[{"@":["foo"],"^":[{"@":["bar"],"^":["SET"]}]}]`,
 		option: PathOption(Path{PathKey("foo")}, PathOption(Path{PathKey("bar")}, SET)),
 	}}
 	for _, c := range cases {
