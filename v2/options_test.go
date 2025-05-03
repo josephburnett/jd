@@ -38,7 +38,7 @@ func TestOptionJSON(t *testing.T) {
 	}}
 	for _, c := range cases {
 		t.Run(c.json, func(t *testing.T) {
-			opts, err := UnmarshalOptions([]byte(c.json))
+			opts, err := ReadOptionsString(c.json)
 			require.NoError(t, err)
 			s, err := json.Marshal(opts)
 			require.NoError(t, err)
@@ -88,6 +88,38 @@ func TestRefine(t *testing.T) {
 			o := refine(&options{retain: c.opts}, c.element)
 			require.Equal(t, c.wantApply, o.apply)
 			require.Equal(t, c.wantRest, o.retain)
+		})
+	}
+}
+
+func TestPathOption(t *testing.T) {
+	cases := []struct {
+		name string
+		opts string
+		a, b string
+	}{{
+		name: "Precision on a number in an object",
+		opts: `[{"@":["foo"],"^":[{"precision":0.1}]}]`,
+		a:    `{"foo":1.0}`,
+		b:    `{"foo":1.001}`,
+	}}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			controlA, err := ReadJsonString(c.a)
+			require.NoError(t, err)
+			controlB, err := ReadJsonString(c.b)
+			require.NoError(t, err)
+			controlDiff := controlA.Diff(controlB)
+			require.NotEmpty(t, controlDiff)
+
+			a, err := ReadJsonString(c.a)
+			require.NoError(t, err)
+			b, err := ReadJsonString(c.b)
+			require.NoError(t, err)
+			o, err := ReadOptionsString(c.opts)
+			require.NoError(t, err)
+			diff := a.Diff(b, o...)
+			require.Empty(t, diff)
 		})
 	}
 }

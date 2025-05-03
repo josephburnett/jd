@@ -116,7 +116,7 @@ func (o jsonObject) pathIdent(pathObject jsonObject, opts *options) [8]byte {
 }
 
 func (o jsonObject) Diff(n JsonNode, opts ...Option) Diff {
-	op := refine(&options{retain: opts}, nil)
+	op := &options{retain: opts}
 	return o.diff(n, make(Path, 0), op, getPatchStrategy(op))
 }
 
@@ -163,7 +163,8 @@ func (o1 jsonObject) diff(
 		v1 := o1[k1]
 		if v2, ok := o2[k1]; ok {
 			// Both keys are present
-			subDiff := v1.diff(v2, append(path, PathKey(k1)), opts, strategy)
+			o := refine(opts, PathKey(k1))
+			subDiff := v1.diff(v2, append(path, PathKey(k1)), o, strategy)
 			d = append(d, subDiff...)
 		} else {
 			// O2 missing key

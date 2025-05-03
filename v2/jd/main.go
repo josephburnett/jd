@@ -141,7 +141,7 @@ func parseOptions() ([]jd.Option, error) {
 	if *precision != 0.0 && (*set || *mset) {
 		return nil, fmt.Errorf("-precision cannot be used with -set or -mset because they use hashcodes")
 	}
-	options, err := jd.UnmarshalOptions([]byte(*opts))
+	options, err := jd.ReadOptionsString(*opts)
 	if err != nil {
 		return nil, err
 	}

@@ -9,9 +9,9 @@ type Option interface {
 	isOption()
 }
 
-func UnmarshalOptions(data []byte) ([]Option, error) {
+func ReadOptionsString(s string) ([]Option, error) {
 	var a any
-	err := json.Unmarshal(data, &a)
+	err := json.Unmarshal([]byte(s), &a)
 	if err != nil {
 		return nil, err
 	}
