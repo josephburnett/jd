@@ -102,6 +102,16 @@ func TestPathOption(t *testing.T) {
 		opts: `[{"@":["foo"],"^":[{"precision":0.1}]}]`,
 		a:    `{"foo":1.0}`,
 		b:    `{"foo":1.001}`,
+	}, {
+		name: "Precision on a number alone",
+		opts: `[{"@":[],"^":[{"precision":0.1}]}]`,
+		a:    `1.0`,
+		b:    `1.001`,
+	}, {
+		name: "Precision in a list index",
+		opts: `[{"@":[0],"^":[{"precision":0.1}]}]`,
+		a:    `[1.0]`,
+		b:    `[1.001]`,
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

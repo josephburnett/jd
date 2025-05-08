@@ -55,7 +55,7 @@ func (l jsonList) hashCode(opts *options) [8]byte {
 }
 
 func (l jsonList) Diff(n JsonNode, opts ...Option) Diff {
-	o := refine(&options{retain: opts}, nil)
+	o := &options{retain: opts}
 	return l.diff(n, make(Path, 0), o, getPatchStrategy(o))
 }
 
@@ -72,15 +72,17 @@ func (a jsonList) diff(
 	if strategy == mergePatchStrategy {
 		return a.diffMergePatchStrategy(b, path, opts)
 	}
-	aHashes := make([]interface{}, len(a))
-	bHashes := make([]interface{}, len(b))
+	aHashes := make([]any, len(a))
+	bHashes := make([]any, len(b))
 	for i, v := range a {
-		aHashes[i] = v.hashCode(opts)
+		o := refine(opts, PathIndex(i))
+		aHashes[i] = v.hashCode(o)
 	}
 	for i, v := range b {
-		bHashes[i] = v.hashCode(opts)
+		o := refine(opts, PathIndex(i))
+		bHashes[i] = v.hashCode(o)
 	}
-	commonSequence := lcs.New([]interface{}(aHashes), []interface{}(bHashes)).Values()
+	commonSequence := lcs.New([]any(aHashes), []any(bHashes)).Values()
 	return a.diffRest(
 		0,
 		b,
