@@ -1,4 +1,4 @@
-package jd
+package node
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func renderJson(i interface{}) string {
+func RenderJson(i interface{}) string {
 	s, err := json.Marshal(i)
 	if err != nil {
 		panic(err)
@@ -14,7 +14,7 @@ func renderJson(i interface{}) string {
 	return string(s)
 }
 
-func renderYaml(i interface{}) string {
+func RenderYaml(i interface{}) string {
 	s, err := yaml.Marshal(i)
 	if err != nil {
 		panic(err)

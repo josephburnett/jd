@@ -1,26 +1,29 @@
-package jd
+package array
 
 import (
 	"fmt"
 	"sort"
+
+	"github.com/josephburnett/jd/v2/internal/node"
+	"github.com/josephburnett/jd/v2/internal/types"
 )
 
-type jsonSet jsonArray
+type JsonSet JsonArray
 
-var _ JsonNode = jsonSet(nil)
+var _ types.JsonNode = JsonSet(nil)
 
-func (s jsonSet) Json(_ ...Option) string {
-	return renderJson(s.raw())
+func (s JsonSet) Json(_ ...types.Option) string {
+	return node.RenderJson(s.raw())
 }
 
-func (s jsonSet) Yaml(_ ...Option) string {
-	return renderYaml(s.raw())
+func (s JsonSet) Yaml(_ ...types.Option) string {
+	return node.RenderYaml(s.raw())
 }
 
-func (s jsonSet) raw() interface{} {
-	sMap := make(map[[8]byte]JsonNode)
+func (s JsonSet) raw() interface{} {
+	sMap := make(map[[8]byte]types.JsonNode)
 	for _, n := range s {
-		hc := n.hashCode(&options{retain: []Option{setOption{}}})
+		hc := n.hashCode(&types.Options{Retain: []types.Option{types.SetOption{}}})
 		sMap[hc] = n
 	}
 	hashes := make(hashCodes, 0, len(sMap))
@@ -35,14 +38,14 @@ func (s jsonSet) raw() interface{} {
 	return set
 }
 
-func (s1 jsonSet) Equals(n JsonNode, opts ...Option) bool {
-	o := refine(&options{retain: opts}, nil)
+func (s1 JsonSet) Equals(n types.JsonNode, opts ...types.Option) bool {
+	o := option.Refine(&types.Options{Retain: opts}, nil)
 	return s1.equals(n, o)
 }
 
-func (s1 jsonSet) equals(n JsonNode, o *options) bool {
+func (s1 JsonSet) equals(n types.JsonNode, o *type.Options) bool {
 	n = dispatch(n, o)
-	s2, ok := n.(jsonSet)
+	s2, ok := n.(JsonSet)
 	if !ok {
 		return false
 	}
@@ -53,7 +56,7 @@ func (s1 jsonSet) equals(n JsonNode, o *options) bool {
 	}
 }
 
-func (s jsonSet) hashCode(opts *options) [8]byte {
+func (s JsonSet) hashCode(opts *options) [8]byte {
 	sMap := make(map[[8]byte]bool)
 	for _, v := range s {
 		v = dispatch(v, opts)
@@ -67,19 +70,19 @@ func (s jsonSet) hashCode(opts *options) [8]byte {
 	return hashes.combine()
 }
 
-func (s jsonSet) Diff(j JsonNode, opts ...Option) Diff {
+func (s JsonSet) Diff(j JsonNode, opts ...types.Option) Diff {
 	o := refine(&options{retain: opts}, nil)
 	return s.diff(j, make(Path, 0), o, getPatchStrategy(o))
 }
 
-func (s1 jsonSet) diff(
+func (s1 JsonSet) diff(
 	n JsonNode,
 	path Path,
 	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)
-	s2, ok := n.(jsonSet)
+	s2, ok := n.(JsonSet)
 	if !ok {
 		// Different types
 		var e DiffElement
@@ -180,11 +183,11 @@ func (s1 jsonSet) diff(
 	return d
 }
 
-func (s jsonSet) Patch(d Diff) (JsonNode, error) {
+func (s JsonSet) Patch(d Diff) (JsonNode, error) {
 	return patchAll(s, d)
 }
 
-func (s jsonSet) patch(
+func (s JsonSet) patch(
 	pathBehind, pathAhead Path,
 	before, oldValues, newValues, after []JsonNode,
 	strategy patchStrategy,
@@ -284,7 +287,7 @@ func (s jsonSet) patch(
 		hashes = append(hashes, hc)
 	}
 	sort.Sort(hashes)
-	newValue := make(jsonSet, 0, len(aMap))
+	newValue := make(JsonSet, 0, len(aMap))
 	for _, hc := range hashes {
 		newValue = append(newValue, aMap[hc])
 	}

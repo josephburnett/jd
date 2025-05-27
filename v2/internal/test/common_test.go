@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func checkJson(ctx *testContext, a, b string) {
+func CheckJson(ctx *testContext, a, b string) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Errorf("%v", err.Error())
@@ -17,7 +17,7 @@ func checkJson(ctx *testContext, a, b string) {
 	}
 }
 
-func checkEqual(ctx *testContext, a, b string) {
+func CheckEqual(ctx *testContext, a, b string) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Errorf("%v", err.Error())
@@ -40,7 +40,7 @@ func checkEqual(ctx *testContext, a, b string) {
 	}
 }
 
-func checkNotEqual(ctx *testContext, a, b string) {
+func CheckNotEqual(ctx *testContext, a, b string) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Errorf("%v", err.Error())
@@ -57,7 +57,7 @@ func checkNotEqual(ctx *testContext, a, b string) {
 	}
 }
 
-func checkHash(ctx *testContext, a, b string, wantSame bool) {
+func CheckHash(ctx *testContext, a, b string, wantSame bool) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Fatalf("%v", err.Error())
@@ -79,7 +79,7 @@ func checkHash(ctx *testContext, a, b string, wantSame bool) {
 	}
 }
 
-func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
+func CheckDiff(ctx *testContext, a, b string, diffLines ...string) {
 	nodeA, err := ReadJsonString(a)
 	if err != nil {
 		ctx.t.Fatalf("%v", err.Error())
@@ -99,7 +99,7 @@ func checkDiff(ctx *testContext, a, b string, diffLines ...string) {
 	}
 }
 
-func checkPatch(ctx *testContext, a, e string, diffLines ...string) {
+func CheckPatch(ctx *testContext, a, e string, diffLines ...string) {
 	diffString := ""
 	for _, dl := range diffLines {
 		diffString += dl + "\n"
@@ -126,7 +126,7 @@ func checkPatch(ctx *testContext, a, e string, diffLines ...string) {
 	}
 }
 
-func checkPatchError(ctx *testContext, a string, diffLines ...string) {
+func CheckPatchError(ctx *testContext, a string, diffLines ...string) {
 	diffString := ""
 	for _, dl := range diffLines {
 		diffString += dl + "\n"

@@ -1,11 +1,13 @@
-package jd
+package array
 
 import (
 	"testing"
+
+	"github.com/josephburnett/jd/v2/internal/test"
 )
 
 func TestListJson(t *testing.T) {
-	ctx := newTestContext(t)
+	ctx := test.NewTestContext(t)
 	tests := []struct {
 		a string
 		b string
@@ -17,12 +19,12 @@ func TestListJson(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		checkJson(ctx, tt.a, tt.b)
+		test.CheckJson(ctx, tt.a, tt.b)
 	}
 }
 
 func TestListEqual(t *testing.T) {
-	ctx := newTestContext(t)
+	ctx := test.NewTestContext(t)
 	tests := []struct {
 		a string
 		b string
@@ -35,12 +37,12 @@ func TestListEqual(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		checkEqual(ctx, tt.a, tt.b)
+		test.CheckEqual(ctx, tt.a, tt.b)
 	}
 }
 
 func TestListNotEqual(t *testing.T) {
-	ctx := newTestContext(t)
+	ctx := test.NewTestContext(t)
 	tests := []struct {
 		a string
 		b string
@@ -52,12 +54,12 @@ func TestListNotEqual(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		checkNotEqual(ctx, tt.a, tt.b)
+		test.CheckNotEqual(ctx, tt.a, tt.b)
 	}
 }
 
 func TestListHash(t *testing.T) {
-	ctx := newTestContext(t)
+	ctx := test.NewTestContext(t)
 	tests := []struct {
 		a        string
 		b        string
@@ -72,7 +74,7 @@ func TestListHash(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		checkHash(ctx, tt.a, tt.b, tt.wantSame)
+		test.CheckHash(ctx, tt.a, tt.b, tt.wantSame)
 	}
 }
 
@@ -325,11 +327,11 @@ func TestListDiff(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.a+tt.b, func(t *testing.T) {
-			ctx := newTestContext(t)
+			ctx := test.NewTestContext(t)
 			if len(tt.options) > 0 {
 				ctx = ctx.withOptions(tt.options...)
 			}
-			checkDiff(ctx, tt.a, tt.b, tt.diff...)
+			test.CheckDiff(ctx, tt.a, tt.b, tt.diff...)
 		})
 	}
 }
@@ -623,8 +625,8 @@ func TestListPatch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.a+tt.b, func(t *testing.T) {
-			ctx := newTestContext(t)
-			checkPatch(ctx, tt.a, tt.b, tt.diff...)
+			ctx := test.NewTestContext(t)
+			test.CheckPatch(ctx, tt.a, tt.b, tt.diff...)
 		})
 	}
 }
@@ -709,8 +711,8 @@ func TestListPatchError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.a, func(t *testing.T) {
-			ctx := newTestContext(t)
-			checkPatchError(ctx, tt.a, tt.diff...)
+			ctx := test.NewTestContext(t)
+			test.CheckPatchError(ctx, tt.a, tt.diff...)
 		})
 	}
 }

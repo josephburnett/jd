@@ -1,4 +1,4 @@
-package jd
+package node
 
 import (
 	"testing"

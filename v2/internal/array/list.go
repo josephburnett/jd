@@ -1,35 +1,37 @@
-package jd
+package array
 
 import (
 	"fmt"
 
+	"github.com/josephburnett/jd/v2/internal/node"
+	"github.com/josephburnett/jd/v2/internal/types"
 	lcs "github.com/yudai/golcs"
 )
 
-type jsonList []JsonNode
+type JsonList []types.JsonNode
 
-var _ JsonNode = jsonList(nil)
+var _ types.JsonNode = JsonList(nil)
 
-func (l jsonList) Json(_ ...Option) string {
-	return renderJson(l.raw())
+func (l JsonList) Json(_ ...types.Option) string {
+	return node.RenderJson(l.raw())
 }
 
-func (l jsonList) Yaml(_ ...Option) string {
-	return renderYaml(l.raw())
+func (l JsonList) Yaml(_ ...types.Option) string {
+	return node.RenderYaml(l.raw())
 }
 
-func (l jsonList) raw() interface{} {
-	return jsonArray(l).raw()
+func (l JsonList) raw() interface{} {
+	return JsonArray(l).raw()
 }
 
-func (l1 jsonList) Equals(n JsonNode, opts ...Option) bool {
-	o := refine(&options{retain: opts}, nil)
+func (l1 JsonList) Equals(n types.JsonNode, opts ...types.Option) bool {
+	o := types.Refine(&types.Options{Retain: opts}, nil)
 	return l1.equals(n, o)
 }
 
-func (l1 jsonList) equals(n JsonNode, o *options) bool {
+func (l1 JsonList) equals(n types.JsonNode, o *types.Options) bool {
 	n2 := dispatch(n, o)
-	l2, ok := n2.(jsonList)
+	l2, ok := n2.(JsonList)
 	if !ok {
 		return false
 	}
@@ -45,7 +47,7 @@ func (l1 jsonList) equals(n JsonNode, o *options) bool {
 	return true
 }
 
-func (l jsonList) hashCode(opts *options) [8]byte {
+func (l JsonList) hashCode(opts *types.Options) [8]byte {
 	b := []byte{0xF5, 0x18, 0x0A, 0x71, 0xA4, 0xC4, 0x03, 0xF3} // random bytes
 	for _, n := range l {
 		h := n.hashCode(opts)
@@ -54,18 +56,18 @@ func (l jsonList) hashCode(opts *options) [8]byte {
 	return hash(b)
 }
 
-func (l jsonList) Diff(n JsonNode, opts ...Option) Diff {
-	o := &options{retain: opts}
+func (l JsonList) Diff(n types.JsonNode, opts ...types.Option) types.Diff {
+	o := &type.Options{Retain: opts}
 	return l.diff(n, make(Path, 0), o, getPatchStrategy(o))
 }
 
-func (a jsonList) diff(
+func (a JsonList) diff(
 	n JsonNode,
 	path Path,
 	opts *options,
 	strategy patchStrategy,
 ) Diff {
-	b, ok := n.(jsonList)
+	b, ok := n.(JsonList)
 	if !ok {
 		return a.diffDifferentTypes(n, path, strategy)
 	}
@@ -94,9 +96,9 @@ func (a jsonList) diff(
 	)
 }
 
-func (a jsonList) diffRest(
+func (a JsonList) diffRest(
 	pathIndex PathIndex,
-	b jsonList,
+	b JsonList,
 	path Path,
 	aHashes, bHashes, commonSequence []interface{},
 	previous JsonNode,
@@ -257,7 +259,7 @@ accumulatingDiff:
 	)...)
 }
 
-func (a jsonList) diffDifferentTypes(n JsonNode, path Path, strategy patchStrategy) Diff {
+func (a JsonList) diffDifferentTypes(n JsonNode, path Path, strategy patchStrategy) Diff {
 	var e DiffElement
 	switch strategy {
 	case mergePatchStrategy:
@@ -278,7 +280,7 @@ func (a jsonList) diffDifferentTypes(n JsonNode, path Path, strategy patchStrate
 	return Diff{e}
 }
 
-func (a jsonList) diffMergePatchStrategy(b jsonList, path Path, opts *options) Diff {
+func (a JsonList) diffMergePatchStrategy(b JsonList, path Path, opts *options) Diff {
 	if !a.equals(b, opts) {
 		e := DiffElement{
 			Metadata: Metadata{
@@ -300,8 +302,8 @@ func sameContainerType(n1, n2 JsonNode, opts *options) bool {
 		if _, ok := c2.(jsonObject); ok {
 			return true
 		}
-	case jsonList:
-		if _, ok := c2.(jsonList); ok {
+	case JsonList:
+		if _, ok := c2.(JsonList); ok {
 			return true
 		}
 	case jsonSet:
@@ -318,11 +320,11 @@ func sameContainerType(n1, n2 JsonNode, opts *options) bool {
 	return false
 }
 
-func (l jsonList) Patch(d Diff) (JsonNode, error) {
+func (l JsonList) Patch(d Diff) (JsonNode, error) {
 	return patchAll(l, d)
 }
 
-func (l jsonList) patch(pathBehind, pathAhead Path, before, removeValues, addValues, after []JsonNode, strategy patchStrategy) (JsonNode, error) {
+func (l JsonList) patch(pathBehind, pathAhead Path, before, removeValues, addValues, after []JsonNode, strategy patchStrategy) (JsonNode, error) {
 
 	if strategy == mergePatchStrategy {
 		return patch(l, pathBehind, pathAhead, before, removeValues, addValues, after, mergePatchStrategy)
@@ -399,7 +401,7 @@ func (l jsonList) patch(pathBehind, pathAhead Path, before, removeValues, addVal
 		l = append(l[:i], l[i+1:]...)
 		removeValues = removeValues[1:]
 	}
-	l2 := make(jsonList, i)
+	l2 := make(JsonList, i)
 	copy(l2, l[:i])
 	l2 = append(l2, addValues...)
 	if int(i) < len(l) {

@@ -1,34 +1,37 @@
-package jd
+package array
 
 import (
 	"fmt"
 	"sort"
+
+	"github.com/josephburnett/jd/v2/internal/node"
+	"github.com/josephburnett/jd/v2/internal/types"
 )
 
-type jsonMultiset jsonArray
+type JsonMultiset JsonArray
 
-var _ JsonNode = jsonMultiset(nil)
+var _ types.JsonNode = JsonMultiset(nil)
 
-func (a jsonMultiset) Json(_ ...Option) string {
-	return renderJson(a.raw())
+func (a JsonMultiset) Json(_ ...types.Option) string {
+	return node.RenderJson(a.raw())
 }
 
-func (a jsonMultiset) Yaml(_ ...Option) string {
-	return renderYaml(a.raw())
+func (a JsonMultiset) Yaml(_ ...types.Option) string {
+	return node.RenderYaml(a.raw())
 }
 
-func (a jsonMultiset) raw() interface{} {
-	return jsonArray(a).raw()
+func (a JsonMultiset) raw() interface{} {
+	return JsonArray(a).raw()
 }
 
-func (a1 jsonMultiset) Equals(n JsonNode, opts ...Option) bool {
-	o := refine(&options{retain: opts}, nil)
+func (a1 JsonMultiset) Equals(n types.JsonNode, opts ...types.Option) bool {
+	o := types.Refine(&types.Options{Retain: opts}, nil)
 	return a1.equals(n, o)
 }
 
-func (a1 jsonMultiset) equals(n JsonNode, o *options) bool {
+func (a1 JsonMultiset) equals(n types.JsonNode, o *types.Options) bool {
 	n = dispatch(n, o)
-	a2, ok := n.(jsonMultiset)
+	a2, ok := n.(JsonMultiset)
 	if !ok {
 		return false
 	}
@@ -42,7 +45,7 @@ func (a1 jsonMultiset) equals(n JsonNode, o *options) bool {
 	}
 }
 
-func (a jsonMultiset) hashCode(opts *options) [8]byte {
+func (a JsonMultiset) hashCode(opts *type.Options) [8]byte {
 	h := make(hashCodes, 0, len(a))
 	for _, v := range a {
 		h = append(h, v.hashCode(opts))
@@ -55,19 +58,19 @@ func (a jsonMultiset) hashCode(opts *options) [8]byte {
 	return hash(b)
 }
 
-func (a jsonMultiset) Diff(n JsonNode, opts ...Option) Diff {
+func (a JsonMultiset) Diff(n JsonNode, opts ...Option) Diff {
 	o := refine(&options{retain: opts}, nil)
 	return a.diff(n, nil, o, getPatchStrategy(o))
 }
 
-func (a1 jsonMultiset) diff(
+func (a1 JsonMultiset) diff(
 	n JsonNode,
 	path Path,
 	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)
-	a2, ok := n.(jsonMultiset)
+	a2, ok := n.(JsonMultiset)
 	if !ok {
 		// Different types
 		var e DiffElement
@@ -161,11 +164,11 @@ func (a1 jsonMultiset) diff(
 	return d
 }
 
-func (a jsonMultiset) Patch(d Diff) (JsonNode, error) {
+func (a JsonMultiset) Patch(d Diff) (JsonNode, error) {
 	return patchAll(a, d)
 }
 
-func (a jsonMultiset) patch(pathBehind, pathAhead Path, before, oldValues, newValues, after []JsonNode, strategy patchStrategy) (JsonNode, error) {
+func (a JsonMultiset) patch(pathBehind, pathAhead Path, before, oldValues, newValues, after []JsonNode, strategy patchStrategy) (JsonNode, error) {
 
 	// Merge patch strategy
 	if strategy == mergePatchStrategy {
@@ -226,7 +229,7 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, before, oldValues, newVa
 		}
 	}
 	sort.Sort(aHashes)
-	newValue := make(jsonMultiset, 0)
+	newValue := make(JsonMultiset, 0)
 	for _, hc := range aHashes {
 		newValue = append(newValue, aMap[hc])
 	}

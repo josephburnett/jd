@@ -1,7 +1,10 @@
-package jd
+package array
 
 import (
 	"testing"
+
+	"github.com/josephburnett/jd/v2/internal/test"
+	"github.com/josephburnett/jd/v2/internal/types"
 )
 
 func TestSetJson(t *testing.T) {
@@ -37,9 +40,9 @@ func TestSetJson(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
-				withOptions(setOption{})
-			checkJson(ctx, c.given, c.want)
+			ctx := test.NewTestContext(t).
+				withOptions(types.SetOption{})
+			test.CheckJson(ctx, c.given, c.want)
 		})
 	}
 }
@@ -85,9 +88,9 @@ func TestSetEquals(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
-				withOptions(setOption{})
-			checkEqual(ctx, c.a, c.b)
+			ctx := test.NewTestContext(t).
+				withOptions(types.SetOption{})
+			test.CheckEqual(ctx, c.a, c.b)
 		})
 	}
 }
@@ -117,9 +120,9 @@ func TestSetNotEquals(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
-				withOptions(setOption{})
-			checkNotEqual(ctx, c.a, c.b)
+			ctx := test.NewTestContext(t).
+				withOptions(types.SetOption{})
+			test.CheckNotEqual(ctx, c.a, c.b)
 		})
 	}
 }
@@ -133,13 +136,13 @@ func TestSetDiff(t *testing.T) {
 		want    []string
 	}{{
 		name:    "empty sets no diff",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `[]`,
 		b:       `[]`,
 		want:    ss(),
 	}, {
 		name:    "add a number",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `[1]`,
 		b:       `[1,2]`,
 		want: ss(
@@ -148,13 +151,13 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:    "sets with same numbers",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `[1,2]`,
 		b:       `[1,2]`,
 		want:    ss(),
 	}, {
 		name:    "add a number multiple times",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `[1]`,
 		b:       `[1,2,2]`,
 		want: ss(
@@ -163,7 +166,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:    "remove a number",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `[1,2,3]`,
 		b:       `[1,3]`,
 		want: ss(
@@ -172,7 +175,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:    "replace one object with another",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `[{"a":1}]`,
 		b:       `[{"a":2}]`,
 		want: ss(
@@ -182,7 +185,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:    "replace one repeated object with another",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `[{"a":1},{"a":1}]`,
 		b:       `[{"a":2}]`,
 		want: ss(
@@ -192,7 +195,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:    "remove two strings and add one",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `["foo","foo","bar"]`,
 		b:       `["baz"]`,
 		want: ss(
@@ -203,7 +206,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:    "remove one string and add two repeated",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `["foo"]`,
 		b:       `["bar","baz","bar"]`,
 		want: ss(
@@ -214,7 +217,7 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:    "remove object and add array",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `{}`,
 		b:       `[]`,
 		want: ss(
@@ -225,7 +228,7 @@ func TestSetDiff(t *testing.T) {
 	}, {
 		name: "add property to object in set",
 		options: m(
-			setOption{},
+			types.SetOption{},
 			SetKeys("id"),
 		),
 		a: `[{"id":"foo"}]`,
@@ -237,7 +240,7 @@ func TestSetDiff(t *testing.T) {
 	}, {
 		name: "find object by id among empty objects",
 		options: m(
-			setOption{},
+			types.SetOption{},
 			SetKeys("id"),
 		),
 		a: `[{},{},{"id":"foo"},{}]`,
@@ -249,7 +252,7 @@ func TestSetDiff(t *testing.T) {
 	}, {
 		name: "find object by multiple ids",
 		options: m(
-			setOption{},
+			types.SetOption{},
 			SetKeys("id1", "id2"),
 		),
 		a: `[{},{"id1":"foo","id2":"zap"},{}]`,
@@ -261,7 +264,7 @@ func TestSetDiff(t *testing.T) {
 	}, {
 		name: "find object by id among others",
 		options: m(
-			setOption{},
+			types.SetOption{},
 			SetKeys("id"),
 		),
 		a: `[{"id":"foo"},{"id":"bar"}]`,
@@ -273,7 +276,7 @@ func TestSetDiff(t *testing.T) {
 	}, {
 		name: "two objects with different ids being exchanged",
 		options: m(
-			setOption{},
+			types.SetOption{},
 			SetKeys("id"),
 		),
 		a: `[{"id":"foo"}]`,
@@ -285,13 +288,13 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:    "set options applies to array in object",
-		options: m(setOption{}),
+		options: m(types.SetOption{}),
 		a:       `{"a":[1,2]}`,
 		b:       `{"a":[2,1]}`,
 		want:    ss(),
 	}, {
 		name:    "merge different types produces only new values",
-		options: m(MERGE, setOption{}),
+		options: m(MERGE, types.SetOption{}),
 		a:       `[1,2,3]`,
 		b:       `{}`,
 		want: ss(
@@ -301,13 +304,13 @@ func TestSetDiff(t *testing.T) {
 		),
 	}, {
 		name:    "merge outputs no diff when equal",
-		options: m(MERGE, setOption{}),
+		options: m(MERGE, types.SetOption{}),
 		a:       `[1,2,3]`,
 		b:       `[2,1,3]`,
 		want:    ss(),
 	}, {
 		name:    "merge replaces entire set when not equal",
-		options: m(MERGE, setOption{}),
+		options: m(MERGE, types.SetOption{}),
 		a:       `[1,2,3]`,
 		b:       `[2,1,4]`,
 		want: ss(
@@ -351,9 +354,9 @@ func TestSetDiff(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
+			ctx := test.NewTestContext(t).
 				withOptions(c.options...)
-			checkDiff(ctx, c.a, c.b, c.want...)
+			test.CheckDiff(ctx, c.a, c.b, c.want...)
 		})
 	}
 }
@@ -500,9 +503,9 @@ func TestSetPatch(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
-				withOptions(setOption{})
-			checkPatch(ctx, c.given, c.want, c.patch...)
+			ctx := test.NewTestContext(t).
+				withOptions(types.SetOption{})
+			test.CheckPatch(ctx, c.given, c.want, c.patch...)
 		})
 	}
 }
@@ -549,9 +552,9 @@ func TestSetPatchError(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
-				withOptions(setOption{})
-			checkPatchError(ctx, c.given, c.patch...)
+			ctx := test.NewTestContext(t).
+				withOptions(types.SetOption{})
+			test.CheckPatchError(ctx, c.given, c.patch...)
 		})
 	}
 }

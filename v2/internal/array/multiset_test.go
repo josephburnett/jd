@@ -1,12 +1,15 @@
-package jd
+package array
 
 import (
 	"testing"
+
+	"github.com/josephburnett/jd/v2/internal/test"
+	"github.com/josephburnett/jd/v2/internal/types"
 )
 
 func TestMultisetJson(t *testing.T) {
-	ctx := newTestContext(t).
-		withOptions(multisetOption{})
+	ctx := test.NewTestContext(t).
+		withOptions(types.MultisetOption{})
 	cases := []struct {
 		name  string
 		given string
@@ -35,14 +38,14 @@ func TestMultisetJson(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			checkJson(ctx, c.given, c.want)
+			test.CheckJson(ctx, c.given, c.want)
 		})
 	}
 }
 
 func TestMultisetEquals(t *testing.T) {
-	ctx := newTestContext(t).
-		withOptions(multisetOption{})
+	ctx := test.NewTestContext(t).
+		withOptions(types.MultisetOption{})
 	cases := []struct {
 		name string
 		a    string
@@ -75,14 +78,14 @@ func TestMultisetEquals(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			checkEqual(ctx, c.a, c.b)
+			test.CheckEqual(ctx, c.a, c.b)
 		})
 	}
 }
 
 func TestMultisetNotEquals(t *testing.T) {
-	ctx := newTestContext(t).
-		withOptions(multisetOption{})
+	ctx := test.NewTestContext(t).
+		withOptions(types.MultisetOption{})
 	cases := []struct {
 		name     string
 		metadata Metadata
@@ -108,14 +111,14 @@ func TestMultisetNotEquals(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			checkNotEqual(ctx, c.a, c.b)
+			test.CheckNotEqual(ctx, c.a, c.b)
 		})
 	}
 }
 
 func TestMultisetDiff(t *testing.T) {
-	ctx := newTestContext(t).
-		withOptions(multisetOption{})
+	ctx := test.NewTestContext(t).
+		withOptions(types.MultisetOption{})
 	cases := []struct {
 		name string
 		a    string
@@ -216,13 +219,13 @@ func TestMultisetDiff(t *testing.T) {
 			`@ []`,
 			`+ {}`,
 		),
-		ctx: newTestContext(t).withOptions(MERGE, multisetOption{}),
+		ctx: test.NewTestContext(t).withOptions(MERGE, types.MultisetOption{}),
 	}, {
 		name: "merge outputs no diff when equal",
 		a:    `[1,2,2,3]`,
 		b:    `[2,1,3,2]`,
 		want: ss(),
-		ctx:  newTestContext(t).withOptions(MERGE, multisetOption{}),
+		ctx:  test.NewTestContext(t).withOptions(MERGE, types.MultisetOption{}),
 	}, {
 		name: "merge replaces entire multiset when not equal",
 		a:    `[1,2,2,3]`,
@@ -232,7 +235,7 @@ func TestMultisetDiff(t *testing.T) {
 			`@ []`,
 			`+ [2,1,3,3]`,
 		),
-		ctx: newTestContext(t).withOptions(MERGE, multisetOption{}),
+		ctx: test.NewTestContext(t).withOptions(MERGE, types.MultisetOption{}),
 	}}
 
 	for _, tt := range cases {
@@ -241,7 +244,7 @@ func TestMultisetDiff(t *testing.T) {
 			if c == nil {
 				c = ctx
 			}
-			checkDiff(c, tt.a, tt.b, tt.want...)
+			test.CheckDiff(c, tt.a, tt.b, tt.want...)
 		})
 	}
 }
@@ -359,9 +362,9 @@ func TestMultisetPatch(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
-				withOptions(multisetOption{})
-			checkPatch(ctx, c.given, c.want, c.patch...)
+			ctx := test.NewTestContext(t).
+				withOptions(types.MultisetOption{})
+			test.CheckPatch(ctx, c.given, c.want, c.patch...)
 		})
 	}
 }
@@ -397,9 +400,9 @@ func TestMultisetPatchError(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ctx := newTestContext(t).
-				withOptions(multisetOption{})
-			checkPatchError(ctx, c.given, c.patch...)
+			ctx := test.NewTestContext(t).
+				withOptions(types.MultisetOption{})
+			test.CheckPatchError(ctx, c.given, c.patch...)
 		})
 	}
 }
