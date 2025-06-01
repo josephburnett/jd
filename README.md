@@ -149,7 +149,7 @@ func ExampleJsonNode_Patch() {
   "foo"
 + "bar"
 ]
-`
+`)
 	b, _ := a.Patch(diff)
 	fmt.Print(b.Json())
 	// Output:
