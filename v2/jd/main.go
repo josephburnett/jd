@@ -34,6 +34,7 @@ var (
 	translate     = flag.String("t", "", "Translate mode")
 	ver           = flag.Bool("version", false, "Print version and exit")
 	yaml          = flag.Bool("yaml", false, "Read and write YAML")
+	jqPath        = flag.Bool("jqpath", false, "Render the hunk header as 'jq' compatible JSON-path instead of JSON array")
 
 	_ = flag.Bool("v2", true, "Use the jd v2 library (deprecated, has no effect)")
 )
@@ -183,6 +184,7 @@ func printUsageAndExit() {
 		`  -mset        Treat arrays as multisets (bags).`,
 		`  -setkeys     Keys to identify set objects`,
 		`  -yaml        Read and write YAML instead of JSON.`,
+		`  -jqpath      Render the diff hunk header as 'jq' compatible JSON-path instead of JSON array.`,
 		`  -port=N      Serve web UI on port N`,
 		`  -precision=N Maximum absolute difference for numbers to be equal.`,
 		`               Example: -precision=0.00001`,
@@ -264,6 +266,11 @@ func diff(a, b string, options []jd.Option) (string, bool, error) {
 	if *color {
 		renderOptions = append(renderOptions, jd.COLOR)
 	}
+
+	if *jqPath {
+		renderOptions = append(renderOptions, jd.JQPATH)
+	}
+
 	var (
 		str      string
 		haveDiff bool
