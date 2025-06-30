@@ -118,6 +118,12 @@ func (o setKeysOption) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+type jqPathOption struct{}
+
+var JQPATH = jqPathOption{}
+
+func (o jqPathOption) isOption() {}
+
 func unmarshalAsString(v string, b []byte) error {
 	var untyped any
 	err := json.Unmarshal(b, &untyped)

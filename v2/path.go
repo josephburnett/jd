@@ -1,6 +1,9 @@
 package jd
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 type PathElement interface {
 	isPathElement()
@@ -105,6 +108,34 @@ func (p Path) JsonNode() JsonNode {
 		}
 	}
 	return a
+}
+
+func (p Path) JqPath() string {
+	buf := bytes.NewBuffer(nil)
+
+	length := len(p)
+
+	for i, e := range p {
+		switch e := e.(type) {
+		case PathIndex:
+			// We need to treat the array indices specially - because their
+			// formatting needs to reflect the `arr.[idx]` notation.
+			v := jsonNumber(e)
+			fmt.Fprintf(buf, "[%s]", v.Json())
+		default:
+			// TODO: do we need to handle other Path* elements separately?
+			// Or can they be simply treated as `jsonString()`?
+			v := jsonString(e.(PathKey))
+			buf.WriteString(v.Json())
+		}
+
+		// Keep appending '.' until we reach the last element in the path.
+		if i < (length - 1) {
+			buf.WriteRune('.')
+		}
+	}
+
+	return buf.String()
 }
 
 func (p Path) next() (PathElement, []Option, Path) {

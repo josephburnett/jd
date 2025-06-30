@@ -41,10 +41,18 @@ func colorStringMarshal(str jsonString, commonSequence []any, colorCode string) 
 func (d DiffElement) Render(opts ...Option) string {
 	isColor := checkOption[colorOption](opts)
 	isMerge := checkOption[mergeOption](opts) || d.Metadata.Merge
+	isJqPath := checkOption[jqPathOption](opts)
+
 	b := bytes.NewBuffer(nil)
 	b.WriteString(d.Metadata.Render())
 	b.WriteString("@ ")
-	b.Write([]byte(d.Path.JsonNode().Json()))
+
+	if isJqPath {
+		b.WriteString(d.Path.JqPath())
+	} else {
+		b.Write([]byte(d.Path.JsonNode().Json()))
+	}
+
 	b.WriteString("\n")
 
 	// Check if this is a single string diff. If so, compute the common sequence for a character

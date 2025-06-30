@@ -121,6 +121,124 @@ func checkDiffRender(t *testing.T, a, b string, diffLines ...string) {
 	}
 }
 
+func TestDiffRenderWithJqPath(t *testing.T) {
+	checkDiffRenderWithJqPath(t, `{"a":1}`, `{"a":2}`,
+		`@ "a"`,
+		`- 1`,
+		`+ 2`)
+	checkDiffRenderWithJqPath(t, `{"a":{"b":1}}`, `{"a":{"b":2}}`,
+		`@ "a"."b"`,
+		`- 1`,
+		`+ 2`)
+	checkDiffRenderWithJqPath(t, `{"a":{"b":1}}`, `{"a":{"c":2}}`,
+		`@ "a"."b"`,
+		`- 1`,
+		`@ "a"."c"`,
+		`+ 2`)
+	checkDiffRenderWithJqPath(t, `{"a":{"b":1}}`, `{"c":{"b":1}}`,
+		`@ "a"`,
+		`- {"b":1}`,
+		`@ "c"`,
+		`+ {"b":1}`)
+	// String changes
+	checkDiffRenderWithJqPath(t, `{"a":"bar"}`, `{"a":"baz"}`,
+		`@ "a"`,
+		`- "bar"`,
+		`+ "baz"`)
+	// Array of strings
+	checkDiffRenderWithJqPath(t, `{"qux":["foobar","foobaz"]}`, `{"qux":["fooarrr","foobaz"]}`,
+		`@ "qux".[0]`,
+		`[`,
+		`- "foobar"`,
+		`+ "fooarrr"`,
+		`  "foobaz"`,
+	)
+	// Addition only
+	checkDiffRenderWithJqPath(t, `{"str":""}`, `{"str":"abc"}`,
+		`@ "str"`,
+		`- ""`,
+		`+ "abc"`)
+	// Removal only
+	checkDiffRenderWithJqPath(t, `{"str":"abc"}`, `{"str":""}`,
+		`@ "str"`,
+		`- "abc"`,
+		`+ ""`)
+	// Nested strings
+	checkDiffRenderWithJqPath(t, `{"a":{"b":"hello"}}`, `{"a":{"b":"world"}}`,
+		`@ "a"."b"`,
+		`- "hello"`,
+		`+ "world"`)
+	// Multiple string changes
+	checkDiffRenderWithJqPath(t, `{"a":"foo","b":"bar"}`, `{"a":"baz","b":"qux"}`,
+		`@ "a"`,
+		`- "foo"`,
+		`+ "baz"`,
+		`@ "b"`,
+		`- "bar"`,
+		`+ "qux"`)
+	// Key change
+	checkDiffRenderWithJqPath(t, `{"a":"foo"}`, `{"b":"foo"}`,
+		`@ "a"`,
+		`- "foo"`,
+		`@ "b"`,
+		`+ "foo"`)
+	// Unicode string diff
+	checkDiffRenderWithJqPath(t, `{"a":"こんにちは"}`, `{"a":"さようなら"}`,
+		`@ "a"`,
+		`- "こんにちは"`,
+		`+ "さようなら"`)
+}
+
+func checkDiffRenderWithJqPath(t *testing.T, a, b string, diffLines ...string) {
+	diff := ""
+	for _, dl := range diffLines {
+		diff += dl + "\n"
+	}
+	aJson, err := ReadJsonString(a)
+	if err != nil {
+		t.Errorf("%v", err.Error())
+	}
+	bJson, err := ReadJsonString(b)
+	if err != nil {
+		t.Errorf("%v", err.Error())
+	}
+
+	// Test without color
+	// Use the JQPATH render option explicitly to trigger 'jq' compatible rendering of the hunk header.
+	d := aJson.diff(bJson, nil, []Option{}, strictPatchStrategy).Render(JQPATH)
+	if d != diff {
+		t.Errorf("%v.diff(%v) = %v. Want %v.", a, b, d, diff)
+	}
+
+	// Test with color
+	// Use the JQPATH render option explicitly to trigger 'jq' compatible rendering of the hunk header.
+	coloredDiff := aJson.diff(bJson, nil, []Option{}, strictPatchStrategy).Render(JQPATH, COLOR)
+	strippedDiff := stripAnsiCodes(coloredDiff)
+	if strippedDiff != diff {
+		t.Errorf("%v.diff(%v) with color (stripped) = %v. Want %v.", a, b, strippedDiff, diff)
+	}
+
+	// Verify that uncolored parts in string diffs match between + and - lines
+	lines := strings.Split(coloredDiff, "\n")
+	var minusLine, plusLine string
+	for i, line := range lines {
+		if len(line) == 0 {
+			continue
+		}
+		if line[0] == '-' && strings.Contains(line, "\"") { // Only check string diffs
+			minusLine = line
+			if i+1 < len(lines) && len(lines[i+1]) > 0 && lines[i+1][0] == '+' {
+				plusLine = lines[i+1]
+				minusUncolored := removeColoredParts(minusLine[1:]) // Skip the "- " prefix
+				plusUncolored := removeColoredParts(plusLine[1:])   // Skip the "+ " prefix
+				if minusUncolored != plusUncolored {
+					t.Errorf("Uncolored parts don't match:\n- %s\n+ %s", minusUncolored, plusUncolored)
+				}
+			}
+		}
+	}
+}
+
 // removeColoredParts returns the string with the colored parts (including the text between color codes) removed
 func removeColoredParts(s string) string {
 	var result strings.Builder
