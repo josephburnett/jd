@@ -7,7 +7,7 @@ func diff(
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)
-	if a.Equals(b) {
+	if a.Equals(b, options...) {
 		return d
 	}
 	var de DiffElement
