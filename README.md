@@ -217,8 +217,27 @@ Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' | 'Empty JSON Object' )* ']' 
 ## Cookbook
 
 ### Use git diff to produce a structural diff:
-```diff
+
+#### Option 1: Direct external tool (simple, one-off usage)
+```bash
 git difftool -yx jd @ -- foo.json
+```
+Use this when you want a quick structural diff without any setup. Works immediately if `jd` is in your PATH.
+
+#### Option 2: Configure as git diff driver (integrated, regular usage)
+```bash
+# One-time setup
+git config diff.jd.command 'jd --git-diff-driver'
+echo "*.json diff=jd" >> .gitattributes
+
+# Then use with any git diff command:
+git diff foo.json
+git difftool -t jd foo.json
+```
+Use this approach if you regularly work with JSON files. It integrates `jd` into git's diff system, automatically using structural diffs for JSON files across all git commands. The `.gitattributes` file can be committed to share this behavior with your team.
+
+Example output from either approach:
+```diff
 @ ["foo"]
 - "bar"
 + "baz"
