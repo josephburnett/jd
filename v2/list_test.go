@@ -705,6 +705,43 @@ func TestListPatchError(t *testing.T) {
 			`- 2`,
 			`]`, // wrong after context
 		),
+	}, {
+		// Additional edge cases for context verification vulnerability
+		a: `[1,2,3,4]`,
+		diff: ss(
+			`@ [1]`,
+			`  99`, // wrong before context - should be 1
+			`- 2`,
+			`+ 5`,
+			`  3`,
+		),
+	}, {
+		a: `[1,2,3,4]`,
+		diff: ss(
+			`@ [1]`,
+			`  1`,
+			`- 2`,
+			`+ 5`,
+			`  99`, // wrong after context - should be 3
+		),
+	}, {
+		a: `[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]`,
+		diff: ss(
+			`@ [0]`,
+			`  {"id":1,"name":"Charlie"}`, // wrong before context - name should be Alice
+			`- {"id":1,"name":"Alice"}`,
+			`+ {"id":3,"name":"Alice"}`,
+			`  {"id":2,"name":"Bob"}`,
+		),
+	}, {
+		a: `[10,20,30]`,
+		diff: ss(
+			`@ [1]`,
+			`  10`,
+			`- 20`,
+			`+ 25`,
+			`  999`, // fabricated after context - should be 30
+		),
 	}}
 
 	for _, tt := range tests {
