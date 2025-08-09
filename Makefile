@@ -89,13 +89,13 @@ tidy :
 
 .PHONY : check-version
 check-version : check-env
-	@if ! grep -q $(JD_VERSION) v2/jd/main.go; then                          \
-		echo "Set 'const version = $(JD_VERSION)' in main.go." ; \
+	@if ! grep -q $(JD_VERSION) v2/jd/main.go; then                   \
+		echo "Set 'const version = $(JD_VERSION)' in main.go." ;  \
 		false                                                   ; \
 	fi
-	@if ! grep -q $(JD_VERSION) action.yml; then                          \
-		echo "Set 'docker://josephburnett/jd:$(JD_VERSION)' in action.yml." ; \
-		false                                                   ; \
+	@if ! grep -q v$(JD_VERSION) action.yml; then                                  \
+		echo "Set 'docker://josephburnett/jd:v$(JD_VERSION)' in action.yml." ; \
+		false                                                   ;              \
 	fi
 
 .PHONY : check-env
