@@ -291,12 +291,12 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 		return nil, err
 	}
 	if len(path) == 0 {
-		// Not an array
+		// Not an array - return without setting context
 		return patch, nil
 	}
 	firstIndex, ok := path[len(path)-1].(PathIndex)
 	if !ok {
-		// Not an array
+		// Not an array - return without setting context
 		return patch, nil
 	}
 	path, err = readPointer(patch[1].Path)
@@ -304,12 +304,12 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 		return nil, err
 	}
 	if len(path) == 0 {
-		// Not an array
+		// Not an array - return without setting context
 		return patch, nil
 	}
 	secondIndex, ok := path[len(path)-1].(PathIndex)
 	if !ok {
-		// Not an array
+		// Not an array - return without setting context
 		return patch, nil
 	}
 	switch {
@@ -339,8 +339,8 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 		return patch[1:], nil
 	default:
 		if len(patch) == 2 {
-			// Something else. Let the rest of the read
-			// functions point out the error.
+			// The first test op doesn't match context patterns, so it should be
+			// processed as a regular validation operation, not consumed as context
 			return patch, nil
 		}
 	}
@@ -388,7 +388,8 @@ func setPatchDiffElementContext(patch []patchElement, d *DiffElement) ([]patchEl
 		d.After = []JsonNode{voidNode{}}
 		return patch[1:], nil
 	default:
-		// Something else.
+		// Test operations don't match expected context patterns.
+		// Don't consume them as context - let them be processed as validation operations.
 		return patch, nil
 	}
 }
