@@ -304,3 +304,66 @@ func TestSetPatchDiffElementContext(t *testing.T) {
 		})
 	}
 }
+
+
+
+// TestApplyPatch tests applying JSON Patch (RFC 6902) to documents.
+// This test demonstrates GitHub issue #99: JSON Patch format does not properly
+// validate context test operations that are not directly related to the target path.
+func TestApplyPatch(t *testing.T) {
+	cases := []struct {
+		name        string
+		jsonDoc     string
+		patchString string
+		expectError bool
+		description string
+	}{{
+		name:        "valid_patch_should_succeed",
+		jsonDoc:     `{"foo":["bar","baz"]}`,
+		patchString: `[{"op":"test","path":"/foo/0","value":"bar"},{"op":"test","path":"/foo/1","value":"baz"},{"op":"remove","path":"/foo/1","value":"baz"},{"op":"add","path":"/foo/1","value":"qux"}]`,
+		expectError: false,
+		description: "Valid patch with correct context should succeed",
+	}, {
+		name:        "github_issue_99",
+		jsonDoc:     `{"foo":["bar","baz"]}`,
+		patchString: `[{"op":"test","path":"/foo/0","value":"b"},{"op":"test","path":"/foo/1","value":"baz"},{"op":"remove","path":"/foo/1","value":"baz"},{"op":"add","path":"/foo/1","value":"boom"},{"op":"add","path":"/foo/1","value":"bam"}]`,
+		expectError: true,
+		description: "GitHub issue #99: First test expects '/foo/0' to be 'b' but actual is 'bar' - should fail",
+	}}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Parse the JSON document
+			doc, err := ReadJsonString(tc.jsonDoc)
+			if err != nil {
+				t.Fatalf("Failed to parse JSON document: %v", err)
+			}
+
+			// Parse the JSON Patch
+			patch, err := ReadPatchString(tc.patchString)
+			if err != nil {
+				t.Fatalf("Failed to parse JSON Patch: %v", err)
+			}
+
+			// Apply the patch
+			result, err := doc.Patch(patch)
+
+			if tc.expectError {
+				if err == nil {
+					t.Errorf("CONTEXT VERIFICATION BUG: Patch succeeded when it should have failed")
+					t.Errorf("  Original: %s", tc.jsonDoc)
+					t.Errorf("  Result:   %s", result.Json())
+					t.Errorf("  Issue: %s", tc.description)
+				} else {
+					t.Logf("GOOD: Patch correctly failed: %v", err)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Valid patch failed unexpectedly: %v", err)
+				} else {
+					t.Logf("Valid patch succeeded: %s -> %s", tc.jsonDoc, result.Json())
+				}
+			}
+		})
+	}
+}
