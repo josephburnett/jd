@@ -305,8 +305,6 @@ func TestSetPatchDiffElementContext(t *testing.T) {
 	}
 }
 
-
-
 // TestApplyPatch tests applying JSON Patch (RFC 6902) to documents.
 // This test demonstrates GitHub issue #99: JSON Patch format does not properly
 // validate context test operations that are not directly related to the target path.
