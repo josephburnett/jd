@@ -55,7 +55,7 @@ func TestNumberDiff(t *testing.T) {
 		`^ {"Merge":true}`,
 		`@ []`,
 		`+ 2`)
-	
+
 	// Test precision option with diff - should show no difference when within tolerance
 	checkDiff(
 		newTestContext(t).withOptions(Precision(0.01)),
