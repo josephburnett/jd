@@ -3,7 +3,7 @@ package jd
 import (
 	"fmt"
 
-	lcs "github.com/yudai/golcs"
+	"github.com/josephburnett/jd/v2/lcs"
 )
 
 type jsonList []JsonNode
@@ -22,8 +22,13 @@ func (l jsonList) raw() interface{} {
 	return jsonArray(l).raw()
 }
 
-func (l1 jsonList) Equals(n JsonNode, options ...Option) bool {
-	n2 := dispatch(n, options)
+func (l1 jsonList) Equals(n JsonNode, opts ...Option) bool {
+	o := refine(&options{retain: opts}, nil)
+	return l1.equals(n, o)
+}
+
+func (l1 jsonList) equals(n JsonNode, o *options) bool {
+	n2 := dispatch(n, o)
 	l2, ok := n2.(jsonList)
 	if !ok {
 		return false
@@ -33,30 +38,31 @@ func (l1 jsonList) Equals(n JsonNode, options ...Option) bool {
 	}
 	for i, v1 := range l1 {
 		v2 := l2[i]
-		if !v1.Equals(v2, options...) {
+		if !v1.equals(v2, o) {
 			return false
 		}
 	}
 	return true
 }
 
-func (l jsonList) hashCode(options []Option) [8]byte {
+func (l jsonList) hashCode(opts *options) [8]byte {
 	b := []byte{0xF5, 0x18, 0x0A, 0x71, 0xA4, 0xC4, 0x03, 0xF3} // random bytes
 	for _, n := range l {
-		h := n.hashCode(options)
+		h := n.hashCode(opts)
 		b = append(b, h[:]...)
 	}
 	return hash(b)
 }
 
-func (l jsonList) Diff(n JsonNode, options ...Option) Diff {
-	return l.diff(n, make(Path, 0), options, getPatchStrategy(options))
+func (l jsonList) Diff(n JsonNode, opts ...Option) Diff {
+	o := &options{retain: opts}
+	return l.diff(n, make(Path, 0), o, getPatchStrategy(o))
 }
 
 func (a jsonList) diff(
 	n JsonNode,
 	path Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	b, ok := n.(jsonList)
@@ -64,24 +70,55 @@ func (a jsonList) diff(
 		return a.diffDifferentTypes(n, path, strategy)
 	}
 	if strategy == mergePatchStrategy {
-		return a.diffMergePatchStrategy(b, path, options)
+		return a.diffMergePatchStrategy(b, path, opts)
 	}
-	aHashes := make([]interface{}, len(a))
-	bHashes := make([]interface{}, len(b))
+	// Create adapter slices for LCS
+	lcsLeft := make([]lcs.JsonNode, len(a))
+	lcsRight := make([]lcs.JsonNode, len(b))
 	for i, v := range a {
-		aHashes[i] = v.hashCode(options)
+		o := refine(opts, PathIndex(i))
+		hash := v.hashCode(o)
+		// Convert hash bytes to string for JsonNode compatibility
+		hashStr := string(hash[:])
+		n, _ := NewJsonNode(hashStr)
+		lcsLeft[i] = lcsNodeAdapter{n}
 	}
 	for i, v := range b {
-		bHashes[i] = v.hashCode(options)
+		o := refine(opts, PathIndex(i))
+		hash := v.hashCode(o)
+		// Convert hash bytes to string for JsonNode compatibility
+		hashStr := string(hash[:])
+		n, _ := NewJsonNode(hashStr)
+		lcsRight[i] = lcsNodeAdapter{n}
 	}
-	commonSequence := lcs.New([]interface{}(aHashes), []interface{}(bHashes)).Values()
+	lcsValues := lcs.New(lcsLeft, lcsRight).Values()
+	// Convert back to interface{} for compatibility
+	commonSequence := make([]any, len(lcsValues))
+	for i, v := range lcsValues {
+		if adapter, ok := v.(lcsNodeAdapter); ok {
+			commonSequence[i] = adapter.JsonNode.Json()
+		}
+	}
+	// Create aHashes and bHashes arrays for diffRest compatibility
+	aHashes := make([]any, len(a))
+	bHashes := make([]any, len(b))
+	for i, v := range lcsLeft {
+		if adapter, ok := v.(lcsNodeAdapter); ok {
+			aHashes[i] = adapter.JsonNode.Json()
+		}
+	}
+	for i, v := range lcsRight {
+		if adapter, ok := v.(lcsNodeAdapter); ok {
+			bHashes[i] = adapter.JsonNode.Json()
+		}
+	}
 	return a.diffRest(
 		0,
 		b,
 		append(path, PathIndex(0)),
 		aHashes, bHashes, commonSequence,
 		voidNode{},
-		options,
+		opts,
 		strategy,
 	)
 }
@@ -92,7 +129,7 @@ func (a jsonList) diffRest(
 	path Path,
 	aHashes, bHashes, commonSequence []interface{},
 	previous JsonNode,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	var aCursor, bCursor, commonSequenceCursor int
@@ -191,12 +228,12 @@ accumulatingDiff:
 				d[0].Remove = append(d[0].Remove, a[aCursor])
 				aCursor++
 			}
-		case sameContainerType(a[aCursor], b[bCursor], options):
+		case sameContainerType(a[aCursor], b[bCursor], opts):
 			// We are at compatible containers which
 			// contain additional differences. If we've
 			// accumulated differences at this level then
 			// keep them before the sub-diff.
-			subDiff := a[aCursor].diff(b[bCursor], pathNow(), options, strategy)
+			subDiff := a[aCursor].diff(b[bCursor], pathNow(), opts, strategy)
 			if haveDiff() {
 				d[0].After = after()
 				d = append(d, subDiff...)
@@ -244,7 +281,7 @@ accumulatingDiff:
 		pathNow(),
 		aHashes[aCursor:], bHashes[bCursor:], commonSequence[commonSequenceCursor:],
 		b[bCursor-1],
-		options,
+		opts,
 		strategy,
 	)...)
 }
@@ -270,8 +307,8 @@ func (a jsonList) diffDifferentTypes(n JsonNode, path Path, strategy patchStrate
 	return Diff{e}
 }
 
-func (a jsonList) diffMergePatchStrategy(b jsonList, path Path, options []Option) Diff {
-	if !a.Equals(b, options...) {
+func (a jsonList) diffMergePatchStrategy(b jsonList, path Path, opts *options) Diff {
+	if !a.equals(b, opts) {
 		e := DiffElement{
 			Metadata: Metadata{
 				Merge: true,
@@ -284,9 +321,9 @@ func (a jsonList) diffMergePatchStrategy(b jsonList, path Path, options []Option
 	return Diff{}
 }
 
-func sameContainerType(n1, n2 JsonNode, options []Option) bool {
-	c1 := dispatch(n1, options)
-	c2 := dispatch(n2, options)
+func sameContainerType(n1, n2 JsonNode, opts *options) bool {
+	c1 := dispatch(n1, opts)
+	c2 := dispatch(n2, opts)
 	switch c1.(type) {
 	case jsonObject:
 		if _, ok := c2.(jsonObject); ok {

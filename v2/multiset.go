@@ -21,8 +21,13 @@ func (a jsonMultiset) raw() interface{} {
 	return jsonArray(a).raw()
 }
 
-func (a1 jsonMultiset) Equals(n JsonNode, options ...Option) bool {
-	n = dispatch(n, options)
+func (a1 jsonMultiset) Equals(n JsonNode, opts ...Option) bool {
+	o := refine(&options{retain: opts}, nil)
+	return a1.equals(n, o)
+}
+
+func (a1 jsonMultiset) equals(n JsonNode, o *options) bool {
+	n = dispatch(n, o)
 	a2, ok := n.(jsonMultiset)
 	if !ok {
 		return false
@@ -30,17 +35,17 @@ func (a1 jsonMultiset) Equals(n JsonNode, options ...Option) bool {
 	if len(a1) != len(a2) {
 		return false
 	}
-	if a1.hashCode(options) == a2.hashCode(options) {
+	if a1.hashCode(o) == a2.hashCode(o) {
 		return true
 	} else {
 		return false
 	}
 }
 
-func (a jsonMultiset) hashCode(options []Option) [8]byte {
+func (a jsonMultiset) hashCode(opts *options) [8]byte {
 	h := make(hashCodes, 0, len(a))
 	for _, v := range a {
-		h = append(h, v.hashCode(options))
+		h = append(h, v.hashCode(opts))
 	}
 	sort.Sort(h)
 	b := make([]byte, 0, len(a)*8)
@@ -50,14 +55,15 @@ func (a jsonMultiset) hashCode(options []Option) [8]byte {
 	return hash(b)
 }
 
-func (a jsonMultiset) Diff(n JsonNode, options ...Option) Diff {
-	return a.diff(n, nil, options, getPatchStrategy(options))
+func (a jsonMultiset) Diff(n JsonNode, opts ...Option) Diff {
+	o := refine(&options{retain: opts}, nil)
+	return a.diff(n, nil, o, getPatchStrategy(o))
 }
 
 func (a1 jsonMultiset) diff(
 	n JsonNode,
 	path Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)
@@ -96,14 +102,14 @@ func (a1 jsonMultiset) diff(
 	a1Counts := make(map[[8]byte]int)
 	a1Map := make(map[[8]byte]JsonNode)
 	for _, v := range a1 {
-		hc := v.hashCode(options)
+		hc := v.hashCode(opts)
 		a1Counts[hc]++
 		a1Map[hc] = v
 	}
 	a2Counts := make(map[[8]byte]int)
 	a2Map := make(map[[8]byte]JsonNode)
 	for _, v := range a2 {
-		hc := v.hashCode(options)
+		hc := v.hashCode(opts)
 		a2Counts[hc]++
 		a2Map[hc] = v
 	}
@@ -180,7 +186,8 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, before, oldValues, newVa
 		return newValue, nil
 	}
 	// Unrolled recursive case
-	n, metadata, _ := pathAhead.next()
+	n, opts, _ := pathAhead.next()
+	o := refine(&options{retain: opts}, nil)
 	_, ok := n.(PathMultiset)
 	if !ok {
 		return nil, fmt.Errorf(
@@ -189,12 +196,12 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, before, oldValues, newVa
 	aCounts := make(map[[8]byte]int)
 	aMap := make(map[[8]byte]JsonNode)
 	for _, v := range a {
-		hc := v.hashCode(metadata)
+		hc := v.hashCode(o)
 		aCounts[hc]++
 		aMap[hc] = v
 	}
 	for _, v := range oldValues {
-		hc := v.hashCode(metadata)
+		hc := v.hashCode(o)
 		aCounts[hc]--
 		aMap[hc] = v
 	}
@@ -206,7 +213,7 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, before, oldValues, newVa
 		}
 	}
 	for _, v := range newValues {
-		hc := v.hashCode(metadata)
+		hc := v.hashCode(o)
 		aCounts[hc]++
 		aMap[hc] = v
 	}

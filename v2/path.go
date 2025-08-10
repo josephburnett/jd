@@ -24,8 +24,8 @@ func (_ PathSetKeys) isPathElement()      {}
 func (_ PathMultisetKeys) isPathElement() {}
 func (_ PathAllValues) isPathElement()    {}
 
-func newPathSetKeys(o jsonObject, options []Option) PathSetKeys {
-	setKeys, ok := getOption[setKeysOption](options)
+func newPathSetKeys(o jsonObject, opts *options) PathSetKeys {
+	setKeys, ok := getOption[setKeysOption](opts)
 	if !ok || setKeys == nil {
 		return PathSetKeys(o)
 	}

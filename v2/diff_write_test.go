@@ -88,13 +88,13 @@ func checkDiffRender(t *testing.T, a, b string, diffLines ...string) {
 	}
 
 	// Test without color
-	d := aJson.diff(bJson, nil, []Option{}, strictPatchStrategy).Render()
+	d := aJson.diff(bJson, nil, &options{}, strictPatchStrategy).Render()
 	if d != diff {
 		t.Errorf("%v.diff(%v) = %v. Want %v.", a, b, d, diff)
 	}
 
 	// Test with color
-	coloredDiff := aJson.diff(bJson, nil, []Option{}, strictPatchStrategy).Render(COLOR)
+	coloredDiff := aJson.diff(bJson, nil, &options{}, strictPatchStrategy).Render(COLOR)
 	strippedDiff := stripAnsiCodes(coloredDiff)
 	if strippedDiff != diff {
 		t.Errorf("%v.diff(%v) with color (stripped) = %v. Want %v.", a, b, strippedDiff, diff)

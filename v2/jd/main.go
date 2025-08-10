@@ -25,6 +25,7 @@ var (
 	format        = flag.String("f", "", "Diff format (jd, patch, merge)")
 	gitDiffDriver = flag.Bool("git-diff-driver", false, "Use jd as a git diff driver.")
 	mset          = flag.Bool("mset", false, "Arrays as multisets")
+	opts          = flag.String("opts", "[]", "JSON array of options")
 	output        = flag.String("o", "", "Output file")
 	patch         = flag.Bool("p", false, "Patch mode")
 	port          = flag.Int("port", 0, "Serve web UI on port")
@@ -35,6 +36,7 @@ var (
 	ver           = flag.Bool("version", false, "Print version and exit")
 	yaml          = flag.Bool("yaml", false, "Read and write YAML")
 
+	// This is here so that existing user commands that provide -v2 don't fail.
 	_ = flag.Bool("v2", true, "Use the jd v2 library (deprecated, has no effect)")
 )
 
@@ -63,7 +65,7 @@ func main() {
 		options []jd.Option
 		err     error
 	)
-	options, err = parseMetadata()
+	options, err = parseOptions()
 	if err != nil {
 		errorAndExit(err)
 	}
@@ -135,11 +137,14 @@ func serveWeb(port string) error {
 	return http.ListenAndServe(":"+port, nil)
 }
 
-func parseMetadata() ([]jd.Option, error) {
+func parseOptions() ([]jd.Option, error) {
 	if *precision != 0.0 && (*set || *mset) {
 		return nil, fmt.Errorf("-precision cannot be used with -set or -mset because they use hashcodes")
 	}
-	options := make([]jd.Option, 0)
+	options, err := jd.ReadOptionsString(*opts)
+	if err != nil {
+		return nil, err
+	}
 	if *set {
 		options = append(options, jd.SET)
 	}
@@ -179,6 +184,7 @@ func printUsageAndExit() {
 		`  -color       Print color diff.`,
 		`  -p           Apply patch FILE1 to FILE2 or STDIN.`,
 		`  -o=FILE3     Write to FILE3 instead of STDOUT.`,
+		`  -opts='[]'   JSON array of options.`,
 		`  -set         Treat arrays as sets.`,
 		`  -mset        Treat arrays as multisets (bags).`,
 		`  -setkeys     Keys to identify set objects`,

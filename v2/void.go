@@ -36,7 +36,12 @@ func (v voidNode) raw() interface{} {
 	return ""
 }
 
-func (v voidNode) Equals(n JsonNode, options ...Option) bool {
+func (v voidNode) Equals(n JsonNode, opts ...Option) bool {
+	o := refine(&options{retain: opts}, nil)
+	return v.equals(n, o)
+}
+
+func (v voidNode) equals(n JsonNode, o *options) bool {
 	switch n.(type) {
 	case voidNode:
 		return true
@@ -45,21 +50,22 @@ func (v voidNode) Equals(n JsonNode, options ...Option) bool {
 	}
 }
 
-func (v voidNode) hashCode(_ []Option) [8]byte {
+func (v voidNode) hashCode(_ *options) [8]byte {
 	return hash([]byte{0xF3, 0x97, 0x6B, 0x21, 0x91, 0x26, 0x8D, 0x96}) // Randomly chosen bytes
 }
 
-func (v voidNode) Diff(n JsonNode, options ...Option) Diff {
-	return v.diff(n, make(Path, 0), options, getPatchStrategy(options))
+func (v voidNode) Diff(n JsonNode, opts ...Option) Diff {
+	o := refine(&options{retain: opts}, nil)
+	return v.diff(n, make(Path, 0), o, getPatchStrategy(o))
 }
 
 func (v voidNode) diff(
 	n JsonNode,
 	p Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
-	return diff(v, n, p, options, strategy)
+	return diff(v, n, p, opts, strategy)
 }
 
 func (v voidNode) Patch(d Diff) (JsonNode, error) {

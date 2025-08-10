@@ -66,8 +66,9 @@ func checkHash(ctx *testContext, a, b string, wantSame bool) {
 	if err != nil {
 		ctx.t.Fatalf("%v", err.Error())
 	}
-	hashA := nodeA.hashCode(ctx.options)
-	hashB := nodeB.hashCode(ctx.options)
+	o := refine(&options{retain: ctx.options}, nil)
+	hashA := nodeA.hashCode(o)
+	hashB := nodeB.hashCode(o)
 	if wantSame && hashA != hashB {
 		ctx.t.Errorf("%v.hashCode = %v. %v.hashCode = %v. Want the same.",
 			a, hashA, b, hashB)
@@ -162,7 +163,6 @@ func m(m ...Option) []Option {
 type testContext struct {
 	t       *testing.T
 	options []Option
-	opts    []Option
 }
 
 func newTestContext(t *testing.T) *testContext {

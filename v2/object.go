@@ -33,7 +33,12 @@ func (o jsonObject) raw() interface{} {
 	return j
 }
 
-func (o1 jsonObject) Equals(n JsonNode, options ...Option) bool {
+func (o1 jsonObject) Equals(n JsonNode, opts ...Option) bool {
+	o := refine(&options{retain: opts}, nil)
+	return o1.equals(n, o)
+}
+
+func (o1 jsonObject) equals(n JsonNode, o *options) bool {
 	o2, ok := n.(jsonObject)
 	if !ok {
 		return false
@@ -47,7 +52,7 @@ func (o1 jsonObject) Equals(n JsonNode, options ...Option) bool {
 		if !ok {
 			return false
 		}
-		ret := val1.Equals(val2, options...)
+		ret := val1.equals(val2, o)
 		if !ret {
 			return false
 		}
@@ -55,7 +60,7 @@ func (o1 jsonObject) Equals(n JsonNode, options ...Option) bool {
 	return true
 }
 
-func (o jsonObject) hashCode(options []Option) [8]byte {
+func (o jsonObject) hashCode(opts *options) [8]byte {
 	keys := make([]string, 0, len(o))
 	for k := range o {
 		keys = append(keys, k)
@@ -65,7 +70,7 @@ func (o jsonObject) hashCode(options []Option) [8]byte {
 	for _, k := range keys {
 		keyHash := hash([]byte(k))
 		a = append(a, keyHash[:]...)
-		valueHash := o[k].hashCode(options)
+		valueHash := o[k].hashCode(opts)
 		a = append(a, valueHash[:]...)
 	}
 	return hash(a)
@@ -73,10 +78,10 @@ func (o jsonObject) hashCode(options []Option) [8]byte {
 
 // ident is the identity of the json object based on either the hash of a
 // given set of keys or the full object if no keys are present.
-func (o jsonObject) ident(options []Option) [8]byte {
-	keys, ok := getOption[setKeysOption](options)
+func (o jsonObject) ident(opts *options) [8]byte {
+	keys, ok := getOption[setKeysOption](opts)
 	if !ok {
-		return o.hashCode(options)
+		return o.hashCode(opts)
 	}
 	hashes := hashCodes{
 		// We start with a constant hash to distinguish between
@@ -86,16 +91,16 @@ func (o jsonObject) ident(options []Option) [8]byte {
 	for _, key := range []string(*keys) {
 		v, ok := o[key]
 		if ok {
-			hashes = append(hashes, v.hashCode(options))
+			hashes = append(hashes, v.hashCode(opts))
 		}
 	}
 	if len(hashes) == 0 {
-		return o.hashCode(options)
+		return o.hashCode(opts)
 	}
 	return hashes.combine()
 }
 
-func (o jsonObject) pathIdent(pathObject jsonObject, options []Option) [8]byte {
+func (o jsonObject) pathIdent(pathObject jsonObject, opts *options) [8]byte {
 	keys := []string{}
 	for k := range pathObject {
 		keys = append(keys, k)
@@ -107,17 +112,18 @@ func (o jsonObject) pathIdent(pathObject jsonObject, options []Option) [8]byte {
 		}
 	}
 	e, _ := NewJsonNode(id)
-	return e.hashCode([]Option{})
+	return e.hashCode(&options{})
 }
 
-func (o jsonObject) Diff(n JsonNode, options ...Option) Diff {
-	return o.diff(n, make(Path, 0), options, getPatchStrategy(options))
+func (o jsonObject) Diff(n JsonNode, opts ...Option) Diff {
+	op := &options{retain: opts}
+	return o.diff(n, make(Path, 0), op, getPatchStrategy(op))
 }
 
 func (o1 jsonObject) diff(
 	n JsonNode,
 	path Path,
-	options []Option,
+	opts *options,
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)
@@ -157,7 +163,8 @@ func (o1 jsonObject) diff(
 		v1 := o1[k1]
 		if v2, ok := o2[k1]; ok {
 			// Both keys are present
-			subDiff := v1.diff(v2, append(path, PathKey(k1)), options, strategy)
+			o := refine(opts, PathKey(k1))
+			subDiff := v1.diff(v2, append(path, PathKey(k1)), o, strategy)
 			d = append(d, subDiff...)
 		} else {
 			// O2 missing key
