@@ -24,8 +24,8 @@ func (_ PathSetKeys) isPathElement()      {}
 func (_ PathMultisetKeys) isPathElement() {}
 func (_ PathAllValues) isPathElement()    {}
 
-func newPathSetKeys(o jsonObject, opts *options) PathSetKeys {
-	setKeys, ok := getOption[setKeysOption](opts)
+func newPathSetKeys(o jsonObject, opts *Options) PathSetKeys {
+	setKeys, ok := getOption[SetKeysOption](opts)
 	if !ok || setKeys == nil {
 		return PathSetKeys(o)
 	}
@@ -118,13 +118,13 @@ func (p Path) next() (PathElement, []Option, Path) {
 	case PathIndex:
 		return p[0], nil, rest
 	case PathSet:
-		return p[0], []Option{setOption{}}, rest
+		return p[0], []Option{SET}, rest
 	case PathMultiset:
-		return p[0], []Option{multisetOption{}}, rest
+		return p[0], []Option{MULTISET}, rest
 	case PathSetKeys:
-		return p[0], []Option{setOption{}}, rest
+		return p[0], []Option{SET}, rest
 	case PathMultisetKeys:
-		return p[0], []Option{multisetOption{}}, rest
+		return p[0], []Option{MULTISET}, rest
 	default:
 		panic(fmt.Sprintf("path element should be a closed set. got %T", e))
 	}

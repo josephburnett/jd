@@ -1,5 +1,20 @@
 package jd
 
+import "github.com/josephburnett/jd/v2/internal/types"
+
+type JsonNode = types.JsonNode
+type Path = types.Path 
+type options = types.Options
+type patchStrategy = types.PatchStrategy
+type Diff = types.Diff
+type DiffElement = types.DiffElement
+type Metadata = types.Metadata
+
+const (
+	mergePatchStrategy = types.MergePatchStrategy
+	strictPatchStrategy = types.StrictPatchStrategy
+)
+
 func diff(
 	a, b JsonNode,
 	p Path,

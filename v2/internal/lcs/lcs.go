@@ -5,13 +5,12 @@ package lcs
 
 import (
 	"context"
-	"reflect"
 
-	"github.com/josephburnett/jd/v2"
+	"github.com/josephburnett/jd/v2/internal/types"
 )
 
 // Lcs is the interface to calculate the LCS of two arrays.
-type lcsI interface {
+type Lcs interface {
 	// Values calculates the LCS value of the two arrays.
 	Values() (values []interface{})
 	// ValueContext is a context aware version of Values()
@@ -31,14 +30,19 @@ type lcsI interface {
 }
 
 // IndexPair represents an pair of indeices in the Left and Right arrays found in the LCS value.
-type indexPair struct {
+type IndexPair struct {
 	Left  int
 	Right int
 }
 
+type indexPair = IndexPair
+
 type lcs struct {
-	left  []interface{}
-	right []interface{}
+	left          []types.JsonNode
+	right         []types.JsonNode
+	leftOriginal  []interface{}
+	rightOriginal []interface{}
+	opts          *types.Options
 	/* for caching */
 	table      [][]int
 	indexPairs []indexPair
@@ -46,10 +50,60 @@ type lcs struct {
 }
 
 // New creates a new LCS calculator from two arrays.
-func newLCS(left, right []jd.JsonNode) Lcs {
+func New(left, right []interface{}) Lcs {
+	// Store original values for API compatibility
+	leftOriginal := make([]interface{}, len(left))
+	rightOriginal := make([]interface{}, len(right))
+	copy(leftOriginal, left)
+	copy(rightOriginal, right)
+	
+	// Convert to JsonNodes for comparison
+	leftNodes := make([]types.JsonNode, len(left))
+	rightNodes := make([]types.JsonNode, len(right))
+	
+	for i, v := range left {
+		if node, ok := v.(types.JsonNode); ok {
+			leftNodes[i] = node
+		} else {
+			// Convert basic types to JsonNodes
+			node, err := types.NewJsonNode(v)
+			if err != nil {
+				panic(err) // This maintains existing API behavior
+			}
+			leftNodes[i] = node
+		}
+	}
+	
+	for i, v := range right {
+		if node, ok := v.(types.JsonNode); ok {
+			rightNodes[i] = node
+		} else {
+			node, err := types.NewJsonNode(v)
+			if err != nil {
+				panic(err)
+			}
+			rightNodes[i] = node
+		}
+	}
+	
+	return &lcs{
+		left:          leftNodes,
+		right:         rightNodes,
+		leftOriginal:  leftOriginal,
+		rightOriginal: rightOriginal,
+		opts:          &types.Options{}, // Default empty options
+		table:         nil,
+		indexPairs:    nil,
+		values:        nil,
+	}
+}
+
+// NewWithOptions creates a new LCS calculator with path-specific options.
+func NewWithOptions(left, right []types.JsonNode, opts *types.Options) Lcs {
 	return &lcs{
 		left:       left,
 		right:      right,
+		opts:       opts,
 		table:      nil,
 		indexPairs: nil,
 		values:     nil,
@@ -85,7 +139,8 @@ func (lcs *lcs) TableContext(ctx context.Context) (table [][]int, err error) {
 		}
 		for x := 1; x < sizeX; x++ {
 			increment := 0
-			if reflect.DeepEqual(lcs.left[x-1], lcs.right[y-1]) {
+			// Use option-aware equality instead of reflect.DeepEqual
+			if lcs.left[x-1].Equals(lcs.right[y-1], lcs.opts.Retain...) {
 				increment = 1
 			}
 			table[x][y] = max(table[x-1][y-1]+increment, table[x-1][y], table[x][y-1])
@@ -131,7 +186,7 @@ func (lcs *lcs) IndexPairsContext(ctx context.Context) (pairs []IndexPair, err e
 	pairs = make([]IndexPair, table[len(table)-1][len(table[0])-1])
 
 	for x, y := len(lcs.left), len(lcs.right); x > 0 && y > 0; {
-		if reflect.DeepEqual(lcs.left[x-1], lcs.right[y-1]) {
+		if lcs.left[x-1].Equals(lcs.right[y-1], lcs.opts.Retain...) {
 			pairs[table[x][y]-1] = IndexPair{Left: x - 1, Right: y - 1}
 			x--
 			y--
@@ -168,7 +223,7 @@ func (lcs *lcs) ValuesContext(ctx context.Context) (values []interface{}, err er
 
 	values = make([]interface{}, len(pairs))
 	for i, pair := range pairs {
-		values[i] = lcs.left[pair.Left]
+		values[i] = lcs.leftOriginal[pair.Left]
 	}
 	lcs.values = values
 
@@ -177,14 +232,12 @@ func (lcs *lcs) ValuesContext(ctx context.Context) (values []interface{}, err er
 
 // Table implements Lcs.Left()
 func (lcs *lcs) Left() (leftValues []interface{}) {
-	leftValues = lcs.left
-	return
+	return lcs.leftOriginal
 }
 
 // Table implements Lcs.Right()
 func (lcs *lcs) Right() (rightValues []interface{}) {
-	rightValues = lcs.right
-	return
+	return lcs.rightOriginal
 }
 
 func max(first int, rest ...int) (max int) {

@@ -25,16 +25,28 @@ func TestOptionJSON(t *testing.T) {
 		option: COLOR,
 	}, {
 		json:   `[{"precision":1.01}]`,
-		option: Precision(1.01),
+		option: PrecisionOption{Precision: 1.01},
 	}, {
 		json:   `[{"setkeys":["foo","bar"]}]`,
-		option: SetKeys("foo", "bar"),
+		option: SetKeysOption([]string{"foo", "bar"}),
 	}, {
 		json:   `[{"@":["foo"],"^":["SET"]}]`,
-		option: PathOption(Path{PathKey("foo")}, SET),
+		option: PathOption{At: Path{PathKey("foo")}, Then: []Option{SET}},
 	}, {
 		json:   `[{"@":["foo"],"^":[{"@":["bar"],"^":["SET"]}]}]`,
-		option: PathOption(Path{PathKey("foo")}, PathOption(Path{PathKey("bar")}, SET)),
+		option: PathOption{At: Path{PathKey("foo")}, Then: []Option{PathOption{At: Path{PathKey("bar")}, Then: []Option{SET}}}},
+	}, {
+		json:   `[{"@":["users"],"^":["SET"]}]`,
+		option: PathOption{At: Path{PathKey("users")}, Then: []Option{SET}},
+	}, {
+		json:   `[{"@":["users",0,"tags"],"^":["SET"]}]`,
+		option: PathOption{At: Path{PathKey("users"), PathIndex(0), PathKey("tags")}, Then: []Option{SET}},
+	}, {
+		json:   `[{"@":["data","items"],"^":["MULTISET"]}]`,
+		option: PathOption{At: Path{PathKey("data"), PathKey("items")}, Then: []Option{MULTISET}},
+	}, {
+		json:   `[{"@":["measurements"],"^":[{"precision":0.001}]}]`,
+		option: PathOption{At: Path{PathKey("measurements")}, Then: []Option{PrecisionOption{Precision: 0.001}}},
 	}}
 	for _, c := range cases {
 		t.Run(c.json, func(t *testing.T) {
@@ -66,32 +78,57 @@ func TestRefine(t *testing.T) {
 		wantRest:  []Option{SET, COLOR},
 	}, {
 		name:      "recurse consumes on element of path",
-		opts:      []Option{PathOption(Path{PathKey("foo"), PathKey("bar")}, SET)},
+		opts:      []Option{PathOption{At: Path{PathKey("foo"), PathKey("bar")}, Then: []Option{SET}}},
 		element:   PathKey("foo"),
 		wantApply: nil,
-		wantRest:  []Option{PathOption(Path{PathKey("bar")}, SET)},
+		wantRest:  []Option{PathOption{At: Path{PathKey("bar")}, Then: []Option{SET}}},
 	}, {
 		name:      "path option ending in set",
-		opts:      []Option{PathOption(Path{PathKey("foo"), PathSet{}})},
+		opts:      []Option{PathOption{At: Path{PathKey("foo"), PathSet{}}, Then: nil}},
 		element:   PathKey("foo"),
 		wantApply: []Option{SET},
 		wantRest:  nil,
 	}, {
 		name:      "path option delivering set in payload",
-		opts:      []Option{PathOption(Path{PathKey("foo")}, SET)},
+		opts:      []Option{PathOption{At: Path{PathKey("foo")}, Then: []Option{SET}}},
 		element:   PathKey("foo"),
+		wantApply: []Option{SET},
+		wantRest:  nil,
+	}, {
+		name:      "users path gets set semantics",
+		opts:      []Option{PathOption{At: Path{PathKey("users")}, Then: []Option{SET}}},
+		element:   PathKey("users"),
+		wantApply: []Option{SET},
+		wantRest:  nil,
+	}, {
+		name:      "nested path users[0].tags - step 1 (users)",
+		opts:      []Option{PathOption{At: Path{PathKey("users"), PathIndex(0), PathKey("tags")}, Then: []Option{SET}}},
+		element:   PathKey("users"),
+		wantApply: nil,
+		wantRest:  []Option{PathOption{At: Path{PathIndex(0), PathKey("tags")}, Then: []Option{SET}}},
+	}, {
+		name:      "nested path users[0].tags - step 2 (index 0)",
+		opts:      []Option{PathOption{At: Path{PathIndex(0), PathKey("tags")}, Then: []Option{SET}}},
+		element:   PathIndex(0),
+		wantApply: nil,
+		wantRest:  []Option{PathOption{At: Path{PathKey("tags")}, Then: []Option{SET}}},
+	}, {
+		name:      "nested path users[0].tags - step 3 (tags)",
+		opts:      []Option{PathOption{At: Path{PathKey("tags")}, Then: []Option{SET}}},
+		element:   PathKey("tags"),
 		wantApply: []Option{SET},
 		wantRest:  nil,
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			o := refine(&options{retain: c.opts}, c.element)
-			require.Equal(t, c.wantApply, o.apply)
-			require.Equal(t, c.wantRest, o.retain)
+			o := Refine(&Options{Retain: c.opts}, c.element)
+			require.Equal(t, c.wantApply, o.Apply)
+			require.Equal(t, c.wantRest, o.Retain)
 		})
 	}
 }
 
+/*
 func XTestPathOption(t *testing.T) {
 	cases := []struct {
 		name string
@@ -133,3 +170,4 @@ func XTestPathOption(t *testing.T) {
 		})
 	}
 }
+*/

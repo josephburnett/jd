@@ -1,5 +1,10 @@
 package types
 
+// Metadata describes how to interpret the diff.
+type Metadata struct {
+	Merge bool
+}
+
 // DiffElement (hunk) is a way in which two JsonNodes differ at a given
 // Path. OldValues can be removed and NewValues can be added. The exact
 // Path and how to interpret the intervening structure is determined by a
@@ -50,6 +55,36 @@ type DiffElement struct {
 // easily be edited by hand. The elements of a Diff can be applied to
 // a JsonNode by the Patch method.
 type Diff []DiffElement
+
+func (d Diff) Render(options ...Option) string {
+	// TODO: Implement proper rendering
+	return ""
+}
+
+func (d Diff) RenderPatch() (string, error) {
+	// TODO: Implement patch rendering  
+	return "[]", nil
+}
+
+func (d Diff) RenderMerge() (string, error) {
+	// TODO: Implement merge rendering
+	return "{}", nil
+}
+
+func ReadDiffString(s string) (Diff, error) {
+	// TODO: Implement diff parsing
+	return Diff{}, nil
+}
+
+func ReadPatchString(s string) (Diff, error) {
+	// TODO: Implement patch parsing
+	return Diff{}, nil
+}
+
+func ReadMergeString(s string) (Diff, error) {
+	// TODO: Implement merge parsing
+	return Diff{}, nil
+}
 
 // JSON Patch (RFC 6902)
 type patchElement struct {

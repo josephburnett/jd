@@ -40,7 +40,8 @@ Output:
 3. Adds context before and after when modifying an array to prevent bad patches.
 4. Create and apply structural patches in jd, patch (RFC 6902) and merge (RFC 7386) patch formats.
 5. Translates between patch formats.
-6. Includes Web Assembly-based UI (no network calls).
+6. **Path-Metadata Options**: Apply different comparison semantics (SET, LIST, MULTISET) at specific JSON paths.
+7. Includes Web Assembly-based UI (no network calls).
 
 ## Installation
 
@@ -115,6 +116,60 @@ return a diff if there are differences in the objects themselves,
 their keys and/or values. You shouldn't expect this option to mask or
 ignore non-specified keys, it is not intended as a way to 'ignore'
 some differences between objects.
+
+## Path-Metadata Options
+
+The path-metadata feature allows you to apply different comparison semantics to specific paths within your JSON documents. This is particularly useful when you have mixed data structures where some arrays should be treated as ordered lists while others should be treated as unordered sets.
+
+### Basic Syntax
+
+Path-metadata options use JSON format with two keys:
+- `@` (at): Specifies the target path as an array of path elements
+- `^` (then): Specifies the options to apply at that path
+
+```bash
+# Apply SET semantics to the "users" array
+jd -opts='[{"@":["users"],"^":["SET"]}]' file1.json file2.json
+
+# Apply MULTISET semantics to nested path
+jd -opts='[{"@":["data","items"],"^":["MULTISET"]}]' file1.json file2.json
+```
+
+### Path Elements
+
+- **String keys**: `["users"]` targets an object property
+- **Array indices**: `[0]` targets the first array element  
+- **Nested paths**: `["users",0,"tags"]` targets `users[0].tags`
+- **Set markers**: `[{}]` targets arrays treated as sets
+- **Multiset markers**: `[[]]` targets arrays treated as multisets
+
+### Examples
+
+**Mixed array semantics:**
+```json
+{
+  "logs": ["error", "info", "debug"],
+  "users": ["alice", "bob"]  
+}
+```
+
+Apply LIST semantics to `logs` (order matters) but SET semantics to `users` (order doesn't matter):
+
+```bash
+jd -opts='[{"@":["users"],"^":["SET"]}]' old.json new.json
+```
+
+**Precision at specific paths:**
+```bash
+# Apply precision only to numbers under "measurements"
+jd -opts='[{"@":["measurements"],"^":[{"precision":0.001}]}]' old.json new.json
+```
+
+**Complex nested example:**
+```bash
+# Users array uses SET semantics, but each user's tags also use SET semantics
+jd -opts='[{"@":["users"],"^":["SET"]},{"@":["users",{},"tags"],"^":["SET"]}]' old.json new.json
+```
 
 ## Library usage
 

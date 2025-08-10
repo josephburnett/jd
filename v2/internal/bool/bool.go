@@ -1,15 +1,23 @@
 package jd
 
-type jsonBool bool
+import "github.com/josephburnett/jd/v2/internal/types"
+
+type jsonBool = types.JsonBool
+type JsonNode = types.JsonNode
+type Option = types.Option
+type Diff = types.Diff
+type Path = types.Path
+type options = types.Options
+type patchStrategy = types.PatchStrategy
 
 var _ JsonNode = jsonBool(true)
 
 func (b jsonBool) Json(_ ...Option) string {
-	return renderJson(b.raw())
+	return types.RenderJson(b.raw())
 }
 
 func (b jsonBool) Yaml(_ ...Option) string {
-	return renderYaml(b.raw())
+	return types.RenderYaml(b.raw())
 }
 
 func (b jsonBool) raw() interface{} {
@@ -37,8 +45,8 @@ func (b jsonBool) hashCode(_ *options) [8]byte {
 }
 
 func (b jsonBool) Diff(n JsonNode, opts ...Option) Diff {
-	o := refine(&options{retain: opts}, nil)
-	strategy := getPatchStrategy(o)
+	o := types.Refine(&options{Retain: opts}, nil)
+	strategy := types.GetPatchStrategy(o)
 	return b.diff(n, make(Path, 0), o, strategy)
 }
 

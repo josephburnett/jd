@@ -57,7 +57,7 @@ func NewOption(a any) (Option, error) {
 						return nil, fmt.Errorf("wanted float64. got %T", v)
 					}
 					prec = f
-					return Precision(prec), nil
+					return PrecisionOption{Precision: prec}, nil
 				case "setkeys":
 					untypedKeys, ok := v.([]any)
 					if !ok {
@@ -71,7 +71,7 @@ func NewOption(a any) (Option, error) {
 						}
 						keys = append(keys, key)
 					}
-					return SetKeys(keys...), nil
+					return SetKeysOption(keys), nil
 				default:
 					return nil, fmt.Errorf("unrecognized option: %v", a)
 				}
@@ -108,7 +108,7 @@ func NewOption(a any) (Option, error) {
 					return nil, fmt.Errorf("unrecognized option: %v", a)
 				}
 			}
-			return PathOption(at, then...), nil
+			return PathOption{At: at, Then: then}, nil
 		default:
 			return nil, fmt.Errorf("unrecognized option: %v", a)
 		}
@@ -165,7 +165,7 @@ type PrecisionOption struct {
 func (o PrecisionOption) isOption() {}
 func (o PrecisionOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]float64{
-		"precision": o.precision,
+		"precision": o.Precision,
 	})
 }
 func (o PrecisionOption) UnmarshalJSON(b []byte) error {
@@ -174,7 +174,7 @@ func (o PrecisionOption) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	o = PrecisionOption{
-		precision: *f,
+		Precision: *f,
 	}
 	return nil
 }
@@ -246,15 +246,22 @@ func unmarshalObjectKeyAs[T any](b []byte, key string) (*T, error) {
 	return &t, nil
 }
 
-type patchStrategy string
+type PatchStrategy string
 
 const (
-	mergePatchStrategy  patchStrategy = "merge"
-	strictPatchStrategy patchStrategy = "strict"
+	MergePatchStrategy  PatchStrategy = "merge"
+	StrictPatchStrategy PatchStrategy = "strict"
 )
 
-func checkOption[T Option](opts *options) bool {
-	for _, o := range opts.retain {
+type patchStrategy = PatchStrategy
+
+const (
+	mergePatchStrategy  = MergePatchStrategy
+	strictPatchStrategy = StrictPatchStrategy
+)
+
+func checkOption[T Option](opts *Options) bool {
+	for _, o := range opts.Retain {
 		if _, ok := o.(T); ok {
 			return true
 		}
@@ -262,8 +269,8 @@ func checkOption[T Option](opts *options) bool {
 	return false
 }
 
-func getOption[T Option](opts *options) (*T, bool) {
-	for _, o := range opts.apply {
+func getOption[T Option](opts *Options) (*T, bool) {
+	for _, o := range opts.Apply {
 		if t, ok := o.(T); ok {
 			return &t, true
 		}
@@ -271,12 +278,33 @@ func getOption[T Option](opts *options) (*T, bool) {
 	return nil, false
 }
 
-func getPatchStrategy(opts *options) patchStrategy {
+func GetOption[T Option](opts *Options) (*T, bool) {
+	for _, o := range opts.Apply {
+		if t, ok := o.(T); ok {
+			return &t, true
+		}
+	}
+	return nil, false
+}
+
+func GetPatchStrategy(opts *Options) PatchStrategy {
 	if checkOption[MergeOption](opts) {
 		return mergePatchStrategy
 	}
 	return strictPatchStrategy
 }
+
+func getPatchStrategy(opts *Options) patchStrategy {
+	return GetPatchStrategy(opts)
+}
+
+// Predefined constants for common options
+var (
+	MERGE    = MergeOption{}
+	SET      = SetOption{}
+	MULTISET = MultisetOption{}
+	COLOR    = ColorOption{}
+)
 
 type Options struct {
 	Apply  []Option
@@ -286,7 +314,7 @@ type Options struct {
 func Refine(o *Options, p PathElement) *Options {
 	var apply, retain []Option
 	// Only recurse on retained options. Applied options are consumed.
-	for _, o := range o.retain {
+	for _, o := range o.Retain {
 		switch o := o.(type) {
 		// Global options always to every path.
 		case MergeOption, SetOption, MultisetOption, ColorOption, PrecisionOption, SetKeysOption:
@@ -309,6 +337,12 @@ func Refine(o *Options, p PathElement) *Options {
 				}
 			}
 
+			// Special case: when p == nil (at root), always retain path options for later processing
+			if p == nil {
+				retain = append(retain, o)
+				continue
+			}
+			
 			if leaf {
 				if len(o.At) > 0 && o.At[0] != p {
 					// Ignore options targetting other paths.
@@ -323,21 +357,15 @@ func Refine(o *Options, p PathElement) *Options {
 			}
 			// Retain options to be used later.
 			if !leaf {
-				var nextAt Path
-				if p == nil {
-					nextAt = o.At
-				} else {
-					nextAt = o.At[1:]
-				}
-				retain = append(retain, pathOption{
-					At:   nextAt,
+				retain = append(retain, PathOption{
+					At:   o.At[1:],
 					Then: o.Then,
 				})
 			}
 		}
 	}
 	return &Options{
-		apply:  apply,
-		retain: retain,
+		Apply:  apply,
+		Retain: retain,
 	}
 }

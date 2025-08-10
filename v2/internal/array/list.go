@@ -3,9 +3,9 @@ package array
 import (
 	"fmt"
 
+	"github.com/josephburnett/jd/v2/internal/lcs"
 	"github.com/josephburnett/jd/v2/internal/node"
 	"github.com/josephburnett/jd/v2/internal/types"
-	lcs "github.com/yudai/golcs"
 )
 
 type JsonList []types.JsonNode
@@ -57,31 +57,31 @@ func (l JsonList) hashCode(opts *types.Options) [8]byte {
 }
 
 func (l JsonList) Diff(n types.JsonNode, opts ...types.Option) types.Diff {
-	o := &type.Options{Retain: opts}
-	return l.diff(n, make(Path, 0), o, getPatchStrategy(o))
+	o := types.Refine(&types.Options{Retain: opts}, nil)
+	return l.diff(n, make(types.Path, 0), o, types.GetPatchStrategy(o))
 }
 
 func (a JsonList) diff(
-	n JsonNode,
-	path Path,
-	opts *options,
-	strategy patchStrategy,
-) Diff {
+	n types.JsonNode,
+	path types.Path,
+	opts *types.Options,
+	strategy types.PatchStrategy,
+) types.Diff {
 	b, ok := n.(JsonList)
 	if !ok {
 		return a.diffDifferentTypes(n, path, strategy)
 	}
-	if strategy == mergePatchStrategy {
+	if strategy == types.MergePatchStrategy {
 		return a.diffMergePatchStrategy(b, path, opts)
 	}
 	aHashes := make([]any, len(a))
 	bHashes := make([]any, len(b))
 	for i, v := range a {
-		o := refine(opts, PathIndex(i))
+		o := types.Refine(opts, types.PathIndex(i))
 		aHashes[i] = v.hashCode(o)
 	}
 	for i, v := range b {
-		o := refine(opts, PathIndex(i))
+		o := types.Refine(opts, types.PathIndex(i))
 		bHashes[i] = v.hashCode(o)
 	}
 	commonSequence := lcs.New([]any(aHashes), []any(bHashes)).Values()

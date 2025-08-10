@@ -1,34 +1,36 @@
 package jd
 
-import "github.com/josephburnett/jd/v2/internal/option"
+import "github.com/josephburnett/jd/v2/internal/types"
 
-type Option interface {
-	isOption()
-}
+type Option = types.Option
 
 func ReadOptionString(s string) ([]Option, error) {
-	return option.ReadOptionsString(s)
+	return types.ReadOptionsString(s)
+}
+
+func ReadOptionsString(s string) ([]Option, error) {
+	return types.ReadOptionsString(s)
 }
 
 func NewOption(a any) (Option, error) {
-	return option.NewOption(a)
+	return types.NewOption(a)
 }
 
 var (
-	MERGE    = option.MergeOption{}
-	SET      = option.SetOption{}
-	MULTISET = option.MultisetOption{}
-	COLOR    = option.ColorOption{}
+	MERGE    = types.MERGE
+	SET      = types.SET
+	MULTISET = types.MULTISET
+	COLOR    = types.COLOR
 )
 
 func Precision(precision float64) Option {
-	return option.PrecisionOption{precision}
+	return types.PrecisionOption{Precision: precision}
 }
 
 func PathOption(at Path, then ...Option) Option {
-	return option.PathOption{at, then}
+	return types.PathOption{At: types.Path(at), Then: []types.Option(then)}
 }
 
 func SetKeys(keys ...string) Option {
-	return option.SetKeysOption(keys)
+	return types.SetKeysOption(keys)
 }
