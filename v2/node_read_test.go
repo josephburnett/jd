@@ -15,6 +15,87 @@ func TestUnmarshal(t *testing.T) {
 	checkUnmarshal(t, `[]`, jsonArray{})
 }
 
+func TestYamlV3BooleanKeys(t *testing.T) {
+	// These tests would have failed with yaml.v2 (YAML 1.1) but pass with yaml.v3 (YAML 1.2)
+	// because in YAML 1.2, only "true"/"false" are boolean literals, not "on"/"off"/"yes"/"no"
+	//
+	// With yaml.v2, these would fail with "unsupported key type bool" because:
+	// - "on:" would be parsed as boolean key `true`
+	// - "off:" would be parsed as boolean key `false`
+	// - "yes:" would be parsed as boolean key `true`
+	// - "no:" would be parsed as boolean key `false`
+	//
+	// With yaml.v3, these are parsed as string keys, which is the correct YAML 1.2 behavior.
+
+	tests := []struct {
+		name     string
+		yaml     string
+		expected JsonNode
+	}{
+		{
+			name: "GitHub Actions on key",
+			yaml: `on:
+  push:
+    branches: [main]`,
+			expected: jsonObject{
+				"on": jsonObject{
+					"push": jsonObject{
+						"branches": jsonArray{jsonString("main")},
+					},
+				},
+			},
+		},
+		{
+			name: "off key as string",
+			yaml: `off: disabled`,
+			expected: jsonObject{
+				"off": jsonString("disabled"),
+			},
+		},
+		{
+			name: "yes key as string",
+			yaml: `yes: confirmed`,
+			expected: jsonObject{
+				"yes": jsonString("confirmed"),
+			},
+		},
+		{
+			name: "no key as string",
+			yaml: `no: rejected`,
+			expected: jsonObject{
+				"no": jsonString("rejected"),
+			},
+		},
+		{
+			name: "multiple YAML 1.1 boolean-like keys",
+			yaml: `on: enabled
+off: disabled
+yes: confirmed
+no: rejected`,
+			expected: jsonObject{
+				"on":  jsonString("enabled"),
+				"off": jsonString("disabled"),
+				"yes": jsonString("confirmed"),
+				"no":  jsonString("rejected"),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			node, err := ReadYamlString(tt.yaml)
+			if err != nil {
+				t.Errorf("ReadYamlString(%q) failed: %v", tt.yaml, err)
+				return
+			}
+
+			if !tt.expected.Equals(node) {
+				t.Errorf("ReadYamlString(%q) = %v, want %v", tt.yaml, node, tt.expected)
+			}
+		})
+	}
+}
+
 func checkUnmarshal(t *testing.T, s string, n JsonNode) {
 	node, err := ReadJsonString(s)
 	if err != nil {
