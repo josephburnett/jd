@@ -5,17 +5,19 @@ package lcs
 
 import (
 	"context"
-	"reflect"
-
-	"github.com/josephburnett/jd/v2"
 )
 
+// JsonNode represents a JSON node that can be compared using jd semantics
+type JsonNode interface {
+	Equals(other JsonNode) bool
+}
+
 // Lcs is the interface to calculate the LCS of two arrays.
-type lcsI interface {
+type Lcs interface {
 	// Values calculates the LCS value of the two arrays.
-	Values() (values []interface{})
+	Values() (values []JsonNode)
 	// ValueContext is a context aware version of Values()
-	ValuesContext(ctx context.Context) (values []interface{}, err error)
+	ValuesContext(ctx context.Context) (values []JsonNode, err error)
 	// IndexPairs calculates paris of indices which have the same value in LCS.
 	IndexPairs() (pairs []IndexPair)
 	// IndexPairsContext is a context aware version of IndexPairs()
@@ -25,28 +27,28 @@ type lcsI interface {
 	// LengthContext is a context aware version of Length()
 	LengthContext(ctx context.Context) (length int, err error)
 	// Left returns one of the two arrays to be compared.
-	Left() (leftValues []interface{})
+	Left() (leftValues []JsonNode)
 	// Right returns the other of the two arrays to be compared.
-	Right() (righttValues []interface{})
+	Right() (righttValues []JsonNode)
 }
 
 // IndexPair represents an pair of indeices in the Left and Right arrays found in the LCS value.
-type indexPair struct {
+type IndexPair struct {
 	Left  int
 	Right int
 }
 
 type lcs struct {
-	left  []interface{}
-	right []interface{}
+	left  []JsonNode
+	right []JsonNode
 	/* for caching */
 	table      [][]int
-	indexPairs []indexPair
-	values     []interface{}
+	indexPairs []IndexPair
+	values     []JsonNode
 }
 
 // New creates a new LCS calculator from two arrays.
-func newLCS(left, right []jd.JsonNode) Lcs {
+func New(left, right []JsonNode) Lcs {
 	return &lcs{
 		left:       left,
 		right:      right,
@@ -85,7 +87,7 @@ func (lcs *lcs) TableContext(ctx context.Context) (table [][]int, err error) {
 		}
 		for x := 1; x < sizeX; x++ {
 			increment := 0
-			if reflect.DeepEqual(lcs.left[x-1], lcs.right[y-1]) {
+			if lcs.left[x-1].Equals(lcs.right[y-1]) {
 				increment = 1
 			}
 			table[x][y] = max(table[x-1][y-1]+increment, table[x-1][y], table[x][y-1])
@@ -131,7 +133,7 @@ func (lcs *lcs) IndexPairsContext(ctx context.Context) (pairs []IndexPair, err e
 	pairs = make([]IndexPair, table[len(table)-1][len(table[0])-1])
 
 	for x, y := len(lcs.left), len(lcs.right); x > 0 && y > 0; {
-		if reflect.DeepEqual(lcs.left[x-1], lcs.right[y-1]) {
+		if lcs.left[x-1].Equals(lcs.right[y-1]) {
 			pairs[table[x][y]-1] = IndexPair{Left: x - 1, Right: y - 1}
 			x--
 			y--
@@ -150,13 +152,13 @@ func (lcs *lcs) IndexPairsContext(ctx context.Context) (pairs []IndexPair, err e
 }
 
 // Table implements Lcs.Values()
-func (lcs *lcs) Values() (values []interface{}) {
+func (lcs *lcs) Values() (values []JsonNode) {
 	values, _ = lcs.ValuesContext(context.Background())
 	return values
 }
 
 // Table implements Lcs.ValuesContext()
-func (lcs *lcs) ValuesContext(ctx context.Context) (values []interface{}, err error) {
+func (lcs *lcs) ValuesContext(ctx context.Context) (values []JsonNode, err error) {
 	if lcs.values != nil {
 		return lcs.values, nil
 	}
@@ -166,7 +168,7 @@ func (lcs *lcs) ValuesContext(ctx context.Context) (values []interface{}, err er
 		return nil, err
 	}
 
-	values = make([]interface{}, len(pairs))
+	values = make([]JsonNode, len(pairs))
 	for i, pair := range pairs {
 		values[i] = lcs.left[pair.Left]
 	}
@@ -176,13 +178,13 @@ func (lcs *lcs) ValuesContext(ctx context.Context) (values []interface{}, err er
 }
 
 // Table implements Lcs.Left()
-func (lcs *lcs) Left() (leftValues []interface{}) {
+func (lcs *lcs) Left() (leftValues []JsonNode) {
 	leftValues = lcs.left
 	return
 }
 
 // Table implements Lcs.Right()
-func (lcs *lcs) Right() (rightValues []interface{}) {
+func (lcs *lcs) Right() (rightValues []JsonNode) {
 	rightValues = lcs.right
 	return
 }

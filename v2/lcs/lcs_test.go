@@ -1,4 +1,4 @@
-package jd
+package lcs
 
 import (
 	"context"
@@ -7,75 +7,96 @@ import (
 	"time"
 )
 
+// Simple JsonNode implementation for testing
+type testJsonNode struct {
+	value interface{}
+}
+
+func (t testJsonNode) Equals(other JsonNode) bool {
+	if otherTest, ok := other.(testJsonNode); ok {
+		return reflect.DeepEqual(t.value, otherTest.value)
+	}
+	return false
+}
+
+// Helper function to convert interface{} slice to JsonNode slice
+func toJsonNodes(values []interface{}) []JsonNode {
+	nodes := make([]JsonNode, len(values))
+	for i, v := range values {
+		nodes[i] = testJsonNode{value: v}
+	}
+	return nodes
+}
+
 func TestLCS(t *testing.T) {
 	cases := []struct {
-		left       []interface{}
-		right      []interface{}
+		left       []JsonNode
+		right      []JsonNode
 		indexPairs []IndexPair
-		values     []interface{}
+		values     []JsonNode
 		length     int
 	}{
 		{
-			left:       []interface{}{1, 2, 3},
-			right:      []interface{}{2, 3},
+			left:       toJsonNodes([]interface{}{1, 2, 3}),
+			right:      toJsonNodes([]interface{}{2, 3}),
 			indexPairs: []IndexPair{{1, 0}, {2, 1}},
-			values:     []interface{}{2, 3},
+			values:     toJsonNodes([]interface{}{2, 3}),
 			length:     2,
 		},
 		{
-			left:       []interface{}{2, 3},
-			right:      []interface{}{1, 2, 3},
+			left:       toJsonNodes([]interface{}{2, 3}),
+			right:      toJsonNodes([]interface{}{1, 2, 3}),
 			indexPairs: []IndexPair{{0, 1}, {1, 2}},
-			values:     []interface{}{2, 3},
+			values:     toJsonNodes([]interface{}{2, 3}),
 			length:     2,
 		},
 		{
-			left:       []interface{}{2, 3},
-			right:      []interface{}{2, 5, 3},
+			left:       toJsonNodes([]interface{}{2, 3}),
+			right:      toJsonNodes([]interface{}{2, 5, 3}),
 			indexPairs: []IndexPair{{0, 0}, {1, 2}},
-			values:     []interface{}{2, 3},
+			values:     toJsonNodes([]interface{}{2, 3}),
 			length:     2,
 		},
 		{
-			left:       []interface{}{2, 3, 3},
-			right:      []interface{}{2, 5, 3},
+			left:       toJsonNodes([]interface{}{2, 3, 3}),
+			right:      toJsonNodes([]interface{}{2, 5, 3}),
 			indexPairs: []IndexPair{{0, 0}, {2, 2}},
-			values:     []interface{}{2, 3},
+			values:     toJsonNodes([]interface{}{2, 3}),
 			length:     2,
 		},
 		{
-			left:       []interface{}{1, 2, 5, 3, 1, 1, 5, 8, 3},
-			right:      []interface{}{1, 2, 3, 3, 4, 4, 5, 1, 6},
+			left:       toJsonNodes([]interface{}{1, 2, 5, 3, 1, 1, 5, 8, 3}),
+			right:      toJsonNodes([]interface{}{1, 2, 3, 3, 4, 4, 5, 1, 6}),
 			indexPairs: []IndexPair{{0, 0}, {1, 1}, {2, 6}, {4, 7}},
-			values:     []interface{}{1, 2, 5, 1},
+			values:     toJsonNodes([]interface{}{1, 2, 5, 1}),
 			length:     4,
 		},
 		{
-			left:       []interface{}{},
-			right:      []interface{}{2, 5, 3},
+			left:       toJsonNodes([]interface{}{}),
+			right:      toJsonNodes([]interface{}{2, 5, 3}),
 			indexPairs: []IndexPair{},
-			values:     []interface{}{},
+			values:     toJsonNodes([]interface{}{}),
 			length:     0,
 		},
 		{
-			left:       []interface{}{3, 4},
-			right:      []interface{}{},
+			left:       toJsonNodes([]interface{}{3, 4}),
+			right:      toJsonNodes([]interface{}{}),
 			indexPairs: []IndexPair{},
-			values:     []interface{}{},
+			values:     toJsonNodes([]interface{}{}),
 			length:     0,
 		},
 		{
-			left:       []interface{}{"foo"},
-			right:      []interface{}{"baz", "foo"},
+			left:       toJsonNodes([]interface{}{"foo"}),
+			right:      toJsonNodes([]interface{}{"baz", "foo"}),
 			indexPairs: []IndexPair{{0, 1}},
-			values:     []interface{}{"foo"},
+			values:     toJsonNodes([]interface{}{"foo"}),
 			length:     1,
 		},
 		{
-			left:       []interface{}{byte('T'), byte('G'), byte('A'), byte('G'), byte('T'), byte('A')},
-			right:      []interface{}{byte('G'), byte('A'), byte('T'), byte('A')},
+			left:       toJsonNodes([]interface{}{int(byte('T')), int(byte('G')), int(byte('A')), int(byte('G')), int(byte('T')), int(byte('A'))}),
+			right:      toJsonNodes([]interface{}{int(byte('G')), int(byte('A')), int(byte('T')), int(byte('A'))}),
 			indexPairs: []IndexPair{{1, 0}, {2, 1}, {4, 2}, {5, 3}},
-			values:     []interface{}{byte('G'), byte('A'), byte('T'), byte('A')},
+			values:     toJsonNodes([]interface{}{int(byte('G')), int(byte('A')), int(byte('T')), int(byte('A'))}),
 			length:     4,
 		},
 	}
@@ -101,10 +122,12 @@ func TestLCS(t *testing.T) {
 }
 
 func TestContextCancel(t *testing.T) {
-	left := make([]interface{}, 100000) // takes over 1 sec
-	right := make([]interface{}, 100000)
-	right[0] = 1
-	right[len(right)-1] = 1
+	leftRaw := make([]interface{}, 100000) // takes over 1 sec
+	rightRaw := make([]interface{}, 100000)
+	rightRaw[0] = 1
+	rightRaw[len(rightRaw)-1] = 1
+	left := toJsonNodes(leftRaw)
+	right := toJsonNodes(rightRaw)
 	lcs := New(left, right)
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -3,7 +3,7 @@ package jd
 import (
 	"fmt"
 
-	lcs "github.com/yudai/golcs"
+	"github.com/josephburnett/jd/v2/lcs"
 )
 
 type jsonList []JsonNode
@@ -72,17 +72,46 @@ func (a jsonList) diff(
 	if strategy == mergePatchStrategy {
 		return a.diffMergePatchStrategy(b, path, opts)
 	}
-	aHashes := make([]any, len(a))
-	bHashes := make([]any, len(b))
+	// Create adapter slices for LCS
+	lcsLeft := make([]lcs.JsonNode, len(a))
+	lcsRight := make([]lcs.JsonNode, len(b))
 	for i, v := range a {
 		o := refine(opts, PathIndex(i))
-		aHashes[i] = v.hashCode(o)
+		hash := v.hashCode(o)
+		// Convert hash bytes to string for JsonNode compatibility
+		hashStr := string(hash[:])
+		n, _ := NewJsonNode(hashStr)
+		lcsLeft[i] = lcsNodeAdapter{n}
 	}
 	for i, v := range b {
 		o := refine(opts, PathIndex(i))
-		bHashes[i] = v.hashCode(o)
+		hash := v.hashCode(o)
+		// Convert hash bytes to string for JsonNode compatibility
+		hashStr := string(hash[:])
+		n, _ := NewJsonNode(hashStr)
+		lcsRight[i] = lcsNodeAdapter{n}
 	}
-	commonSequence := lcs.New([]any(aHashes), []any(bHashes)).Values()
+	lcsValues := lcs.New(lcsLeft, lcsRight).Values()
+	// Convert back to interface{} for compatibility
+	commonSequence := make([]any, len(lcsValues))
+	for i, v := range lcsValues {
+		if adapter, ok := v.(lcsNodeAdapter); ok {
+			commonSequence[i] = adapter.JsonNode.Json()
+		}
+	}
+	// Create aHashes and bHashes arrays for diffRest compatibility
+	aHashes := make([]any, len(a))
+	bHashes := make([]any, len(b))
+	for i, v := range lcsLeft {
+		if adapter, ok := v.(lcsNodeAdapter); ok {
+			aHashes[i] = adapter.JsonNode.Json()
+		}
+	}
+	for i, v := range lcsRight {
+		if adapter, ok := v.(lcsNodeAdapter); ok {
+			bHashes[i] = adapter.JsonNode.Json()
+		}
+	}
 	return a.diffRest(
 		0,
 		b,
