@@ -1,4 +1,4 @@
-FROM golang:1.18 AS build
+FROM golang:1.23 AS build
 RUN mkdir -p /go/src/github.com/josephburnett/jd
 WORKDIR /go/src/github.com/josephburnett/jd
 COPY . .
