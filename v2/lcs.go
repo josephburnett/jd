@@ -5,6 +5,8 @@ package jd
 
 import (
 	"context"
+	"fmt"
+	"strings"
 )
 
 // Lcs is the interface to calculate the LCS of two arrays.
@@ -25,12 +27,35 @@ type Lcs interface {
 	Left() (leftValues []JsonNode)
 	// Right returns the other of the two arrays to be compared.
 	Right() (righttValues []JsonNode)
+
+	// ============================================================================
+	// DEBUGGING METHODS
+	// ============================================================================
+
+	// Table returns the LCS dynamic programming table for debugging
+	Table() (table [][]int)
+	// TableContext is a context aware version of Table()
+	TableContext(ctx context.Context) (table [][]int, err error)
+	// DebugString returns a human-readable debug representation of the LCS analysis
+	DebugString() string
+	// DebugMatches returns detailed information about each match found
+	DebugMatches() []DebugMatch
+	// DebugTable returns a formatted string representation of the LCS table
+	DebugTable() string
 }
 
 // IndexPair represents an pair of indeices in the Left and Right arrays found in the LCS value.
 type IndexPair struct {
 	Left  int
 	Right int
+}
+
+// DebugMatch provides detailed information about each match found during LCS analysis
+type DebugMatch struct {
+	LeftIndex  int
+	RightIndex int
+	Value      JsonNode
+	Position   int // Position in the LCS sequence
 }
 
 type lcs struct {
@@ -182,6 +207,94 @@ func (lcs *lcs) Left() (leftValues []JsonNode) {
 func (lcs *lcs) Right() (rightValues []JsonNode) {
 	rightValues = lcs.right
 	return
+}
+
+// ============================================================================
+// DEBUGGING METHOD IMPLEMENTATIONS
+// ============================================================================
+
+// DebugString returns a human-readable debug representation of the LCS analysis
+func (lcs *lcs) DebugString() string {
+	pairs := lcs.IndexPairs()
+	values := lcs.Values()
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("LCS Analysis:\n"))
+	sb.WriteString(fmt.Sprintf("  Left array length: %d\n", len(lcs.left)))
+	sb.WriteString(fmt.Sprintf("  Right array length: %d\n", len(lcs.right)))
+	sb.WriteString(fmt.Sprintf("  LCS length: %d\n", len(values)))
+	sb.WriteString(fmt.Sprintf("  Matches found: %d\n", len(pairs)))
+
+	if len(pairs) > 0 {
+		sb.WriteString("  Match details:\n")
+		for i, pair := range pairs {
+			value := values[i]
+			sb.WriteString(fmt.Sprintf("    %d: L[%d]=R[%d] = %s\n",
+				i, pair.Left, pair.Right, value.Json()))
+		}
+	}
+
+	return sb.String()
+}
+
+// DebugMatches returns detailed information about each match found
+func (lcs *lcs) DebugMatches() []DebugMatch {
+	pairs := lcs.IndexPairs()
+	values := lcs.Values()
+
+	matches := make([]DebugMatch, len(pairs))
+	for i, pair := range pairs {
+		matches[i] = DebugMatch{
+			LeftIndex:  pair.Left,
+			RightIndex: pair.Right,
+			Value:      values[i],
+			Position:   i,
+		}
+	}
+
+	return matches
+}
+
+// DebugTable returns a formatted string representation of the LCS table
+func (lcs *lcs) DebugTable() string {
+	table := lcs.Table()
+	if len(table) == 0 {
+		return "Empty LCS table"
+	}
+
+	var sb strings.Builder
+
+	// Header with right array values
+	sb.WriteString("LCS Table (Left=rows, Right=columns):\n")
+	sb.WriteString("    ")
+	for j := 0; j < len(lcs.right); j++ {
+		sb.WriteString(fmt.Sprintf("%3s ", lcs.right[j].Json()[:min(3, len(lcs.right[j].Json()))]))
+	}
+	sb.WriteString("\n")
+
+	// Table rows
+	for i, row := range table {
+		if i == 0 {
+			sb.WriteString("  ")
+		} else {
+			leftVal := lcs.left[i-1].Json()
+			sb.WriteString(fmt.Sprintf("%3s", leftVal[:min(3, len(leftVal))]))
+		}
+
+		for _, val := range row {
+			sb.WriteString(fmt.Sprintf("%4d", val))
+		}
+		sb.WriteString("\n")
+	}
+
+	return sb.String()
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func max(first int, rest ...int) (max int) {
