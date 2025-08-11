@@ -63,7 +63,17 @@ func (a jsonArray) refineForArrayDispatch(opts *options) *options {
 			apply = append(apply, o)
 			retain = append(retain, o)
 		case pathOption:
-			// PathOptions - keep in retain to preserve them for inner diffing
+			// Special case: PathOption with empty path should have its options applied for dispatch
+			if len(o.At) == 0 {
+				// Extract dispatch-relevant options from the PathOption
+				for _, thenOpt := range o.Then {
+					switch thenOpt.(type) {
+					case setOption, multisetOption:
+						apply = append(apply, thenOpt)
+					}
+				}
+			}
+			// Always keep PathOptions in retain to preserve them for inner diffing
 			retain = append(retain, o)
 		}
 	}
