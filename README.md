@@ -241,62 +241,153 @@ func ExampleMultiplePathOptions() {
 }
 ```
 
-## Diff language
+## Diff Language (v2)
 
-Note: this is the v1 grammar. Needs to be updated with v2.
+The jd v2 diff format is a human-readable structural diff format with context and metadata support.
 
-![Railroad diagram of EBNF](/ebnf.png)
+### Format Overview
 
-- A diff is zero or more sections
-- Sections start with a `@` header and the path to a node
-- A path is a JSON list of zero or more elements accessing collections
-- A JSON number element (e.g. `0`) accesses an array
-- A JSON string element (e.g. `"foo"`) accesses an object
-- An empty JSON object element (`{}`) accesses an array as a set or multiset
-- After the path is one or more removals or additions, removals first
-- Removals start with `-` and then the JSON value to be removed
-- Additions start with `+` and then the JSON value to added
+A diff consists of:
+- **Metadata lines** (optional): Start with `^` and specify hunk-level metadata
+- **Diff hunks**: Start with `@` and specify the path, followed by changes and context
 
-### EBNF
+### EBNF Grammar
 
 ```EBNF
-Diff ::= ( '@' '[' ( 'JSON String' | 'JSON Number' | 'Empty JSON Object' )* ']' '\n' ( ( '-' 'JSON Value' '\n' )+ | '+' 'JSON Value' '\n' ) ( '+' 'JSON Value' '\n' )* )*
+Diff ::= (MetadataLine | DiffHunk)*
+
+MetadataLine ::= '^' SP JsonObject NEWLINE
+
+DiffHunk ::= '@' SP JsonArray NEWLINE
+             ContextLine*
+             (RemoveLine | AddLine)*
+             ContextLine*
+
+ContextLine ::= SP SP JsonValue NEWLINE
+
+RemoveLine ::= '-' SP JsonValue NEWLINE
+
+AddLine ::= '+' SP JsonValue NEWLINE
+
+JsonArray ::= '[' (PathElement (',' PathElement)*)? ']'
+
+PathElement ::= JsonString        // Object key: "foo"
+              | JsonNumber        // Array index: 0 
+              | EmptyObject       // Set marker: {}
+              | EmptyArray        // List marker: [] 
+              | ObjectWithKeys    // Set keys: {"id":"value"}
+              | ArrayWithObject   // Multiset: [{}] or [{"id":"value"}]
 ```
 
-### Examples
+*Note: Railroad diagram at /ebnf.png needs updating for v2 format.*
 
-```DIFF
-@ ["a"]
-- 1
-+ 2
+### Path Elements Reference
+
+| Element | Description | Example Path |
+|---------|-------------|--------------|
+| `"key"` | Object field access | `["user","name"]` |
+| `0`, `1`, etc. | Array index access | `["items",0]` |
+| `{}` | Treat array as set (ignore order/duplicates) | `["tags",{}]` |
+| `[]` | Explicit list marker | `["values",[]]` |
+| `{"id":"val"}` | Match objects by specific key | `["users",{"id":"123"}]` |
+| `[{}]` | Treat as multiset (ignore order, count duplicates) | `["counts",[{}]]` |
+| `[{"key":"val"}]` | Match multiset objects by key | `["items",[{"id":"456"}]]` |
+
+### Line Types
+
+- **`@ [path]`**: Diff hunk header specifying the location
+- **`^ {metadata}`**: Metadata for the following hunks (inherits downward)  
+- **`  value`**: Context lines (spaces) - elements that provide context
+- **`- value`**: Remove lines - values being removed
+- **`+ value`**: Add lines - values being added
+
+### Core Examples
+
+#### Simple Object Change
+```diff
+@ ["name"]
+- "Alice"
++ "Bob"
 ```
 
-```DIFF
-@ [2]
-[
-+ {"foo":"bar"}
+#### Array Element with Context
+```diff
+@ ["items",1]
+  "apple"
++ "banana" 
+  "cherry"
+```
+
+#### Set Operations (Ignore Order)
+```diff
+@ ["tags",{}]
+- "urgent"
++ "completed"
++ "reviewed"
+```
+
+#### Object Identification by Key
+```diff
+@ ["users",{"id":"123"},"status"]
+- "pending"
++ "active"
+```
+
+#### Multiset Operations
+```diff
+@ ["scores",[{}]]
+- 85
+- 92
++ 88
++ 95
++ 95
+```
+
+### Advanced Examples
+
+#### Merge Patch Metadata
+```diff
+^ {"Merge":true}
+@ ["config"]
+- {"timeout":30,"retries":3}
++ {"timeout":60,"retries":5,"debug":true}
+```
+
+#### Complex List Context
+```diff
+@ ["matrix",1,2]
+  [[1,2,3],[4,5,6]]
+- 6
++ 9
+  [7,8,9]
 ]
 ```
 
-```DIFF
-@ ["Movies",67,"Title"]
-- "Dr. Strangelove"
-+ "Dr. Evil Love"
-@ ["Movies",67,"Actors","Dr. Strangelove"]
-- "Peter Sellers"
-+ "Mike Myers"
-@ ["Movies",102]
-  {"Title":"Terminator","Actors":{"Terminator":"Arnold"}}
-+ {"Title":"Austin Powers","Actors":{"Austin Powers":"Mike Myers"}}
-]
+#### Nested Set with PathOptions
+```diff
+@ ["department","employees",{"employeeId":"E123"},"projects",{}]
+- "ProjectA"
++ "ProjectB" 
++ "ProjectC"
 ```
 
-```DIFF
-@ ["Movies",67,"Tags",{}]
-- "Romance"
-+ "Action"
-+ "Comedy"
+#### Multiple Hunks with Inheritance
+```diff
+^ {"Merge":true}
+@ ["user","preferences"] 
++ {"theme":"dark","notifications":true}
+@ ["user","lastLogin"]
++ "2023-12-01T10:30:00Z"
 ```
+
+### Integration with PathOptions
+
+The path syntax directly corresponds to PathOption targeting:
+- Diff path `["users",{}]` ↔ PathOption `{"@":["users"],"^":["SET"]}`
+- Diff path `["items",{"id":"123"}]` ↔ PathOption with SetKeys targeting
+- Diff path `["scores",[{}]]` ↔ PathOption `{"@":["scores"],"^":["MULTISET"]}`
+
+This allows fine-grained control over how different parts of your data structures are compared and diffed.
 
 ## Cookbook
 
