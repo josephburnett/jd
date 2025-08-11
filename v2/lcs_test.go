@@ -1,4 +1,4 @@
-package lcs
+package jd
 
 import (
 	"context"
@@ -7,23 +7,12 @@ import (
 	"time"
 )
 
-// Simple JsonNode implementation for testing
-type testJsonNode struct {
-	value interface{}
-}
-
-func (t testJsonNode) Equals(other JsonNode) bool {
-	if otherTest, ok := other.(testJsonNode); ok {
-		return reflect.DeepEqual(t.value, otherTest.value)
-	}
-	return false
-}
-
 // Helper function to convert interface{} slice to JsonNode slice
 func toJsonNodes(values []interface{}) []JsonNode {
 	nodes := make([]JsonNode, len(values))
 	for i, v := range values {
-		nodes[i] = testJsonNode{value: v}
+		node, _ := NewJsonNode(v)
+		nodes[i] = node
 	}
 	return nodes
 }
@@ -102,7 +91,7 @@ func TestLCS(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		lcs := New(c.left, c.right)
+		lcs := NewLcs(c.left, c.right)
 
 		actualPairs := lcs.IndexPairs()
 		if !reflect.DeepEqual(actualPairs, c.indexPairs) {
@@ -128,7 +117,7 @@ func TestContextCancel(t *testing.T) {
 	rightRaw[len(rightRaw)-1] = 1
 	left := toJsonNodes(leftRaw)
 	right := toJsonNodes(rightRaw)
-	lcs := New(left, right)
+	lcs := NewLcs(left, right)
 
 	ctx, cancel := context.WithCancel(context.Background())
 

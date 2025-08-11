@@ -5,27 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/josephburnett/jd/v2/lcs"
 	"golang.org/x/exp/slices"
 )
 
-// Adapter to make jd.JsonNode compatible with lcs.JsonNode
-type lcsNodeAdapter struct {
-	JsonNode
-}
-
-func (a lcsNodeAdapter) Equals(other lcs.JsonNode) bool {
-	if a.JsonNode == nil {
-		return false
-	}
-	if otherAdapter, ok := other.(lcsNodeAdapter); ok {
-		if otherAdapter.JsonNode == nil {
-			return false
-		}
-		return a.JsonNode.Equals(otherAdapter.JsonNode)
-	}
-	return false
-}
 
 const (
 	colorDefault = "\033[0m"
@@ -35,7 +17,7 @@ const (
 
 // colorStringDiff renders a string as JSON, adding the provided color
 // around all runes not in the common sequence of runes.
-func colorStringMarshal(str jsonString, commonSequence []lcs.JsonNode, colorCode string) string {
+func colorStringMarshal(str jsonString, commonSequence []JsonNode, colorCode string) string {
 	sJson, _ := json.Marshal(str)
 	// Strip enclosing quotes which are not part of the common sequence.
 	sRaw := string(sJson)[1 : len(sJson)-1]
@@ -44,9 +26,9 @@ func colorStringMarshal(str jsonString, commonSequence []lcs.JsonNode, colorCode
 	lcsIndex := 0
 	for _, r := range sRaw {
 		if lcsIndex < len(commonSequence) {
-			// Extract rune value from lcs.JsonNode adapter
-			if adapter, ok := commonSequence[lcsIndex].(lcsNodeAdapter); ok {
-				if nodeRaw := adapter.JsonNode.raw(); nodeRaw == r {
+			// Extract rune value from JsonNode
+			if jsonStr, ok := commonSequence[lcsIndex].(jsonString); ok {
+				if rawStr, ok := jsonStr.raw().(string); ok && len(rawStr) == 1 && rune(rawStr[0]) == r {
 					b.WriteRune(r)
 					lcsIndex++
 				} else {
@@ -81,23 +63,21 @@ func (d DiffElement) Render(opts ...Option) string {
 
 	// Check if this is a single string diff. If so, compute the common sequence for a character
 	// level diff.
-	var commonSequence []lcs.JsonNode
+	var commonSequence []JsonNode
 	isSingleStringDiff := false
 	if len(d.Remove) == 1 && len(d.Add) == 1 {
 		oldStr, oldOk := d.Remove[0].(jsonString)
 		newStr, newOk := d.Add[0].(jsonString)
 		if oldOk && newOk {
-			oldNodes := []lcs.JsonNode{}
+			oldNodes := []JsonNode{}
 			for _, c := range oldStr {
-				n, _ := NewJsonNode(c)
-				oldNodes = append(oldNodes, lcsNodeAdapter{n})
+				oldNodes = append(oldNodes, jsonString(string(c)))
 			}
-			newNodes := []lcs.JsonNode{}
+			newNodes := []JsonNode{}
 			for _, c := range newStr {
-				n, _ := NewJsonNode(c)
-				newNodes = append(newNodes, lcsNodeAdapter{n})
+				newNodes = append(newNodes, jsonString(string(c)))
 			}
-			commonSequence = lcs.New(oldNodes, newNodes).Values()
+			commonSequence = NewLcs(oldNodes, newNodes).Values()
 			isSingleStringDiff = true
 		}
 	}

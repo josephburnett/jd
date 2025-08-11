@@ -2,8 +2,6 @@ package jd
 
 import (
 	"fmt"
-
-	"github.com/josephburnett/jd/v2/lcs"
 )
 
 type jsonList []JsonNode
@@ -72,45 +70,34 @@ func (a jsonList) diff(
 	if strategy == mergePatchStrategy {
 		return a.diffMergePatchStrategy(b, path, opts)
 	}
-	// Create adapter slices for LCS
-	lcsLeft := make([]lcs.JsonNode, len(a))
-	lcsRight := make([]lcs.JsonNode, len(b))
-	for i, v := range a {
-		o := refine(opts, PathIndex(i))
-		hash := v.hashCode(o)
-		// Convert hash bytes to string for JsonNode compatibility
-		hashStr := string(hash[:])
-		n, _ := NewJsonNode(hashStr)
-		lcsLeft[i] = lcsNodeAdapter{n}
+	// Use the original LCS approach with interface{} types for now
+	aHashes := make([]interface{}, len(a))
+	bHashes := make([]interface{}, len(b))
+	
+	for i, n := range a {
+		aHashes[i] = n.hashCode(opts)
 	}
-	for i, v := range b {
-		o := refine(opts, PathIndex(i))
-		hash := v.hashCode(o)
-		// Convert hash bytes to string for JsonNode compatibility
-		hashStr := string(hash[:])
-		n, _ := NewJsonNode(hashStr)
-		lcsRight[i] = lcsNodeAdapter{n}
+	for i, n := range b {
+		bHashes[i] = n.hashCode(opts)
 	}
-	lcsValues := lcs.New(lcsLeft, lcsRight).Values()
-	// Convert back to interface{} for compatibility
-	commonSequence := make([]any, len(lcsValues))
+	
+	// Convert jsonList to []JsonNode for LCS calculation
+	aNodes := make([]JsonNode, len(a))
+	bNodes := make([]JsonNode, len(b))
+	for i, node := range a {
+		aNodes[i] = node
+	}
+	for i, node := range b {
+		bNodes[i] = node
+	}
+	
+	lcsResult := NewLcs(aNodes, bNodes)
+	lcsValues := lcsResult.Values()
+	
+	// Convert JsonNode values back to hashes for compatibility with diffRest
+	commonSequence := make([]interface{}, len(lcsValues))
 	for i, v := range lcsValues {
-		if adapter, ok := v.(lcsNodeAdapter); ok {
-			commonSequence[i] = adapter.JsonNode.Json()
-		}
-	}
-	// Create aHashes and bHashes arrays for diffRest compatibility
-	aHashes := make([]any, len(a))
-	bHashes := make([]any, len(b))
-	for i, v := range lcsLeft {
-		if adapter, ok := v.(lcsNodeAdapter); ok {
-			aHashes[i] = adapter.JsonNode.Json()
-		}
-	}
-	for i, v := range lcsRight {
-		if adapter, ok := v.(lcsNodeAdapter); ok {
-			bHashes[i] = adapter.JsonNode.Json()
-		}
+		commonSequence[i] = v.hashCode(opts)
 	}
 	return a.diffRest(
 		0,

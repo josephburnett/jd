@@ -1,16 +1,11 @@
-package lcs
+package jd
 
-// package lcs provides functions to calculate Longest Common Subsequence (LCS)
+// LCS provides functions to calculate Longest Common Subsequence (LCS)
 // values from two arbitrary arrays.
 
 import (
 	"context"
 )
-
-// JsonNode represents a JSON node that can be compared using jd semantics
-type JsonNode interface {
-	Equals(other JsonNode) bool
-}
 
 // Lcs is the interface to calculate the LCS of two arrays.
 type Lcs interface {
@@ -47,8 +42,8 @@ type lcs struct {
 	values     []JsonNode
 }
 
-// New creates a new LCS calculator from two arrays.
-func New(left, right []JsonNode) Lcs {
+// NewLcs creates a new LCS calculator from two arrays.
+func NewLcs(left, right []JsonNode) Lcs {
 	return &lcs{
 		left:       left,
 		right:      right,
