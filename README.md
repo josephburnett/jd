@@ -116,6 +116,51 @@ their keys and/or values. You shouldn't expect this option to mask or
 ignore non-specified keys, it is not intended as a way to 'ignore'
 some differences between objects.
 
+#### PathOptions: Targeted Comparison Options
+
+PathOptions allow you to apply different comparison semantics to specific paths in your JSON/YAML data. This enables precise control over how different parts of your data are compared.
+
+**PathOption Syntax:**
+```json
+{"@": ["path", "to", "target"], "^": [options]}
+```
+
+- `@` (At): JSON path array specifying where to apply the option
+- `^` (Then): Array of options to apply at that path
+
+**Supported Options:**
+- `"SET"`: Treat array as a set (ignore order and duplicates)
+- `"MULTISET"`: Treat array as a multiset (ignore order, count duplicates)  
+- `{"precision": N}`: Numbers within N are considered equal
+- `{"setkeys": ["key1", "key2"]}`: Match objects by specified keys
+
+**Examples:**
+
+Treat specific array as a set while others remain as lists:
+```bash
+jd -opts='[{"@":["tags"],"^":["SET"]}]' a.json b.json
+```
+
+Apply precision to specific temperature field:
+```bash
+jd -opts='[{"@":["sensor","temperature"],"^":[{"precision":0.1}]}]' a.json b.json
+```
+
+Multiple PathOptions - SET on one path, precision on another:
+```bash
+jd -opts='[{"@":["items"],"^":["SET"]}, {"@":["price"],"^":[{"precision":0.01}]}]' a.json b.json
+```
+
+Target specific array index:
+```bash
+jd -opts='[{"@":["measurements", 0],"^":[{"precision":0.05}]}]' a.json b.json
+```
+
+Apply to root level:
+```bash
+jd -opts='[{"@":[],"^":["SET"]}]' a.json b.json
+```
+
 ## Library usage
 
 Note: import only release commits (`v2.Y.Z`) because `master` can be unstable.
@@ -154,6 +199,45 @@ func ExampleJsonNode_Patch() {
 	fmt.Print(b.Json())
 	// Output:
 	// ["foo","bar"]
+}
+
+func ExamplePathOptions() {
+	// Apply SET semantics to specific array path
+	a, _ := jd.ReadJsonString(`{"tags":["red","blue","green"], "items":[1,2,3]}`)
+	b, _ := jd.ReadJsonString(`{"tags":["green","red","blue"], "items":[3,2,1]}`)
+	
+	// Only treat "tags" as a set, "items" remain as list
+	opts, _ := jd.ReadOptionsString(`[{"@":["tags"],"^":["SET"]}]`)
+	diff := a.Diff(b, opts...)
+	fmt.Print(diff.Render())
+	// Output:
+	// @ ["items",0]
+	// [
+	// + 3
+	// + 2
+	//   1
+	// @ ["items",3]
+	//   1
+	// - 2
+	// - 3
+	// ]
+}
+
+func ExampleMultiplePathOptions() {
+	a, _ := jd.ReadJsonString(`{"temp":20.12, "pressure":1013.25, "tags":["A","B","C"]}`)
+	b, _ := jd.ReadJsonString(`{"temp":20.15, "pressure":1013.30, "tags":["C","A","B"]}`)
+	
+	// Apply precision to temp, exact match to pressure, SET semantics to tags
+	opts, _ := jd.ReadOptionsString(`[
+		{"@":["temp"],"^":[{"precision":0.1}]},
+		{"@":["tags"],"^":["SET"]}
+	]`)
+	diff := a.Diff(b, opts...)
+	fmt.Print(diff.Render())
+	// Output:
+	// @ ["pressure"]
+	// - 1013.25
+	// + 1013.3
 }
 ```
 
