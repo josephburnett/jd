@@ -5,7 +5,6 @@ go 1.24.0
 require (
 	github.com/go-openapi/jsonpointer v0.21.0
 	github.com/stretchr/testify v1.10.0
-	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 	gopkg.in/yaml.v3 v3.0.1
 )
