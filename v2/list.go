@@ -333,6 +333,7 @@ type ListDiffProcessor struct {
 func NewListDiffProcessor(basePath Path, pathIndex PathIndex, previous JsonNode, a, b jsonList, opts *options, strategy patchStrategy) *ListDiffProcessor {
 	return &ListDiffProcessor{
 		state:                IDLE,
+		finalDiff:            Diff{}, // Initialize to empty slice, not nil
 		opts:                 opts,
 		strategy:             strategy,
 		previous:             previous,
@@ -340,7 +341,7 @@ func NewListDiffProcessor(basePath Path, pathIndex PathIndex, previous JsonNode,
 		contextMgr:           NewContextManager(a, b),
 		lastProcessedElement: previous,
 		nextAfterElement:     voidNode{}, // Default to void
-		debug:                false,
+		debug:                false,      // Disable debugging
 	}
 }
 
@@ -410,8 +411,8 @@ func (p *ListDiffProcessor) processContainerDiffEvent(event ContainerDiffEvent) 
 
 	// If we were accumulating changes, finalize them first
 	if p.state == ACCUMULATING_CHANGES {
-		// The container element becomes the After context for the previous operation
-		p.nextAfterElement = event.BElement
+		// The After context should be the element from original array A that comes after the previous operation
+		p.nextAfterElement = event.AElement // Use A element, not B element
 		p.finalizeCurrentDiff()
 	}
 
@@ -419,9 +420,13 @@ func (p *ListDiffProcessor) processContainerDiffEvent(event ContainerDiffEvent) 
 
 	// Perform recursive diff
 	subPath := p.pathCalc.CurrentPath()
+	p.debugLog("Container diff sub-path: %v", subPath)
 	subDiff := event.AElement.diff(event.BElement, subPath, p.opts, p.strategy)
 
-	p.debugLog("Sub-diff has %d elements", len(subDiff))
+	p.debugLog("Sub-diff has %d elements with paths:", len(subDiff))
+	for i, elem := range subDiff {
+		p.debugLog("  Sub-diff %d: path=%v", i, elem.Path)
+	}
 	p.finalDiff = append(p.finalDiff, subDiff...)
 
 	p.pathCalc.AdvanceForContainer()
