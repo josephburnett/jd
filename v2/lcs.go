@@ -59,8 +59,9 @@ type DebugMatch struct {
 }
 
 type lcs struct {
-	left  []JsonNode
-	right []JsonNode
+	left    []JsonNode
+	right   []JsonNode
+	options *options
 	/* for caching */
 	table      [][]int
 	indexPairs []IndexPair
@@ -69,9 +70,15 @@ type lcs struct {
 
 // NewLcs creates a new LCS calculator from two arrays.
 func NewLcs(left, right []JsonNode) Lcs {
+	return NewLcsWithOptions(left, right, &options{})
+}
+
+// NewLcsWithOptions creates a new LCS calculator from two arrays with options.
+func NewLcsWithOptions(left, right []JsonNode, opts *options) Lcs {
 	return &lcs{
 		left:       left,
 		right:      right,
+		options:    opts,
 		table:      nil,
 		indexPairs: nil,
 		values:     nil,
@@ -107,7 +114,15 @@ func (lcs *lcs) TableContext(ctx context.Context) (table [][]int, err error) {
 		}
 		for x := 1; x < sizeX; x++ {
 			increment := 0
-			if lcs.left[x-1].Equals(lcs.right[y-1]) {
+			// Use options-aware equality check with path-specific refinement
+			leftIndex := x - 1
+			rightIndex := y - 1
+
+			// Refine options for the specific left index to handle PathOptions
+			refinedOpts := refine(lcs.options, PathIndex(leftIndex))
+			allOpts := append(refinedOpts.apply, refinedOpts.retain...)
+
+			if lcs.left[leftIndex].Equals(lcs.right[rightIndex], allOpts...) {
 				increment = 1
 			}
 			table[x][y] = max(table[x-1][y-1]+increment, table[x-1][y], table[x][y-1])

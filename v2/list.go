@@ -187,8 +187,8 @@ func (a jsonList) generateDiffEvents(b jsonList, opts *options) []DiffEvent {
 		return events
 	}
 
-	// Use LCS to find matches
-	lcsResult := NewLcs(a, b)
+	// Use LCS to find matches with options awareness
+	lcsResult := NewLcsWithOptions(a, b, opts)
 	matches := lcsResult.IndexPairs()
 
 	// Build events by walking through both arrays
@@ -203,8 +203,10 @@ func (a jsonList) generateDiffEvents(b jsonList, opts *options) []DiffEvent {
 
 		if atMatch {
 			// We have a match - but first check if it's a container that needs diffing
+			// Refine options for this specific list index
+			refinedOpts := refine(opts, PathIndex(aIndex))
 			if sameContainerType(a[aIndex], b[bIndex], opts) &&
-				!a[aIndex].equals(b[bIndex], opts) {
+				!a[aIndex].equals(b[bIndex], refinedOpts) {
 				// Compatible containers with differences
 				events = append(events, ContainerDiffEvent{
 					AIndex:   aIndex,
@@ -213,7 +215,7 @@ func (a jsonList) generateDiffEvents(b jsonList, opts *options) []DiffEvent {
 					BElement: b[bIndex],
 				})
 			} else {
-				// Perfect match
+				// Perfect match (check equality with refined options for precision)
 				events = append(events, MatchEvent{
 					AIndex:  aIndex,
 					BIndex:  bIndex,
@@ -421,7 +423,10 @@ func (p *ListDiffProcessor) processContainerDiffEvent(event ContainerDiffEvent) 
 	// Perform recursive diff
 	subPath := p.pathCalc.CurrentPath()
 	p.debugLog("Container diff sub-path: %v", subPath)
-	subDiff := event.AElement.diff(event.BElement, subPath, p.opts, p.strategy)
+	// Refine options for the current index
+	currentIndex := p.pathCalc.GetCurrentIndex()
+	refinedOpts := refine(p.opts, currentIndex)
+	subDiff := event.AElement.diff(event.BElement, subPath, refinedOpts, p.strategy)
 
 	p.debugLog("Sub-diff has %d elements with paths:", len(subDiff))
 	for i, elem := range subDiff {

@@ -37,6 +37,7 @@ func (n1 jsonNumber) equals(node JsonNode, o *options) bool {
 	if !ok {
 		return false
 	}
+
 	return math.Abs(float64(n1)-float64(n2)) <= precision
 }
 

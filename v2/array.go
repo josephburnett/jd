@@ -43,11 +43,35 @@ func (a jsonArray) hashCode(opts *options) [8]byte {
 }
 
 func (a jsonArray) Diff(n JsonNode, opts ...Option) Diff {
-	o := refine(&options{retain: opts}, nil)
+	// We need to refine to extract global options (SET, MULTISET, etc.) for dispatch,
+	// but we want to preserve PathOptions. So we do a selective refine.
+	o := a.refineForArrayDispatch(&options{retain: opts})
 	n1 := dispatch(a, o)
 	n2 := dispatch(n, o)
 	strategy := getPatchStrategy(o)
 	return n1.diff(n2, make(Path, 0), o, strategy)
+}
+
+// refineForArrayDispatch extracts global options for dispatch while preserving PathOptions
+func (a jsonArray) refineForArrayDispatch(opts *options) *options {
+	var apply, retain []Option
+
+	for _, opt := range opts.retain {
+		switch o := opt.(type) {
+		// Global options - extract to apply for dispatch to work
+		case mergeOption, setOption, multisetOption, colorOption, precisionOption, setKeysOption:
+			apply = append(apply, o)
+			retain = append(retain, o)
+		case pathOption:
+			// PathOptions - keep in retain to preserve them for inner diffing
+			retain = append(retain, o)
+		}
+	}
+
+	return &options{
+		apply:  apply,
+		retain: retain,
+	}
 }
 
 func (a jsonArray) diff(
