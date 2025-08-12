@@ -45,7 +45,7 @@ pack-web : build-web validate-toolchain
 
 .PHONY : build-web
 build-web : validate-toolchain
-	cd v2 ; cp $$(go env GOROOT)/misc/wasm/wasm_exec.js web/assets/
+	cd v2 ; curl -fsSL https://raw.githubusercontent.com/golang/go/go1.23.12/misc/wasm/wasm_exec.js -o web/assets/wasm_exec.js
 	cd v2 ; GOOS=js GOARCH=wasm go build -o web/assets/jd.wasm ./web/ui/main.go
 
 .PHONY : serve
