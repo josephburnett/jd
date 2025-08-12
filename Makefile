@@ -1,31 +1,55 @@
+# Enforce strict toolchain usage - matches toolchain directive in go.mod
+export GOTOOLCHAIN=go1.23.12
+
+# Toolchain validation target
+.PHONY : validate-toolchain
+validate-toolchain :
+	@echo "Validating Go toolchain versions..."
+	@ROOT_TOOLCHAIN=$$(grep '^toolchain ' go.mod | awk '{print $$2}'); \
+	V2_TOOLCHAIN=$$(grep '^toolchain ' v2/go.mod | awk '{print $$2}'); \
+	if [ "$$ROOT_TOOLCHAIN" != "$$V2_TOOLCHAIN" ]; then \
+		echo "Error: Toolchain mismatch between go.mod files:"; \
+		echo "  Root go.mod: $$ROOT_TOOLCHAIN"; \
+		echo "  v2/go.mod: $$V2_TOOLCHAIN"; \
+		exit 1; \
+	fi; \
+	if [ "$$ROOT_TOOLCHAIN" != "$(GOTOOLCHAIN)" ]; then \
+		echo "Error: Makefile GOTOOLCHAIN does not match go.mod toolchain:"; \
+		echo "  Makefile GOTOOLCHAIN: $(GOTOOLCHAIN)"; \
+		echo "  go.mod toolchain: $$ROOT_TOOLCHAIN"; \
+		echo "  Please update GOTOOLCHAIN in Makefile to match go.mod"; \
+		exit 1; \
+	fi; \
+	echo "✓ Toolchain validation passed: $$ROOT_TOOLCHAIN"
+
 .PHONY : build
-build : test pack-web
+build : test pack-web validate-toolchain
 	mkdir -p release
 	cd v2/jd ; CGO_ENABLED=0 go build -tags include_web -o ../../release/jd main.go
 
 .PHONY : test
-test :
+test : validate-toolchain
 	go test .
 	go test ./lib
 	cd v2 ; go test .
 	cd v2 ; go test ./jd
 
 .PHONY : fuzz
-fuzz :
+fuzz : validate-toolchain
 	go test ./lib -fuzz=FuzzJd -fuzztime=10s
 	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=10s
 
 .PHONY : pack-web
-pack-web : build-web
+pack-web : build-web validate-toolchain
 	cd v2 ; go run web/pack/main.go
 
 .PHONY : build-web
-build-web :
+build-web : validate-toolchain
 	cd v2 ; cp $$(go env GOROOT)/misc/wasm/wasm_exec.js web/assets/
 	cd v2 ; GOOS=js GOARCH=wasm go build -o web/assets/jd.wasm ./web/ui/main.go
 
 .PHONY : serve
-serve : pack-web
+serve : pack-web validate-toolchain
 	cd v2 ; go run -tags include_web jd/main.go -port 8080
 
 .PHONY : release-build
@@ -35,7 +59,7 @@ release-build : check-env check-version check-dirty build-all build-docker
 	@echo
 
 .PHONY : build-all
-build-all : test pack-web
+build-all : test pack-web validate-toolchain
 	mkdir -p release
 	cd v2/jd ; GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-amd64-linux main.go
 	cd v2/jd ; GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-amd64-darwin main.go
@@ -83,7 +107,7 @@ check-dirty : tidy
 	git diff --quiet --exit-code
 
 .PHONY : tidy
-tidy :
+tidy : validate-toolchain
 	cd v2 ; go mod tidy
 	go mod tidy
 
