@@ -37,7 +37,7 @@ test : validate-toolchain
 .PHONY : fuzz
 fuzz : validate-toolchain
 	go test ./lib -fuzz=FuzzJd -fuzztime=10s
-	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=10s
+	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=30s
 
 .PHONY : pack-web
 pack-web : build-web validate-toolchain
