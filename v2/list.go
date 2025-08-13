@@ -78,7 +78,7 @@ func (a jsonList) diff(
 // diffEventDriven implements the new event-driven diff algorithm
 func (a jsonList) diffEventDriven(b jsonList, path Path, opts *options, strategy patchStrategy) Diff {
 	// Step 1: Generate diff events using LCS analysis
-	events := generateListDiffEvents(a, b, opts)
+	events := generateListdiffEvents(a, b, opts)
 
 	// Step 2: Create processor with path structure that matches original diffRest
 	// The original algorithm used append(path, PathIndex(0)), so we need:
@@ -87,7 +87,7 @@ func (a jsonList) diffEventDriven(b jsonList, path Path, opts *options, strategy
 	basePath := path
 	pathIndex := PathIndex(0)
 
-	processor := NewListDiffProcessor(basePath, pathIndex, voidNode{}, a, b, opts, strategy)
+	processor := newlistDiffProcessor(basePath, pathIndex, voidNode{}, a, b, opts, strategy)
 
 	// Step 3: Process events to generate final diff
 	return processor.ProcessEvents(events)
@@ -426,34 +426,34 @@ func (l jsonList) patch(pathBehind, pathAhead Path, before, removeValues, addVal
 // LIST-SPECIFIC EVENT-DRIVEN DIFF SYSTEM
 // ============================================================================
 
-// ListDiffProcessorState represents the current state of diff processing
-type ListDiffProcessorState int
+// listDiffProcessorState represents the current state of diff processing
+type listDiffProcessorState int
 
 const (
-	LIST_IDLE ListDiffProcessorState = iota
-	LIST_ACCUMULATING_CHANGES
-	LIST_PROCESSING_MATCH
-	LIST_PROCESSING_CONTAINER_DIFF
+	listIdle listDiffProcessorState = iota
+	listAccumulatingChanges
+	listProcessingMatch
+	listProcessingContainerDiff
 )
 
-func (s ListDiffProcessorState) String() string {
+func (s listDiffProcessorState) String() string {
 	switch s {
-	case LIST_IDLE:
-		return "LIST_IDLE"
-	case LIST_ACCUMULATING_CHANGES:
-		return "LIST_ACCUMULATING_CHANGES"
-	case LIST_PROCESSING_MATCH:
-		return "LIST_PROCESSING_MATCH"
-	case LIST_PROCESSING_CONTAINER_DIFF:
-		return "LIST_PROCESSING_CONTAINER_DIFF"
+	case listIdle:
+		return "listIdle"
+	case listAccumulatingChanges:
+		return "listAccumulatingChanges"
+	case listProcessingMatch:
+		return "listProcessingMatch"
+	case listProcessingContainerDiff:
+		return "listProcessingContainerDiff"
 	default:
 		return fmt.Sprintf("LIST_UNKNOWN(%d)", s)
 	}
 }
 
-// ListDiffProcessor processes diff events using a state machine
-type ListDiffProcessor struct {
-	state       ListDiffProcessorState
+// listDiffProcessor processes diff events using a state machine
+type listDiffProcessor struct {
+	state       listDiffProcessorState
 	currentDiff DiffElement
 	finalDiff   Diff
 	opts        *options
@@ -461,8 +461,8 @@ type ListDiffProcessor struct {
 	previous    JsonNode
 
 	// Helper components
-	pathCalc   *PathCalculator
-	contextMgr *ContextManager
+	pathCalc   *pathCalculator
+	contextMgr *contextManager
 
 	// Context tracking
 	lastProcessedElement JsonNode
@@ -472,34 +472,34 @@ type ListDiffProcessor struct {
 	debug bool
 }
 
-func NewListDiffProcessor(basePath Path, pathIndex PathIndex, previous JsonNode, a, b jsonList, opts *options, strategy patchStrategy) *ListDiffProcessor {
-	return &ListDiffProcessor{
-		state:                LIST_IDLE,
+func newlistDiffProcessor(basePath Path, pathIndex PathIndex, previous JsonNode, a, b jsonList, opts *options, strategy patchStrategy) *listDiffProcessor {
+	return &listDiffProcessor{
+		state:                listIdle,
 		finalDiff:            Diff{}, // Initialize to empty slice, not nil
 		opts:                 opts,
 		strategy:             strategy,
 		previous:             previous,
-		pathCalc:             NewPathCalculator(basePath, pathIndex),
-		contextMgr:           NewContextManager(a, b),
+		pathCalc:             newpathCalculator(basePath, pathIndex),
+		contextMgr:           newcontextManager(a, b),
 		lastProcessedElement: previous,
 		nextAfterElement:     voidNode{}, // Default to void
 		debug:                false,      // Disable debugging
 	}
 }
 
-func (p *ListDiffProcessor) SetDebug(debug bool) {
+func (p *listDiffProcessor) SetDebug(debug bool) {
 	p.debug = debug
 	p.pathCalc.SetDebug(debug)
 	p.contextMgr.SetDebug(debug)
 }
 
-func (p *ListDiffProcessor) debugLog(format string, args ...interface{}) {
+func (p *listDiffProcessor) debugLog(format string, args ...interface{}) {
 	if p.debug {
-		fmt.Printf("[ListDiffProcessor:%s] "+format+"\n", append([]interface{}{p.state}, args...)...)
+		fmt.Printf("[listDiffProcessor:%s] "+format+"\n", append([]interface{}{p.state}, args...)...)
 	}
 }
 
-func (p *ListDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
+func (p *listDiffProcessor) ProcessEvents(events []diffEvent) Diff {
 	p.debugLog("Starting to process %d events", len(events))
 
 	for i, event := range events {
@@ -514,51 +514,51 @@ func (p *ListDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
 	return p.finalDiff
 }
 
-func (p *ListDiffProcessor) processEvent(event DiffEvent) {
+func (p *listDiffProcessor) processEvent(event diffEvent) {
 	switch e := event.(type) {
-	case MatchEvent:
-		p.processMatchEvent(e)
-	case ContainerDiffEvent:
-		p.processContainerDiffEvent(e)
-	case RemoveEvent:
-		p.processRemoveEvent(e)
-	case AddEvent:
-		p.processAddEvent(e)
-	case ReplaceEvent:
-		p.processReplaceEvent(e)
+	case matchEvent:
+		p.processmatchEvent(e)
+	case containerDiffEvent:
+		p.processcontainerDiffEvent(e)
+	case removeEvent:
+		p.processremoveEvent(e)
+	case addEvent:
+		p.processaddEvent(e)
+	case replaceEvent:
+		p.processreplaceEvent(e)
 	default:
 		p.debugLog("WARNING: Unknown event type: %T", event)
 	}
 }
 
-func (p *ListDiffProcessor) processMatchEvent(event MatchEvent) {
+func (p *listDiffProcessor) processmatchEvent(event matchEvent) {
 	p.debugLog("Processing match: A[%d]=B[%d]", event.AIndex, event.BIndex)
 
 	// If we were accumulating changes, finalize them first
-	if p.state == LIST_ACCUMULATING_CHANGES {
+	if p.state == listAccumulatingChanges {
 		// The matched element becomes the After context for the previous operation
 		p.nextAfterElement = event.Element
 		p.finalizeCurrentDiff()
 	}
 
-	p.state = LIST_PROCESSING_MATCH
+	p.state = listProcessingMatch
 	p.pathCalc.AdvanceForMatch()
 	p.contextMgr.SetCursors(event.AIndex+1, event.BIndex+1) // Move past the match
 	p.lastProcessedElement = event.Element                  // Track the matched element
-	p.state = LIST_IDLE
+	p.state = listIdle
 }
 
-func (p *ListDiffProcessor) processContainerDiffEvent(event ContainerDiffEvent) {
+func (p *listDiffProcessor) processcontainerDiffEvent(event containerDiffEvent) {
 	p.debugLog("Processing container diff: A[%d] vs B[%d]", event.AIndex, event.BIndex)
 
 	// If we were accumulating changes, finalize them first
-	if p.state == LIST_ACCUMULATING_CHANGES {
+	if p.state == listAccumulatingChanges {
 		// The After context should be the element from original array A that comes after the previous operation
 		p.nextAfterElement = event.AElement // Use A element, not B element
 		p.finalizeCurrentDiff()
 	}
 
-	p.state = LIST_PROCESSING_CONTAINER_DIFF
+	p.state = listProcessingContainerDiff
 
 	// Perform recursive diff
 	subPath := p.pathCalc.CurrentPath()
@@ -577,10 +577,10 @@ func (p *ListDiffProcessor) processContainerDiffEvent(event ContainerDiffEvent) 
 	p.pathCalc.AdvanceForContainer()
 	p.contextMgr.SetCursors(event.AIndex+1, event.BIndex+1) // Move past the container
 	p.lastProcessedElement = event.BElement                 // After container diff, the B element is what remains
-	p.state = LIST_IDLE
+	p.state = listIdle
 }
 
-func (p *ListDiffProcessor) processRemoveEvent(event RemoveEvent) {
+func (p *listDiffProcessor) processremoveEvent(event removeEvent) {
 	p.debugLog("Processing remove: A[%d]", event.AIndex)
 	p.ensureAccumulatingState()
 	p.currentDiff.Remove = append(p.currentDiff.Remove, event.Element)
@@ -588,7 +588,7 @@ func (p *ListDiffProcessor) processRemoveEvent(event RemoveEvent) {
 	// For removes, advance A cursor but not B cursor
 }
 
-func (p *ListDiffProcessor) processAddEvent(event AddEvent) {
+func (p *listDiffProcessor) processaddEvent(event addEvent) {
 	p.debugLog("Processing add: B[%d]", event.BIndex)
 	p.ensureAccumulatingState()
 	p.currentDiff.Add = append(p.currentDiff.Add, event.Element)
@@ -596,7 +596,7 @@ func (p *ListDiffProcessor) processAddEvent(event AddEvent) {
 	// For adds, advance B cursor but not A cursor
 }
 
-func (p *ListDiffProcessor) processReplaceEvent(event ReplaceEvent) {
+func (p *listDiffProcessor) processreplaceEvent(event replaceEvent) {
 	p.debugLog("Processing replace: A[%d] -> B[%d]", event.AIndex, event.BIndex)
 	p.ensureAccumulatingState()
 	p.currentDiff.Remove = append(p.currentDiff.Remove, event.AElement)
@@ -605,15 +605,15 @@ func (p *ListDiffProcessor) processReplaceEvent(event ReplaceEvent) {
 	// For replaces, both cursors advance
 }
 
-func (p *ListDiffProcessor) ensureAccumulatingState() {
-	if p.state != LIST_ACCUMULATING_CHANGES {
+func (p *listDiffProcessor) ensureAccumulatingState() {
+	if p.state != listAccumulatingChanges {
 		p.startAccumulating()
 	}
 }
 
-func (p *ListDiffProcessor) startAccumulating() {
+func (p *listDiffProcessor) startAccumulating() {
 	p.debugLog("Starting to accumulate changes at path %s", p.pathCalc.CurrentPath())
-	p.state = LIST_ACCUMULATING_CHANGES
+	p.state = listAccumulatingChanges
 
 	// Use the last processed element as Before context
 	beforeContext := []JsonNode{p.lastProcessedElement}
@@ -624,8 +624,8 @@ func (p *ListDiffProcessor) startAccumulating() {
 	}
 }
 
-func (p *ListDiffProcessor) finalizeCurrentDiff() {
-	if p.state != LIST_ACCUMULATING_CHANGES {
+func (p *listDiffProcessor) finalizeCurrentDiff() {
+	if p.state != listAccumulatingChanges {
 		return
 	}
 
@@ -640,77 +640,77 @@ func (p *ListDiffProcessor) finalizeCurrentDiff() {
 	}
 
 	p.currentDiff = DiffElement{}
-	p.state = LIST_IDLE
+	p.state = listIdle
 }
 
-func (p *ListDiffProcessor) finalize() {
-	if p.state == LIST_ACCUMULATING_CHANGES {
+func (p *listDiffProcessor) finalize() {
+	if p.state == listAccumulatingChanges {
 		// When finalizing at the end, After context should be void
 		p.nextAfterElement = voidNode{}
 		p.finalizeCurrentDiff()
 	}
 }
 
-// PathCalculator handles path calculations and advancement during diff processing
-type PathCalculator struct {
+// pathCalculator handles path calculations and advancement during diff processing
+type pathCalculator struct {
 	basePath  Path
 	pathIndex PathIndex
 	debug     bool
 }
 
-func NewPathCalculator(basePath Path, pathIndex PathIndex) *PathCalculator {
-	return &PathCalculator{
+func newpathCalculator(basePath Path, pathIndex PathIndex) *pathCalculator {
+	return &pathCalculator{
 		basePath:  basePath,
 		pathIndex: pathIndex,
 		debug:     false,
 	}
 }
 
-func (pc *PathCalculator) SetDebug(debug bool) {
+func (pc *pathCalculator) SetDebug(debug bool) {
 	pc.debug = debug
 }
 
-func (pc *PathCalculator) debugLog(format string, args ...interface{}) {
+func (pc *pathCalculator) debugLog(format string, args ...interface{}) {
 	if pc.debug {
-		fmt.Printf("[PathCalculator] "+format+"\n", args...)
+		fmt.Printf("[pathCalculator] "+format+"\n", args...)
 	}
 }
 
-func (pc *PathCalculator) CurrentPath() Path {
+func (pc *pathCalculator) CurrentPath() Path {
 	return append(pc.basePath.clone(), pc.pathIndex)
 }
 
-func (pc *PathCalculator) GetCurrentIndex() PathIndex {
+func (pc *pathCalculator) GetCurrentIndex() PathIndex {
 	return pc.pathIndex
 }
 
-func (pc *PathCalculator) AdvanceForMatch() {
+func (pc *pathCalculator) AdvanceForMatch() {
 	pc.debugLog("Advancing path for match: %d -> %d", pc.pathIndex, pc.pathIndex+1)
 	pc.pathIndex++
 }
 
-func (pc *PathCalculator) AdvanceForAdd() {
+func (pc *pathCalculator) AdvanceForAdd() {
 	pc.debugLog("Advancing path for add: %d -> %d", pc.pathIndex, pc.pathIndex+1)
 	pc.pathIndex += 1 // Path advances by 1 per added element
 }
 
-func (pc *PathCalculator) AdvanceForRemove() {
+func (pc *pathCalculator) AdvanceForRemove() {
 	pc.debugLog("Advancing path for remove: %d (no change)", pc.pathIndex)
 	// Path stays same because list is getting shorter but we're moving to next element
 }
 
-func (pc *PathCalculator) AdvanceForReplace() {
+func (pc *pathCalculator) AdvanceForReplace() {
 	pc.debugLog("Advancing path for replace: %d -> %d", pc.pathIndex, pc.pathIndex+1)
 	pc.pathIndex++
 }
 
-func (pc *PathCalculator) AdvanceForContainer() {
+func (pc *pathCalculator) AdvanceForContainer() {
 	pc.debugLog("Advancing path for container: %d -> %d", pc.pathIndex, pc.pathIndex+1)
 	pc.pathIndex++
 }
 
-// ContextManager handles Before/After context calculation for diff elements
-type ContextManager struct {
+// contextManager handles Before/After context calculation for diff elements
+type contextManager struct {
 	originalA jsonList
 	originalB jsonList
 	aIndex    int
@@ -718,8 +718,8 @@ type ContextManager struct {
 	debug     bool
 }
 
-func NewContextManager(a, b jsonList) *ContextManager {
-	return &ContextManager{
+func newcontextManager(a, b jsonList) *contextManager {
+	return &contextManager{
 		originalA: a,
 		originalB: b,
 		aIndex:    0,
@@ -728,28 +728,28 @@ func NewContextManager(a, b jsonList) *ContextManager {
 	}
 }
 
-func (cm *ContextManager) SetDebug(debug bool) {
+func (cm *contextManager) SetDebug(debug bool) {
 	cm.debug = debug
 }
 
-func (cm *ContextManager) debugLog(format string, args ...interface{}) {
+func (cm *contextManager) debugLog(format string, args ...interface{}) {
 	if cm.debug {
-		fmt.Printf("[ContextManager] "+format+"\n", args...)
+		fmt.Printf("[contextManager] "+format+"\n", args...)
 	}
 }
 
-func (cm *ContextManager) SetCursors(aIndex, bIndex int) {
+func (cm *contextManager) SetCursors(aIndex, bIndex int) {
 	cm.debugLog("Setting cursors: A=%d, B=%d", aIndex, bIndex)
 	cm.aIndex = aIndex
 	cm.bIndex = bIndex
 }
 
-func (cm *ContextManager) GetBeforeContext(previous JsonNode) []JsonNode {
+func (cm *contextManager) GetBeforeContext(previous JsonNode) []JsonNode {
 	cm.debugLog("Getting before context with previous: %s", previous.Json())
 	return []JsonNode{previous}
 }
 
-func (cm *ContextManager) GetAfterContext() []JsonNode {
+func (cm *contextManager) GetAfterContext() []JsonNode {
 	// Calculate After context similar to original diffRest logic
 	// This is the element that comes after the current operation
 
@@ -763,66 +763,66 @@ func (cm *ContextManager) GetAfterContext() []JsonNode {
 	return []JsonNode{afterElement}
 }
 
-func (cm *ContextManager) AdvanceForMatch() {
+func (cm *contextManager) AdvanceForMatch() {
 	cm.debugLog("Advancing context for match: A=%d->%d, B=%d->%d",
 		cm.aIndex, cm.aIndex+1, cm.bIndex, cm.bIndex+1)
 	cm.aIndex++
 	cm.bIndex++
 }
 
-func (cm *ContextManager) AdvanceForAdd() {
+func (cm *contextManager) AdvanceForAdd() {
 	cm.debugLog("Advancing context for add: B=%d->%d", cm.bIndex, cm.bIndex+1)
 	cm.bIndex++
 }
 
-func (cm *ContextManager) AdvanceForRemove() {
+func (cm *contextManager) AdvanceForRemove() {
 	cm.debugLog("Advancing context for remove: A=%d->%d", cm.aIndex, cm.aIndex+1)
 	cm.aIndex++
 }
 
-func (cm *ContextManager) AdvanceForReplace() {
+func (cm *contextManager) AdvanceForReplace() {
 	cm.debugLog("Advancing context for replace: A=%d->%d, B=%d->%d",
 		cm.aIndex, cm.aIndex+1, cm.bIndex, cm.bIndex+1)
 	cm.aIndex++
 	cm.bIndex++
 }
 
-func (cm *ContextManager) AdvanceForContainer() {
+func (cm *contextManager) AdvanceForContainer() {
 	cm.debugLog("Advancing context for container: A=%d->%d, B=%d->%d",
 		cm.aIndex, cm.aIndex+1, cm.bIndex, cm.bIndex+1)
 	cm.aIndex++
 	cm.bIndex++
 }
 
-// generateListDiffEvents converts LCS analysis into a sequence of diff events for lists
-func generateListDiffEvents(a, b jsonList, opts *options) []DiffEvent {
+// generateListdiffEvents converts LCS analysis into a sequence of diff events for lists
+func generateListdiffEvents(a, b jsonList, opts *options) []diffEvent {
 	// Handle empty lists
 	if len(a) == 0 && len(b) == 0 {
-		return []DiffEvent{}
+		return []diffEvent{}
 	}
 	if len(a) == 0 {
 		// All additions
-		events := make([]DiffEvent, len(b))
+		events := make([]diffEvent, len(b))
 		for i, elem := range b {
-			events[i] = AddEvent{BIndex: i, Element: elem}
+			events[i] = addEvent{BIndex: i, Element: elem}
 		}
 		return events
 	}
 	if len(b) == 0 {
 		// All removals
-		events := make([]DiffEvent, len(a))
+		events := make([]diffEvent, len(a))
 		for i, elem := range a {
-			events[i] = RemoveEvent{AIndex: i, Element: elem}
+			events[i] = removeEvent{AIndex: i, Element: elem}
 		}
 		return events
 	}
 
 	// Use LCS to find matches with options awareness
-	lcsResult := NewLcsWithOptions(a, b, opts)
+	lcsResult := newLcsWithOptions(a, b, opts)
 	matches := lcsResult.IndexPairs()
 
 	// Build events by walking through both arrays
-	var events []DiffEvent
+	var events []diffEvent
 	var aIndex, bIndex, matchIndex int
 
 	for aIndex < len(a) || bIndex < len(b) {
@@ -838,7 +838,7 @@ func generateListDiffEvents(a, b jsonList, opts *options) []DiffEvent {
 			if sameContainerType(a[aIndex], b[bIndex], opts) &&
 				!a[aIndex].equals(b[bIndex], refinedOpts) {
 				// Compatible containers with differences
-				events = append(events, ContainerDiffEvent{
+				events = append(events, containerDiffEvent{
 					AIndex:   aIndex,
 					BIndex:   bIndex,
 					AElement: a[aIndex],
@@ -846,7 +846,7 @@ func generateListDiffEvents(a, b jsonList, opts *options) []DiffEvent {
 				})
 			} else {
 				// Perfect match (check equality with refined options for precision)
-				events = append(events, MatchEvent{
+				events = append(events, matchEvent{
 					AIndex:  aIndex,
 					BIndex:  bIndex,
 					Element: a[aIndex],
@@ -869,7 +869,7 @@ func generateListDiffEvents(a, b jsonList, opts *options) []DiffEvent {
 				aIndex < nextMatchA && bIndex < nextMatchB &&
 				sameContainerType(a[aIndex], b[bIndex], opts) {
 				// Compatible containers - try container diff
-				events = append(events, ContainerDiffEvent{
+				events = append(events, containerDiffEvent{
 					AIndex:   aIndex,
 					BIndex:   bIndex,
 					AElement: a[aIndex],
@@ -880,7 +880,7 @@ func generateListDiffEvents(a, b jsonList, opts *options) []DiffEvent {
 			} else if aIndex < len(a) && bIndex < len(b) &&
 				aIndex < nextMatchA && bIndex < nextMatchB {
 				// Different elements at same position - replacement
-				events = append(events, ReplaceEvent{
+				events = append(events, replaceEvent{
 					AIndex:   aIndex,
 					BIndex:   bIndex,
 					AElement: a[aIndex],
@@ -890,14 +890,14 @@ func generateListDiffEvents(a, b jsonList, opts *options) []DiffEvent {
 				bIndex++
 			} else if aIndex < nextMatchA && aIndex < len(a) {
 				// Element only in A - removal
-				events = append(events, RemoveEvent{
+				events = append(events, removeEvent{
 					AIndex:  aIndex,
 					Element: a[aIndex],
 				})
 				aIndex++
 			} else if bIndex < nextMatchB && bIndex < len(b) {
 				// Element only in B - addition
-				events = append(events, AddEvent{
+				events = append(events, addEvent{
 					BIndex:  bIndex,
 					Element: b[bIndex],
 				})

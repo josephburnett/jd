@@ -76,7 +76,7 @@ func (d DiffElement) Render(opts ...Option) string {
 			for _, c := range newStr {
 				newNodes = append(newNodes, jsonString(string(c)))
 			}
-			commonSequence = NewLcs(oldNodes, newNodes).Values()
+			commonSequence = newLcs(oldNodes, newNodes).Values()
 			isSingleStringDiff = true
 		}
 	}

@@ -82,20 +82,20 @@ func (s1 jsonSet) diff(
 	if !ok {
 		// Different types - use simple replace event
 		events := generateSimpleEvents(s1, n, opts)
-		processor := NewSetDiffProcessor(path, opts, strategy)
+		processor := newsetDiffProcessor(path, opts, strategy)
 		return processor.ProcessEvents(events)
 	}
 
 	// Handle merge patch strategy for same types
 	if strategy == mergePatchStrategy && !s1.Equals(n) {
 		events := generateSimpleEvents(s1, n, opts)
-		processor := NewSetDiffProcessor(path, opts, strategy)
+		processor := newsetDiffProcessor(path, opts, strategy)
 		return processor.ProcessEvents(events)
 	}
 
 	// Same type - use set-specific event generation
-	events := generateSetDiffEvents(s1, s2, opts)
-	processor := NewSetDiffProcessor(path, opts, strategy)
+	events := generateSetdiffEvents(s1, s2, opts)
+	processor := newsetDiffProcessor(path, opts, strategy)
 	return processor.ProcessEvents(events)
 }
 
@@ -214,44 +214,44 @@ func (s jsonSet) patch(
 // SET-SPECIFIC EVENT-DRIVEN DIFF SYSTEM
 // ============================================================================
 
-// SetElementEvent represents operations on set elements
-type SetElementEvent struct {
+// setElementEvent represents operations on set elements
+type setElementEvent struct {
 	Operation string // "ADD" or "REMOVE"
 	Element   JsonNode
 	Hash      [8]byte // For identity tracking
 }
 
-func (e SetElementEvent) String() string {
+func (e setElementEvent) String() string {
 	return fmt.Sprintf("SET_%s(%s)", e.Operation, e.Element.Json())
 }
 
-func (e SetElementEvent) GetType() string { return "SET_ELEMENT" }
+func (e setElementEvent) GetType() string { return "SET_ELEMENT" }
 
-// SetObjectDiffEvent represents an object in a set that needs recursive diffing
-type SetObjectDiffEvent struct {
+// setObjectDiffEvent represents an object in a set that needs recursive diffing
+type setObjectDiffEvent struct {
 	OldObject JsonNode
 	NewObject JsonNode
 	Hash      [8]byte // Identity hash
 }
 
-func (e SetObjectDiffEvent) String() string {
+func (e setObjectDiffEvent) String() string {
 	return fmt.Sprintf("SET_OBJECT_DIFF(%s -> %s)", e.OldObject.Json(), e.NewObject.Json())
 }
 
-func (e SetObjectDiffEvent) GetType() string { return "SET_OBJECT_DIFF" }
+func (e setObjectDiffEvent) GetType() string { return "SET_OBJECT_DIFF" }
 
-// SetDiffProcessor processes set diff events
-type SetDiffProcessor struct {
-	*BaseDiffProcessor
+// setDiffProcessor processes set diff events
+type setDiffProcessor struct {
+	*baseDiffProcessor
 }
 
-func NewSetDiffProcessor(path Path, opts *options, strategy patchStrategy) *SetDiffProcessor {
-	return &SetDiffProcessor{
-		BaseDiffProcessor: NewBaseDiffProcessor(path, opts, strategy),
+func newsetDiffProcessor(path Path, opts *options, strategy patchStrategy) *setDiffProcessor {
+	return &setDiffProcessor{
+		baseDiffProcessor: newBaseDiffProcessor(path, opts, strategy),
 	}
 }
 
-func (p *SetDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
+func (p *setDiffProcessor) ProcessEvents(events []diffEvent) Diff {
 	p.debugLog("Starting to process %d set events", len(events))
 
 	// Collect all add/remove events for the set operation
@@ -261,7 +261,7 @@ func (p *SetDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
 		p.debugLog("Processing event %d: %s", i, event.String())
 
 		switch e := event.(type) {
-		case SetElementEvent:
+		case setElementEvent:
 			if setElement == nil {
 				setElement = &DiffElement{
 					Path:   append(p.path.clone(), PathSet{}),
@@ -276,14 +276,14 @@ func (p *SetDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
 				setElement.Add = append(setElement.Add, e.Element)
 			}
 
-		case SetObjectDiffEvent:
-			p.processSetObjectDiffEvent(e)
+		case setObjectDiffEvent:
+			p.processsetObjectDiffEvent(e)
 
-		case SimpleReplaceEvent:
-			p.processSimpleReplaceEvent(e)
+		case simpleReplaceEvent:
+			p.processsimpleReplaceEvent(e)
 
 		default:
-			p.debugLog("WARNING: Unknown event type for SetDiffProcessor: %T", event)
+			p.debugLog("WARNING: Unknown event type for setDiffProcessor: %T", event)
 		}
 	}
 
@@ -296,7 +296,7 @@ func (p *SetDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
 	return p.finalDiff
 }
 
-func (p *SetDiffProcessor) processSetObjectDiffEvent(event SetObjectDiffEvent) {
+func (p *setDiffProcessor) processsetObjectDiffEvent(event setObjectDiffEvent) {
 	p.debugLog("Processing set object diff: %s -> %s", event.OldObject.Json(), event.NewObject.Json())
 
 	// For set object diffs, we need to create a path with PathSetKeys
@@ -308,7 +308,7 @@ func (p *SetDiffProcessor) processSetObjectDiffEvent(event SetObjectDiffEvent) {
 	p.finalDiff = append(p.finalDiff, subDiff...)
 }
 
-func (p *SetDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEvent) {
+func (p *setDiffProcessor) processsimpleReplaceEvent(event simpleReplaceEvent) {
 	p.debugLog("Processing simple replace: %s -> %s", event.OldValue.Json(), event.NewValue.Json())
 
 	var e DiffElement
@@ -332,9 +332,9 @@ func (p *SetDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEvent) {
 	p.finalDiff = append(p.finalDiff, e)
 }
 
-// generateSetDiffEvents analyzes two sets and generates appropriate diff events
-func generateSetDiffEvents(s1, s2 jsonSet, opts *options) []DiffEvent {
-	var events []DiffEvent
+// generateSetdiffEvents analyzes two sets and generates appropriate diff events
+func generateSetdiffEvents(s1, s2 jsonSet, opts *options) []diffEvent {
+	var events []diffEvent
 
 	// Create hash maps for identity-based comparison
 	s1Map := make(map[[8]byte]JsonNode)
@@ -381,7 +381,7 @@ func generateSetDiffEvents(s1, s2 jsonSet, opts *options) []DiffEvent {
 		v1 := s1Map[hc]
 		if v2, ok := s2Map[hc]; !ok {
 			// Deleted value
-			events = append(events, SetElementEvent{
+			events = append(events, setElementEvent{
 				Operation: "REMOVE",
 				Element:   v1,
 				Hash:      hc,
@@ -392,7 +392,7 @@ func generateSetDiffEvents(s1, s2 jsonSet, opts *options) []DiffEvent {
 			o2, isObject2 := v2.(jsonObject)
 			if isObject1 && isObject2 && !o1.equals(o2, opts) {
 				// Sub diff objects with same identity
-				events = append(events, SetObjectDiffEvent{
+				events = append(events, setObjectDiffEvent{
 					OldObject: o1,
 					NewObject: o2,
 					Hash:      hc,
@@ -405,7 +405,7 @@ func generateSetDiffEvents(s1, s2 jsonSet, opts *options) []DiffEvent {
 	for _, hc := range s2Hashes {
 		if _, ok := s1Map[hc]; !ok {
 			// Added value
-			events = append(events, SetElementEvent{
+			events = append(events, setElementEvent{
 				Operation: "ADD",
 				Element:   s2Map[hc],
 				Hash:      hc,

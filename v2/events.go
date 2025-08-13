@@ -8,116 +8,116 @@ import (
 // CORE EVENT-DRIVEN DIFF SYSTEM
 // ============================================================================
 
-// DiffEvent represents an operation needed to transform one structure into another
-type DiffEvent interface {
+// diffEvent represents an operation needed to transform one structure into another
+type diffEvent interface {
 	String() string // For debugging
 	GetType() string
 }
 
-// MatchEvent represents elements that are identical between A and B
-type MatchEvent struct {
+// matchEvent represents elements that are identical between A and B
+type matchEvent struct {
 	AIndex, BIndex int
 	Element        JsonNode
 }
 
-func (e MatchEvent) String() string {
+func (e matchEvent) String() string {
 	return fmt.Sprintf("MATCH(A[%d]=B[%d]: %s)", e.AIndex, e.BIndex, e.Element.Json())
 }
 
-func (e MatchEvent) GetType() string { return "MATCH" }
+func (e matchEvent) GetType() string { return "MATCH" }
 
-// ContainerDiffEvent represents containers that are compatible and need recursive diffing
-type ContainerDiffEvent struct {
+// containerDiffEvent represents containers that are compatible and need recursive diffing
+type containerDiffEvent struct {
 	AIndex, BIndex     int
 	AElement, BElement JsonNode
 }
 
-func (e ContainerDiffEvent) String() string {
+func (e containerDiffEvent) String() string {
 	return fmt.Sprintf("CONTAINER_DIFF(A[%d] vs B[%d])", e.AIndex, e.BIndex)
 }
 
-func (e ContainerDiffEvent) GetType() string { return "CONTAINER_DIFF" }
+func (e containerDiffEvent) GetType() string { return "CONTAINER_DIFF" }
 
-// RemoveEvent represents an element that exists only in A (needs to be removed)
-type RemoveEvent struct {
+// removeEvent represents an element that exists only in A (needs to be removed)
+type removeEvent struct {
 	AIndex  int
 	Element JsonNode
 }
 
-func (e RemoveEvent) String() string {
+func (e removeEvent) String() string {
 	return fmt.Sprintf("REMOVE(A[%d]: %s)", e.AIndex, e.Element.Json())
 }
 
-func (e RemoveEvent) GetType() string { return "REMOVE" }
+func (e removeEvent) GetType() string { return "REMOVE" }
 
-// AddEvent represents an element that exists only in B (needs to be added)
-type AddEvent struct {
+// addEvent represents an element that exists only in B (needs to be added)
+type addEvent struct {
 	BIndex  int
 	Element JsonNode
 }
 
-func (e AddEvent) String() string {
+func (e addEvent) String() string {
 	return fmt.Sprintf("ADD(B[%d]: %s)", e.BIndex, e.Element.Json())
 }
 
-func (e AddEvent) GetType() string { return "ADD" }
+func (e addEvent) GetType() string { return "ADD" }
 
-// ReplaceEvent represents elements at the same position that are different
-type ReplaceEvent struct {
+// replaceEvent represents elements at the same position that are different
+type replaceEvent struct {
 	AIndex, BIndex     int
 	AElement, BElement JsonNode
 }
 
-func (e ReplaceEvent) String() string {
+func (e replaceEvent) String() string {
 	return fmt.Sprintf("REPLACE(A[%d]: %s -> B[%d]: %s)",
 		e.AIndex, e.AElement.Json(), e.BIndex, e.BElement.Json())
 }
 
-func (e ReplaceEvent) GetType() string { return "REPLACE" }
+func (e replaceEvent) GetType() string { return "REPLACE" }
 
-// SimpleReplaceEvent represents a simple replacement between two different values
-type SimpleReplaceEvent struct {
+// simpleReplaceEvent represents a simple replacement between two different values
+type simpleReplaceEvent struct {
 	OldValue, NewValue JsonNode
 }
 
-func (e SimpleReplaceEvent) String() string {
+func (e simpleReplaceEvent) String() string {
 	return fmt.Sprintf("SIMPLE_REPLACE(%s -> %s)", e.OldValue.Json(), e.NewValue.Json())
 }
 
-func (e SimpleReplaceEvent) GetType() string { return "SIMPLE_REPLACE" }
+func (e simpleReplaceEvent) GetType() string { return "SIMPLE_REPLACE" }
 
 // ============================================================================
 // CORE DIFF PROCESSOR
 // ============================================================================
 
-// DiffProcessorState represents the current state of diff processing
-type DiffProcessorState int
+// diffProcessorState represents the current state of diff processing
+type diffProcessorState int
 
 const (
-	IDLE DiffProcessorState = iota
-	ACCUMULATING_CHANGES
-	PROCESSING_MATCH
-	PROCESSING_CONTAINER_DIFF
+	idle diffProcessorState = iota
+	accumulatingChanges
+	processingMatch
+	processingContainerDiff
 )
 
-func (s DiffProcessorState) String() string {
+func (s diffProcessorState) String() string {
 	switch s {
-	case IDLE:
+	case idle:
 		return "IDLE"
-	case ACCUMULATING_CHANGES:
+	case accumulatingChanges:
 		return "ACCUMULATING_CHANGES"
-	case PROCESSING_MATCH:
+	case processingMatch:
 		return "PROCESSING_MATCH"
-	case PROCESSING_CONTAINER_DIFF:
+	case processingContainerDiff:
 		return "PROCESSING_CONTAINER_DIFF"
 	default:
 		return fmt.Sprintf("UNKNOWN(%d)", s)
 	}
 }
 
-// BaseDiffProcessor provides common functionality for all diff processors
-type BaseDiffProcessor struct {
-	state       DiffProcessorState
+// baseDiffProcessor provides common functionality for all diff processors
+type baseDiffProcessor struct {
+	state       diffProcessorState
 	currentDiff DiffElement
 	finalDiff   Diff
 	opts        *options
@@ -126,9 +126,9 @@ type BaseDiffProcessor struct {
 	debug       bool
 }
 
-func NewBaseDiffProcessor(path Path, opts *options, strategy patchStrategy) *BaseDiffProcessor {
-	return &BaseDiffProcessor{
-		state:     IDLE,
+func newBaseDiffProcessor(path Path, opts *options, strategy patchStrategy) *baseDiffProcessor {
+	return &baseDiffProcessor{
+		state:     idle,
 		finalDiff: Diff{}, // Initialize to empty slice, not nil
 		opts:      opts,
 		strategy:  strategy,
@@ -137,11 +137,11 @@ func NewBaseDiffProcessor(path Path, opts *options, strategy patchStrategy) *Bas
 	}
 }
 
-func (p *BaseDiffProcessor) SetDebug(debug bool) {
+func (p *baseDiffProcessor) SetDebug(debug bool) {
 	p.debug = debug
 }
 
-func (p *BaseDiffProcessor) debugLog(format string, args ...interface{}) {
+func (p *baseDiffProcessor) debugLog(format string, args ...interface{}) {
 	if p.debug {
 		fmt.Printf("[BaseDiffProcessor:%s] "+format+"\n", append([]interface{}{p.state}, args...)...)
 	}
@@ -151,18 +151,18 @@ func (p *BaseDiffProcessor) debugLog(format string, args ...interface{}) {
 // SIMPLE DIFF PROCESSOR (for primitive types)
 // ============================================================================
 
-// SimpleDiffProcessor handles diff processing for simple types (bool, string, number, null, void)
-type SimpleDiffProcessor struct {
-	*BaseDiffProcessor
+// simpleDiffProcessor handles diff processing for simple types (bool, string, number, null, void)
+type simpleDiffProcessor struct {
+	*baseDiffProcessor
 }
 
-func NewSimpleDiffProcessor(path Path, opts *options, strategy patchStrategy) *SimpleDiffProcessor {
-	return &SimpleDiffProcessor{
-		BaseDiffProcessor: NewBaseDiffProcessor(path, opts, strategy),
+func newSimpleDiffProcessor(path Path, opts *options, strategy patchStrategy) *simpleDiffProcessor {
+	return &simpleDiffProcessor{
+		baseDiffProcessor: newBaseDiffProcessor(path, opts, strategy),
 	}
 }
 
-func (p *SimpleDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
+func (p *simpleDiffProcessor) ProcessEvents(events []diffEvent) Diff {
 	p.debugLog("Starting to process %d events", len(events))
 
 	for i, event := range events {
@@ -174,16 +174,16 @@ func (p *SimpleDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
 	return p.finalDiff
 }
 
-func (p *SimpleDiffProcessor) processEvent(event DiffEvent) {
+func (p *simpleDiffProcessor) processEvent(event diffEvent) {
 	switch e := event.(type) {
-	case SimpleReplaceEvent:
+	case simpleReplaceEvent:
 		p.processSimpleReplaceEvent(e)
 	default:
-		p.debugLog("WARNING: Unknown event type for SimpleDiffProcessor: %T", event)
+		p.debugLog("WARNING: Unknown event type for simpleDiffProcessor: %T", event)
 	}
 }
 
-func (p *SimpleDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEvent) {
+func (p *simpleDiffProcessor) processSimpleReplaceEvent(event simpleReplaceEvent) {
 	p.debugLog("Processing simple replace: %s -> %s", event.OldValue.Json(), event.NewValue.Json())
 
 	var e DiffElement
@@ -208,9 +208,9 @@ func (p *SimpleDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEvent
 }
 
 // generateSimpleEvents creates events for simple type differences
-func generateSimpleEvents(a, b JsonNode, opts *options) []DiffEvent {
+func generateSimpleEvents(a, b JsonNode, opts *options) []diffEvent {
 	if a.equals(b, opts) {
-		return []DiffEvent{}
+		return []diffEvent{}
 	}
-	return []DiffEvent{SimpleReplaceEvent{OldValue: a, NewValue: b}}
+	return []diffEvent{simpleReplaceEvent{OldValue: a, NewValue: b}}
 }

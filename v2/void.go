@@ -67,7 +67,7 @@ func (v voidNode) diff(
 ) Diff {
 	// Use event-driven diff architecture
 	events := generateSimpleEvents(v, n, opts)
-	processor := NewSimpleDiffProcessor(p, opts, strategy)
+	processor := newSimpleDiffProcessor(p, opts, strategy)
 	return processor.ProcessEvents(events)
 }
 

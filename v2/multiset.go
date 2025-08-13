@@ -70,20 +70,20 @@ func (a1 jsonMultiset) diff(
 	if !ok {
 		// Different types - use simple replace event
 		events := generateSimpleEvents(a1, n, opts)
-		processor := NewMultisetDiffProcessor(path, opts, strategy)
+		processor := newmultisetDiffProcessor(path, opts, strategy)
 		return processor.ProcessEvents(events)
 	}
 
 	// Handle merge patch strategy for same types
 	if strategy == mergePatchStrategy && !a1.Equals(n) {
 		events := generateSimpleEvents(a1, n, opts)
-		processor := NewMultisetDiffProcessor(path, opts, strategy)
+		processor := newmultisetDiffProcessor(path, opts, strategy)
 		return processor.ProcessEvents(events)
 	}
 
 	// Same type - use multiset-specific event generation
-	events := generateMultisetDiffEvents(a1, a2, opts)
-	processor := NewMultisetDiffProcessor(path, opts, strategy)
+	events := generateMultisetdiffEvents(a1, a2, opts)
+	processor := newmultisetDiffProcessor(path, opts, strategy)
 	return processor.ProcessEvents(events)
 }
 
@@ -163,32 +163,32 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, before, oldValues, newVa
 // MULTISET-SPECIFIC EVENT-DRIVEN DIFF SYSTEM
 // ============================================================================
 
-// MultisetElementEvent represents operations on multiset elements with counts
-type MultisetElementEvent struct {
+// multisetElementEvent represents operations on multiset elements with counts
+type multisetElementEvent struct {
 	Operation string // "ADD" or "REMOVE"
 	Element   JsonNode
 	Count     int     // How many instances to add/remove
 	Hash      [8]byte // For identity tracking
 }
 
-func (e MultisetElementEvent) String() string {
+func (e multisetElementEvent) String() string {
 	return fmt.Sprintf("MULTISET_%s(%s x%d)", e.Operation, e.Element.Json(), e.Count)
 }
 
-func (e MultisetElementEvent) GetType() string { return "MULTISET_ELEMENT" }
+func (e multisetElementEvent) GetType() string { return "MULTISET_ELEMENT" }
 
-// MultisetDiffProcessor processes multiset diff events
-type MultisetDiffProcessor struct {
-	*BaseDiffProcessor
+// multisetDiffProcessor processes multiset diff events
+type multisetDiffProcessor struct {
+	*baseDiffProcessor
 }
 
-func NewMultisetDiffProcessor(path Path, opts *options, strategy patchStrategy) *MultisetDiffProcessor {
-	return &MultisetDiffProcessor{
-		BaseDiffProcessor: NewBaseDiffProcessor(path, opts, strategy),
+func newmultisetDiffProcessor(path Path, opts *options, strategy patchStrategy) *multisetDiffProcessor {
+	return &multisetDiffProcessor{
+		baseDiffProcessor: newBaseDiffProcessor(path, opts, strategy),
 	}
 }
 
-func (p *MultisetDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
+func (p *multisetDiffProcessor) ProcessEvents(events []diffEvent) Diff {
 	p.debugLog("Starting to process %d multiset events", len(events))
 
 	// Collect all add/remove events for the multiset operation
@@ -198,7 +198,7 @@ func (p *MultisetDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
 		p.debugLog("Processing event %d: %s", i, event.String())
 
 		switch e := event.(type) {
-		case MultisetElementEvent:
+		case multisetElementEvent:
 			if multisetElement == nil {
 				multisetElement = &DiffElement{
 					Path:   append(p.path.clone(), PathMultiset{}),
@@ -216,11 +216,11 @@ func (p *MultisetDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
 				}
 			}
 
-		case SimpleReplaceEvent:
-			p.processSimpleReplaceEvent(e)
+		case simpleReplaceEvent:
+			p.processsimpleReplaceEvent(e)
 
 		default:
-			p.debugLog("WARNING: Unknown event type for MultisetDiffProcessor: %T", event)
+			p.debugLog("WARNING: Unknown event type for multisetDiffProcessor: %T", event)
 		}
 	}
 
@@ -233,7 +233,7 @@ func (p *MultisetDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
 	return p.finalDiff
 }
 
-func (p *MultisetDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEvent) {
+func (p *multisetDiffProcessor) processsimpleReplaceEvent(event simpleReplaceEvent) {
 	p.debugLog("Processing simple replace: %s -> %s", event.OldValue.Json(), event.NewValue.Json())
 
 	var e DiffElement
@@ -257,9 +257,9 @@ func (p *MultisetDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEve
 	p.finalDiff = append(p.finalDiff, e)
 }
 
-// generateMultisetDiffEvents analyzes two multisets and generates appropriate diff events
-func generateMultisetDiffEvents(a1, a2 jsonMultiset, opts *options) []DiffEvent {
-	var events []DiffEvent
+// generateMultisetdiffEvents analyzes two multisets and generates appropriate diff events
+func generateMultisetdiffEvents(a1, a2 jsonMultiset, opts *options) []diffEvent {
+	var events []diffEvent
 
 	// Count elements in both multisets
 	a1Counts := make(map[[8]byte]int)
@@ -300,7 +300,7 @@ func generateMultisetDiffEvents(a1, a2 jsonMultiset, opts *options) []DiffEvent 
 		}
 		removed := a1Count - a2Count
 		if removed > 0 {
-			events = append(events, MultisetElementEvent{
+			events = append(events, multisetElementEvent{
 				Operation: "REMOVE",
 				Element:   a1Map[hc],
 				Count:     removed,
@@ -318,7 +318,7 @@ func generateMultisetDiffEvents(a1, a2 jsonMultiset, opts *options) []DiffEvent 
 		}
 		added := a2Count - a1Count
 		if added > 0 {
-			events = append(events, MultisetElementEvent{
+			events = append(events, multisetElementEvent{
 				Operation: "ADD",
 				Element:   a2Map[hc],
 				Count:     added,

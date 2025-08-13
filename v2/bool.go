@@ -50,7 +50,7 @@ func (b jsonBool) diff(
 ) Diff {
 	// Use event-driven diff architecture
 	events := generateSimpleEvents(b, n, opts)
-	processor := NewSimpleDiffProcessor(path, opts, strategy)
+	processor := newSimpleDiffProcessor(path, opts, strategy)
 	return processor.ProcessEvents(events)
 }
 

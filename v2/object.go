@@ -130,13 +130,13 @@ func (o1 jsonObject) diff(
 	if !ok {
 		// Different types - use simple replace event
 		events := generateSimpleEvents(o1, n, opts)
-		processor := NewObjectDiffProcessor(path, opts, strategy)
+		processor := newobjectDiffProcessor(path, opts, strategy)
 		return processor.ProcessEvents(events)
 	}
 
 	// Same type - use object-specific event generation
-	events := generateObjectDiffEvents(o1, o2, opts)
-	processor := NewObjectDiffProcessor(path, opts, strategy)
+	events := generateObjectdiffEvents(o1, o2, opts)
+	processor := newobjectDiffProcessor(path, opts, strategy)
 	return processor.ProcessEvents(events)
 }
 
@@ -206,68 +206,68 @@ func (o jsonObject) patch(
 // OBJECT-SPECIFIC EVENT-DRIVEN DIFF SYSTEM
 // ============================================================================
 
-// ObjectKeyEvent represents operations on object keys
-type ObjectKeyEvent interface {
-	DiffEvent
+// objectKeyEvent represents operations on object keys
+type objectKeyEvent interface {
+	diffEvent
 	GetKey() string
 }
 
-// ObjectKeyAddEvent represents adding a new key to an object
-type ObjectKeyAddEvent struct {
+// objectKeyAddEvent represents adding a new key to an object
+type objectKeyAddEvent struct {
 	Key   string
 	Value JsonNode
 }
 
-func (e ObjectKeyAddEvent) String() string {
+func (e objectKeyAddEvent) String() string {
 	return fmt.Sprintf("OBJECT_KEY_ADD(%s: %s)", e.Key, e.Value.Json())
 }
 
-func (e ObjectKeyAddEvent) GetType() string { return "OBJECT_KEY_ADD" }
-func (e ObjectKeyAddEvent) GetKey() string  { return e.Key }
+func (e objectKeyAddEvent) GetType() string { return "OBJECT_KEY_ADD" }
+func (e objectKeyAddEvent) GetKey() string  { return e.Key }
 
-// ObjectKeyRemoveEvent represents removing a key from an object
-type ObjectKeyRemoveEvent struct {
+// objectKeyRemoveEvent represents removing a key from an object
+type objectKeyRemoveEvent struct {
 	Key   string
 	Value JsonNode
 }
 
-func (e ObjectKeyRemoveEvent) String() string {
+func (e objectKeyRemoveEvent) String() string {
 	return fmt.Sprintf("OBJECT_KEY_REMOVE(%s: %s)", e.Key, e.Value.Json())
 }
 
-func (e ObjectKeyRemoveEvent) GetType() string { return "OBJECT_KEY_REMOVE" }
-func (e ObjectKeyRemoveEvent) GetKey() string  { return e.Key }
+func (e objectKeyRemoveEvent) GetType() string { return "OBJECT_KEY_REMOVE" }
+func (e objectKeyRemoveEvent) GetKey() string  { return e.Key }
 
-// ObjectKeyDiffEvent represents a key that exists in both objects but with different values
-type ObjectKeyDiffEvent struct {
+// objectKeyDiffEvent represents a key that exists in both objects but with different values
+type objectKeyDiffEvent struct {
 	Key         string
 	OldValue    JsonNode
 	NewValue    JsonNode
 	IsRecursive bool // true if values are compatible containers
 }
 
-func (e ObjectKeyDiffEvent) String() string {
+func (e objectKeyDiffEvent) String() string {
 	if e.IsRecursive {
 		return fmt.Sprintf("OBJECT_KEY_DIFF_RECURSIVE(%s: %s -> %s)", e.Key, e.OldValue.Json(), e.NewValue.Json())
 	}
 	return fmt.Sprintf("OBJECT_KEY_DIFF(%s: %s -> %s)", e.Key, e.OldValue.Json(), e.NewValue.Json())
 }
 
-func (e ObjectKeyDiffEvent) GetType() string { return "OBJECT_KEY_DIFF" }
-func (e ObjectKeyDiffEvent) GetKey() string  { return e.Key }
+func (e objectKeyDiffEvent) GetType() string { return "OBJECT_KEY_DIFF" }
+func (e objectKeyDiffEvent) GetKey() string  { return e.Key }
 
-// ObjectDiffProcessor processes object diff events
-type ObjectDiffProcessor struct {
-	*BaseDiffProcessor
+// objectDiffProcessor processes object diff events
+type objectDiffProcessor struct {
+	*baseDiffProcessor
 }
 
-func NewObjectDiffProcessor(path Path, opts *options, strategy patchStrategy) *ObjectDiffProcessor {
-	return &ObjectDiffProcessor{
-		BaseDiffProcessor: NewBaseDiffProcessor(path, opts, strategy),
+func newobjectDiffProcessor(path Path, opts *options, strategy patchStrategy) *objectDiffProcessor {
+	return &objectDiffProcessor{
+		baseDiffProcessor: newBaseDiffProcessor(path, opts, strategy),
 	}
 }
 
-func (p *ObjectDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
+func (p *objectDiffProcessor) ProcessEvents(events []diffEvent) Diff {
 	p.debugLog("Starting to process %d object events", len(events))
 
 	for i, event := range events {
@@ -279,22 +279,22 @@ func (p *ObjectDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
 	return p.finalDiff
 }
 
-func (p *ObjectDiffProcessor) processEvent(event DiffEvent) {
+func (p *objectDiffProcessor) processEvent(event diffEvent) {
 	switch e := event.(type) {
-	case ObjectKeyAddEvent:
+	case objectKeyAddEvent:
 		p.processKeyAddEvent(e)
-	case ObjectKeyRemoveEvent:
+	case objectKeyRemoveEvent:
 		p.processKeyRemoveEvent(e)
-	case ObjectKeyDiffEvent:
-		p.processKeyDiffEvent(e)
-	case SimpleReplaceEvent:
-		p.processSimpleReplaceEvent(e)
+	case objectKeyDiffEvent:
+		p.processKeydiffEvent(e)
+	case simpleReplaceEvent:
+		p.processsimpleReplaceEvent(e)
 	default:
-		p.debugLog("WARNING: Unknown event type for ObjectDiffProcessor: %T", event)
+		p.debugLog("WARNING: Unknown event type for objectDiffProcessor: %T", event)
 	}
 }
 
-func (p *ObjectDiffProcessor) processKeyAddEvent(event ObjectKeyAddEvent) {
+func (p *objectDiffProcessor) processKeyAddEvent(event objectKeyAddEvent) {
 	p.debugLog("Processing key add: %s = %s", event.Key, event.Value.Json())
 
 	var e DiffElement
@@ -319,7 +319,7 @@ func (p *ObjectDiffProcessor) processKeyAddEvent(event ObjectKeyAddEvent) {
 	p.finalDiff = append(p.finalDiff, e)
 }
 
-func (p *ObjectDiffProcessor) processKeyRemoveEvent(event ObjectKeyRemoveEvent) {
+func (p *objectDiffProcessor) processKeyRemoveEvent(event objectKeyRemoveEvent) {
 	p.debugLog("Processing key remove: %s = %s", event.Key, event.Value.Json())
 
 	var e DiffElement
@@ -343,7 +343,7 @@ func (p *ObjectDiffProcessor) processKeyRemoveEvent(event ObjectKeyRemoveEvent) 
 	p.finalDiff = append(p.finalDiff, e)
 }
 
-func (p *ObjectDiffProcessor) processKeyDiffEvent(event ObjectKeyDiffEvent) {
+func (p *objectDiffProcessor) processKeydiffEvent(event objectKeyDiffEvent) {
 	p.debugLog("Processing key diff: %s = %s -> %s (recursive=%t)",
 		event.Key, event.OldValue.Json(), event.NewValue.Json(), event.IsRecursive)
 
@@ -377,7 +377,7 @@ func (p *ObjectDiffProcessor) processKeyDiffEvent(event ObjectKeyDiffEvent) {
 	}
 }
 
-func (p *ObjectDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEvent) {
+func (p *objectDiffProcessor) processsimpleReplaceEvent(event simpleReplaceEvent) {
 	p.debugLog("Processing simple replace: %s -> %s", event.OldValue.Json(), event.NewValue.Json())
 
 	var e DiffElement
@@ -401,9 +401,9 @@ func (p *ObjectDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEvent
 	p.finalDiff = append(p.finalDiff, e)
 }
 
-// generateObjectDiffEvents analyzes two objects and generates appropriate diff events
-func generateObjectDiffEvents(o1, o2 jsonObject, opts *options) []DiffEvent {
-	var events []DiffEvent
+// generateObjectdiffEvents analyzes two objects and generates appropriate diff events
+func generateObjectdiffEvents(o1, o2 jsonObject, opts *options) []diffEvent {
+	var events []diffEvent
 
 	// Get all unique keys and sort them for deterministic processing
 	allKeys := make(map[string]bool)
@@ -431,7 +431,7 @@ func generateObjectDiffEvents(o1, o2 jsonObject, opts *options) []DiffEvent {
 			if !v1.equals(v2, o) {
 				// Check if compatible containers for recursive diff
 				isRecursive := sameContainerType(v1, v2, opts)
-				events = append(events, ObjectKeyDiffEvent{
+				events = append(events, objectKeyDiffEvent{
 					Key:         k,
 					OldValue:    v1,
 					NewValue:    v2,
@@ -441,13 +441,13 @@ func generateObjectDiffEvents(o1, o2 jsonObject, opts *options) []DiffEvent {
 			// If equal, no event needed
 		} else if existsInO1 {
 			// Key only in o1 - removal
-			events = append(events, ObjectKeyRemoveEvent{
+			events = append(events, objectKeyRemoveEvent{
 				Key:   k,
 				Value: v1,
 			})
 		} else {
 			// Key only in o2 - addition
-			events = append(events, ObjectKeyAddEvent{
+			events = append(events, objectKeyAddEvent{
 				Key:   k,
 				Value: v2,
 			})

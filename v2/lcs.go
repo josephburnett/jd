@@ -9,16 +9,16 @@ import (
 	"strings"
 )
 
-// Lcs is the interface to calculate the LCS of two arrays.
-type Lcs interface {
+// lcs is the interface to calculate the LCS of two arrays.
+type lcs interface {
 	// Values calculates the LCS value of the two arrays.
 	Values() (values []JsonNode)
 	// ValueContext is a context aware version of Values()
 	ValuesContext(ctx context.Context) (values []JsonNode, err error)
 	// IndexPairs calculates paris of indices which have the same value in LCS.
-	IndexPairs() (pairs []IndexPair)
+	IndexPairs() (pairs []indexPair)
 	// IndexPairsContext is a context aware version of IndexPairs()
-	IndexPairsContext(ctx context.Context) (pairs []IndexPair, err error)
+	IndexPairsContext(ctx context.Context) (pairs []indexPair, err error)
 	// Length calculates the length of the LCS.
 	Length() (length int)
 	// LengthContext is a context aware version of Length()
@@ -39,43 +39,43 @@ type Lcs interface {
 	// DebugString returns a human-readable debug representation of the LCS analysis
 	DebugString() string
 	// DebugMatches returns detailed information about each match found
-	DebugMatches() []DebugMatch
+	DebugMatches() []debugMatch
 	// DebugTable returns a formatted string representation of the LCS table
 	DebugTable() string
 }
 
-// IndexPair represents an pair of indeices in the Left and Right arrays found in the LCS value.
-type IndexPair struct {
+// indexPair represents an pair of indeices in the Left and Right arrays found in the LCS value.
+type indexPair struct {
 	Left  int
 	Right int
 }
 
-// DebugMatch provides detailed information about each match found during LCS analysis
-type DebugMatch struct {
+// debugMatch provides detailed information about each match found during LCS analysis
+type debugMatch struct {
 	LeftIndex  int
 	RightIndex int
 	Value      JsonNode
 	Position   int // Position in the LCS sequence
 }
 
-type lcs struct {
+type lcsImpl struct {
 	left    []JsonNode
 	right   []JsonNode
 	options *options
 	/* for caching */
 	table      [][]int
-	indexPairs []IndexPair
+	indexPairs []indexPair
 	values     []JsonNode
 }
 
-// NewLcs creates a new LCS calculator from two arrays.
-func NewLcs(left, right []JsonNode) Lcs {
-	return NewLcsWithOptions(left, right, &options{})
+// newLcs creates a new LCS calculator from two arrays.
+func newLcs(left, right []JsonNode) lcs {
+	return newLcsWithOptions(left, right, &options{})
 }
 
-// NewLcsWithOptions creates a new LCS calculator from two arrays with options.
-func NewLcsWithOptions(left, right []JsonNode, opts *options) Lcs {
-	return &lcs{
+// newLcsWithOptions creates a new LCS calculator from two arrays with options.
+func newLcsWithOptions(left, right []JsonNode, opts *options) lcs {
+	return &lcsImpl{
 		left:       left,
 		right:      right,
 		options:    opts,
@@ -85,14 +85,14 @@ func NewLcsWithOptions(left, right []JsonNode, opts *options) Lcs {
 	}
 }
 
-// Table implements Lcs.Table()
-func (lcs *lcs) Table() (table [][]int) {
+// Table implements lcs.Table()
+func (lcs *lcsImpl) Table() (table [][]int) {
 	table, _ = lcs.TableContext(context.Background())
 	return table
 }
 
-// Table implements Lcs.TableContext()
-func (lcs *lcs) TableContext(ctx context.Context) (table [][]int, err error) {
+// Table implements lcs.TableContext()
+func (lcs *lcsImpl) TableContext(ctx context.Context) (table [][]int, err error) {
 	if lcs.table != nil {
 		return lcs.table, nil
 	}
@@ -133,14 +133,14 @@ func (lcs *lcs) TableContext(ctx context.Context) (table [][]int, err error) {
 	return table, nil
 }
 
-// Table implements Lcs.Length()
-func (lcs *lcs) Length() (length int) {
+// Table implements lcs.Length()
+func (lcs *lcsImpl) Length() (length int) {
 	length, _ = lcs.LengthContext(context.Background())
 	return length
 }
 
-// Table implements Lcs.LengthContext()
-func (lcs *lcs) LengthContext(ctx context.Context) (length int, err error) {
+// Table implements lcs.LengthContext()
+func (lcs *lcsImpl) LengthContext(ctx context.Context) (length int, err error) {
 	table, err := lcs.TableContext(ctx)
 	if err != nil {
 		return 0, err
@@ -148,14 +148,14 @@ func (lcs *lcs) LengthContext(ctx context.Context) (length int, err error) {
 	return table[len(lcs.left)][len(lcs.right)], nil
 }
 
-// Table implements Lcs.IndexPairs()
-func (lcs *lcs) IndexPairs() (pairs []IndexPair) {
+// Table implements lcs.IndexPairs()
+func (lcs *lcsImpl) IndexPairs() (pairs []indexPair) {
 	pairs, _ = lcs.IndexPairsContext(context.Background())
 	return pairs
 }
 
-// Table implements Lcs.IndexPairsContext()
-func (lcs *lcs) IndexPairsContext(ctx context.Context) (pairs []IndexPair, err error) {
+// Table implements lcs.IndexPairsContext()
+func (lcs *lcsImpl) IndexPairsContext(ctx context.Context) (pairs []indexPair, err error) {
 	if lcs.indexPairs != nil {
 		return lcs.indexPairs, nil
 	}
@@ -165,11 +165,11 @@ func (lcs *lcs) IndexPairsContext(ctx context.Context) (pairs []IndexPair, err e
 		return nil, err
 	}
 
-	pairs = make([]IndexPair, table[len(table)-1][len(table[0])-1])
+	pairs = make([]indexPair, table[len(table)-1][len(table[0])-1])
 
 	for x, y := len(lcs.left), len(lcs.right); x > 0 && y > 0; {
 		if lcs.left[x-1].Equals(lcs.right[y-1]) {
-			pairs[table[x][y]-1] = IndexPair{Left: x - 1, Right: y - 1}
+			pairs[table[x][y]-1] = indexPair{Left: x - 1, Right: y - 1}
 			x--
 			y--
 		} else {
@@ -186,14 +186,14 @@ func (lcs *lcs) IndexPairsContext(ctx context.Context) (pairs []IndexPair, err e
 	return pairs, nil
 }
 
-// Table implements Lcs.Values()
-func (lcs *lcs) Values() (values []JsonNode) {
+// Table implements lcs.Values()
+func (lcs *lcsImpl) Values() (values []JsonNode) {
 	values, _ = lcs.ValuesContext(context.Background())
 	return values
 }
 
-// Table implements Lcs.ValuesContext()
-func (lcs *lcs) ValuesContext(ctx context.Context) (values []JsonNode, err error) {
+// Table implements lcs.ValuesContext()
+func (lcs *lcsImpl) ValuesContext(ctx context.Context) (values []JsonNode, err error) {
 	if lcs.values != nil {
 		return lcs.values, nil
 	}
@@ -212,14 +212,14 @@ func (lcs *lcs) ValuesContext(ctx context.Context) (values []JsonNode, err error
 	return values, nil
 }
 
-// Table implements Lcs.Left()
-func (lcs *lcs) Left() (leftValues []JsonNode) {
+// Table implements lcs.Left()
+func (lcs *lcsImpl) Left() (leftValues []JsonNode) {
 	leftValues = lcs.left
 	return
 }
 
-// Table implements Lcs.Right()
-func (lcs *lcs) Right() (rightValues []JsonNode) {
+// Table implements lcs.Right()
+func (lcs *lcsImpl) Right() (rightValues []JsonNode) {
 	rightValues = lcs.right
 	return
 }
@@ -229,7 +229,7 @@ func (lcs *lcs) Right() (rightValues []JsonNode) {
 // ============================================================================
 
 // DebugString returns a human-readable debug representation of the LCS analysis
-func (lcs *lcs) DebugString() string {
+func (lcs *lcsImpl) DebugString() string {
 	pairs := lcs.IndexPairs()
 	values := lcs.Values()
 
@@ -253,13 +253,13 @@ func (lcs *lcs) DebugString() string {
 }
 
 // DebugMatches returns detailed information about each match found
-func (lcs *lcs) DebugMatches() []DebugMatch {
+func (lcs *lcsImpl) DebugMatches() []debugMatch {
 	pairs := lcs.IndexPairs()
 	values := lcs.Values()
 
-	matches := make([]DebugMatch, len(pairs))
+	matches := make([]debugMatch, len(pairs))
 	for i, pair := range pairs {
-		matches[i] = DebugMatch{
+		matches[i] = debugMatch{
 			LeftIndex:  pair.Left,
 			RightIndex: pair.Right,
 			Value:      values[i],
@@ -271,7 +271,7 @@ func (lcs *lcs) DebugMatches() []DebugMatch {
 }
 
 // DebugTable returns a formatted string representation of the LCS table
-func (lcs *lcs) DebugTable() string {
+func (lcs *lcsImpl) DebugTable() string {
 	table := lcs.Table()
 	if len(table) == 0 {
 		return "Empty LCS table"
