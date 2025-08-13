@@ -201,3 +201,258 @@ func (o jsonObject) patch(
 	}
 	return o, nil
 }
+
+// ============================================================================
+// OBJECT-SPECIFIC EVENT-DRIVEN DIFF SYSTEM
+// ============================================================================
+
+// ObjectKeyEvent represents operations on object keys
+type ObjectKeyEvent interface {
+	DiffEvent
+	GetKey() string
+}
+
+// ObjectKeyAddEvent represents adding a new key to an object
+type ObjectKeyAddEvent struct {
+	Key   string
+	Value JsonNode
+}
+
+func (e ObjectKeyAddEvent) String() string {
+	return fmt.Sprintf("OBJECT_KEY_ADD(%s: %s)", e.Key, e.Value.Json())
+}
+
+func (e ObjectKeyAddEvent) GetType() string { return "OBJECT_KEY_ADD" }
+func (e ObjectKeyAddEvent) GetKey() string  { return e.Key }
+
+// ObjectKeyRemoveEvent represents removing a key from an object
+type ObjectKeyRemoveEvent struct {
+	Key   string
+	Value JsonNode
+}
+
+func (e ObjectKeyRemoveEvent) String() string {
+	return fmt.Sprintf("OBJECT_KEY_REMOVE(%s: %s)", e.Key, e.Value.Json())
+}
+
+func (e ObjectKeyRemoveEvent) GetType() string { return "OBJECT_KEY_REMOVE" }
+func (e ObjectKeyRemoveEvent) GetKey() string  { return e.Key }
+
+// ObjectKeyDiffEvent represents a key that exists in both objects but with different values
+type ObjectKeyDiffEvent struct {
+	Key         string
+	OldValue    JsonNode
+	NewValue    JsonNode
+	IsRecursive bool // true if values are compatible containers
+}
+
+func (e ObjectKeyDiffEvent) String() string {
+	if e.IsRecursive {
+		return fmt.Sprintf("OBJECT_KEY_DIFF_RECURSIVE(%s: %s -> %s)", e.Key, e.OldValue.Json(), e.NewValue.Json())
+	}
+	return fmt.Sprintf("OBJECT_KEY_DIFF(%s: %s -> %s)", e.Key, e.OldValue.Json(), e.NewValue.Json())
+}
+
+func (e ObjectKeyDiffEvent) GetType() string { return "OBJECT_KEY_DIFF" }
+func (e ObjectKeyDiffEvent) GetKey() string  { return e.Key }
+
+// ObjectDiffProcessor processes object diff events
+type ObjectDiffProcessor struct {
+	*BaseDiffProcessor
+}
+
+func NewObjectDiffProcessor(path Path, opts *options, strategy patchStrategy) *ObjectDiffProcessor {
+	return &ObjectDiffProcessor{
+		BaseDiffProcessor: NewBaseDiffProcessor(path, opts, strategy),
+	}
+}
+
+func (p *ObjectDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
+	p.debugLog("Starting to process %d object events", len(events))
+
+	for i, event := range events {
+		p.debugLog("Processing event %d: %s", i, event.String())
+		p.processEvent(event)
+	}
+
+	p.debugLog("Final diff has %d elements", len(p.finalDiff))
+	return p.finalDiff
+}
+
+func (p *ObjectDiffProcessor) processEvent(event DiffEvent) {
+	switch e := event.(type) {
+	case ObjectKeyAddEvent:
+		p.processKeyAddEvent(e)
+	case ObjectKeyRemoveEvent:
+		p.processKeyRemoveEvent(e)
+	case ObjectKeyDiffEvent:
+		p.processKeyDiffEvent(e)
+	case SimpleReplaceEvent:
+		p.processSimpleReplaceEvent(e)
+	default:
+		p.debugLog("WARNING: Unknown event type for ObjectDiffProcessor: %T", event)
+	}
+}
+
+func (p *ObjectDiffProcessor) processKeyAddEvent(event ObjectKeyAddEvent) {
+	p.debugLog("Processing key add: %s = %s", event.Key, event.Value.Json())
+
+	var e DiffElement
+	keyPath := append(p.path, PathKey(event.Key))
+	switch p.strategy {
+	case mergePatchStrategy:
+		e = DiffElement{
+			Metadata: Metadata{
+				Merge: true,
+			},
+			Path:   keyPath.clone(),
+			Remove: []JsonNode{},
+			Add:    []JsonNode{event.Value},
+		}
+	default:
+		e = DiffElement{
+			Path:   keyPath.clone(),
+			Remove: []JsonNode{},
+			Add:    []JsonNode{event.Value},
+		}
+	}
+	p.finalDiff = append(p.finalDiff, e)
+}
+
+func (p *ObjectDiffProcessor) processKeyRemoveEvent(event ObjectKeyRemoveEvent) {
+	p.debugLog("Processing key remove: %s = %s", event.Key, event.Value.Json())
+
+	var e DiffElement
+	keyPath := append(p.path, PathKey(event.Key))
+	switch p.strategy {
+	case mergePatchStrategy:
+		e = DiffElement{
+			Metadata: Metadata{
+				Merge: true,
+			},
+			Path: keyPath.clone(),
+			Add:  []JsonNode{voidNode{}},
+		}
+	default:
+		e = DiffElement{
+			Path:   keyPath.clone(),
+			Remove: []JsonNode{event.Value},
+			Add:    []JsonNode{},
+		}
+	}
+	p.finalDiff = append(p.finalDiff, e)
+}
+
+func (p *ObjectDiffProcessor) processKeyDiffEvent(event ObjectKeyDiffEvent) {
+	p.debugLog("Processing key diff: %s = %s -> %s (recursive=%t)",
+		event.Key, event.OldValue.Json(), event.NewValue.Json(), event.IsRecursive)
+
+	keyPath := append(p.path, PathKey(event.Key))
+
+	if event.IsRecursive {
+		// Recursive diff for compatible containers
+		refinedOpts := refine(p.opts, PathKey(event.Key))
+		subDiff := event.OldValue.diff(event.NewValue, keyPath, refinedOpts, p.strategy)
+		p.finalDiff = append(p.finalDiff, subDiff...)
+	} else {
+		// Simple replacement
+		var e DiffElement
+		switch p.strategy {
+		case mergePatchStrategy:
+			e = DiffElement{
+				Metadata: Metadata{
+					Merge: true,
+				},
+				Path: keyPath.clone(),
+				Add:  []JsonNode{event.NewValue},
+			}
+		default:
+			e = DiffElement{
+				Path:   keyPath.clone(),
+				Remove: []JsonNode{event.OldValue},
+				Add:    []JsonNode{event.NewValue},
+			}
+		}
+		p.finalDiff = append(p.finalDiff, e)
+	}
+}
+
+func (p *ObjectDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEvent) {
+	p.debugLog("Processing simple replace: %s -> %s", event.OldValue.Json(), event.NewValue.Json())
+
+	var e DiffElement
+	switch p.strategy {
+	case mergePatchStrategy:
+		e = DiffElement{
+			Metadata: Metadata{
+				Merge: true,
+			},
+			Path: p.path.clone(),
+			Add:  []JsonNode{event.NewValue},
+		}
+	default:
+		e = DiffElement{
+			Path:   p.path.clone(),
+			Remove: []JsonNode{event.OldValue},
+			Add:    []JsonNode{event.NewValue},
+		}
+	}
+
+	p.finalDiff = append(p.finalDiff, e)
+}
+
+// generateObjectDiffEvents analyzes two objects and generates appropriate diff events
+func generateObjectDiffEvents(o1, o2 jsonObject, opts *options) []DiffEvent {
+	var events []DiffEvent
+
+	// Get all unique keys and sort them for deterministic processing
+	allKeys := make(map[string]bool)
+	for k := range o1 {
+		allKeys[k] = true
+	}
+	for k := range o2 {
+		allKeys[k] = true
+	}
+
+	sortedKeys := make([]string, 0, len(allKeys))
+	for k := range allKeys {
+		sortedKeys = append(sortedKeys, k)
+	}
+	sort.Strings(sortedKeys)
+
+	// Process all keys in sorted order
+	for _, k := range sortedKeys {
+		v1, existsInO1 := o1[k]
+		v2, existsInO2 := o2[k]
+
+		if existsInO1 && existsInO2 {
+			// Both keys are present - check if they're different
+			o := refine(opts, PathKey(k))
+			if !v1.equals(v2, o) {
+				// Check if compatible containers for recursive diff
+				isRecursive := sameContainerType(v1, v2, opts)
+				events = append(events, ObjectKeyDiffEvent{
+					Key:         k,
+					OldValue:    v1,
+					NewValue:    v2,
+					IsRecursive: isRecursive,
+				})
+			}
+			// If equal, no event needed
+		} else if existsInO1 {
+			// Key only in o1 - removal
+			events = append(events, ObjectKeyRemoveEvent{
+				Key:   k,
+				Value: v1,
+			})
+		} else {
+			// Key only in o2 - addition
+			events = append(events, ObjectKeyAddEvent{
+				Key:   k,
+				Value: v2,
+			})
+		}
+	}
+
+	return events
+}

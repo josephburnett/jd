@@ -495,10 +495,10 @@ func TestNumberDiff(t *testing.T) {
 			},
 		},
 		{
-			name:    "precision tolerance - no diff within range",
-			a:       `42.42`,
-			b:       `42.420001`,
-			options: []Option{Precision(0.01)},
+			name:     "precision tolerance - no diff within range",
+			a:        `42.42`,
+			b:        `42.420001`,
+			options:  []Option{Precision(0.01)},
 			expected: []string{},
 		},
 		{

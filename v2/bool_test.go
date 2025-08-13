@@ -253,9 +253,9 @@ func TestBoolDiff(t *testing.T) {
 			},
 		},
 		{
-			name: "diff true to false with merge option",
-			a:    `true`,
-			b:    `false`,
+			name:    "diff true to false with merge option",
+			a:       `true`,
+			b:       `false`,
 			options: []Option{MERGE},
 			expected: []string{
 				`^ {"Merge":true}`,
@@ -264,9 +264,9 @@ func TestBoolDiff(t *testing.T) {
 			},
 		},
 		{
-			name: "diff false to true with merge option",
-			a:    `false`,
-			b:    `true`,
+			name:    "diff false to true with merge option",
+			a:       `false`,
+			b:       `true`,
 			options: []Option{MERGE},
 			expected: []string{
 				`^ {"Merge":true}`,

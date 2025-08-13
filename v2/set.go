@@ -209,3 +209,209 @@ func (s jsonSet) patch(
 	}
 	return newValue, nil
 }
+
+// ============================================================================
+// SET-SPECIFIC EVENT-DRIVEN DIFF SYSTEM
+// ============================================================================
+
+// SetElementEvent represents operations on set elements
+type SetElementEvent struct {
+	Operation string // "ADD" or "REMOVE"
+	Element   JsonNode
+	Hash      [8]byte // For identity tracking
+}
+
+func (e SetElementEvent) String() string {
+	return fmt.Sprintf("SET_%s(%s)", e.Operation, e.Element.Json())
+}
+
+func (e SetElementEvent) GetType() string { return "SET_ELEMENT" }
+
+// SetObjectDiffEvent represents an object in a set that needs recursive diffing
+type SetObjectDiffEvent struct {
+	OldObject JsonNode
+	NewObject JsonNode
+	Hash      [8]byte // Identity hash
+}
+
+func (e SetObjectDiffEvent) String() string {
+	return fmt.Sprintf("SET_OBJECT_DIFF(%s -> %s)", e.OldObject.Json(), e.NewObject.Json())
+}
+
+func (e SetObjectDiffEvent) GetType() string { return "SET_OBJECT_DIFF" }
+
+// SetDiffProcessor processes set diff events
+type SetDiffProcessor struct {
+	*BaseDiffProcessor
+}
+
+func NewSetDiffProcessor(path Path, opts *options, strategy patchStrategy) *SetDiffProcessor {
+	return &SetDiffProcessor{
+		BaseDiffProcessor: NewBaseDiffProcessor(path, opts, strategy),
+	}
+}
+
+func (p *SetDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
+	p.debugLog("Starting to process %d set events", len(events))
+
+	// Collect all add/remove events for the set operation
+	var setElement *DiffElement
+
+	for i, event := range events {
+		p.debugLog("Processing event %d: %s", i, event.String())
+
+		switch e := event.(type) {
+		case SetElementEvent:
+			if setElement == nil {
+				setElement = &DiffElement{
+					Path:   append(p.path.clone(), PathSet{}),
+					Remove: []JsonNode{},
+					Add:    []JsonNode{},
+				}
+			}
+
+			if e.Operation == "REMOVE" {
+				setElement.Remove = append(setElement.Remove, e.Element)
+			} else if e.Operation == "ADD" {
+				setElement.Add = append(setElement.Add, e.Element)
+			}
+
+		case SetObjectDiffEvent:
+			p.processSetObjectDiffEvent(e)
+
+		case SimpleReplaceEvent:
+			p.processSimpleReplaceEvent(e)
+
+		default:
+			p.debugLog("WARNING: Unknown event type for SetDiffProcessor: %T", event)
+		}
+	}
+
+	// Add the accumulated set diff element if it has changes
+	if setElement != nil && (len(setElement.Remove) > 0 || len(setElement.Add) > 0) {
+		p.finalDiff = append(p.finalDiff, *setElement)
+	}
+
+	p.debugLog("Final diff has %d elements", len(p.finalDiff))
+	return p.finalDiff
+}
+
+func (p *SetDiffProcessor) processSetObjectDiffEvent(event SetObjectDiffEvent) {
+	p.debugLog("Processing set object diff: %s -> %s", event.OldObject.Json(), event.NewObject.Json())
+
+	// For set object diffs, we need to create a path with PathSetKeys
+	o1, _ := event.OldObject.(jsonObject)
+	setKeysPath := newPathSetKeys(o1, p.opts)
+	subPath := append(p.path.clone(), setKeysPath)
+
+	subDiff := event.OldObject.diff(event.NewObject, subPath, p.opts, p.strategy)
+	p.finalDiff = append(p.finalDiff, subDiff...)
+}
+
+func (p *SetDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEvent) {
+	p.debugLog("Processing simple replace: %s -> %s", event.OldValue.Json(), event.NewValue.Json())
+
+	var e DiffElement
+	switch p.strategy {
+	case mergePatchStrategy:
+		e = DiffElement{
+			Metadata: Metadata{
+				Merge: true,
+			},
+			Path: p.path.clone(),
+			Add:  []JsonNode{event.NewValue},
+		}
+	default:
+		e = DiffElement{
+			Path:   p.path.clone(),
+			Remove: []JsonNode{event.OldValue},
+			Add:    []JsonNode{event.NewValue},
+		}
+	}
+
+	p.finalDiff = append(p.finalDiff, e)
+}
+
+// generateSetDiffEvents analyzes two sets and generates appropriate diff events
+func generateSetDiffEvents(s1, s2 jsonSet, opts *options) []DiffEvent {
+	var events []DiffEvent
+
+	// Create hash maps for identity-based comparison
+	s1Map := make(map[[8]byte]JsonNode)
+	for _, v := range s1 {
+		var hc [8]byte
+		if o, ok := v.(jsonObject); ok {
+			// Hash objects by their identity
+			hc = o.ident(opts)
+		} else {
+			// Everything else by full content
+			hc = v.hashCode(opts)
+		}
+		s1Map[hc] = v
+	}
+
+	s2Map := make(map[[8]byte]JsonNode)
+	for _, v := range s2 {
+		var hc [8]byte
+		if o, ok := v.(jsonObject); ok {
+			// Hash objects by their identity
+			hc = o.ident(opts)
+		} else {
+			// Everything else by full content
+			hc = v.hashCode(opts)
+		}
+		s2Map[hc] = v
+	}
+
+	// Get sorted hash codes for deterministic ordering
+	s1Hashes := make(hashCodes, 0, len(s1Map))
+	for hc := range s1Map {
+		s1Hashes = append(s1Hashes, hc)
+	}
+	sort.Sort(s1Hashes)
+
+	s2Hashes := make(hashCodes, 0, len(s2Map))
+	for hc := range s2Map {
+		s2Hashes = append(s2Hashes, hc)
+	}
+	sort.Sort(s2Hashes)
+
+	// Process removes first (sorted by hash)
+	for _, hc := range s1Hashes {
+		v1 := s1Map[hc]
+		if v2, ok := s2Map[hc]; !ok {
+			// Deleted value
+			events = append(events, SetElementEvent{
+				Operation: "REMOVE",
+				Element:   v1,
+				Hash:      hc,
+			})
+		} else {
+			// Check for object diffs with same identity
+			o1, isObject1 := v1.(jsonObject)
+			o2, isObject2 := v2.(jsonObject)
+			if isObject1 && isObject2 && !o1.equals(o2, opts) {
+				// Sub diff objects with same identity
+				events = append(events, SetObjectDiffEvent{
+					OldObject: o1,
+					NewObject: o2,
+					Hash:      hc,
+				})
+			}
+		}
+	}
+
+	// Process adds (sorted by hash)
+	for _, hc := range s2Hashes {
+		if _, ok := s1Map[hc]; !ok {
+			// Added value
+			events = append(events, SetElementEvent{
+				Operation: "ADD",
+				Element:   s2Map[hc],
+				Hash:      hc,
+			})
+		}
+	}
+
+	return events
+}

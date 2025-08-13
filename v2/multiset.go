@@ -158,3 +158,174 @@ func (a jsonMultiset) patch(pathBehind, pathAhead Path, before, oldValues, newVa
 	}
 	return newValue, nil
 }
+
+// ============================================================================
+// MULTISET-SPECIFIC EVENT-DRIVEN DIFF SYSTEM
+// ============================================================================
+
+// MultisetElementEvent represents operations on multiset elements with counts
+type MultisetElementEvent struct {
+	Operation string // "ADD" or "REMOVE"
+	Element   JsonNode
+	Count     int     // How many instances to add/remove
+	Hash      [8]byte // For identity tracking
+}
+
+func (e MultisetElementEvent) String() string {
+	return fmt.Sprintf("MULTISET_%s(%s x%d)", e.Operation, e.Element.Json(), e.Count)
+}
+
+func (e MultisetElementEvent) GetType() string { return "MULTISET_ELEMENT" }
+
+// MultisetDiffProcessor processes multiset diff events
+type MultisetDiffProcessor struct {
+	*BaseDiffProcessor
+}
+
+func NewMultisetDiffProcessor(path Path, opts *options, strategy patchStrategy) *MultisetDiffProcessor {
+	return &MultisetDiffProcessor{
+		BaseDiffProcessor: NewBaseDiffProcessor(path, opts, strategy),
+	}
+}
+
+func (p *MultisetDiffProcessor) ProcessEvents(events []DiffEvent) Diff {
+	p.debugLog("Starting to process %d multiset events", len(events))
+
+	// Collect all add/remove events for the multiset operation
+	var multisetElement *DiffElement
+
+	for i, event := range events {
+		p.debugLog("Processing event %d: %s", i, event.String())
+
+		switch e := event.(type) {
+		case MultisetElementEvent:
+			if multisetElement == nil {
+				multisetElement = &DiffElement{
+					Path:   append(p.path.clone(), PathMultiset{}),
+					Remove: []JsonNode{},
+					Add:    []JsonNode{},
+				}
+			}
+
+			// Add the element the specified number of times
+			for i := 0; i < e.Count; i++ {
+				if e.Operation == "REMOVE" {
+					multisetElement.Remove = append(multisetElement.Remove, e.Element)
+				} else if e.Operation == "ADD" {
+					multisetElement.Add = append(multisetElement.Add, e.Element)
+				}
+			}
+
+		case SimpleReplaceEvent:
+			p.processSimpleReplaceEvent(e)
+
+		default:
+			p.debugLog("WARNING: Unknown event type for MultisetDiffProcessor: %T", event)
+		}
+	}
+
+	// Add the accumulated multiset diff element if it has changes
+	if multisetElement != nil && (len(multisetElement.Remove) > 0 || len(multisetElement.Add) > 0) {
+		p.finalDiff = append(p.finalDiff, *multisetElement)
+	}
+
+	p.debugLog("Final diff has %d elements", len(p.finalDiff))
+	return p.finalDiff
+}
+
+func (p *MultisetDiffProcessor) processSimpleReplaceEvent(event SimpleReplaceEvent) {
+	p.debugLog("Processing simple replace: %s -> %s", event.OldValue.Json(), event.NewValue.Json())
+
+	var e DiffElement
+	switch p.strategy {
+	case mergePatchStrategy:
+		e = DiffElement{
+			Metadata: Metadata{
+				Merge: true,
+			},
+			Path: p.path.clone(),
+			Add:  []JsonNode{event.NewValue},
+		}
+	default:
+		e = DiffElement{
+			Path:   p.path.clone(),
+			Remove: []JsonNode{event.OldValue},
+			Add:    []JsonNode{event.NewValue},
+		}
+	}
+
+	p.finalDiff = append(p.finalDiff, e)
+}
+
+// generateMultisetDiffEvents analyzes two multisets and generates appropriate diff events
+func generateMultisetDiffEvents(a1, a2 jsonMultiset, opts *options) []DiffEvent {
+	var events []DiffEvent
+
+	// Count elements in both multisets
+	a1Counts := make(map[[8]byte]int)
+	a1Map := make(map[[8]byte]JsonNode)
+	for _, v := range a1 {
+		hc := v.hashCode(opts)
+		a1Counts[hc]++
+		a1Map[hc] = v
+	}
+
+	a2Counts := make(map[[8]byte]int)
+	a2Map := make(map[[8]byte]JsonNode)
+	for _, v := range a2 {
+		hc := v.hashCode(opts)
+		a2Counts[hc]++
+		a2Map[hc] = v
+	}
+
+	// Get sorted hash codes for deterministic ordering (matches original implementation)
+	a1Hashes := make(hashCodes, 0)
+	for hc := range a1Counts {
+		a1Hashes = append(a1Hashes, hc)
+	}
+	sort.Sort(a1Hashes)
+
+	a2Hashes := make(hashCodes, 0)
+	for hc := range a2Counts {
+		a2Hashes = append(a2Hashes, hc)
+	}
+	sort.Sort(a2Hashes)
+
+	// Process removals first (sorted by hash)
+	for _, hc := range a1Hashes {
+		a1Count := a1Counts[hc]
+		a2Count, ok := a2Counts[hc]
+		if !ok {
+			a2Count = 0
+		}
+		removed := a1Count - a2Count
+		if removed > 0 {
+			events = append(events, MultisetElementEvent{
+				Operation: "REMOVE",
+				Element:   a1Map[hc],
+				Count:     removed,
+				Hash:      hc,
+			})
+		}
+	}
+
+	// Process additions (sorted by hash)
+	for _, hc := range a2Hashes {
+		a2Count := a2Counts[hc]
+		a1Count, ok := a1Counts[hc]
+		if !ok {
+			a1Count = 0
+		}
+		added := a2Count - a1Count
+		if added > 0 {
+			events = append(events, MultisetElementEvent{
+				Operation: "ADD",
+				Element:   a2Map[hc],
+				Count:     added,
+				Hash:      hc,
+			})
+		}
+	}
+
+	return events
+}
