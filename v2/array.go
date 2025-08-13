@@ -90,6 +90,7 @@ func (a jsonArray) diff(
 	opts *options,
 	strategy patchStrategy,
 ) Diff {
+	// Dispatch to the appropriate concrete type and use their event-driven diff
 	n1 := dispatch(a, opts)
 	n2 := dispatch(n, opts)
 	return n1.diff(n2, path, opts, strategy)

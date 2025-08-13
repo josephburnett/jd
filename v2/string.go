@@ -44,7 +44,10 @@ func (s1 jsonString) diff(
 	opts *options,
 	strategy patchStrategy,
 ) Diff {
-	return diff(s1, n, path, opts, strategy)
+	// Use event-driven diff architecture
+	events := generateSimpleEvents(s1, n, opts)
+	processor := NewSimpleDiffProcessor(path, opts, strategy)
+	return processor.ProcessEvents(events)
 }
 
 func (s jsonString) Patch(d Diff) (JsonNode, error) {

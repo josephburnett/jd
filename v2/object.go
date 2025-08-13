@@ -126,94 +126,18 @@ func (o1 jsonObject) diff(
 	opts *options,
 	strategy patchStrategy,
 ) Diff {
-	d := make(Diff, 0)
 	o2, ok := n.(jsonObject)
 	if !ok {
-		// Different types
-		var e DiffElement
-		switch strategy {
-		case mergePatchStrategy:
-			e = DiffElement{
-				Metadata: Metadata{
-					Merge: true,
-				},
-				Path: path.clone(),
-				Add:  []JsonNode{n},
-			}
-		default:
-			e = DiffElement{
-				Path:   path.clone(),
-				Remove: []JsonNode{o1},
-				Add:    []JsonNode{n},
-			}
-		}
-		return append(d, e)
+		// Different types - use simple replace event
+		events := generateSimpleEvents(o1, n, opts)
+		processor := NewObjectDiffProcessor(path, opts, strategy)
+		return processor.ProcessEvents(events)
 	}
-	o1Keys := make([]string, 0, len(o1))
-	for k := range o1 {
-		o1Keys = append(o1Keys, k)
-	}
-	sort.Strings(o1Keys)
-	o2Keys := make([]string, 0, len(o2))
-	for k := range o2 {
-		o2Keys = append(o2Keys, k)
-	}
-	sort.Strings(o2Keys)
-	for _, k1 := range o1Keys {
-		v1 := o1[k1]
-		if v2, ok := o2[k1]; ok {
-			// Both keys are present
-			o := refine(opts, PathKey(k1))
-			subDiff := v1.diff(v2, append(path, PathKey(k1)), o, strategy)
-			d = append(d, subDiff...)
-		} else {
-			// O2 missing key
-			var e DiffElement
-			switch strategy {
-			case mergePatchStrategy:
-				e = DiffElement{
-					Metadata: Metadata{
-						Merge: true,
-					},
-					Path: append(path, PathKey(k1)).clone(),
-					Add:  []JsonNode{voidNode{}},
-				}
-			default:
-				e = DiffElement{
-					Path:   append(path, PathKey(k1)).clone(),
-					Remove: nodeList(v1),
-					Add:    nodeList(),
-				}
-			}
-			d = append(d, e)
-		}
-	}
-	for _, k2 := range o2Keys {
-		v2 := o2[k2]
-		if _, ok := o1[k2]; !ok {
-			// O1 missing key
-			var e DiffElement
-			switch strategy {
-			case mergePatchStrategy:
-				e = DiffElement{
-					Metadata: Metadata{
-						Merge: true,
-					},
-					Path:   append(path, PathKey(k2)).clone(),
-					Remove: nodeList(),
-					Add:    nodeList(v2),
-				}
-			default:
-				e = DiffElement{
-					Path:   append(path, PathKey(k2)).clone(),
-					Remove: nodeList(),
-					Add:    nodeList(v2),
-				}
-			}
-			d = append(d, e)
-		}
-	}
-	return d
+
+	// Same type - use object-specific event generation
+	events := generateObjectDiffEvents(o1, o2, opts)
+	processor := NewObjectDiffProcessor(path, opts, strategy)
+	return processor.ProcessEvents(events)
 }
 
 func (o jsonObject) Patch(d Diff) (JsonNode, error) {

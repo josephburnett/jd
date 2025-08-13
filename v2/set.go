@@ -78,106 +78,25 @@ func (s1 jsonSet) diff(
 	opts *options,
 	strategy patchStrategy,
 ) Diff {
-	d := make(Diff, 0)
 	s2, ok := n.(jsonSet)
 	if !ok {
-		// Different types
-		var e DiffElement
-		switch strategy {
-		case mergePatchStrategy:
-			e = DiffElement{
-				Metadata: Metadata{
-					Merge: true,
-				},
-				Path: path.clone(),
-				Add:  nodeList(n),
-			}
-		default:
-			e = DiffElement{
-				Path:   path.clone(),
-				Remove: nodeList(s1),
-				Add:    nodeList(n),
-			}
-		}
-		return append(d, e)
+		// Different types - use simple replace event
+		events := generateSimpleEvents(s1, n, opts)
+		processor := NewSetDiffProcessor(path, opts, strategy)
+		return processor.ProcessEvents(events)
 	}
+
+	// Handle merge patch strategy for same types
 	if strategy == mergePatchStrategy && !s1.Equals(n) {
-		e := DiffElement{
-			Metadata: Metadata{
-				Merge: true,
-			},
-			Path: path.clone(),
-			Add:  nodeList(n),
-		}
-		return append(d, e)
+		events := generateSimpleEvents(s1, n, opts)
+		processor := NewSetDiffProcessor(path, opts, strategy)
+		return processor.ProcessEvents(events)
 	}
-	s1Map := make(map[[8]byte]JsonNode)
-	for _, v := range s1 {
-		var hc [8]byte
-		if o, ok := v.(jsonObject); ok {
-			// Hash objects by their identity.
-			hc = o.ident(opts)
-		} else {
-			// Everything else by full content.
-			hc = v.hashCode(opts)
-		}
-		s1Map[hc] = v
-	}
-	s2Map := make(map[[8]byte]JsonNode)
-	for _, v := range s2 {
-		var hc [8]byte
-		if o, ok := v.(jsonObject); ok {
-			// Hash objects by their identity.
-			hc = o.ident(opts)
-		} else {
-			// Everything else by full content.
-			hc = v.hashCode(opts)
-		}
-		s2Map[hc] = v
-	}
-	s1Hashes := make(hashCodes, 0)
-	for hc := range s1Map {
-		s1Hashes = append(s1Hashes, hc)
-	}
-	sort.Sort(s1Hashes)
-	s2Hashes := make(hashCodes, 0)
-	for hc := range s2Map {
-		s2Hashes = append(s2Hashes, hc)
-	}
-	sort.Sort(s2Hashes)
-	e := DiffElement{
-		Path:   append(path.clone(), PathSet{}),
-		Remove: nodeList(),
-		Add:    nodeList(),
-	}
-	for _, hc := range s1Hashes {
-		n2, ok := s2Map[hc]
-		if !ok {
-			// Deleted value.
-			e.Remove = append(e.Remove, s1Map[hc])
-		} else {
-			// Changed value.
-			o1, isObject1 := s1Map[hc].(jsonObject)
-			o2, isObject2 := n2.(jsonObject)
-			if isObject1 && isObject2 {
-				// Sub diff objects with same identity.
-				p := append(path.clone(), newPathSetKeys(o1, opts))
-				subDiff := o1.diff(o2, p, opts, strategy)
-				d = append(d, subDiff...)
-			}
-		}
-	}
-	for _, hc := range s2Hashes {
-		_, ok := s1Map[hc]
-		if !ok {
-			// Added value.
-			e.Add = append(e.Add, s2Map[hc])
-		}
-	}
-	if len(e.Remove) > 0 || len(e.Add) > 0 {
-		d = append(d, e)
-	}
-	return d
+
+	// Same type - use set-specific event generation
+	events := generateSetDiffEvents(s1, s2, opts)
+	processor := NewSetDiffProcessor(path, opts, strategy)
+	return processor.ProcessEvents(events)
 }
 
 func (s jsonSet) Patch(d Diff) (JsonNode, error) {

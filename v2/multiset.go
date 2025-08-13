@@ -66,99 +66,25 @@ func (a1 jsonMultiset) diff(
 	opts *options,
 	strategy patchStrategy,
 ) Diff {
-	d := make(Diff, 0)
 	a2, ok := n.(jsonMultiset)
 	if !ok {
-		// Different types
-		var e DiffElement
-		switch strategy {
-		case mergePatchStrategy:
-			e = DiffElement{
-				Metadata: Metadata{
-					Merge: true,
-				},
-				Path: path.clone(),
-				Add:  nodeList(n),
-			}
-		default:
-			e = DiffElement{
-				Path:   path.clone(),
-				Remove: nodeList(a1),
-				Add:    nodeList(n),
-			}
-		}
-		return append(d, e)
+		// Different types - use simple replace event
+		events := generateSimpleEvents(a1, n, opts)
+		processor := NewMultisetDiffProcessor(path, opts, strategy)
+		return processor.ProcessEvents(events)
 	}
+
+	// Handle merge patch strategy for same types
 	if strategy == mergePatchStrategy && !a1.Equals(n) {
-		e := DiffElement{
-			Metadata: Metadata{
-				Merge: true,
-			},
-			Path: path.clone(),
-			Add:  nodeList(n),
-		}
-		return append(d, e)
+		events := generateSimpleEvents(a1, n, opts)
+		processor := NewMultisetDiffProcessor(path, opts, strategy)
+		return processor.ProcessEvents(events)
 	}
-	a1Counts := make(map[[8]byte]int)
-	a1Map := make(map[[8]byte]JsonNode)
-	for _, v := range a1 {
-		hc := v.hashCode(opts)
-		a1Counts[hc]++
-		a1Map[hc] = v
-	}
-	a2Counts := make(map[[8]byte]int)
-	a2Map := make(map[[8]byte]JsonNode)
-	for _, v := range a2 {
-		hc := v.hashCode(opts)
-		a2Counts[hc]++
-		a2Map[hc] = v
-	}
-	pathWithMultiset := append(path.clone(), PathMultiset{})
-	e := DiffElement{
-		Path:   pathWithMultiset,
-		Remove: nodeList(),
-		Add:    nodeList(),
-	}
-	a1Hashes := make(hashCodes, 0)
-	for hc := range a1Counts {
-		a1Hashes = append(a1Hashes, hc)
-	}
-	sort.Sort(a1Hashes)
-	a2Hashes := make(hashCodes, 0)
-	for hc := range a2Counts {
-		a2Hashes = append(a2Hashes, hc)
-	}
-	sort.Sort(a2Hashes)
-	for _, hc := range a1Hashes {
-		a1Count := a1Counts[hc]
-		a2Count, ok := a2Counts[hc]
-		if !ok {
-			a2Count = 0
-		}
-		removed := a1Count - a2Count
-		if removed > 0 {
-			for i := 0; i < removed; i++ {
-				e.Remove = append(e.Remove, a1Map[hc])
-			}
-		}
-	}
-	for _, hc := range a2Hashes {
-		a2Count := a2Counts[hc]
-		a1Count, ok := a1Counts[hc]
-		if !ok {
-			a1Count = 0
-		}
-		added := a2Count - a1Count
-		if added > 0 {
-			for i := 0; i < added; i++ {
-				e.Add = append(e.Add, a2Map[hc])
-			}
-		}
-	}
-	if len(e.Remove) > 0 || len(e.Add) > 0 {
-		d = append(d, e)
-	}
-	return d
+
+	// Same type - use multiset-specific event generation
+	events := generateMultisetDiffEvents(a1, a2, opts)
+	processor := NewMultisetDiffProcessor(path, opts, strategy)
+	return processor.ProcessEvents(events)
 }
 
 func (a jsonMultiset) Patch(d Diff) (JsonNode, error) {

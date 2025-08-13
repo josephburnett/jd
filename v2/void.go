@@ -65,7 +65,10 @@ func (v voidNode) diff(
 	opts *options,
 	strategy patchStrategy,
 ) Diff {
-	return diff(v, n, p, opts, strategy)
+	// Use event-driven diff architecture
+	events := generateSimpleEvents(v, n, opts)
+	processor := NewSimpleDiffProcessor(p, opts, strategy)
+	return processor.ProcessEvents(events)
 }
 
 func (v voidNode) Patch(d Diff) (JsonNode, error) {
