@@ -143,8 +143,80 @@ func BenchmarkPatch_Object_FullToEmpty(b *testing.B) {
 	}
 }
 
-func BenchmarkDiff_Object_LargeObjects(b *testing.B) {
+func BenchmarkDiff_Object_PartialUpdates(b *testing.B) {
 	sizes := []int{100, 1000, 3000}
+	changePercentages := []float64{0.1, 0.25, 0.5}
+	
+	for _, size := range sizes {
+		for _, changePercent := range changePercentages {
+			b.Run(fmt.Sprintf("Size_%d_Changes_%.0f%%", size, changePercent*100), func(b *testing.B) {
+				original := generateObject(size)
+				
+				modifiedData := make(map[string]interface{})
+				for i := 0; i < size; i++ {
+					modifiedData[fmt.Sprintf("key_%d", i)] = fmt.Sprintf("value_%d", i)
+				}
+				
+				numChanges := int(float64(size) * changePercent)
+				for i := 0; i < numChanges; i++ {
+					keyIndex := i * (size / numChanges)
+					if keyIndex < size {
+						modifiedData[fmt.Sprintf("key_%d", keyIndex)] = fmt.Sprintf("updated_value_%d", keyIndex)
+					}
+				}
+				modified, _ := NewJsonNode(modifiedData)
+				
+				b.ReportAllocs()
+				b.ResetTimer()
+				
+				for i := 0; i < b.N; i++ {
+					diff := original.Diff(modified)
+					_ = diff
+				}
+			})
+		}
+	}
+}
+
+func BenchmarkDiff_Object_ApiUpdatePatterns(b *testing.B) {
+	sizes := []int{100, 1000, 3000}
+	
+	for _, size := range sizes {
+		b.Run(fmt.Sprintf("Size_%d_ApiUpdate", size), func(b *testing.B) {
+			original := generateObject(size)
+			
+			modifiedData := make(map[string]interface{})
+			for i := 0; i < size; i++ {
+				modifiedData[fmt.Sprintf("key_%d", i)] = fmt.Sprintf("value_%d", i)
+			}
+			
+			modifiedData["updated_at"] = "2025-08-13T10:00:00Z"
+			modifiedData["version"] = 2
+			
+			for i := 0; i < 5 && i < size; i++ {
+				modifiedData[fmt.Sprintf("key_%d", i)] = fmt.Sprintf("new_value_%d", i)
+			}
+			
+			numDeletes := min(3, size/10)
+			for i := 0; i < numDeletes; i++ {
+				delete(modifiedData, fmt.Sprintf("key_%d", size-1-i))
+			}
+			
+			modified, _ := NewJsonNode(modifiedData)
+			
+			b.ReportAllocs()
+			b.ResetTimer()
+			
+			for i := 0; i < b.N; i++ {
+				diff := original.Diff(modified)
+				_ = diff
+			}
+		})
+	}
+}
+
+func BenchmarkDiff_Object_CompleteRewrite_Pathological(b *testing.B) {
+	sizes := []int{100, 500}
 	
 	for _, size := range sizes {
 		b.Run(fmt.Sprintf("Size_%d", size), func(b *testing.B) {

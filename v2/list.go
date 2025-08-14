@@ -794,9 +794,73 @@ func (cm *contextManager) AdvanceForContainer() {
 	cm.bIndex++
 }
 
-// generateListdiffEvents converts LCS analysis into a sequence of diff events for lists
-func generateListdiffEvents(a, b jsonList, opts *options) []diffEvent {
-	// Handle empty lists
+// hasCommonElements quickly checks if two lists share any common elements
+func hasCommonElements(a, b jsonList, opts *options) bool {
+	if len(a) == 0 || len(b) == 0 {
+		return false
+	}
+	
+	// For small arrays, just do direct comparison
+	if len(a) <= 10 && len(b) <= 10 {
+		for _, aItem := range a {
+			for _, bItem := range b {
+				if aItem.equals(bItem, opts) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	
+	// For larger arrays, use a map for faster lookup
+	bSet := make(map[string]bool)
+	for _, bItem := range b {
+		key := bItem.Json() // Use JSON representation as key
+		bSet[key] = true
+	}
+	
+	for _, aItem := range a {
+		key := aItem.Json()
+		if bSet[key] {
+			return true
+		}
+	}
+	
+	return false
+}
+
+// shouldUseFastPath determines if we should skip expensive LCS computation
+func shouldUseFastPath(a, b jsonList, opts *options) bool {
+	// If either array is empty, use fast path
+	if len(a) == 0 || len(b) == 0 {
+		return true
+	}
+	
+	// If arrays are identical, use fast path
+	if len(a) == len(b) {
+		identical := true
+		for i := 0; i < len(a); i++ {
+			if !a[i].equals(b[i], opts) {
+				identical = false
+				break
+			}
+		}
+		if identical {
+			return true
+		}
+	}
+	
+	// For large arrays with no common elements, use fast path
+	if len(a) > 100 && len(b) > 100 && !hasCommonElements(a, b, opts) {
+		return true
+	}
+	
+	return false
+}
+
+// generateFastPathEvents creates diff events for obvious cases without LCS
+func generateFastPathEvents(a, b jsonList, opts *options) []diffEvent {
+	// Empty lists
 	if len(a) == 0 && len(b) == 0 {
 		return []diffEvent{}
 	}
@@ -815,6 +879,211 @@ func generateListdiffEvents(a, b jsonList, opts *options) []diffEvent {
 			events[i] = removeEvent{AIndex: i, Element: elem}
 		}
 		return events
+	}
+	
+	// Identical arrays
+	if len(a) == len(b) {
+		identical := true
+		for i := 0; i < len(a); i++ {
+			if !a[i].equals(b[i], opts) {
+				identical = false
+				break
+			}
+		}
+		if identical {
+			// No differences - all matches
+			events := make([]diffEvent, len(a))
+			for i, elem := range a {
+				events[i] = matchEvent{AIndex: i, BIndex: i, Element: elem}
+			}
+			return events
+		}
+	}
+	
+	// Completely different arrays - replace all
+	events := make([]diffEvent, 0, len(a)+len(b))
+	for i, elem := range a {
+		events = append(events, removeEvent{AIndex: i, Element: elem})
+	}
+	for i, elem := range b {
+		events = append(events, addEvent{BIndex: i, Element: elem})
+	}
+	return events
+}
+
+// myersEdit represents a single edit operation in Myers' algorithm
+type myersEdit struct {
+	Type  string    // "insert", "delete", "match"
+	AIdx  int       // Index in array A (for delete/match)
+	BIdx  int       // Index in array B (for insert/match)
+	Value JsonNode  // The value being operated on
+}
+
+// myersDiff implements Myers' O(ND) diff algorithm
+func myersDiff(a, b jsonList, opts *options) []myersEdit {
+	N := len(a)
+	M := len(b)
+	
+	// Handle trivial cases
+	if N == 0 && M == 0 {
+		return []myersEdit{}
+	}
+	if N == 0 {
+		edits := make([]myersEdit, M)
+		for i := 0; i < M; i++ {
+			edits[i] = myersEdit{Type: "insert", BIdx: i, Value: b[i]}
+		}
+		return edits
+	}
+	if M == 0 {
+		edits := make([]myersEdit, N)
+		for i := 0; i < N; i++ {
+			edits[i] = myersEdit{Type: "delete", AIdx: i, Value: a[i]}
+		}
+		return edits
+	}
+	
+	// Myers' algorithm implementation
+	MAX := N + M
+	V := make([]int, 2*MAX+1)
+	
+	var trace [][]int
+	
+	for D := 0; D <= MAX; D++ {
+		// Copy current V for trace
+		currentV := make([]int, len(V))
+		copy(currentV, V)
+		trace = append(trace, currentV)
+		
+		for k := -D; k <= D; k += 2 {
+			var x int
+			if k == -D || (k != D && V[k-1+MAX] < V[k+1+MAX]) {
+				x = V[k+1+MAX]
+			} else {
+				x = V[k-1+MAX] + 1
+			}
+			
+			y := x - k
+			
+			// Follow diagonal (matches)
+			for x < N && y < M && a[x].equals(b[y], opts) {
+				x++
+				y++
+			}
+			
+			V[k+MAX] = x
+			
+			if x >= N && y >= M {
+				// Found the optimal path, backtrack to build edits
+				return buildMyersEdits(a, b, trace, opts)
+			}
+		}
+	}
+	
+	// Should never reach here for valid inputs
+	return []myersEdit{}
+}
+
+// buildMyersEdits reconstructs the edit sequence from Myers' algorithm trace
+func buildMyersEdits(a, b jsonList, trace [][]int, opts *options) []myersEdit {
+	var edits []myersEdit
+	N := len(a)
+	M := len(b)
+	MAX := N + M
+	
+	x, y := N, M
+	
+	// Backtrack through the trace
+	for D := len(trace) - 1; D > 0; D-- {
+		prevV := trace[D-1]
+		
+		k := x - y
+		
+		var prevK int
+		if k == -D || (k != D && prevV[k-1+MAX] < prevV[k+1+MAX]) {
+			prevK = k + 1
+		} else {
+			prevK = k - 1
+		}
+		
+		prevX := prevV[prevK+MAX]
+		prevY := prevX - prevK
+		
+		// Add any diagonal moves (matches) first
+		for x > prevX && y > prevY {
+			x--
+			y--
+			edits = append([]myersEdit{{Type: "match", AIdx: x, BIdx: y, Value: a[x]}}, edits...)
+		}
+		
+		// Add the edit operation
+		if x > prevX {
+			// Deletion
+			x--
+			edits = append([]myersEdit{{Type: "delete", AIdx: x, Value: a[x]}}, edits...)
+		} else if y > prevY {
+			// Insertion
+			y--
+			edits = append([]myersEdit{{Type: "insert", BIdx: y, Value: b[y]}}, edits...)
+		}
+	}
+	
+	// Add any remaining matches at the beginning
+	for x > 0 && y > 0 && a[x-1].equals(b[y-1], opts) {
+		x--
+		y--
+		edits = append([]myersEdit{{Type: "match", AIdx: x, BIdx: y, Value: a[x]}}, edits...)
+	}
+	
+	return edits
+}
+
+// convertMyersToEvents converts Myers' edits to the internal diff event format
+func convertMyersToEvents(myersEdits []myersEdit) []diffEvent {
+	events := make([]diffEvent, 0, len(myersEdits))
+	
+	for _, edit := range myersEdits {
+		switch edit.Type {
+		case "match":
+			events = append(events, matchEvent{
+				AIndex:  edit.AIdx,
+				BIndex:  edit.BIdx,
+				Element: edit.Value,
+			})
+		case "delete":
+			events = append(events, removeEvent{
+				AIndex:  edit.AIdx,
+				Element: edit.Value,
+			})
+		case "insert":
+			events = append(events, addEvent{
+				BIndex:  edit.BIdx,
+				Element: edit.Value,
+			})
+		}
+	}
+	
+	return events
+}
+
+// shouldUseMyers determines if we should use Myers algorithm instead of LCS
+func shouldUseMyers(a, b jsonList) bool {
+	// Use Myers for medium-sized arrays where LCS might be expensive
+	// but fast path doesn't apply
+	return len(a) > 10 && len(b) > 10 && (len(a) < 1000 || len(b) < 1000)
+}
+
+// generateListdiffEvents converts LCS analysis into a sequence of diff events for lists
+func generateListdiffEvents(a, b jsonList, opts *options) []diffEvent {
+	// Check if we should use fast path optimization
+	if shouldUseFastPath(a, b, opts) {
+		return generateFastPathEvents(a, b, opts)
+	}
+	
+	// Check if we should use Myers algorithm
+	if shouldUseMyers(a, b) {
+		myersEdits := myersDiff(a, b, opts)
+		return convertMyersToEvents(myersEdits)
 	}
 
 	// Use LCS to find matches with options awareness
