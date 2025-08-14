@@ -319,3 +319,101 @@ benchmark-quick:
 3. Clear documentation of findings
 
 This baseline will provide the foundation needed to measure immutability implementation impact and ensure performance doesn't regress during the transition.
+
+## Baseline Performance Results
+
+**Date:** August 13, 2025  
+**Platform:** Linux (Intel Core m3-8100Y @ 1.10GHz)  
+**Benchmark File:** `benchmarks/baseline_20250813_215048.txt`
+
+### Critical Performance Issues Identified
+
+#### 1. Exponential Diff Operations
+**Worst performance bottlenecks** that will be severely impacted by immutability:
+
+```
+BenchmarkDiff_Array_LargeChanges:
+- Size 100:  1.76 seconds,  1.1GB allocated,  21K allocs
+- Size 1000: 224 seconds, 104GB allocated,   2M allocs  
+- Size 3000: 1897 seconds, 939GB allocated, 18M allocs
+```
+
+```
+BenchmarkDiff_Object_LargeObjects:
+- Size 100:  358ms,   110MB allocated,  2.7K allocs
+- Size 1000: 3.7s,    1GB allocated,   28K allocs
+- Size 3000: 14.5s,   3.7GB allocated, 84K allocs
+```
+
+**Analysis:** These show **quadratic/exponential scaling** - the diff algorithms become prohibitively expensive with large changes. This is the highest priority area for optimization when implementing immutability.
+
+#### 2. Array Beginning Operations - Linear Scaling
+**Expected challenge areas** showing reasonable linear performance:
+
+```
+BenchmarkPatch_Array_InsertAtBeginning:
+- Size 100:  1.4μs,  2KB allocated,   8 allocs
+- Size 1000: 7.0μs, 16KB allocated,   8 allocs  
+- Size 3000: 24.4μs, 49KB allocated,  8 allocs
+```
+
+**Analysis:** Linear scaling (17x slower for 30x data) with predictable memory growth. While this will require full array copying with immutability, the baseline performance is reasonable.
+
+### Surprisingly Good Performance
+
+#### 1. Object Operations - Size Independent
+**Operations that won't be hurt by immutability:**
+
+```
+BenchmarkPatch_Object_KeyRestructuring:
+- AddKey (Small):   1.5μs, 248B allocated, 11 allocs
+- AddKey (Large):   1.8μs, 248B allocated, 11 allocs
+- RemoveKey (3000): 1.5μs, 232B allocated, 10 allocs
+```
+
+**Analysis:** Performance is essentially constant regardless of object size (10 vs 3000 keys). This suggests excellent hash table implementation that won't degrade with structural sharing.
+
+#### 2. Deep Nesting - Reasonable Scaling
+**Path copying operations scale well:**
+
+```
+BenchmarkPatch_DeepNesting_PathCopying:
+- Depth 5:  3.0μs,  664B allocated, 22 allocs
+- Depth 10: 5.0μs, 1032B allocated, 28 allocs
+- Depth 15: 9.4μs, 1144B allocated, 33 allocs
+```
+
+**Analysis:** Only 3x slower for 3x depth increase. Deep path copying for immutability will be manageable.
+
+#### 3. No-Op Operations - Optimal Baseline
+```
+BenchmarkPatch_NoOp: 4.6ns, 0B allocated, 0 allocs
+```
+
+**Analysis:** Excellent baseline showing minimal overhead for unchanged structures.
+
+### Memory Allocation Patterns
+
+1. **Array Operations:** Linear, predictable memory growth
+2. **Diff Operations:** Massive allocations (1GB+ for large changes) 
+3. **Object Operations:** Constant small allocations (~300B)
+4. **Deep Nesting:** Linear growth with depth
+
+### Recommendations for Immutability Implementation
+
+#### High Priority Optimization Areas:
+1. **Diff generation algorithms** - Focus on structural sharing for large change detection
+2. **Array middle insertions** - Consider specialized data structures
+3. **Object diffing optimization** - Leverage size-independent key operations
+
+#### Operations Ready for Immutability:
+1. **Single value changes** - Already fast, will benefit from structural sharing
+2. **Key add/remove operations** - Size-independent performance proven
+3. **Deep nesting modifications** - Linear scaling indicates good foundation
+
+#### Success Metrics:
+- **Critical:** Keep diff operations under exponential complexity
+- **Important:** Maintain linear scaling for array operations  
+- **Baseline:** Preserve sub-microsecond performance for simple operations
+
+This baseline establishes clear performance expectations and identifies the operations most at risk during the immutability transition.
