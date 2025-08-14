@@ -131,6 +131,14 @@ ifndef JD_PREVIOUS_VERSION
 	$(error Set JD_PREVIOUS_VERSION for release notes)
 endif
 
+.PHONY : benchmark
+benchmark : validate-toolchain
+	@echo "Running performance baseline benchmarks..."
+	@mkdir -p benchmarks
+	@timestamp=$$(date +%Y%m%d_%H%M%S); \
+	cd v2 && go test -run=^$$ -bench=^Benchmark -benchmem -count=1 -timeout=3m -benchtime=200ms | tee ../benchmarks/baseline_$$timestamp.txt; \
+	echo "Results saved to benchmarks/baseline_$$timestamp.txt"
+
 .PHONY : find-issues
 find-issues :
 	-staticcheck ./...
