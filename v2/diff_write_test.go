@@ -250,8 +250,9 @@ func checkDiffRender(t *testing.T, a, b string, diffLines ...string) {
 	// Test with color
 	coloredDiff := aJson.diff(bJson, nil, newOptions([]Option{}), strictPatchStrategy).Render(COLOR)
 	strippedDiff := stripAnsiCodes(coloredDiff)
-	if strippedDiff != diff {
-		t.Errorf("%v.diff(%v) with color (stripped) = %v. Want %v.", a, b, strippedDiff, diff)
+	expectedDiffWithColorHeader := `^ "COLOR"` + "\n" + diff
+	if strippedDiff != expectedDiffWithColorHeader {
+		t.Errorf("%v.diff(%v) with color (stripped) = %v. Want %v.", a, b, strippedDiff, expectedDiffWithColorHeader)
 	}
 
 	// Verify that uncolored parts in string diffs match between + and - lines
@@ -510,5 +511,295 @@ func TestDiffRenderMerge(t *testing.T) {
 				t.Errorf("Want %v. Got %v", tt.merge, got)
 			}
 		})
+	}
+}
+
+func TestDiffElementOptionsRendering(t *testing.T) {
+	tests := []struct {
+		name    string
+		options []Option
+		want    string
+	}{
+		{
+			name:    "no options",
+			options: []Option{},
+			want:    "",
+		},
+		{
+			name:    "single SET option",
+			options: []Option{SET},
+			want:    `^ "SET"` + "\n",
+		},
+		{
+			name:    "single MERGE option",
+			options: []Option{MERGE},
+			want:    `^ "MERGE"` + "\n",
+		},
+		{
+			name:    "single MULTISET option",
+			options: []Option{MULTISET},
+			want:    `^ "MULTISET"` + "\n",
+		},
+		{
+			name:    "single COLOR option",
+			options: []Option{COLOR},
+			want:    `^ "COLOR"` + "\n",
+		},
+		{
+			name:    "precision option",
+			options: []Option{Precision(0.01)},
+			want:    `^ {"precision":0.01}` + "\n",
+		},
+		{
+			name:    "setkeys option",
+			options: []Option{SetKeys("id", "name")},
+			want:    `^ {"setkeys":["id","name"]}` + "\n",
+		},
+		{
+			name:    "multiple simple options",
+			options: []Option{MERGE, COLOR},
+			want:    `^ "MERGE"` + "\n" + `^ "COLOR"` + "\n",
+		},
+		{
+			name:    "multiple mixed options",
+			options: []Option{SET, Precision(0.001), COLOR},
+			want:    `^ "SET"` + "\n" + `^ {"precision":0.001}` + "\n" + `^ "COLOR"` + "\n",
+		},
+		{
+			name:    "path option",
+			options: []Option{PathOption(Path{PathKey("users")}, SET)},
+			want:    `^ {"@":["users"],"^":["SET"]}` + "\n",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a DiffElement with the options to test rendering
+			element := DiffElement{
+				Options: tt.options,
+				Path:    Path{PathKey("test")},
+				Add:     []JsonNode{jsonString("value")},
+			}
+			rendered := element.Render()
+
+			// Extract just the options part (everything before "@ ")
+			parts := strings.Split(rendered, "@ ")
+			got := parts[0]
+
+			if got != tt.want {
+				t.Errorf("DiffElement options rendering = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDiffRenderWithOptions(t *testing.T) {
+	tests := []struct {
+		name      string
+		a         string
+		b         string
+		options   []Option
+		wantLines []string
+	}{
+		{
+			name:    "simple diff with SET option",
+			a:       `{"items":[1,2,3]}`,
+			b:       `{"items":[2,1,4]}`,
+			options: []Option{SET},
+			wantLines: []string{
+				`^ "SET"`,
+				`@ ["items",{}]`,
+				`- 3`,
+				`+ 4`,
+			},
+		},
+		{
+			name:    "simple diff with MERGE option",
+			a:       `{"a":1}`,
+			b:       `{"a":2}`,
+			options: []Option{MERGE},
+			wantLines: []string{
+				`^ "MERGE"`,
+				`@ ["a"]`,
+				`+ 2`,
+			},
+		},
+		{
+			name:    "diff with multiple options",
+			a:       `{"price":10.99}`,
+			b:       `{"price":11.05}`,
+			options: []Option{SET, Precision(0.001)},
+			wantLines: []string{
+				`^ "SET"`,
+				`^ {"precision":0.001}`,
+				`@ ["price"]`,
+				`- 10.99`,
+				`+ 11.05`,
+			},
+		},
+		{
+			name:    "diff with no options (no header)",
+			a:       `{"a":1}`,
+			b:       `{"a":2}`,
+			options: []Option{},
+			wantLines: []string{
+				`@ ["a"]`,
+				`- 1`,
+				`+ 2`,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			aJson, err := ReadJsonString(tt.a)
+			if err != nil {
+				t.Fatalf("Error reading a: %v", err)
+			}
+			bJson, err := ReadJsonString(tt.b)
+			if err != nil {
+				t.Fatalf("Error reading b: %v", err)
+			}
+
+			diff := aJson.Diff(bJson, tt.options...)
+			got := diff.Render(tt.options...)
+
+			want := ""
+			for _, line := range tt.wantLines {
+				want += line + "\n"
+			}
+
+			if got != want {
+				t.Errorf("Diff.Render() = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestDiffRoundTrip(t *testing.T) {
+	tests := []struct {
+		name    string
+		a       string
+		b       string
+		options []Option
+	}{
+		{
+			name:    "round-trip with SET option",
+			a:       `{"items":[1,2,3]}`,
+			b:       `{"items":[2,1,4]}`,
+			options: []Option{SET},
+		},
+		{
+			name:    "round-trip with MERGE option",
+			a:       `{"a":1}`,
+			b:       `{"a":2}`,
+			options: []Option{MERGE},
+		},
+		{
+			name:    "round-trip with multiple options",
+			a:       `{"price":10.99}`,
+			b:       `{"price":11.05}`,
+			options: []Option{SET, Precision(0.001)},
+		},
+		{
+			name:    "round-trip with path option",
+			a:       `{"users":[{"id":1,"name":"alice"}]}`,
+			b:       `{"users":[{"id":1,"name":"bob"}]}`,
+			options: []Option{PathOption(Path{PathKey("users")}, SET)},
+		},
+		{
+			name:    "round-trip with no options",
+			a:       `{"a":1}`,
+			b:       `{"a":2}`,
+			options: []Option{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create original diff
+			aJson, err := ReadJsonString(tt.a)
+			if err != nil {
+				t.Fatalf("Error reading a: %v", err)
+			}
+			bJson, err := ReadJsonString(tt.b)
+			if err != nil {
+				t.Fatalf("Error reading b: %v", err)
+			}
+
+			originalDiff := aJson.Diff(bJson, tt.options...)
+
+			// Render diff to string
+			renderedDiff := originalDiff.Render(tt.options...)
+
+			// Parse diff back from string
+			parsedDiff, err := ReadDiffString(renderedDiff)
+			if err != nil {
+				t.Fatalf("Error parsing rendered diff: %v", err)
+			}
+
+			// Render parsed diff again (without passing options since they're now stored in DiffElement.Options)
+			reRenderedDiff := parsedDiff.Render()
+
+			// Should be identical (round-trip) unless MERGE option causes normalization
+			expectedRerendered := renderedDiff
+			// Special case: MERGE option causes {"Merge":true} to be normalized to "MERGE"
+			if len(tt.options) > 0 {
+				for _, opt := range tt.options {
+					if _, isMerge := opt.(mergeOption); isMerge {
+						// Replace the legacy format with modern format for comparison
+						expectedRerendered = strings.ReplaceAll(expectedRerendered, `^ {"Merge":true}`+"\n", "")
+						break
+					}
+				}
+			}
+
+			if expectedRerendered != reRenderedDiff {
+				t.Errorf("Round-trip failed.\nOriginal:\n%s\nRe-rendered:\n%s\nExpected:\n%s", renderedDiff, reRenderedDiff, expectedRerendered)
+			}
+		})
+	}
+}
+
+func TestLegacyMetadataRoundTrip(t *testing.T) {
+	// Test that legacy {"Merge":true} format gets normalized to "MERGE"
+	legacyDiff := `^ {"Merge":true}
+@ ["a"]
++ 2
+`
+
+	// Parse legacy format
+	parsedDiff, err := ReadDiffString(legacyDiff)
+	if err != nil {
+		t.Fatalf("Error parsing legacy diff: %v", err)
+	}
+
+	// Should have both Metadata.Merge=true and Options=[MERGE]
+	if len(parsedDiff) != 1 {
+		t.Fatalf("Expected 1 diff element, got %d", len(parsedDiff))
+	}
+
+	element := parsedDiff[0]
+	if !element.Metadata.Merge {
+		t.Error("Expected Metadata.Merge to be true")
+	}
+
+	if len(element.Options) != 1 {
+		t.Fatalf("Expected 1 option, got %d", len(element.Options))
+	}
+
+	if _, ok := element.Options[0].(mergeOption); !ok {
+		t.Errorf("Expected MERGE option, got %T", element.Options[0])
+	}
+
+	// Render should normalize to modern format
+	rendered := parsedDiff.Render()
+	expectedModern := `^ "MERGE"
+@ ["a"]
++ 2
+`
+
+	if rendered != expectedModern {
+		t.Errorf("Legacy format should normalize to modern.\nGot:\n%s\nExpected:\n%s", rendered, expectedModern)
 	}
 }

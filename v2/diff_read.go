@@ -84,11 +84,38 @@ func readDiff(s string) (Diff, error) {
 			if err != nil {
 				return errorfAt(i, "Invalid Metadata. %v", err.Error())
 			}
-			m, err := readMetadata(n)
+			// Try to parse as an Option first
+			opt, err := NewOption(n.raw())
 			if err != nil {
-				return errorfAt(i, "Invalid Metadata. %v", err.Error())
+				// If it fails as an option, try legacy metadata parsing for backward compatibility
+				m, metaErr := readMetadata(n)
+				if metaErr != nil {
+					// Neither option nor legacy metadata worked, skip this line
+					continue
+				}
+				de.Metadata = de.Metadata.merge(m)
+			} else {
+				// Successfully parsed as option, check for duplicates before storing
+				isDuplicate := false
+				for _, existingOpt := range de.Options {
+					if fmt.Sprintf("%T", existingOpt) == fmt.Sprintf("%T", opt) {
+						// Same type of option already exists, skip to avoid duplication
+						if _, isMerge := opt.(mergeOption); isMerge {
+							// Still ensure Metadata is set for MERGE
+							de.Metadata.Merge = true
+						}
+						isDuplicate = true
+						break
+					}
+				}
+				if !isDuplicate {
+					de.Options = append(de.Options, opt)
+					// If it's a MERGE option, also update Metadata for mechanical compatibility
+					if _, isMerge := opt.(mergeOption); isMerge {
+						de.Metadata.Merge = true
+					}
+				}
 			}
-			de.Metadata = de.Metadata.merge(m)
 			state = META
 		case "@":
 			if state == ADD || state == REMOVE || state == AFTER {

@@ -166,7 +166,9 @@ func parseOptions() ([]jd.Option, error) {
 	if *format == "merge" {
 		options = append(options, jd.MERGE)
 	}
-	options = append(options, jd.Precision(*precision))
+	if *precision != 0.0 {
+		options = append(options, jd.Precision(*precision))
+	}
 	return options, nil
 }
 
@@ -179,6 +181,13 @@ func printUsageAndExit() {
 		`Prints the diff of FILE1 and FILE2 to STDOUT.`,
 		`When FILE2 is omitted the second input is read from STDIN.`,
 		`When patching (-p) FILE1 is a diff.`,
+		``,
+		`Options Header: When options are provided, they are displayed at the`,
+		`beginning of the diff output to show how the diff was produced:`,
+		`  ^ "SET"                     (arrays treated as sets)`,
+		`  ^ {"precision":0.001}       (number comparison precision)`,
+		`  ^ {"setkeys":["id"]}        (object matching keys)`,
+		`This helps understand diff behavior and enables reproducible results.`,
 		``,
 		`Options:`,
 		`  -color       Print color diff.`,
@@ -274,6 +283,8 @@ func diff(a, b string, options []jd.Option) (string, bool, error) {
 	}
 	diff := aNode.Diff(bNode, options...)
 	var renderOptions []jd.Option
+	// Include all the original options to show in the header
+	renderOptions = append(renderOptions, options...)
 	if *color {
 		renderOptions = append(renderOptions, jd.COLOR)
 	}

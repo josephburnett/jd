@@ -305,13 +305,38 @@ The jd v2 diff format is a human-readable structural diff format with context an
 ### Format Overview
 
 A diff consists of:
-- **Metadata lines** (optional): Start with `^` and specify hunk-level metadata
+- **Options header** (optional): Shows the options used to create the diff
+- **Metadata lines** (optional): Start with `^` and specify hunk-level metadata  
 - **Diff hunks**: Start with `@` and specify the path, followed by changes and context
+
+### Options Header
+
+When options are provided to `jd`, they are displayed at the beginning of the diff to show how it was produced. Each option appears on its own line starting with `^ `:
+
+```diff
+^ "SET"
+^ {"precision":0.001}
+@ ["items",{}]
+- "old-item"
++ "new-item"
+```
+
+This feature helps understand:
+- Whether arrays were treated as sets (`"SET"`) or multisets (`"MULTISET"`) 
+- What precision was used for number comparisons (`{"precision":N}`)
+- Which keys identify set objects (`{"setkeys":["key1","key2"]}`)
+- Path-specific options (`{"@":["path"],"^":["OPTION"]}`)
+- Whether merge semantics were applied (`"MERGE"`)
+- If color output was requested (`"COLOR"`)
+
+The options header is informational and helps with debugging diff behavior. Note that diffs with options headers can still be parsed and applied as patches.
 
 ### EBNF Grammar
 
 ```EBNF
-Diff ::= (MetadataLine | DiffHunk)*
+Diff ::= OptionsHeader* (MetadataLine | DiffHunk)*
+
+OptionsHeader ::= '^' SP JsonValue NEWLINE
 
 MetadataLine ::= '^' SP JsonObject NEWLINE
 

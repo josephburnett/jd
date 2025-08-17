@@ -55,7 +55,31 @@ func (d DiffElement) Render(opts ...Option) string {
 	isColor := checkOption[colorOption](o)
 	isMerge := checkOption[mergeOption](o) || d.Metadata.Merge
 	b := bytes.NewBuffer(nil)
-	b.WriteString(d.Metadata.Render())
+	// Render options from the Options field if present, otherwise fall back to metadata
+	if len(d.Options) > 0 {
+		for _, opt := range d.Options {
+			optJson, err := json.Marshal(opt)
+			if err != nil {
+				// Skip options that can't be serialized
+				continue
+			}
+			b.WriteString(fmt.Sprintf("^ %s\n", string(optJson)))
+		}
+	} else {
+		// Check if any of the passed global options would make metadata redundant
+		shouldSkipMetadata := false
+		for _, opt := range opts {
+			if _, isMerge := opt.(mergeOption); isMerge && d.Metadata.Merge {
+				shouldSkipMetadata = true
+				break
+			}
+		}
+
+		if !shouldSkipMetadata {
+			// Fall back to rendering metadata for backward compatibility
+			b.WriteString(d.Metadata.Render())
+		}
+	}
 	b.WriteString("@ ")
 	b.Write([]byte(d.Path.JsonNode().Json()))
 	b.WriteString("\n")
@@ -169,8 +193,23 @@ func (d DiffElement) Render(opts ...Option) string {
 	}
 	return b.String()
 }
+
 func (d Diff) Render(opts ...Option) string {
 	b := bytes.NewBuffer(nil)
+
+	// Only render global options header if there are actual diff elements
+	// Empty diffs with options headers are invalid
+	if len(d) > 0 && len(opts) > 0 {
+		for _, opt := range opts {
+			optJson, err := json.Marshal(opt)
+			if err != nil {
+				// Skip options that can't be serialized
+				continue
+			}
+			b.WriteString(fmt.Sprintf("^ %s\n", string(optJson)))
+		}
+	}
+
 	for _, element := range d {
 		b.WriteString(element.Render(opts...))
 	}

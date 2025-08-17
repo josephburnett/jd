@@ -76,6 +76,16 @@ func NewOption(a any) (Option, error) {
 						keys = append(keys, key)
 					}
 					return SetKeys(keys...), nil
+				case "Merge":
+					b, ok := v.(bool)
+					if !ok {
+						return nil, fmt.Errorf("wanted bool. got %T", v)
+					}
+					if b {
+						return MERGE, nil
+					}
+					// If Merge is false, we don't need to return an option
+					return nil, fmt.Errorf("Merge: false is not a valid option")
 				default:
 					return nil, fmt.Errorf("unrecognized option: %v", a)
 				}

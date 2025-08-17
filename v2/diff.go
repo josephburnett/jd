@@ -11,6 +11,10 @@ type DiffElement struct {
 	// DiffElements until another Metadata is encountered.
 	Metadata Metadata
 
+	// Options are informational only and document how this diff was created.
+	// They are rendered as ^ lines but are not required for patch application.
+	Options []Option
+
 	// Path elements can be strings to index Objects, numbers to
 	// index Lists and objects to index Sets and Multisets.
 	//
