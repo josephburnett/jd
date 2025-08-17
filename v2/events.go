@@ -209,6 +209,9 @@ func (p *simpleDiffProcessor) processSimpleReplaceEvent(event simpleReplaceEvent
 
 // generateSimpleEvents creates events for simple type differences
 func generateSimpleEvents(a, b JsonNode, opts *options) []diffEvent {
+	if !opts.diffingOn {
+		return []diffEvent{} // No events when diffing is off
+	}
 	if a.equals(b, opts) {
 		return []diffEvent{}
 	}

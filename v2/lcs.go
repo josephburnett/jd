@@ -70,7 +70,7 @@ type lcsImpl struct {
 
 // newLcs creates a new LCS calculator from two arrays.
 func newLcs(left, right []JsonNode) lcs {
-	return newLcsWithOptions(left, right, &options{})
+	return newLcsWithOptions(left, right, newOptions([]Option{}))
 }
 
 // newLcsWithOptions creates a new LCS calculator from two arrays with options.

@@ -53,7 +53,7 @@ func (l jsonList) hashCode(opts *options) [8]byte {
 }
 
 func (l jsonList) Diff(n JsonNode, opts ...Option) Diff {
-	o := &options{retain: opts}
+	o := newOptions(opts)
 	return l.diff(n, make(Path, 0), o, getPatchStrategy(o))
 }
 
@@ -582,6 +582,16 @@ func (p *listDiffProcessor) processcontainerDiffEvent(event containerDiffEvent) 
 
 func (p *listDiffProcessor) processremoveEvent(event removeEvent) {
 	p.debugLog("Processing remove: A[%d]", event.AIndex)
+
+	// Check if diffing is enabled for the current index
+	currentIndex := p.pathCalc.GetCurrentIndex()
+	refinedOpts := refine(p.opts, currentIndex)
+	if !refinedOpts.diffingOn {
+		p.debugLog("Skipping remove at index %v - diffing is off", currentIndex)
+		p.pathCalc.AdvanceForRemove()
+		return
+	}
+
 	p.ensureAccumulatingState()
 	p.currentDiff.Remove = append(p.currentDiff.Remove, event.Element)
 	p.pathCalc.AdvanceForRemove()
@@ -590,6 +600,16 @@ func (p *listDiffProcessor) processremoveEvent(event removeEvent) {
 
 func (p *listDiffProcessor) processaddEvent(event addEvent) {
 	p.debugLog("Processing add: B[%d]", event.BIndex)
+
+	// Check if diffing is enabled for the current index
+	currentIndex := p.pathCalc.GetCurrentIndex()
+	refinedOpts := refine(p.opts, currentIndex)
+	if !refinedOpts.diffingOn {
+		p.debugLog("Skipping add at index %v - diffing is off", currentIndex)
+		p.pathCalc.AdvanceForAdd()
+		return
+	}
+
 	p.ensureAccumulatingState()
 	p.currentDiff.Add = append(p.currentDiff.Add, event.Element)
 	p.pathCalc.AdvanceForAdd()
@@ -598,6 +618,16 @@ func (p *listDiffProcessor) processaddEvent(event addEvent) {
 
 func (p *listDiffProcessor) processreplaceEvent(event replaceEvent) {
 	p.debugLog("Processing replace: A[%d] -> B[%d]", event.AIndex, event.BIndex)
+
+	// Check if diffing is enabled for the current index
+	currentIndex := p.pathCalc.GetCurrentIndex()
+	refinedOpts := refine(p.opts, currentIndex)
+	if !refinedOpts.diffingOn {
+		p.debugLog("Skipping replace at index %v - diffing is off", currentIndex)
+		p.pathCalc.AdvanceForReplace()
+		return
+	}
+
 	p.ensureAccumulatingState()
 	p.currentDiff.Remove = append(p.currentDiff.Remove, event.AElement)
 	p.currentDiff.Add = append(p.currentDiff.Add, event.BElement)
@@ -799,7 +829,7 @@ func hasCommonElements(a, b jsonList, opts *options) bool {
 	if len(a) == 0 || len(b) == 0 {
 		return false
 	}
-	
+
 	// For small arrays, just do direct comparison
 	if len(a) <= 10 && len(b) <= 10 {
 		for _, aItem := range a {
@@ -811,21 +841,21 @@ func hasCommonElements(a, b jsonList, opts *options) bool {
 		}
 		return false
 	}
-	
+
 	// For larger arrays, use a map for faster lookup
 	bSet := make(map[string]bool)
 	for _, bItem := range b {
 		key := bItem.Json() // Use JSON representation as key
 		bSet[key] = true
 	}
-	
+
 	for _, aItem := range a {
 		key := aItem.Json()
 		if bSet[key] {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -835,7 +865,7 @@ func shouldUseFastPath(a, b jsonList, opts *options) bool {
 	if len(a) == 0 || len(b) == 0 {
 		return true
 	}
-	
+
 	// If arrays are identical, use fast path
 	if len(a) == len(b) {
 		identical := true
@@ -849,12 +879,12 @@ func shouldUseFastPath(a, b jsonList, opts *options) bool {
 			return true
 		}
 	}
-	
+
 	// For large arrays with no common elements, use fast path
 	if len(a) > 100 && len(b) > 100 && !hasCommonElements(a, b, opts) {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -880,7 +910,7 @@ func generateFastPathEvents(a, b jsonList, opts *options) []diffEvent {
 		}
 		return events
 	}
-	
+
 	// Identical arrays
 	if len(a) == len(b) {
 		identical := true
@@ -899,7 +929,7 @@ func generateFastPathEvents(a, b jsonList, opts *options) []diffEvent {
 			return events
 		}
 	}
-	
+
 	// Completely different arrays - replace all
 	events := make([]diffEvent, 0, len(a)+len(b))
 	for i, elem := range a {
@@ -913,17 +943,17 @@ func generateFastPathEvents(a, b jsonList, opts *options) []diffEvent {
 
 // myersEdit represents a single edit operation in Myers' algorithm
 type myersEdit struct {
-	Type  string    // "insert", "delete", "match"
-	AIdx  int       // Index in array A (for delete/match)
-	BIdx  int       // Index in array B (for insert/match)
-	Value JsonNode  // The value being operated on
+	Type  string   // "insert", "delete", "match"
+	AIdx  int      // Index in array A (for delete/match)
+	BIdx  int      // Index in array B (for insert/match)
+	Value JsonNode // The value being operated on
 }
 
 // myersDiff implements Myers' O(ND) diff algorithm
 func myersDiff(a, b jsonList, opts *options) []myersEdit {
 	N := len(a)
 	M := len(b)
-	
+
 	// Handle trivial cases
 	if N == 0 && M == 0 {
 		return []myersEdit{}
@@ -942,19 +972,19 @@ func myersDiff(a, b jsonList, opts *options) []myersEdit {
 		}
 		return edits
 	}
-	
+
 	// Myers' algorithm implementation
 	MAX := N + M
 	V := make([]int, 2*MAX+1)
-	
+
 	var trace [][]int
-	
+
 	for D := 0; D <= MAX; D++ {
 		// Copy current V for trace
 		currentV := make([]int, len(V))
 		copy(currentV, V)
 		trace = append(trace, currentV)
-		
+
 		for k := -D; k <= D; k += 2 {
 			var x int
 			if k == -D || (k != D && V[k-1+MAX] < V[k+1+MAX]) {
@@ -962,24 +992,24 @@ func myersDiff(a, b jsonList, opts *options) []myersEdit {
 			} else {
 				x = V[k-1+MAX] + 1
 			}
-			
+
 			y := x - k
-			
+
 			// Follow diagonal (matches)
 			for x < N && y < M && a[x].equals(b[y], opts) {
 				x++
 				y++
 			}
-			
+
 			V[k+MAX] = x
-			
+
 			if x >= N && y >= M {
 				// Found the optimal path, backtrack to build edits
 				return buildMyersEdits(a, b, trace, opts)
 			}
 		}
 	}
-	
+
 	// Should never reach here for valid inputs
 	return []myersEdit{}
 }
@@ -990,32 +1020,32 @@ func buildMyersEdits(a, b jsonList, trace [][]int, opts *options) []myersEdit {
 	N := len(a)
 	M := len(b)
 	MAX := N + M
-	
+
 	x, y := N, M
-	
+
 	// Backtrack through the trace
 	for D := len(trace) - 1; D > 0; D-- {
 		prevV := trace[D-1]
-		
+
 		k := x - y
-		
+
 		var prevK int
 		if k == -D || (k != D && prevV[k-1+MAX] < prevV[k+1+MAX]) {
 			prevK = k + 1
 		} else {
 			prevK = k - 1
 		}
-		
+
 		prevX := prevV[prevK+MAX]
 		prevY := prevX - prevK
-		
+
 		// Add any diagonal moves (matches) first
 		for x > prevX && y > prevY {
 			x--
 			y--
 			edits = append([]myersEdit{{Type: "match", AIdx: x, BIdx: y, Value: a[x]}}, edits...)
 		}
-		
+
 		// Add the edit operation
 		if x > prevX {
 			// Deletion
@@ -1027,21 +1057,21 @@ func buildMyersEdits(a, b jsonList, trace [][]int, opts *options) []myersEdit {
 			edits = append([]myersEdit{{Type: "insert", BIdx: y, Value: b[y]}}, edits...)
 		}
 	}
-	
+
 	// Add any remaining matches at the beginning
 	for x > 0 && y > 0 && a[x-1].equals(b[y-1], opts) {
 		x--
 		y--
 		edits = append([]myersEdit{{Type: "match", AIdx: x, BIdx: y, Value: a[x]}}, edits...)
 	}
-	
+
 	return edits
 }
 
 // convertMyersToEvents converts Myers' edits to the internal diff event format
 func convertMyersToEvents(myersEdits []myersEdit) []diffEvent {
 	events := make([]diffEvent, 0, len(myersEdits))
-	
+
 	for _, edit := range myersEdits {
 		switch edit.Type {
 		case "match":
@@ -1062,7 +1092,7 @@ func convertMyersToEvents(myersEdits []myersEdit) []diffEvent {
 			})
 		}
 	}
-	
+
 	return events
 }
 
@@ -1079,7 +1109,7 @@ func generateListdiffEvents(a, b jsonList, opts *options) []diffEvent {
 	if shouldUseFastPath(a, b, opts) {
 		return generateFastPathEvents(a, b, opts)
 	}
-	
+
 	// Check if we should use Myers algorithm
 	if shouldUseMyers(a, b) {
 		myersEdits := myersDiff(a, b, opts)

@@ -27,7 +27,7 @@ func (a jsonArray) raw() interface{} {
 }
 
 func (a1 jsonArray) Equals(n JsonNode, opts ...Option) bool {
-	o := refine(&options{retain: opts}, nil)
+	o := refine(newOptions(opts), nil)
 	return a1.equals(n, o)
 }
 
@@ -45,7 +45,7 @@ func (a jsonArray) hashCode(opts *options) [8]byte {
 func (a jsonArray) Diff(n JsonNode, opts ...Option) Diff {
 	// We need to refine to extract global options (SET, MULTISET, etc.) for dispatch,
 	// but we want to preserve PathOptions. So we do a selective refine.
-	o := a.refineForArrayDispatch(&options{retain: opts})
+	o := a.refineForArrayDispatch(newOptions(opts))
 	n1 := dispatch(a, o)
 	n2 := dispatch(n, o)
 	strategy := getPatchStrategy(o)
@@ -79,8 +79,9 @@ func (a jsonArray) refineForArrayDispatch(opts *options) *options {
 	}
 
 	return &options{
-		apply:  apply,
-		retain: retain,
+		apply:     apply,
+		retain:    retain,
+		diffingOn: opts.diffingOn,
 	}
 }
 

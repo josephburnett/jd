@@ -34,7 +34,7 @@ func (o jsonObject) raw() interface{} {
 }
 
 func (o1 jsonObject) Equals(n JsonNode, opts ...Option) bool {
-	o := refine(&options{retain: opts}, nil)
+	o := refine(newOptions(opts), nil)
 	return o1.equals(n, o)
 }
 
@@ -112,11 +112,11 @@ func (o jsonObject) pathIdent(pathObject jsonObject, opts *options) [8]byte {
 		}
 	}
 	e, _ := NewJsonNode(id)
-	return e.hashCode(&options{})
+	return e.hashCode(newOptions([]Option{}))
 }
 
 func (o jsonObject) Diff(n JsonNode, opts ...Option) Diff {
-	op := &options{retain: opts}
+	op := newOptions(opts)
 	return o.diff(n, make(Path, 0), op, getPatchStrategy(op))
 }
 
@@ -297,6 +297,12 @@ func (p *objectDiffProcessor) processEvent(event diffEvent) {
 func (p *objectDiffProcessor) processKeyAddEvent(event objectKeyAddEvent) {
 	p.debugLog("Processing key add: %s = %s", event.Key, event.Value.Json())
 
+	// Check if diffing is enabled for this key
+	refinedOpts := refine(p.opts, PathKey(event.Key))
+	if !refinedOpts.diffingOn {
+		return // Skip this key if diffing is off
+	}
+
 	var e DiffElement
 	keyPath := append(p.path, PathKey(event.Key))
 	switch p.strategy {
@@ -321,6 +327,12 @@ func (p *objectDiffProcessor) processKeyAddEvent(event objectKeyAddEvent) {
 
 func (p *objectDiffProcessor) processKeyRemoveEvent(event objectKeyRemoveEvent) {
 	p.debugLog("Processing key remove: %s = %s", event.Key, event.Value.Json())
+
+	// Check if diffing is enabled for this key
+	refinedOpts := refine(p.opts, PathKey(event.Key))
+	if !refinedOpts.diffingOn {
+		return // Skip this key if diffing is off
+	}
 
 	var e DiffElement
 	keyPath := append(p.path, PathKey(event.Key))
@@ -349,13 +361,18 @@ func (p *objectDiffProcessor) processKeydiffEvent(event objectKeyDiffEvent) {
 
 	keyPath := append(p.path, PathKey(event.Key))
 
+	// Always refine options for this key
+	refinedOpts := refine(p.opts, PathKey(event.Key))
+
 	if event.IsRecursive {
-		// Recursive diff for compatible containers
-		refinedOpts := refine(p.opts, PathKey(event.Key))
+		// Recursive diff for compatible containers - always process to allow child overrides
 		subDiff := event.OldValue.diff(event.NewValue, keyPath, refinedOpts, p.strategy)
 		p.finalDiff = append(p.finalDiff, subDiff...)
 	} else {
-		// Simple replacement
+		// Simple replacement - check if diffing is enabled for this key
+		if !refinedOpts.diffingOn {
+			return // Skip this key if diffing is off
+		}
 		var e DiffElement
 		switch p.strategy {
 		case mergePatchStrategy:
@@ -403,6 +420,7 @@ func (p *objectDiffProcessor) processsimpleReplaceEvent(event simpleReplaceEvent
 
 // generateObjectdiffEvents analyzes two objects and generates appropriate diff events
 func generateObjectdiffEvents(o1, o2 jsonObject, opts *options) []diffEvent {
+
 	var events []diffEvent
 
 	// Get all unique keys and sort them for deterministic processing

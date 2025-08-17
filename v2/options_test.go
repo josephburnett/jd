@@ -40,6 +40,12 @@ func TestOptionJSON(t *testing.T) {
 	}, {
 		json:   `[{"@":["foo"],"^":[{"@":["bar"],"^":["SET"]}]}]`,
 		option: PathOption(Path{PathKey("foo")}, PathOption(Path{PathKey("bar")}, SET)),
+	}, {
+		json:   `["DIFF_ON"]`,
+		option: DIFF_ON,
+	}, {
+		json:   `["DIFF_OFF"]`,
+		option: DIFF_OFF,
 	}}
 	for _, c := range cases {
 		t.Run(c.json, func(t *testing.T) {
@@ -270,6 +276,140 @@ func TestPathOption(t *testing.T) {
 				// Compare jd diff format representations
 				actualDiffString := actualDiff.Render()
 				require.Equal(t, *c.expectedDiff, actualDiffString, "Diff should match expected")
+			}
+		})
+	}
+}
+
+func TestDiffOnOffOption(t *testing.T) {
+	cases := []struct {
+		name         string
+		opts         string
+		a, b         string
+		expectEmpty  bool    // true if diff should be empty
+		expectedDiff *string // if specified, check exact diff output
+	}{{
+		name:        "DIFF_OFF at root ignores all changes",
+		opts:        `[{"@":[],"^":["DIFF_OFF"]}]`,
+		a:           `{"foo":1,"bar":"hello"}`,
+		b:           `{"foo":2,"bar":"world","baz":true}`,
+		expectEmpty: true,
+	}, {
+		name:        "DIFF_ON at root allows all changes (default behavior)",
+		opts:        `[{"@":[],"^":["DIFF_ON"]}]`,
+		a:           `{"foo":1}`,
+		b:           `{"foo":2}`,
+		expectEmpty: false,
+	}, {
+		name:         "DIFF_OFF for specific field ignores that field only",
+		opts:         `[{"@":["timestamp"],"^":["DIFF_OFF"]}]`,
+		a:            `{"data":"hello","timestamp":"2023-01-01"}`,
+		b:            `{"data":"world","timestamp":"2023-01-02"}`,
+		expectedDiff: strPtr("@ [\"data\"]\n- \"hello\"\n+ \"world\"\n"),
+	}, {
+		name:         "Allow-list approach: DIFF_OFF at root, DIFF_ON for specific paths",
+		opts:         `[{"@":[],"^":["DIFF_OFF"]}, {"@":["userdata"],"^":["DIFF_ON"]}]`,
+		a:            `{"userdata":"important","system":"ignore1","timestamp":"2023-01-01"}`,
+		b:            `{"userdata":"changed","system":"ignore2","timestamp":"2023-01-02"}`,
+		expectedDiff: strPtr("@ [\"userdata\"]\n- \"important\"\n+ \"changed\"\n"),
+	}, {
+		name:         "Nested PathOptions: override parent state",
+		opts:         `[{"@":["config"],"^":["DIFF_OFF"]}, {"@":["config","user_settings"],"^":["DIFF_ON"]}]`,
+		a:            `{"config":{"system":"val1","user_settings":"setting1"}}`,
+		b:            `{"config":{"system":"val2","user_settings":"setting2"}}`,
+		expectedDiff: strPtr("@ [\"config\",\"user_settings\"]\n- \"setting1\"\n+ \"setting2\"\n"),
+	}, {
+		name:        "DIFF_OFF with arrays - no diff generated",
+		opts:        `[{"@":["tags"],"^":["DIFF_OFF"]}]`,
+		a:           `{"tags":[1,2,3],"data":"same"}`,
+		b:           `{"tags":[4,5,6],"data":"same"}`,
+		expectEmpty: true,
+	}, {
+		name:        "DIFF_OFF with objects - no diff generated",
+		opts:        `[{"@":["metadata"],"^":["DIFF_OFF"]}]`,
+		a:           `{"metadata":{"id":1,"created":"2023"},"value":10}`,
+		b:           `{"metadata":{"id":2,"created":"2024"},"value":10}`,
+		expectEmpty: true,
+	}, {
+		name:        "DIFF_OFF combined with SET option",
+		opts:        `[{"@":["ignored"],"^":["DIFF_OFF"]}, {"@":["tags"],"^":["SET"]}]`,
+		a:           `{"ignored":[1,2],"tags":[1,2,3]}`,
+		b:           `{"ignored":[3,4],"tags":[3,1,2]}`, // tags reordered but same set
+		expectEmpty: true,
+	}, {
+		name:         "Multiple DIFF_OFF paths",
+		opts:         `[{"@":["field1"],"^":["DIFF_OFF"]}, {"@":["field2"],"^":["DIFF_OFF"]}]`,
+		a:            `{"field1":"change1","field2":"change2","field3":"old"}`,
+		b:            `{"field1":"new1","field2":"new2","field3":"new"}`,
+		expectedDiff: strPtr("@ [\"field3\"]\n- \"old\"\n+ \"new\"\n"),
+	}, {
+		name:        "Order precedence: last DIFF_OFF wins",
+		opts:        `[{"@":["test"],"^":["DIFF_ON"]}, {"@":["test"],"^":["DIFF_OFF"]}]`,
+		a:           `{"test":"old","other":"same"}`,
+		b:           `{"test":"new","other":"same"}`,
+		expectEmpty: true,
+	}, {
+		name:         "Order precedence: last DIFF_ON wins",
+		opts:         `[{"@":["test"],"^":["DIFF_OFF"]}, {"@":["test"],"^":["DIFF_ON"]}]`,
+		a:            `{"test":"old","other":"same"}`,
+		b:            `{"test":"new","other":"same"}`,
+		expectedDiff: strPtr("@ [\"test\"]\n- \"old\"\n+ \"new\"\n"),
+	}, {
+		name:         "Deep nesting with selective diffing",
+		opts:         `[{"@":["level1","level2"],"^":["DIFF_OFF"]}, {"@":["level1","level2","important"],"^":["DIFF_ON"]}]`,
+		a:            `{"level1":{"level2":{"ignore":"val1","important":"data1"}}}`,
+		b:            `{"level1":{"level2":{"ignore":"val2","important":"data2"}}}`,
+		expectedDiff: strPtr("@ [\"level1\",\"level2\",\"important\"]\n- \"data1\"\n+ \"data2\"\n"),
+	}, {
+		name:        "DIFF_OFF on array elements",
+		opts:        `[{"@":[0],"^":["DIFF_OFF"]}]`,
+		a:           `["ignore","keep"]`,
+		b:           `["changed","keep"]`,
+		expectEmpty: true,
+	}, {
+		name:        "DIFF_OFF with primitive types",
+		opts:        `[{"@":[],"^":["DIFF_OFF"]}]`,
+		a:           `"old string"`,
+		b:           `"new string"`,
+		expectEmpty: true,
+	}, {
+		name:        "DIFF_OFF with numbers",
+		opts:        `[{"@":[],"^":["DIFF_OFF"]}]`,
+		a:           `42`,
+		b:           `100`,
+		expectEmpty: true,
+	}, {
+		name:        "DIFF_OFF with booleans",
+		opts:        `[{"@":[],"^":["DIFF_OFF"]}]`,
+		a:           `true`,
+		b:           `false`,
+		expectEmpty: true,
+	}, {
+		name:        "DIFF_OFF with null values",
+		opts:        `[{"@":[],"^":["DIFF_OFF"]}]`,
+		a:           `null`,
+		b:           `"not null"`,
+		expectEmpty: true,
+	}}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			a, err := ReadJsonString(c.a)
+			require.NoError(t, err)
+			b, err := ReadJsonString(c.b)
+			require.NoError(t, err)
+			opts, err := ReadOptionsString(c.opts)
+			require.NoError(t, err)
+
+			diff := a.Diff(b, opts...)
+
+			if c.expectEmpty {
+				require.Empty(t, diff, "Expected empty diff but got: %s", diff.Render())
+			} else if c.expectedDiff != nil {
+				actualDiffString := diff.Render()
+				require.Equal(t, *c.expectedDiff, actualDiffString, "Diff should match expected")
+			} else {
+				require.NotEmpty(t, diff, "Expected non-empty diff")
 			}
 		})
 	}

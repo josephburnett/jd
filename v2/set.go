@@ -68,7 +68,7 @@ func (s jsonSet) hashCode(opts *options) [8]byte {
 }
 
 func (s jsonSet) Diff(j JsonNode, opts ...Option) Diff {
-	o := refine(&options{retain: opts}, nil)
+	o := refine(newOptions(opts), nil)
 	return s.diff(j, make(Path, 0), o, getPatchStrategy(o))
 }
 
@@ -334,6 +334,10 @@ func (p *setDiffProcessor) processsimpleReplaceEvent(event simpleReplaceEvent) {
 
 // generateSetdiffEvents analyzes two sets and generates appropriate diff events
 func generateSetdiffEvents(s1, s2 jsonSet, opts *options) []diffEvent {
+	if !opts.diffingOn {
+		return []diffEvent{} // No events when diffing is off
+	}
+
 	var events []diffEvent
 
 	// Create hash maps for identity-based comparison

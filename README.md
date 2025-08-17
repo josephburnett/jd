@@ -85,7 +85,7 @@ Options:
   -p           Apply patch FILE1 to FILE2 or STDIN.
   -o=FILE3     Write to FILE3 instead of STDOUT.
   -opts='[]'   JSON array of options. Supports global options and PathOptions.
-               Global: ["SET"], ["MULTISET"], [{"precision":0.1}], [{"setkeys":["id"]}]
+               Global: ["SET"], ["MULTISET"], [{"precision":0.1}], [{"setkeys":["id"]}], ["DIFF_ON"], ["DIFF_OFF"]
                PathOptions target specific paths: [{"@":["path"],"^":["SET"]}]
                Example: [{"@":["users"],"^":["SET"]},{"@":["scores",0],"^":[{"precision":0.1}]}]
   -set         Treat arrays as sets. Same as -opts='["SET"]'.
@@ -139,6 +139,8 @@ PathOptions allow you to apply different comparison semantics to specific paths 
 - `"MULTISET"`: Treat array as a multiset (ignore order, count duplicates)  
 - `{"precision": N}`: Numbers within N are considered equal
 - `{"setkeys": ["key1", "key2"]}`: Match objects by specified keys
+- `"DIFF_ON"`: Enable diffing at this path (default behavior)
+- `"DIFF_OFF"`: Disable diffing at this path, ignore all changes
 
 **Examples:**
 
@@ -165,6 +167,21 @@ jd -opts='[{"@":["measurements", 0],"^":[{"precision":0.05}]}]' a.json b.json
 Apply to root level:
 ```bash
 jd -opts='[{"@":[],"^":["SET"]}]' a.json b.json
+```
+
+Ignore specific fields (deny-list approach):
+```bash
+jd -opts='[{"@":["timestamp"],"^":["DIFF_OFF"]}, {"@":["metadata","generated"],"^":["DIFF_OFF"]}]' a.json b.json
+```
+
+Allow-list approach - ignore everything except specific fields:
+```bash
+jd -opts='[{"@":[],"^":["DIFF_OFF"]}, {"@":["userdata"],"^":["DIFF_ON"]}]' a.json b.json
+```
+
+Nested override - ignore parent but include specific child:
+```bash
+jd -opts='[{"@":["config"],"^":["DIFF_OFF"]}, {"@":["config","user_settings"],"^":["DIFF_ON"]}]' a.json b.json
 ```
 
 ## Library usage
@@ -244,6 +261,40 @@ func ExampleMultiplePathOptions() {
 	// @ ["pressure"]
 	// - 1013.25
 	// + 1013.3
+}
+
+func ExampleSelectiveDiffing() {
+	a, _ := jd.ReadJsonString(`{"userdata":"important","system":"ignore1","timestamp":"2023-01-01"}`)
+	b, _ := jd.ReadJsonString(`{"userdata":"changed","system":"ignore2","timestamp":"2023-01-02"}`)
+	
+	// Allow-list approach: ignore everything except userdata
+	opts, _ := jd.ReadOptionsString(`[
+		{"@":[],"^":["DIFF_OFF"]},
+		{"@":["userdata"],"^":["DIFF_ON"]}
+	]`)
+	diff := a.Diff(b, opts...)
+	fmt.Print(diff.Render())
+	// Output:
+	// @ ["userdata"]
+	// - "important"
+	// + "changed"
+}
+
+func ExampleNestedOverride() {
+	a, _ := jd.ReadJsonString(`{"config":{"system":"val1","user_settings":"setting1"}}`)
+	b, _ := jd.ReadJsonString(`{"config":{"system":"val2","user_settings":"setting2"}}`)
+	
+	// Ignore config changes except for user_settings
+	opts, _ := jd.ReadOptionsString(`[
+		{"@":["config"],"^":["DIFF_OFF"]},
+		{"@":["config","user_settings"],"^":["DIFF_ON"]}
+	]`)
+	diff := a.Diff(b, opts...)
+	fmt.Print(diff.Render())
+	// Output:
+	// @ ["config","user_settings"]
+	// - "setting1"
+	// + "setting2"
 }
 ```
 

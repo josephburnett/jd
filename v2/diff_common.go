@@ -7,6 +7,9 @@ func diff(
 	strategy patchStrategy,
 ) Diff {
 	d := make(Diff, 0)
+	if !opts.diffingOn {
+		return d // Return empty diff when diffing is off
+	}
 	if a.equals(b, opts) {
 		return d
 	}

@@ -56,7 +56,7 @@ func (a jsonMultiset) hashCode(opts *options) [8]byte {
 }
 
 func (a jsonMultiset) Diff(n JsonNode, opts ...Option) Diff {
-	o := refine(&options{retain: opts}, nil)
+	o := refine(newOptions(opts), nil)
 	return a.diff(n, nil, o, getPatchStrategy(o))
 }
 
@@ -259,6 +259,10 @@ func (p *multisetDiffProcessor) processsimpleReplaceEvent(event simpleReplaceEve
 
 // generateMultisetdiffEvents analyzes two multisets and generates appropriate diff events
 func generateMultisetdiffEvents(a1, a2 jsonMultiset, opts *options) []diffEvent {
+	if !opts.diffingOn {
+		return []diffEvent{} // No events when diffing is off
+	}
+
 	var events []diffEvent
 
 	// Count elements in both multisets

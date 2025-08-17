@@ -39,6 +39,10 @@ fuzz : validate-toolchain
 	go test ./lib -fuzz=FuzzJd -fuzztime=10s
 	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=30s
 
+.PHONY : go-fmt
+go-fmt :
+	cd v2 ; go fmt ./...
+
 .PHONY : pack-web
 pack-web : build-web validate-toolchain
 	cd v2 ; go run web/pack/main.go

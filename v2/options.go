@@ -42,6 +42,10 @@ func NewOption(a any) (Option, error) {
 			return MULTISET, nil
 		case "COLOR":
 			return COLOR, nil
+		case "DIFF_ON":
+			return DIFF_ON, nil
+		case "DIFF_OFF":
+			return DIFF_OFF, nil
 		default:
 			return nil, fmt.Errorf("unrecognized string: %v", a)
 		}
@@ -164,6 +168,30 @@ func (o colorOption) MarshalJSON() ([]byte, error) {
 }
 func (o colorOption) UnmarshalJSON(b []byte) error {
 	return unmarshalAsString("COLOR", b)
+}
+
+type diffOnOption struct{}
+
+var DIFF_ON = diffOnOption{}
+
+func (o diffOnOption) isOption() {}
+func (o diffOnOption) MarshalJSON() ([]byte, error) {
+	return json.Marshal("DIFF_ON")
+}
+func (o diffOnOption) UnmarshalJSON(b []byte) error {
+	return unmarshalAsString("DIFF_ON", b)
+}
+
+type diffOffOption struct{}
+
+var DIFF_OFF = diffOffOption{}
+
+func (o diffOffOption) isOption() {}
+func (o diffOffOption) MarshalJSON() ([]byte, error) {
+	return json.Marshal("DIFF_OFF")
+}
+func (o diffOffOption) UnmarshalJSON(b []byte) error {
+	return unmarshalAsString("DIFF_OFF", b)
 }
 
 type precisionOption struct {
@@ -312,19 +340,35 @@ func dispatch(n JsonNode, opts *options) JsonNode {
 }
 
 type options struct {
-	apply  []Option
-	retain []Option
+	apply     []Option
+	retain    []Option
+	diffingOn bool
+}
+
+func newOptions(retain []Option) *options {
+	return &options{
+		retain:    retain,
+		diffingOn: true, // Default to diffing ON
+	}
 }
 
 func refine(o *options, p PathElement) *options {
 	var apply, retain []Option
+	diffingOn := o.diffingOn // Inherit parent diffing state
+
 	// Only recurse on retained options. Applied options are consumed.
 	for _, o := range o.retain {
 		switch o := o.(type) {
 		// Global options always to every path.
-		case mergeOption, setOption, multisetOption, colorOption, precisionOption, setKeysOption:
+		case mergeOption, setOption, multisetOption, colorOption, precisionOption, setKeysOption, diffOnOption, diffOffOption:
 			apply = append(apply, o)
 			retain = append(retain, o)
+			// Update diffing state based on DIFF_ON/DIFF_OFF options
+			if _, ok := o.(diffOnOption); ok {
+				diffingOn = true
+			} else if _, ok := o.(diffOffOption); ok {
+				diffingOn = false
+			}
 		case pathOption:
 			leaf := false
 			if len(o.At) < 2 {
@@ -349,6 +393,14 @@ func refine(o *options, p PathElement) *options {
 				}
 				// Apply payload of options.
 				apply = append(apply, o.Then...)
+				// Also update diffing state from PathOption payload
+				for _, thenOpt := range o.Then {
+					if _, ok := thenOpt.(diffOnOption); ok {
+						diffingOn = true
+					} else if _, ok := thenOpt.(diffOffOption); ok {
+						diffingOn = false
+					}
+				}
 			}
 			// Ignore invalid case
 			if len(o.At) == 0 && p != nil {
@@ -370,7 +422,8 @@ func refine(o *options, p PathElement) *options {
 		}
 	}
 	return &options{
-		apply:  apply,
-		retain: retain,
+		apply:     apply,
+		retain:    retain,
+		diffingOn: diffingOn,
 	}
 }

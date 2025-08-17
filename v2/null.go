@@ -34,7 +34,7 @@ func (n jsonNull) hashCode(_ *options) [8]byte {
 }
 
 func (n jsonNull) Diff(node JsonNode, opts ...Option) Diff {
-	o := refine(&options{retain: opts}, nil)
+	o := refine(newOptions(opts), nil)
 	return n.diff(node, make(Path, 0), o, getPatchStrategy(o))
 }
 
