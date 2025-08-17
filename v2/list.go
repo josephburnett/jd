@@ -335,7 +335,7 @@ func (l jsonList) patch(pathBehind, pathAhead Path, before, removeValues, addVal
 		if len(removeValues) == 0 && strategy == strictPatchStrategy {
 			return nil, fmt.Errorf("invalid diff. must declare list to replace it")
 		}
-		if !l.Equals(removeValues[0]) {
+		if len(removeValues) > 0 && !l.Equals(removeValues[0]) {
 			return nil, fmt.Errorf("wanted %v. found %v", removeValues[0], l)
 		}
 		if len(addValues) == 0 {
@@ -382,7 +382,10 @@ func (l jsonList) patch(pathBehind, pathAhead Path, before, removeValues, addVal
 				continue
 			}
 			return nil, fmt.Errorf("invalid patch. before context %v out of bounds: %v", b, bIndex)
-		case !b.Equals(l[bIndex]):
+		case bIndex >= len(l) || !b.Equals(l[bIndex]):
+			if bIndex >= len(l) {
+				return nil, fmt.Errorf("invalid patch. before context %v index %v out of bounds (list length %v)", b, bIndex, len(l))
+			}
 			return nil, fmt.Errorf("invalid patch. expected %v before. got %v", b, l[bIndex])
 		}
 	}
@@ -399,7 +402,9 @@ func (l jsonList) patch(pathBehind, pathAhead Path, before, removeValues, addVal
 		removeValues = removeValues[1:]
 	}
 	l2 := make(jsonList, i)
-	copy(l2, l[:i])
+	if int(i) <= len(l) {
+		copy(l2, l[:i])
+	}
 	l2 = append(l2, addValues...)
 	if int(i) < len(l) {
 		l2 = append(l2, l[i:]...)
