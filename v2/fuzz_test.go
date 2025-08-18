@@ -281,10 +281,15 @@ func hasSelectiveDiffing(options []Option) bool {
 		case diffOffOption:
 			return true // Global DIFF_OFF prevents diffing
 		case pathOption:
-			// Check if PathOption contains DIFF_OFF in its payload
+			// Check if PathOption contains options that change array semantics
 			for _, thenOpt := range o.Then {
-				if _, ok := thenOpt.(diffOffOption); ok {
-					return true
+				switch thenOpt.(type) {
+				case diffOffOption:
+					return true // DIFF_OFF prevents diffing
+				case setOption:
+					return true // SET changes array semantics (removes duplicates/order)
+				case multisetOption:
+					return true // MULTISET changes array semantics (removes order)
 				}
 			}
 		}
