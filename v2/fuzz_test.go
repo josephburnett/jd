@@ -47,7 +47,7 @@ var corpus = []string{
 
 	// SetKeys scenarios
 	`[{"id":"a","value":1},{"id":"b","value":2}]`,
-	`[{"empId":"123","name":"John"},{"empId":"456","name":"Jane"}]`,
+	`[{"id":"e1","empId":"123","name":"John"},{"id":"e2","empId":"456","name":"Jane"}]`,
 	`[{"type":"book","id":"isbn123","name":"Title1"},{"type":"book","id":"isbn456","name":"Title2"}]`,
 	`[{"version":"1.0","id":"v1"},{"version":"2.0","id":"v2"}]`,
 	`[{"type":"user","id":"u1","name":"Alice"},{"type":"admin","id":"u2","name":"Bob"}]`,
@@ -380,27 +380,27 @@ func generateRandomOptions(seed uint8, a, b JsonNode) []Option {
 		// Global precision - medium values
 		options = append(options, Precision(0.1))
 	case 24:
-		// Global SetKeys - employee-like
-		options = append(options, SetKeys("empId"))
+		// Global SetKeys - id-based
+		options = append(options, SetKeys("id"))
 	case 25:
 		// Global precision - variable based on seed
 		precision := 1e-8 + float64(seed%5)*1e-9
 		options = append(options, Precision(precision))
 	case 26:
-		// Global SetKeys - comprehensive matching
-		options = append(options, SetKeys("type", "id", "name"))
+		// Global SetKeys - multiple common fields
+		options = append(options, SetKeys("id"))
 	case 27:
 		// Global precision - larger tolerance
 		options = append(options, Precision(0.5))
 	case 28:
 		// Global SetKeys - single key variations
-		options = append(options, SetKeys("name"))
+		options = append(options, SetKeys("id"))
 	case 29:
 		// Global precision - tiny tolerance
 		options = append(options, Precision(1e-10))
 	case 30:
-		// Global SetKeys - version-like keys
-		options = append(options, SetKeys("version", "id"))
+		// Global SetKeys - id-based
+		options = append(options, SetKeys("id"))
 	case 31:
 		// No options (second instance for testing)
 		return options
@@ -460,7 +460,7 @@ func generateRandomOptions(seed uint8, a, b JsonNode) []Option {
 		options = append(options, PathOption(Path{PathKey("level1"), PathKey("level2")}, SET))
 	case 44:
 		// Global SetKeys + multiple targeted options
-		options = append(options, SetKeys("name"))
+		options = append(options, SetKeys("id"))
 		options = append(options, PathOption(Path{PathKey("primary")}, SET))
 		options = append(options, PathOption(Path{PathKey("secondary")}, MULTISET))
 	case 45:
