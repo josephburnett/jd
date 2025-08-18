@@ -38,9 +38,9 @@ test : validate-toolchain
 fuzz : validate-toolchain
 	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=30s
 
-.PHONY : fuzz-deep
-fuzz-deep : validate-toolchain
-	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=300s
+.PHONY : fuzz-indef
+fuzz-indef: validate-toolchain
+	cd v2 ; go test . -fuzz=FuzzJd
 
 .PHONY : go-fmt
 go-fmt :
