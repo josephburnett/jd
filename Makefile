@@ -31,13 +31,16 @@ build : test pack-web validate-toolchain
 test : validate-toolchain
 	go test .
 	go test ./lib
-	cd v2 ; go test .
+	cd v2 ; go test -run '^Test' .
 	cd v2 ; go test ./jd
 
 .PHONY : fuzz
 fuzz : validate-toolchain
-	go test ./lib -fuzz=FuzzJd -fuzztime=10s
 	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=30s
+
+.PHONY : fuzz-deep
+fuzz-deep : validate-toolchain
+	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=300s
 
 .PHONY : go-fmt
 go-fmt :

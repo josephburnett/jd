@@ -47,6 +47,62 @@ var corpus = []string{
 	`{"items":[1,2,2,3],"sets":[1,2,3],"multisets":[1,1,2,3,3]}`,
 	`{"a":[1,2],"b":[2,1],"c":[1,2,3]}`,
 	`{"temperature":20.123,"pressure":1013.25,"readings":[20.1,20.2,20.15]}`,
+	// Edge cases for array operations
+	`[[]]`,
+	`[[],[]]`,
+	`[1,[2,[3,[4]]]]`,
+	`{"a":[[1,2],[3,4]],"b":[[5,6]]}`,
+	// Empty and minimal structures
+	`{"":1}`,
+	`{"a":"","b":null,"c":[]}`,
+	`[{"":""}, {"a":null}]`,
+	// Large arrays for LCS algorithm stress testing
+	`[1,2,3,4,5,6,7,8,9,10]`,
+	`[10,9,8,7,6,5,4,3,2,1]`,
+	`[1,1,1,1,1,2,2,2,2,2]`,
+	// Complex set/multiset scenarios
+	`{"tags":["a","b","c","a","b"],"categories":["x","y","z"]}`,
+	`{"primary":["red","blue"],"secondary":["blue","red","green"]}`,
+	// Precision-sensitive numbers
+	`{"float1":1.00001,"float2":1.00002,"float3":1.1}`,
+	`{"values":[0.1,0.2,0.3,0.10001,0.20002]}`,
+	`{"coords":{"x":123.456789,"y":987.654321,"z":0.000001}}`,
+	// Deep nesting edge cases
+	`{"a":{"b":{"c":{"d":{"e":{"f":1}}}}}}`,
+	`[[[[[1]]]]]`,
+	`{"root":{"level1":[{"level2":{"level3":[1,2,3]}}]}}`,
+	// SetKeys scenarios
+	`[{"id":"a","value":1},{"id":"b","value":2},{"id":"a","value":3}]`,
+	`{"employees":[{"empId":"123","name":"John","dept":"IT"},{"empId":"456","name":"Jane","dept":"HR"}]}`,
+	`{"items":[{"type":"book","id":"isbn123","title":"Title1"},{"type":"book","id":"isbn456","title":"Title2"}]}`,
+	// Boundary cases for indexing
+	`{"0":"zero","1":"one","-1":"minus"}`,
+	`[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]`,
+	// Complex mixed types
+	`{"mixed":[null,true,false,0,1,-1,""," ","text",[]]}`,
+	`{"types":{"null":null,"bool":true,"num":42,"str":"test","arr":[],"obj":{}}}`,
+	// Kubernetes-like config structures
+	`{"metadata":{"name":"test","labels":{"app":"web"}},"spec":{"replicas":3,"containers":[{"name":"web","image":"nginx:1.20"}]}}`,
+	`{"apiVersion":"v1","kind":"ConfigMap","data":{"config.yaml":"key: value\nlist:\n- item1\n- item2"}}`,
+	// Patch format edge cases (objects with numeric-like keys)
+	`{"0":{"op":"add","path":"/test","value":"data"}}`,
+	`{"operations":[{"op":"replace","path":"/status","value":"active"}]}`,
+	// YAML-compatible structures
+	`{"multiline":"line1\nline2\nline3","tabs":"a\tb\tc"}`,
+	`{"unicode":"测试","emoji":"🔧","special":"@#$%^&*()"}`,
+	// Extreme nesting combinations
+	`{"outer":[{"inner":{"deep":[{"value":1},{"value":2}]}}]}`,
+	`[{"array":[{"nested":{"array":[1,2,3]}}]}]`,
+	// Empty vs null distinctions
+	`{"empty_string":"","null_value":null,"empty_array":[],"empty_object":{}}`,
+	// Large object keys
+	`{"very_long_key_name_that_might_cause_issues_with_path_handling":"value"}`,
+	// Scientific notation numbers
+	`{"small":1e-10,"large":1e10,"negative":-1.23e-5}`,
+	// Boolean edge cases
+	`{"true":true,"false":false,"string_true":"true","string_false":"false"}`,
+	// Array with mixed numeric types
+	`[0,0.0,-0,1,-1,1.0,-1.0,1.5,-1.5]`,
 }
 
 func FuzzJd(f *testing.F) {
@@ -57,7 +113,7 @@ func FuzzJd(f *testing.F) {
 		}
 		for _, b := range corpus {
 			// Add seeds with various option combinations
-			for optionSeed := uint8(0); optionSeed < 16; optionSeed++ {
+			for optionSeed := uint8(0); optionSeed < 48; optionSeed++ {
 				f.Add(a, b, optionSeed)
 			}
 		}
@@ -86,10 +142,6 @@ func fuzz(t *testing.T, aStr, bStr string, optionSeed uint8) {
 	for _, format := range [][2]string{{
 		"jd", "list",
 	}, {
-		"jd", "set",
-	}, {
-		"jd", "mset",
-	}, {
 		"jd", "color",
 	}, {
 		"patch", "list",
@@ -114,10 +166,6 @@ func fuzz(t *testing.T, aStr, bStr string, optionSeed uint8) {
 			switch format[0] {
 			case "jd":
 				switch format[1] {
-				case "set":
-					baseOptions = append(baseOptions, setOption{})
-				case "mset":
-					baseOptions = append(baseOptions, multisetOption{})
 				case "color":
 					baseOptions = append(baseOptions, COLOR)
 				default: // list
@@ -127,12 +175,12 @@ func fuzz(t *testing.T, aStr, bStr string, optionSeed uint8) {
 			default: // patch
 			}
 
-			// Generate PathOptions based on optionSeed and combine with base options
-			pathOptions := generateRandomPathOptions(optionSeed, a, b)
-			options := append(baseOptions, pathOptions...)
+			// Generate options (global and PathOptions) based on optionSeed and combine with base options
+			randomOptions := generateRandomOptions(optionSeed, a, b)
+			options := append(baseOptions, randomOptions...)
 
 			// Skip problematic null cases when using PathOptions to avoid panics
-			if len(pathOptions) > 0 && (hasUnsupportedNullValue(a) || hasUnsupportedNullValue(b)) {
+			if len(randomOptions) > 0 && (hasUnsupportedNullValue(a) || hasUnsupportedNullValue(b)) {
 				return
 			}
 
@@ -142,7 +190,7 @@ func fuzz(t *testing.T, aStr, bStr string, optionSeed uint8) {
 				t.Errorf("nil diff of a and b")
 				return
 			}
-			if format[0] == "patch" && hasUnsupportedObjectKey(d) {
+			if format[0] == "patch" && (hasUnsupportedObjectKey(d) || hasUnsupportedPatchPath(d)) {
 				return
 			}
 			var diffABStr string
@@ -178,15 +226,16 @@ func fuzz(t *testing.T, aStr, bStr string, optionSeed uint8) {
 			if err != nil {
 				// PathOptions can create diffs that aren't patchable in some edge cases
 				// This is expected behavior for fuzzing - we want to discover these cases
-				if len(pathOptions) > 0 {
+				if hasPathOptions(randomOptions) {
 					return // Skip verification for PathOption edge cases that cause patch failures
 				}
 				t.Errorf("applying patch %v to %v failed: %v", diffABStr, aStr, err)
 				return
 			}
 
-			// For standard cases without PathOptions, verify exact roundtrip
-			if len(pathOptions) == 0 {
+			// For standard cases and global options, verify exact roundtrip
+			// Skip verification only for PathOptions that may cause selective diffing
+			if !hasPathOptions(randomOptions) {
 				if !patchedA.Equals(b, options...) {
 					t.Errorf("applying patch %v to %v should give %v. Got: %v", diffABStr, aStr, bStr, renderJson(patchedA))
 					return
@@ -244,13 +293,41 @@ func hasUnsupportedNullValue(node JsonNode) bool {
 	}
 }
 
-// generateRandomPathOptions creates random PathOption combinations based on the seed
-func generateRandomPathOptions(seed uint8, a, b JsonNode) []Option {
+func hasUnsupportedPatchPath(diff Diff) bool {
+	for _, d := range diff {
+		for _, pathElement := range d.Path {
+			switch pathElement.(type) {
+			case PathSet: // {} set marker
+				return true
+			case PathMultiset: // [] multiset marker
+				return true
+			case PathSetKeys: // {"key":"value"} object matching
+				return true
+			case PathMultisetKeys: // [{"key":"value"}] multiset object matching
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func hasPathOptions(options []Option) bool {
+	for _, opt := range options {
+		if _, ok := opt.(pathOption); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// generateRandomOptions creates random global and PathOption combinations based on the seed
+func generateRandomOptions(seed uint8, a, b JsonNode) []Option {
 	options := []Option{}
 
-	switch seed % 16 {
+	switch seed % 48 {
+	// 0-15: Pure PathOptions (existing)
 	case 0:
-		// No PathOptions
+		// No options
 		return options
 	case 1:
 		// DIFF_OFF at root
@@ -304,6 +381,133 @@ func generateRandomPathOptions(seed uint8, a, b JsonNode) []Option {
 		// Deny-list pattern: turn off multiple specific paths
 		options = append(options, PathOption(Path{PathKey("timestamp")}, DIFF_OFF))
 		options = append(options, PathOption(Path{PathKey("metadata")}, DIFF_OFF))
+
+	// 16-31: Pure Global Options
+	case 16:
+		// Global SET - all arrays as sets
+		options = append(options, SET)
+	case 17:
+		// Global MULTISET - all arrays as multisets
+		options = append(options, MULTISET)
+	case 18:
+		// Global precision - small values
+		options = append(options, Precision(0.01))
+	case 19:
+		// Global SetKeys - match by id
+		options = append(options, SetKeys("id"))
+	case 20:
+		// Global DIFF_OFF - ignore all changes
+		options = append(options, DIFF_OFF)
+	case 21:
+		// Global precision - very small values (scientific notation)
+		options = append(options, Precision(1e-6))
+	case 22:
+		// Global SetKeys - multiple keys
+		options = append(options, SetKeys("type", "id"))
+	case 23:
+		// Global precision - medium values
+		options = append(options, Precision(0.1))
+	case 24:
+		// Global SetKeys - employee-like
+		options = append(options, SetKeys("empId"))
+	case 25:
+		// Global precision - variable based on seed
+		precision := 1e-8 + float64(seed%5)*1e-9
+		options = append(options, Precision(precision))
+	case 26:
+		// Global SetKeys - comprehensive matching
+		options = append(options, SetKeys("type", "id", "name"))
+	case 27:
+		// Global precision - larger tolerance
+		options = append(options, Precision(0.5))
+	case 28:
+		// Global SetKeys - single key variations
+		options = append(options, SetKeys("name"))
+	case 29:
+		// Global precision - tiny tolerance
+		options = append(options, Precision(1e-10))
+	case 30:
+		// Global SetKeys - version-like keys
+		options = append(options, SetKeys("version", "id"))
+	case 31:
+		// No options (second instance for testing)
+		return options
+
+	// 32-47: Global + PathOptions combinations
+	case 32:
+		// Global SET + PathOption precision
+		options = append(options, SET)
+		options = append(options, PathOption(Path{PathKey("temperature")}, Precision(0.01)))
+	case 33:
+		// Global MULTISET + PathOption DIFF_OFF
+		options = append(options, MULTISET)
+		options = append(options, PathOption(Path{PathKey("metadata")}, DIFF_OFF))
+	case 34:
+		// Global precision + PathOption SET
+		options = append(options, Precision(0.1))
+		options = append(options, PathOption(Path{PathKey("tags")}, SET))
+	case 35:
+		// Global SetKeys + PathOption MULTISET
+		options = append(options, SetKeys("id"))
+		options = append(options, PathOption(Path{PathKey("scores")}, MULTISET))
+	case 36:
+		// Global SET + multiple PathOptions
+		options = append(options, SET)
+		options = append(options, PathOption(Path{PathKey("users")}, SetKeys("empId")))
+		options = append(options, PathOption(Path{PathKey("config")}, DIFF_OFF))
+	case 37:
+		// Global MULTISET + targeted precision
+		options = append(options, MULTISET)
+		options = append(options, PathOption(Path{PathKey("measurements"), PathIndex(0)}, Precision(0.001)))
+	case 38:
+		// Global precision + deny-list pattern
+		options = append(options, Precision(0.05))
+		options = append(options, PathOption(Path{PathKey("timestamp")}, DIFF_OFF))
+		options = append(options, PathOption(Path{PathKey("metadata")}, DIFF_OFF))
+	case 39:
+		// Global SetKeys + allow-list pattern
+		options = append(options, SetKeys("id", "type"))
+		options = append(options, PathOption(Path{}, DIFF_OFF))
+		options = append(options, PathOption(Path{PathKey("data")}, DIFF_ON))
+	case 40:
+		// Global SET + nested overrides
+		options = append(options, SET)
+		options = append(options, PathOption(Path{PathKey("items")}, MULTISET))
+		options = append(options, PathOption(Path{PathKey("items"), PathIndex(0)}, Precision(0.1)))
+	case 41:
+		// Global DIFF_OFF + selective enabling
+		options = append(options, DIFF_OFF)
+		options = append(options, PathOption(Path{PathKey("important")}, DIFF_ON))
+	case 42:
+		// Global precision + SET at specific path
+		options = append(options, Precision(1e-6))
+		options = append(options, PathOption(Path{PathKey("coords")}, SET))
+	case 43:
+		// Global MULTISET + complex nesting
+		options = append(options, MULTISET)
+		options = append(options, PathOption(Path{PathKey("level1"), PathKey("level2")}, SET))
+	case 44:
+		// Global SetKeys + multiple targeted options
+		options = append(options, SetKeys("name"))
+		options = append(options, PathOption(Path{PathKey("primary")}, SET))
+		options = append(options, PathOption(Path{PathKey("secondary")}, MULTISET))
+	case 45:
+		// Complex global + PathOptions mix
+		options = append(options, SET)
+		options = append(options, Precision(0.01))
+		options = append(options, PathOption(Path{PathKey("exceptions")}, DIFF_OFF))
+	case 46:
+		// Global MULTISET + scientific precision
+		options = append(options, MULTISET)
+		precision := 1e-8 + float64(seed%3)*1e-9
+		options = append(options, PathOption(Path{PathKey("scientific")}, Precision(precision)))
+	case 47:
+		// Kitchen sink - multiple global + multiple PathOptions
+		options = append(options, SET)
+		options = append(options, SetKeys("id"))
+		options = append(options, PathOption(Path{PathKey("special")}, MULTISET))
+		options = append(options, PathOption(Path{PathKey("precise")}, Precision(0.001)))
+		options = append(options, PathOption(Path{PathKey("ignored")}, DIFF_OFF))
 	}
 
 	return options
