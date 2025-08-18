@@ -233,9 +233,9 @@ func fuzz(t *testing.T, aStr, bStr string, optionSeed uint8) {
 				return
 			}
 
-			// For standard cases and global options, verify exact roundtrip
-			// Skip verification only for PathOptions that may cause selective diffing
-			if !hasPathOptions(randomOptions) {
+			// For standard cases and most options, verify exact roundtrip
+			// Skip verification only when DIFF_OFF is present (globally or in PathOptions)
+			if !hasSelectiveDiffing(randomOptions) {
 				if !patchedA.Equals(b, options...) {
 					t.Errorf("applying patch %v to %v should give %v. Got: %v", diffABStr, aStr, bStr, renderJson(patchedA))
 					return
@@ -315,6 +315,23 @@ func hasPathOptions(options []Option) bool {
 	for _, opt := range options {
 		if _, ok := opt.(pathOption); ok {
 			return true
+		}
+	}
+	return false
+}
+
+func hasSelectiveDiffing(options []Option) bool {
+	for _, opt := range options {
+		switch o := opt.(type) {
+		case diffOffOption:
+			return true // Global DIFF_OFF prevents diffing
+		case pathOption:
+			// Check if PathOption contains DIFF_OFF in its payload
+			for _, thenOpt := range o.Then {
+				if _, ok := thenOpt.(diffOffOption); ok {
+					return true
+				}
+			}
 		}
 	}
 	return false
