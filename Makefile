@@ -36,7 +36,7 @@ test : validate-toolchain
 
 .PHONY : fuzz
 fuzz : validate-toolchain
-	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=30s
+	cd v2 ; go test . -fuzz=FuzzJd -fuzztime=5m
 
 .PHONY : fuzz-indef
 fuzz-indef: validate-toolchain
