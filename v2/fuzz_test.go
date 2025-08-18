@@ -47,8 +47,10 @@ var corpus = []string{
 
 	// SetKeys scenarios
 	`[{"id":"a","value":1},{"id":"b","value":2}]`,
-	`{"employees":[{"empId":"123","name":"John"},{"empId":"456","name":"Jane"}]}`,
-	`{"items":[{"type":"book","id":"isbn123"},{"type":"book","id":"isbn456"}]}`,
+	`[{"empId":"123","name":"John"},{"empId":"456","name":"Jane"}]`,
+	`[{"type":"book","id":"isbn123","name":"Title1"},{"type":"book","id":"isbn456","name":"Title2"}]`,
+	`[{"version":"1.0","id":"v1"},{"version":"2.0","id":"v2"}]`,
+	`[{"type":"user","id":"u1","name":"Alice"},{"type":"admin","id":"u2","name":"Bob"}]`,
 
 	// Edge cases and special characters
 	`{"":1}`,
