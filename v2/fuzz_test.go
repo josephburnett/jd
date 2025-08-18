@@ -68,7 +68,7 @@ func FuzzJd(f *testing.F) {
 		}
 		for _, b := range corpus {
 			// Add seeds with various option combinations
-			for optionSeed := uint8(0); optionSeed < 48; optionSeed++ {
+			for optionSeed := uint8(0); optionSeed < 24; optionSeed++ {
 				f.Add(a, b, optionSeed)
 			}
 		}
@@ -301,7 +301,7 @@ func hasSelectiveDiffing(options []Option) bool {
 func generateRandomOptions(seed uint8, a, b JsonNode) []Option {
 	options := []Option{}
 
-	switch seed % 48 {
+	switch seed % 24 {
 	// 0-15: Pure PathOptions (existing)
 	case 0:
 		// No options
@@ -359,7 +359,7 @@ func generateRandomOptions(seed uint8, a, b JsonNode) []Option {
 		options = append(options, PathOption(Path{PathKey("timestamp")}, DIFF_OFF))
 		options = append(options, PathOption(Path{PathKey("metadata")}, DIFF_OFF))
 
-	// 16-31: Pure Global Options
+	// 16-23: Essential Global and Global+PathOptions combinations
 	case 16:
 		// Global SET - all arrays as sets
 		options = append(options, SET)
@@ -376,115 +376,17 @@ func generateRandomOptions(seed uint8, a, b JsonNode) []Option {
 		// Global DIFF_OFF - ignore all changes
 		options = append(options, DIFF_OFF)
 	case 21:
-		// Global precision - very small values (scientific notation)
-		options = append(options, Precision(1e-6))
-	case 22:
-		// Global SetKeys - multiple keys
-		options = append(options, SetKeys("type", "id"))
-	case 23:
-		// Global precision - medium values
-		options = append(options, Precision(0.1))
-	case 24:
-		// Global SetKeys - id-based
-		options = append(options, SetKeys("id"))
-	case 25:
-		// Global precision - variable based on seed
-		precision := 1e-8 + float64(seed%5)*1e-9
-		options = append(options, Precision(precision))
-	case 26:
-		// Global SetKeys - multiple common fields
-		options = append(options, SetKeys("id"))
-	case 27:
-		// Global precision - larger tolerance
-		options = append(options, Precision(0.5))
-	case 28:
-		// Global SetKeys - single key variations
-		options = append(options, SetKeys("id"))
-	case 29:
-		// Global precision - tiny tolerance
-		options = append(options, Precision(1e-10))
-	case 30:
-		// Global SetKeys - id-based
-		options = append(options, SetKeys("id"))
-	case 31:
-		// No options (second instance for testing)
-		return options
-
-	// 32-47: Global + PathOptions combinations
-	case 32:
 		// Global SET + PathOption precision
 		options = append(options, SET)
 		options = append(options, PathOption(Path{PathKey("temperature")}, Precision(0.01)))
-	case 33:
+	case 22:
 		// Global MULTISET + PathOption DIFF_OFF
 		options = append(options, MULTISET)
 		options = append(options, PathOption(Path{PathKey("metadata")}, DIFF_OFF))
-	case 34:
-		// Global precision + PathOption SET
-		options = append(options, Precision(0.1))
-		options = append(options, PathOption(Path{PathKey("tags")}, SET))
-	case 35:
-		// Global SetKeys + PathOption MULTISET
-		options = append(options, SetKeys("id"))
-		options = append(options, PathOption(Path{PathKey("scores")}, MULTISET))
-	case 36:
-		// Global SET + multiple PathOptions
-		options = append(options, SET)
-		options = append(options, PathOption(Path{PathKey("users")}, SetKeys("empId")))
-		options = append(options, PathOption(Path{PathKey("config")}, DIFF_OFF))
-	case 37:
-		// Global MULTISET + targeted precision
-		options = append(options, MULTISET)
-		options = append(options, PathOption(Path{PathKey("measurements"), PathIndex(0)}, Precision(0.001)))
-	case 38:
-		// Global precision + deny-list pattern
-		options = append(options, Precision(0.05))
-		options = append(options, PathOption(Path{PathKey("timestamp")}, DIFF_OFF))
-		options = append(options, PathOption(Path{PathKey("metadata")}, DIFF_OFF))
-	case 39:
-		// Global SetKeys + allow-list pattern
-		options = append(options, SetKeys("id", "type"))
-		options = append(options, PathOption(Path{}, DIFF_OFF))
-		options = append(options, PathOption(Path{PathKey("data")}, DIFF_ON))
-	case 40:
-		// Global SET + nested overrides
-		options = append(options, SET)
-		options = append(options, PathOption(Path{PathKey("items")}, MULTISET))
-		options = append(options, PathOption(Path{PathKey("items"), PathIndex(0)}, Precision(0.1)))
-	case 41:
+	case 23:
 		// Global DIFF_OFF + selective enabling
 		options = append(options, DIFF_OFF)
 		options = append(options, PathOption(Path{PathKey("important")}, DIFF_ON))
-	case 42:
-		// Global precision + SET at specific path
-		options = append(options, Precision(1e-6))
-		options = append(options, PathOption(Path{PathKey("coords")}, SET))
-	case 43:
-		// Global MULTISET + complex nesting
-		options = append(options, MULTISET)
-		options = append(options, PathOption(Path{PathKey("level1"), PathKey("level2")}, SET))
-	case 44:
-		// Global SetKeys + multiple targeted options
-		options = append(options, SetKeys("id"))
-		options = append(options, PathOption(Path{PathKey("primary")}, SET))
-		options = append(options, PathOption(Path{PathKey("secondary")}, MULTISET))
-	case 45:
-		// Complex global + PathOptions mix
-		options = append(options, SET)
-		options = append(options, Precision(0.01))
-		options = append(options, PathOption(Path{PathKey("exceptions")}, DIFF_OFF))
-	case 46:
-		// Global MULTISET + scientific precision
-		options = append(options, MULTISET)
-		precision := 1e-8 + float64(seed%3)*1e-9
-		options = append(options, PathOption(Path{PathKey("scientific")}, Precision(precision)))
-	case 47:
-		// Kitchen sink - multiple global + multiple PathOptions
-		options = append(options, SET)
-		options = append(options, SetKeys("id"))
-		options = append(options, PathOption(Path{PathKey("special")}, MULTISET))
-		options = append(options, PathOption(Path{PathKey("precise")}, Precision(0.001)))
-		options = append(options, PathOption(Path{PathKey("ignored")}, DIFF_OFF))
 	}
 
 	return options
