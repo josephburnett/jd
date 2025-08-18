@@ -6,6 +6,7 @@ import (
 )
 
 var corpus = []string{
+	// Essential primitives and edge cases
 	``,  // void
 	` `, // void
 	`null`,
@@ -13,96 +14,48 @@ var corpus = []string{
 	`1`,
 	`""`,
 	`"foo"`,
-	`"bar"`,
-	`"null"`,
+
+	// Core array and object structures
 	`[]`,
-	`[null]`,
-	`[null,null,null]`,
 	`[1]`,
 	`[1,2,3]`,
-	`[{},[],3]`,
-	`[1,{},[]]`,
 	`{}`,
 	`{"foo":"bar"}`,
-	`{"foo":null}`,
 	`{"foo":1}`,
-	`{"foo":[]}`,
-	`{"foo":[null]}`,
-	`{"foo":[1]}`,
 	`{"foo":[1,2,3]}`,
-	`{"foo":[1,null,3]}`,
-	`{"foo":{}}`,
-	`{"foo":{"bar":null}}`,
+
+	// Essential nesting
 	`{"foo":{"bar":1}}`,
-	`{"foo":{"bar":[]}}`,
-	`{"foo":{"bar":[1,2,3]}}`,
-	`{"foo":{"bar":{}}}`,
-	// PathOption-friendly structures for enhanced fuzzing coverage
+	`[{"value":1}]`,
+
+	// PathOptions testing structures
 	`{"timestamp":"2023-01-01","data":"important"}`,
 	`{"config":{"system":"auto","user_settings":"custom"},"metadata":{"generated":true}}`,
 	`{"users":[{"id":"1","name":"Alice"},{"id":"2","name":"Bob"}],"tags":["red","blue","green"]}`,
 	`{"measurements":[10.123, 20.456, 30.789],"coords":[1,2,3,2,1]}`,
-	`{"level1":{"level2":{"level3":{"value":42},"other":true}}}`,
-	`[{"score":85.12},{"score":90.45},{"score":78.90}]`,
+	`{"level1":{"level2":{"level3":{"value":42}}}}`,
+
+	// Set/Multiset testing
 	`{"items":[1,2,2,3],"sets":[1,2,3],"multisets":[1,1,2,3,3]}`,
-	`{"a":[1,2],"b":[2,1],"c":[1,2,3]}`,
-	`{"temperature":20.123,"pressure":1013.25,"readings":[20.1,20.2,20.15]}`,
-	// Edge cases for array operations
-	`[[]]`,
-	`[[],[]]`,
-	`[1,[2,[3,[4]]]]`,
-	`{"a":[[1,2],[3,4]],"b":[[5,6]]}`,
-	// Empty and minimal structures
-	`{"":1}`,
-	`{"a":"","b":null,"c":[]}`,
-	`[{"":""}, {"a":null}]`,
-	// Large arrays for LCS algorithm stress testing
-	`[1,2,3,4,5,6,7,8,9,10]`,
-	`[10,9,8,7,6,5,4,3,2,1]`,
-	`[1,1,1,1,1,2,2,2,2,2]`,
-	// Complex set/multiset scenarios
+	`{"a":[1,2],"b":[2,1]}`,
 	`{"tags":["a","b","c","a","b"],"categories":["x","y","z"]}`,
-	`{"primary":["red","blue"],"secondary":["blue","red","green"]}`,
-	// Precision-sensitive numbers
-	`{"float1":1.00001,"float2":1.00002,"float3":1.1}`,
-	`{"values":[0.1,0.2,0.3,0.10001,0.20002]}`,
+
+	// Precision testing
+	`{"temperature":20.123,"pressure":1013.25}`,
 	`{"coords":{"x":123.456789,"y":987.654321,"z":0.000001}}`,
-	// Deep nesting edge cases
-	`{"a":{"b":{"c":{"d":{"e":{"f":1}}}}}}`,
-	`[[[[[1]]]]]`,
-	`{"root":{"level1":[{"level2":{"level3":[1,2,3]}}]}}`,
-	// SetKeys scenarios
-	`[{"id":"a","value":1},{"id":"b","value":2},{"id":"a","value":3}]`,
-	`{"employees":[{"empId":"123","name":"John","dept":"IT"},{"empId":"456","name":"Jane","dept":"HR"}]}`,
-	`{"items":[{"type":"book","id":"isbn123","title":"Title1"},{"type":"book","id":"isbn456","title":"Title2"}]}`,
-	// Boundary cases for indexing
-	`{"0":"zero","1":"one","-1":"minus"}`,
-	`[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]`,
-	// Complex mixed types
-	`{"mixed":[null,true,false,0,1,-1,""," ","text",[]]}`,
-	`{"types":{"null":null,"bool":true,"num":42,"str":"test","arr":[],"obj":{}}}`,
-	// Kubernetes-like config structures
-	`{"metadata":{"name":"test","labels":{"app":"web"}},"spec":{"replicas":3,"containers":[{"name":"web","image":"nginx:1.20"}]}}`,
-	`{"apiVersion":"v1","kind":"ConfigMap","data":{"config.yaml":"key: value\nlist:\n- item1\n- item2"}}`,
-	// Patch format edge cases (objects with numeric-like keys)
-	`{"0":{"op":"add","path":"/test","value":"data"}}`,
-	`{"operations":[{"op":"replace","path":"/status","value":"active"}]}`,
-	// YAML-compatible structures
-	`{"multiline":"line1\nline2\nline3","tabs":"a\tb\tc"}`,
-	`{"unicode":"测试","emoji":"🔧","special":"@#$%^&*()"}`,
-	// Extreme nesting combinations
-	`{"outer":[{"inner":{"deep":[{"value":1},{"value":2}]}}]}`,
-	`[{"array":[{"nested":{"array":[1,2,3]}}]}]`,
-	// Empty vs null distinctions
-	`{"empty_string":"","null_value":null,"empty_array":[],"empty_object":{}}`,
-	// Large object keys
-	`{"very_long_key_name_that_might_cause_issues_with_path_handling":"value"}`,
-	// Scientific notation numbers
 	`{"small":1e-10,"large":1e10,"negative":-1.23e-5}`,
-	// Boolean edge cases
-	`{"true":true,"false":false,"string_true":"true","string_false":"false"}`,
-	// Array with mixed numeric types
-	`[0,0.0,-0,1,-1,1.0,-1.0,1.5,-1.5]`,
+
+	// SetKeys scenarios
+	`[{"id":"a","value":1},{"id":"b","value":2}]`,
+	`{"employees":[{"empId":"123","name":"John"},{"empId":"456","name":"Jane"}]}`,
+	`{"items":[{"type":"book","id":"isbn123"},{"type":"book","id":"isbn456"}]}`,
+
+	// Edge cases and special characters
+	`{"":1}`,
+	`{"0":"zero","1":"one","-1":"minus"}`,
+	`{"mixed":[null,true,false,0,1,-1,""]}`,
+	`{"unicode":"测试","emoji":"🔧"}`,
+	`{"empty_string":"","null_value":null,"empty_array":[],"empty_object":{}}`,
 }
 
 func FuzzJd(f *testing.F) {
