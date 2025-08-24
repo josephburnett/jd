@@ -10,6 +10,32 @@
 		   style="font-size:2em">jd a.json b.json</legend></pre>
     </p>
     <p id="crash" style="color:red"></p>
+    
+    <!-- Operation Section -->
+    <p style="margin: 10px 0;">
+      <strong style="font-weight: bold;">Operation:</strong>
+      <span id="mode-diff" style="cursor: pointer; color: #080; text-decoration: underline; margin: 0 5px;">diff</span> |
+      <span id="mode-patch" style="cursor: pointer; margin: 0 5px;">patch</span>
+      <input type="hidden" name="mode" value="diff">
+    </p>
+
+    <!-- Format Section -->
+    <p style="margin: 10px 0;">
+      <strong style="font-weight: bold;">Format:</strong>
+      <span id="format-json" style="cursor: pointer; color: #080; text-decoration: underline; margin: 0 5px;">json</span> |
+      <span id="format-yaml" style="cursor: pointer; margin: 0 5px;">yaml</span>
+      <input type="hidden" name="format" value="json">
+    </p>
+    
+    <!-- Diff Format Section -->
+    <p style="margin: 10px 0;">
+      <strong style="font-weight: bold;">Diff format:</strong>
+      <span id="diff-format-jd" style="cursor: pointer; color: #080; text-decoration: underline; margin: 0 3px;">jd</span> |
+      <span id="diff-format-patch" style="cursor: pointer; margin: 0 3px;">patch (RFC 6902)</span> |
+      <span id="diff-format-merge" style="cursor: pointer; margin: 0 3px;">merge (RFC 7386)</span>
+      <input type="hidden" name="diff-format" value="jd">
+    </p>
+
     <p style="width:50%;float:left">
       <legend id="a-label"
 	      for="a-json"
@@ -45,97 +71,32 @@
       <legend id="diff-error"
 	      for="diff"></legend>
     </p>
-    <legend id="options"
-	    style="font-size:2em"
-	    >options</legend>
-    <p>
-      <div>
-	<input id="mode-diff"
-	       type="radio"
-	       name="mode"
-	       value="diff"
-	       checked>
-	<label for="mode-diff">diff</label>
-      </div>
-      <div>
-	<input id="mode-patch"
-	       type="radio"
-	       name="mode"
-	       value="patch">
-	<label for="mode-patch">patch</label>
-      </div>
-    </p>
-    <p>
-      <legend id="options-format-label"
-	      >Data format:</legend>
-      <div>
-	<input id="format-json"
-	       type="radio"
-	       name="format"
-	       value="json"
-	       checked>
-	<label for="format-json">"json"</label>
-      </div>
-      <div>
-	<input id="format-yaml"
-	       type="radio"
-	       name="format"
-	       value="yaml">
-	<label for="format-yaml">"yaml"</label>
-      </div>
-    </p>
-    <p>
-      <legend id="options-diff-format-label"
-	      >Diff format:</legend>
-      <div>
-	<input id="diff-format-jd"
-	       type="radio"
-	       name="diff-format"
-	       value="jd"
-	       checked>
-	<label for="diff-format-json">"jd"</label>
-      </div>
-      <div>
-	<input id="diff-format-patch"
-	       type="radio"
-	       name="diff-format"
-	       value="patch">
-	<label for="diff-format-patch">"patch" (RFC 6902)</label>
-      </div>
-      <div>
-	<input id="diff-format-merge"
-	       type="radio"
-	       name="diff-format"
-	       value="merge">
-	<label for="diff-format-merge">"merge" (RFC 7386)</label>
-      </div>
-    </p>
-    <p>
-      <legend id="options-array-label"
-	      >Treat arrays as an:</legend>
-      <div>
-	<input id="array-list"
-	       type="radio"
-	       name="array"
-	       value="list"
-	       checked>
-	<label for="array-list">ordered list</label>
-      </div>
-      <div>
-	<input id="array-set"
-	       type="radio"
-	       name="array"
-	       value="set">
-	<label for="array-set">unordered set</label>
-      </div>
-      <div>
-	<input id="array-mset"
-	       type="radio"
-	       name="array"
-	       value="mset">
-	<label for="array-mset">unordered multiset (bag)</label>
-      </div>
-    </p>
+    <!-- Options Section -->
+    <div id="options-section" style="margin: 20px 0;">
+      <legend style="font-size:2em; margin-bottom: 15px;">Options</legend>
+      <p>
+        <legend style="font-size:1.2em">Options JSON:</legend>
+        <textarea id="options-json"
+                  rows="3"
+                  style="width:98.5%; font-family: monospace;"
+                  placeholder="[]">[]</textarea>
+        <div id="validation-error" style="color: red; font-size: 0.9em;"></div>
+      </p>
+      <p>
+        <legend style="font-size:1.1em">Examples:</legend>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+          <button type="button" id="example-set" style="padding: 5px 10px;">Global SET</button>
+          <button type="button" id="example-multiset" style="padding: 5px 10px;">Global MULTISET</button>
+          <button type="button" id="example-precision" style="padding: 5px 10px;">Precision</button>
+          <button type="button" id="example-setkeys" style="padding: 5px 10px;">SetKeys</button>
+          <button type="button" id="example-path-set" style="padding: 5px 10px;">Path SET</button>
+          <button type="button" id="example-path-precision" style="padding: 5px 10px;">Path Precision</button>
+          <button type="button" id="example-selective-diff" style="padding: 5px 10px;">Selective Diff</button>
+          <button type="button" id="example-mixed" style="padding: 5px 10px;">Mixed</button>
+          <button type="button" id="example-clear" style="padding: 5px 10px;">Clear</button>
+        </div>
+      </p>
+    </div>
     <legend id="about"
 	    style="font-size:2em"
 	    >about</legend>

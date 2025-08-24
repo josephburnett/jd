@@ -13,7 +13,7 @@ func TestNew(t *testing.T) {
 	if presenter == nil {
 		t.Fatal("New() returned nil presenter")
 	}
-	
+
 	// Verify initial state
 	if presenter.state.Mode != ModeDiff {
 		t.Errorf("Initial mode = %v, want %v", presenter.state.Mode, ModeDiff)
@@ -24,51 +24,59 @@ func TestNew(t *testing.T) {
 	if presenter.state.DiffFormat != DiffFormatJd {
 		t.Errorf("Initial diff format = %v, want %v", presenter.state.DiffFormat, DiffFormatJd)
 	}
-	if presenter.state.Array != ArrayList {
-		t.Errorf("Initial array type = %v, want %v", presenter.state.Array, ArrayList)
+	if presenter.state.OptionsJSON != "[]" {
+		t.Errorf("Initial options JSON = %v, want %v", presenter.state.OptionsJSON, "[]")
 	}
 }
 
 func TestSetCommandLabel(t *testing.T) {
 	tests := []struct {
-		name       string
-		mode       Mode
-		format     Format
-		diffFormat DiffFormat
-		array      ArrayType
-		want       string
+		name        string
+		mode        Mode
+		format      Format
+		diffFormat  DiffFormat
+		optionsJSON string
+		want        string
 	}{
 		{
-			name:       "basic diff json",
-			mode:       ModeDiff,
-			format:     FormatJSON,
-			diffFormat: DiffFormatJd,
-			array:      ArrayList,
-			want:       "jd a.json b.json",
+			name:        "basic diff json",
+			mode:        ModeDiff,
+			format:      FormatJSON,
+			diffFormat:  DiffFormatJd,
+			optionsJSON: "[]",
+			want:        "jd a.json b.json",
 		},
 		{
-			name:       "diff yaml with set",
-			mode:       ModeDiff,
-			format:     FormatYAML,
-			diffFormat: DiffFormatJd,
-			array:      ArraySet,
-			want:       "jd -yaml -set a.yaml b.yaml",
+			name:        "diff yaml with set option",
+			mode:        ModeDiff,
+			format:      FormatYAML,
+			diffFormat:  DiffFormatJd,
+			optionsJSON: `["SET"]`,
+			want:        `jd -yaml -opts='["SET"]' a.yaml b.yaml`,
 		},
 		{
-			name:       "patch mode with merge format",
-			mode:       ModePatch,
-			format:     FormatJSON,
-			diffFormat: DiffFormatMerge,
-			array:      ArrayList,
-			want:       "jd -p -f merge diff a.json",
+			name:        "patch mode with merge format",
+			mode:        ModePatch,
+			format:      FormatJSON,
+			diffFormat:  DiffFormatMerge,
+			optionsJSON: "[]",
+			want:        "jd -p -f merge diff a.json",
 		},
 		{
-			name:       "patch yaml with patch format and multiset",
-			mode:       ModePatch,
-			format:     FormatYAML,
-			diffFormat: DiffFormatPatch,
-			array:      ArrayMset,
-			want:       "jd -p -yaml -f patch -mset diff a.yaml",
+			name:        "patch yaml with options",
+			mode:        ModePatch,
+			format:      FormatYAML,
+			diffFormat:  DiffFormatPatch,
+			optionsJSON: `[{"precision": 0.1}]`,
+			want:        `jd -p -yaml -f patch -opts='[{"precision": 0.1}]' diff a.yaml`,
+		},
+		{
+			name:        "path options example",
+			mode:        ModeDiff,
+			format:      FormatJSON,
+			diffFormat:  DiffFormatJd,
+			optionsJSON: `[{"@": ["users"], "^": ["SET"]}]`,
+			want:        `jd -opts='[{"@": ["users"], "^": ["SET"]}]' a.json b.json`,
 		},
 	}
 
@@ -76,14 +84,15 @@ func TestSetCommandLabel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			view := newMockView()
 			presenter, _ := New(view)
-			
+
 			presenter.state.Mode = tt.mode
 			presenter.state.Format = tt.format
 			presenter.state.DiffFormat = tt.diffFormat
-			presenter.state.Array = tt.array
-			
+			presenter.state.OptionsJSON = tt.optionsJSON
+			presenter.validateAndParseOptions()
+
 			presenter.setCommandLabel()
-			
+
 			mock := view.(*mockView)
 			got := mock.labels[CommandId]
 			if got != tt.want {
@@ -119,9 +128,9 @@ func TestSetInputLabels(t *testing.T) {
 			view := newMockView()
 			presenter, _ := New(view)
 			presenter.state.Format = tt.format
-			
+
 			presenter.setInputLabels()
-			
+
 			mock := view.(*mockView)
 			if got := mock.labels[ALabelId]; got != tt.wantA {
 				t.Errorf("A label = %v, want %v", got, tt.wantA)
@@ -135,31 +144,31 @@ func TestSetInputLabels(t *testing.T) {
 
 func TestSetInputsEnabled(t *testing.T) {
 	tests := []struct {
-		name           string
-		mode           Mode
-		wantAStyle     string
-		wantBReadonly  bool
-		wantBStyle     string
+		name             string
+		mode             Mode
+		wantAStyle       string
+		wantBReadonly    bool
+		wantBStyle       string
 		wantDiffReadonly bool
-		wantDiffStyle  string
+		wantDiffStyle    string
 	}{
 		{
-			name:           "diff mode",
-			mode:           ModeDiff,
-			wantAStyle:     FocusStyle + ";" + HalfWidthStyle,
-			wantBReadonly:  false,
-			wantBStyle:     FocusStyle + ";" + HalfWidthStyle,
+			name:             "diff mode",
+			mode:             ModeDiff,
+			wantAStyle:       FocusStyle + ";" + HalfWidthStyle,
+			wantBReadonly:    false,
+			wantBStyle:       FocusStyle + ";" + HalfWidthStyle,
 			wantDiffReadonly: true,
-			wantDiffStyle:  UnfocusStyle + ";" + FullWidthStyle,
+			wantDiffStyle:    UnfocusStyle + ";" + FullWidthStyle,
 		},
 		{
-			name:           "patch mode",
-			mode:           ModePatch,
-			wantAStyle:     FocusStyle + ";" + HalfWidthStyle,
-			wantBReadonly:  true,
-			wantBStyle:     UnfocusStyle + ";" + HalfWidthStyle,
+			name:             "patch mode",
+			mode:             ModePatch,
+			wantAStyle:       FocusStyle + ";" + HalfWidthStyle,
+			wantBReadonly:    true,
+			wantBStyle:       UnfocusStyle + ";" + HalfWidthStyle,
 			wantDiffReadonly: false,
-			wantDiffStyle:  FocusStyle + ";" + FullWidthStyle,
+			wantDiffStyle:    FocusStyle + ";" + FullWidthStyle,
 		},
 	}
 
@@ -168,9 +177,9 @@ func TestSetInputsEnabled(t *testing.T) {
 			view := newMockView()
 			presenter, _ := New(view)
 			presenter.state.Mode = tt.mode
-			
+
 			presenter.setInputsEnabled()
-			
+
 			mock := view.(*mockView)
 			if got := mock.styles[AJsonId]; got != tt.wantAStyle {
 				t.Errorf("A style = %v, want %v", got, tt.wantAStyle)
@@ -191,26 +200,36 @@ func TestSetInputsEnabled(t *testing.T) {
 	}
 }
 
-func TestSetDerived(t *testing.T) {
+func TestValidateAndParseOptions(t *testing.T) {
 	tests := []struct {
-		name       string
-		diffFormat DiffFormat
-		wantArray  ArrayType
+		name        string
+		optionsJSON string
+		wantError   bool
 	}{
 		{
-			name:       "jd format preserves array setting",
-			diffFormat: DiffFormatJd,
-			wantArray:  ArraySet, // Should remain unchanged
+			name:        "empty options",
+			optionsJSON: "[]",
+			wantError:   false,
 		},
 		{
-			name:       "patch format forces list",
-			diffFormat: DiffFormatPatch,
-			wantArray:  ArrayList,
+			name:        "valid SET option",
+			optionsJSON: `["SET"]`,
+			wantError:   false,
 		},
 		{
-			name:       "merge format forces list",
-			diffFormat: DiffFormatMerge,
-			wantArray:  ArrayList,
+			name:        "valid path option",
+			optionsJSON: `[{"@": ["users"], "^": ["SET"]}]`,
+			wantError:   false,
+		},
+		{
+			name:        "invalid JSON",
+			optionsJSON: `[invalid`,
+			wantError:   true,
+		},
+		{
+			name:        "invalid option",
+			optionsJSON: `["INVALID_OPTION"]`,
+			wantError:   true,
 		},
 	}
 
@@ -218,27 +237,14 @@ func TestSetDerived(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			view := newMockView()
 			presenter, _ := New(view)
-			presenter.state.Array = ArraySet // Start with set
-			presenter.state.DiffFormat = tt.diffFormat
-			
-			presenter.setDerived()
-			
-			if presenter.state.Array != tt.wantArray {
-				t.Errorf("Array type = %v, want %v", presenter.state.Array, tt.wantArray)
-			}
-			
-			// Check that checkboxes are updated correctly for patch/merge formats
-			if tt.diffFormat == DiffFormatPatch || tt.diffFormat == DiffFormatMerge {
-				mock := view.(*mockView)
-				if !mock.checked[string(ArrayList)] {
-					t.Error("ArrayList should be checked")
-				}
-				if mock.checked[string(ArraySet)] {
-					t.Error("ArraySet should not be checked")
-				}
-				if mock.checked[string(ArrayMset)] {
-					t.Error("ArrayMset should not be checked")
-				}
+			presenter.state.OptionsJSON = tt.optionsJSON
+
+			presenter.validateAndParseOptions()
+
+			hasError := presenter.state.ValidationError != ""
+			if hasError != tt.wantError {
+				t.Errorf("validateAndParseOptions() error = %v, wantError %v. Error: %v",
+					hasError, tt.wantError, presenter.state.ValidationError)
 			}
 		})
 	}
@@ -297,20 +303,20 @@ func TestParseAndTranslateJSON(t *testing.T) {
 			view := newMockView()
 			presenter, _ := New(view)
 			presenter.state.Format = tt.format
-			
+
 			// Set up input value
 			mock := view.(*mockView)
 			mock.values[AJsonId] = tt.input
-			
+
 			_, err := presenter.parseAndTranslate(AJsonId, tt.formatLast)
-			
+
 			if tt.wantError && err == nil {
 				t.Error("Expected error but got none")
 			}
 			if !tt.wantError && err != nil {
 				t.Errorf("Unexpected error: %v", err)
 			}
-			
+
 			if tt.wantOutput != "" {
 				if got := mock.values[AJsonId]; got != tt.wantOutput {
 					t.Errorf("Output = %v, want %v", got, tt.wantOutput)
@@ -322,53 +328,53 @@ func TestParseAndTranslateJSON(t *testing.T) {
 
 func TestPrintDiff(t *testing.T) {
 	tests := []struct {
-		name       string
-		inputA     string
-		inputB     string
-		format     Format
-		diffFormat DiffFormat
-		array      ArrayType
-		wantOutput string
-		wantError  string
+		name        string
+		inputA      string
+		inputB      string
+		format      Format
+		diffFormat  DiffFormat
+		optionsJSON string
+		wantOutput  string
+		wantError   string
 	}{
 		{
-			name:       "basic json diff",
-			inputA:     `{"foo": "bar"}`,
-			inputB:     `{"foo": "baz"}`,
-			format:     FormatJSON,
-			diffFormat: DiffFormatJd,
-			array:      ArrayList,
+			name:        "basic json diff",
+			inputA:      `{"foo": "bar"}`,
+			inputB:      `{"foo": "baz"}`,
+			format:      FormatJSON,
+			diffFormat:  DiffFormatJd,
+			optionsJSON: "[]",
 			wantOutput: `@ ["foo"]
 - "bar"
 + "baz"
 `,
 		},
 		{
-			name:       "empty diff",
-			inputA:     `{"foo": "bar"}`,
-			inputB:     `{"foo": "bar"}`,
-			format:     FormatJSON,
-			diffFormat: DiffFormatJd,
-			array:      ArrayList,
-			wantOutput: "",
+			name:        "empty diff",
+			inputA:      `{"foo": "bar"}`,
+			inputB:      `{"foo": "bar"}`,
+			format:      FormatJSON,
+			diffFormat:  DiffFormatJd,
+			optionsJSON: "[]",
+			wantOutput:  "",
 		},
 		{
-			name:       "invalid json A",
-			inputA:     `{"foo": "bar"`,
-			inputB:     `{"foo": "baz"}`,
-			format:     FormatJSON,
-			diffFormat: DiffFormatJd,
-			array:      ArrayList,
-			wantError:  "A input error expected",
+			name:        "invalid json A",
+			inputA:      `{"foo": "bar"`,
+			inputB:      `{"foo": "baz"}`,
+			format:      FormatJSON,
+			diffFormat:  DiffFormatJd,
+			optionsJSON: "[]",
+			wantError:   "A input error expected",
 		},
 		{
-			name:       "invalid json B",
-			inputA:     `{"foo": "bar"}`,
-			inputB:     `{"foo": "baz"`,
-			format:     FormatJSON,
-			diffFormat: DiffFormatJd,
-			array:      ArrayList,
-			wantError:  "B input error expected",
+			name:        "invalid json B",
+			inputA:      `{"foo": "bar"}`,
+			inputB:      `{"foo": "baz"`,
+			format:      FormatJSON,
+			diffFormat:  DiffFormatJd,
+			optionsJSON: "[]",
+			wantError:   "B input error expected",
 		},
 	}
 
@@ -378,28 +384,28 @@ func TestPrintDiff(t *testing.T) {
 			presenter, _ := New(view)
 			presenter.state.Format = tt.format
 			presenter.state.DiffFormat = tt.diffFormat
-			presenter.state.Array = tt.array
+			presenter.state.OptionsJSON = tt.optionsJSON
 			presenter.state.Mode = ModeDiff
-			
+
 			// Set up input values
 			mock := view.(*mockView)
 			mock.values[AJsonId] = tt.inputA
 			mock.values[BJsonId] = tt.inputB
-			
+
 			presenter.printDiff()
-			
+
 			if tt.wantError != "" {
 				if mock.labels[AErrorId] == "" && mock.labels[BErrorId] == "" {
-					t.Errorf("Expected error but got none. AError=%q, BError=%q, DiffError=%q", 
+					t.Errorf("Expected error but got none. AError=%q, BError=%q, DiffError=%q",
 						mock.labels[AErrorId], mock.labels[BErrorId], mock.labels[DiffErrorId])
 				}
 				return
 			}
-			
+
 			if got := mock.values[DiffId]; got != tt.wantOutput {
 				t.Errorf("Diff output = %q, want %q", got, tt.wantOutput)
 			}
-			
+
 			// Verify no errors
 			if mock.labels[AErrorId] != "" {
 				t.Errorf("Unexpected A error: %v", mock.labels[AErrorId])
@@ -465,26 +471,26 @@ func TestPrintPatch(t *testing.T) {
 			presenter.state.Format = tt.format
 			presenter.state.DiffFormat = tt.diffFormat
 			presenter.state.Mode = ModePatch
-			
+
 			// Set up input values
 			mock := view.(*mockView)
 			mock.values[AJsonId] = tt.inputA
 			mock.values[DiffId] = tt.inputDiff
-			
+
 			presenter.printPatch()
-			
+
 			if tt.wantError != "" {
 				if mock.labels[AErrorId] == "" && mock.labels[DiffErrorId] == "" {
-					t.Errorf("Expected error but got none. AError=%q, DiffError=%q", 
+					t.Errorf("Expected error but got none. AError=%q, DiffError=%q",
 						mock.labels[AErrorId], mock.labels[DiffErrorId])
 				}
 				return
 			}
-			
+
 			if got := mock.values[BJsonId]; got != tt.wantOutput {
 				t.Errorf("Patch output = %q, want %q", got, tt.wantOutput)
 			}
-			
+
 			// Verify no errors
 			if mock.labels[AErrorId] != "" {
 				t.Errorf("Unexpected A error: %v", mock.labels[AErrorId])
@@ -499,10 +505,10 @@ func TestPrintPatch(t *testing.T) {
 func TestUpdateState(t *testing.T) {
 	view := newMockView()
 	presenter, _ := New(view)
-	
+
 	// Update state
-	presenter.UpdateState(ModePatch, FormatYAML, DiffFormatPatch, ArraySet)
-	
+	presenter.UpdateState(ModePatch, FormatYAML, DiffFormatPatch, `["SET"]`)
+
 	// Verify state was updated
 	if presenter.state.Mode != ModePatch {
 		t.Errorf("Mode = %v, want %v", presenter.state.Mode, ModePatch)
@@ -513,9 +519,7 @@ func TestUpdateState(t *testing.T) {
 	if presenter.state.DiffFormat != DiffFormatPatch {
 		t.Errorf("DiffFormat = %v, want %v", presenter.state.DiffFormat, DiffFormatPatch)
 	}
-	
-	// Note: Array should be forced to ArrayList due to patch format
-	if presenter.state.Array != ArrayList {
-		t.Errorf("Array = %v, want %v (should be forced to list)", presenter.state.Array, ArrayList)
+	if presenter.state.OptionsJSON != `["SET"]` {
+		t.Errorf("OptionsJSON = %v, want %v", presenter.state.OptionsJSON, `["SET"]`)
 	}
 }

@@ -2,6 +2,7 @@ package presenter
 
 import (
 	"fmt"
+	"strings"
 
 	jd "github.com/josephburnett/jd/v2"
 	"github.com/josephburnett/jd/v2/internal/web/view"
@@ -26,9 +27,8 @@ const (
 	DiffFormatJdId    = "diff-format-jd"
 	DiffFormatPatchId = "diff-format-patch"
 	DiffFormatMergeId = "diff-format-merge"
-	ArrayListId       = "array-list"
-	ArraySetId        = "array-set"
-	ArrayMsetId       = "array-mset"
+	OptionsJsonId     = "options-json"
+	ValidationErrorId = "validation-error"
 
 	// Styles
 	FocusStyle     = "border:solid 3px #080"
@@ -110,12 +110,31 @@ func initPlaceholders() (*Placeholders, error) {
 }
 
 // UpdateState updates the presenter state and triggers reconciliation
-func (p *Presenter) UpdateState(mode Mode, format Format, diffFormat DiffFormat, array ArrayType) {
+func (p *Presenter) UpdateState(mode Mode, format Format, diffFormat DiffFormat, optionsJSON string) {
 	p.state.Mode = mode
 	p.state.Format = format
 	p.state.DiffFormat = diffFormat
-	p.state.Array = array
+	p.state.OptionsJSON = optionsJSON
+	p.validateAndParseOptions()
 	p.Reconcile()
+}
+
+// validateAndParseOptions parses the options JSON and updates validation error
+func (p *Presenter) validateAndParseOptions() {
+	p.state.ValidationError = ""
+
+	// Empty or whitespace JSON is valid (represents no options)
+	optionsJSON := strings.TrimSpace(p.state.OptionsJSON)
+	if optionsJSON == "" || optionsJSON == "[]" {
+		return
+	}
+
+	// Try to parse the options JSON
+	_, err := jd.ReadOptionsString(optionsJSON)
+	if err != nil {
+		p.state.ValidationError = fmt.Sprintf("Invalid options JSON: %v", err)
+		return
+	}
 }
 
 // Reconcile updates the UI based on current state
@@ -125,6 +144,7 @@ func (p *Presenter) Reconcile() {
 	p.setCommandLabel()
 	p.setInputLabels()
 	p.setInputsEnabled()
+	p.setValidationError()
 
 	switch p.state.Mode {
 	case ModeDiff:
@@ -136,27 +156,19 @@ func (p *Presenter) Reconcile() {
 
 // setDerived sets derived state based on current selections
 func (p *Presenter) setDerived() {
-	switch p.state.DiffFormat {
-	case DiffFormatPatch, DiffFormatMerge:
-		p.state.Array = ArrayList
-		p.view.SetChecked(string(ArrayList), true)
-		p.view.SetChecked(string(ArraySet), false)
-		p.view.SetChecked(string(ArrayMset), false)
-	}
+	// No derived state needed anymore since we removed array controls
+}
+
+// setValidationError displays any JSON validation errors
+func (p *Presenter) setValidationError() {
+	p.view.SetLabel(ValidationErrorId, p.state.ValidationError)
 }
 
 // setPlaceholder updates placeholder text based on current format
 func (p *Presenter) setPlaceholder() {
 	switch p.state.DiffFormat {
 	case DiffFormatJd:
-		switch p.state.Array {
-		case ArrayList:
-			p.view.SetPlaceholder(DiffId, p.placeholders.JdPlaceholderList)
-		case ArraySet:
-			p.view.SetPlaceholder(DiffId, p.placeholders.JdPlaceholderSet)
-		case ArrayMset:
-			p.view.SetPlaceholder(DiffId, p.placeholders.JdPlaceholderMset)
-		}
+		p.view.SetPlaceholder(DiffId, p.placeholders.JdPlaceholderList)
 	case DiffFormatPatch:
 		p.view.SetPlaceholder(DiffId, p.placeholders.PatchPlaceholder)
 	case DiffFormatMerge:
@@ -177,6 +189,7 @@ func (p *Presenter) setPlaceholder() {
 func (p *Presenter) setCommandLabel() {
 	command := "jd"
 
+	// Add flags
 	switch p.state.Mode {
 	case ModePatch:
 		command += " -p"
@@ -194,26 +207,23 @@ func (p *Presenter) setCommandLabel() {
 		command += " -f merge"
 	}
 
-	switch p.state.Array {
-	case ArraySet:
-		command += " -set"
-	case ArrayMset:
-		command += " -mset"
+	// Add options as the last flag if present and valid
+	optionsJSON := strings.TrimSpace(p.state.OptionsJSON)
+	if optionsJSON != "" && optionsJSON != "[]" && p.state.ValidationError == "" {
+		command += fmt.Sprintf(" -opts='%s'", optionsJSON)
+	}
+
+	// Add file arguments at the very end
+	ext := ".json"
+	if p.state.Format == FormatYAML {
+		ext = ".yaml"
 	}
 
 	switch p.state.Mode {
 	case ModeDiff:
-		if p.state.Format == FormatJSON {
-			command += " a.json b.json"
-		} else {
-			command += " a.yaml b.yaml"
-		}
+		command += fmt.Sprintf(" a%s b%s", ext, ext)
 	case ModePatch:
-		if p.state.Format == FormatJSON {
-			command += " diff a.json"
-		} else {
-			command += " diff a.yaml"
-		}
+		command += fmt.Sprintf(" diff a%s", ext)
 	}
 
 	p.view.SetLabel(CommandId, command)
@@ -246,31 +256,27 @@ func (p *Presenter) setInputsEnabled() {
 		p.view.SetReadonly(DiffId, false)
 		p.view.SetStyle(DiffId, FocusStyle+";"+FullWidthStyle)
 	}
-
-	buttons := []string{ArrayListId, ArraySetId, ArrayMsetId}
-	for _, id := range buttons {
-		switch p.state.DiffFormat {
-		case DiffFormatJd:
-			p.view.SetDisabled(id, false)
-		case DiffFormatPatch, DiffFormatMerge:
-			p.view.SetDisabled(id, true)
-		}
-	}
 }
 
 // getMetadata returns jd options based on current state
 func (p *Presenter) getMetadata() []jd.Option {
 	options := []jd.Option{}
-	switch p.state.Array {
-	case ArraySet:
-		options = append(options, jd.SET)
-	case ArrayMset:
-		options = append(options, jd.MULTISET)
-	}
+
+	// Add MERGE option for merge diff format
 	switch p.state.DiffFormat {
 	case DiffFormatMerge:
 		options = append(options, jd.MERGE)
 	}
+
+	// Parse and add options from JSON if valid
+	optionsJSON := strings.TrimSpace(p.state.OptionsJSON)
+	if optionsJSON != "" && optionsJSON != "[]" && p.state.ValidationError == "" {
+		parsedOptions, err := jd.ReadOptionsString(optionsJSON)
+		if err == nil {
+			options = append(options, parsedOptions...)
+		}
+	}
+
 	return options
 }
 
@@ -287,13 +293,13 @@ func (p *Presenter) parseAndTranslate(id string, formatLast Format) (jd.JsonNode
 		p.view.SetTextarea(id, nodeYaml.Json())
 		return nodeYaml, nil
 	}
-	
+
 	// Translate JSON to YAML
 	if change && p.state.Format == FormatYAML && errJson == nil {
 		p.view.SetTextarea(id, nodeJson.Yaml())
 		return nodeJson, nil
 	}
-	
+
 	// Return good parsing results
 	if p.state.Format == FormatJSON && errJson == nil {
 		return nodeJson, nil
@@ -301,7 +307,7 @@ func (p *Presenter) parseAndTranslate(id string, formatLast Format) (jd.JsonNode
 	if p.state.Format == FormatYAML && errYaml == nil {
 		return nodeYaml, nil
 	}
-	
+
 	// Return error relevant to desired format
 	if p.state.Format == FormatJSON {
 		return nil, errJson

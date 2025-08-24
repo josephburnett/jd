@@ -2,12 +2,13 @@ package presenter
 
 // State represents the current application state
 type State struct {
-	Mode           Mode
-	Format         Format
-	DiffFormat     DiffFormat
-	Array          ArrayType
-	FormatLast     Format
-	DiffFormatLast DiffFormat
+	Mode            Mode
+	Format          Format
+	DiffFormat      DiffFormat
+	OptionsJSON     string // JSON string for advanced options
+	FormatLast      Format
+	DiffFormatLast  DiffFormat
+	ValidationError string // Error from parsing options JSON
 }
 
 // Mode represents the application operation mode
@@ -39,17 +40,17 @@ const (
 type ArrayType string
 
 const (
-	ArrayList  ArrayType = "array-list"
-	ArraySet   ArrayType = "array-set"
-	ArrayMset  ArrayType = "array-mset"
+	ArrayList ArrayType = "array-list"
+	ArraySet  ArrayType = "array-set"
+	ArrayMset ArrayType = "array-mset"
 )
 
 // NewState creates a new state with default values
 func NewState() *State {
 	return &State{
-		Mode:       ModeDiff,
-		Format:     FormatJSON,
-		DiffFormat: DiffFormatJd,
-		Array:      ArrayList,
+		Mode:        ModeDiff,
+		Format:      FormatJSON,
+		DiffFormat:  DiffFormatJd,
+		OptionsJSON: "[]",
 	}
 }

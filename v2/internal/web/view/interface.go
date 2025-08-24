@@ -7,14 +7,14 @@ type View interface {
 	GetValue(id string) string
 	SetTextarea(id, text string)
 	SetLabel(id, text string)
-	
+
 	// State management
 	IsChecked(id string) bool
 	SetChecked(id string, checked bool)
 	SetDisabled(id string, disabled bool)
 	SetReadonly(id string, readonly bool)
 	SetStyle(id, style string)
-	
+
 	// Placeholder management
 	SetPlaceholder(id, text string)
 }

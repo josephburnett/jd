@@ -48,46 +48,50 @@ func newApp() (*app, error) {
 		}
 	}
 
+	// Set up mode click handlers
 	for _, id := range []string{
 		presenter.ModeDiffId,
 		presenter.ModePatchId,
 	} {
-		err := a.watchModeChange(id)
+		err := a.watchModeClick(id)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	// Set up format click handlers
 	for _, id := range []string{
 		presenter.FormatJsonId,
 		presenter.FormatYamlId,
 	} {
-		err := a.watchFormatChange(id)
+		err := a.watchFormatClick(id)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	// Set up diff format click handlers
 	for _, id := range []string{
 		presenter.DiffFormatJdId,
 		presenter.DiffFormatPatchId,
 		presenter.DiffFormatMergeId,
 	} {
-		err := a.watchDiffFormatChange(id)
+		err := a.watchDiffFormatClick(id)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	for _, id := range []string{
-		presenter.ArrayListId,
-		presenter.ArraySetId,
-		presenter.ArrayMsetId,
-	} {
-		err := a.watchArrayChange(id)
-		if err != nil {
-			return nil, err
-		}
+	// Watch options JSON textarea
+	err = a.watchOptionsChange(presenter.OptionsJsonId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set up example buttons
+	err = a.setupExampleButtons()
+	if err != nil {
+		return nil, err
 	}
 
 	go a.handleChange()
@@ -109,11 +113,14 @@ func (a *app) watchInput(id string) error {
 	return nil
 }
 
-func (a *app) watchModeChange(id string) error {
+func (a *app) watchModeClick(id string) error {
 	listener := func(_ js.Value, _ []js.Value) interface{} {
 		defer a.catchPanic()
 		a.mux.Lock()
 		defer a.mux.Unlock()
+
+		// Update styling for mode selection
+		a.updateModeStyles(id)
 		a.updatePresenterState()
 		a.changeCh <- struct{}{}
 		return nil
@@ -122,15 +129,18 @@ func (a *app) watchModeChange(id string) error {
 	if element.IsNull() {
 		return fmt.Errorf("id %v not found", id)
 	}
-	element.Call("addEventListener", "change", js.FuncOf(listener))
+	element.Call("addEventListener", "click", js.FuncOf(listener))
 	return nil
 }
 
-func (a *app) watchFormatChange(id string) error {
+func (a *app) watchFormatClick(id string) error {
 	listener := func(_ js.Value, _ []js.Value) interface{} {
 		defer a.catchPanic()
 		a.mux.Lock()
 		defer a.mux.Unlock()
+
+		// Update styling for format selection
+		a.updateFormatStyles(id)
 		a.updatePresenterState()
 		a.changeCh <- struct{}{}
 		return nil
@@ -139,15 +149,18 @@ func (a *app) watchFormatChange(id string) error {
 	if element.IsNull() {
 		return fmt.Errorf("id %v not found", id)
 	}
-	element.Call("addEventListener", "change", js.FuncOf(listener))
+	element.Call("addEventListener", "click", js.FuncOf(listener))
 	return nil
 }
 
-func (a *app) watchDiffFormatChange(id string) error {
+func (a *app) watchDiffFormatClick(id string) error {
 	listener := func(_ js.Value, _ []js.Value) interface{} {
 		defer a.catchPanic()
 		a.mux.Lock()
 		defer a.mux.Unlock()
+
+		// Update styling for diff format selection
+		a.updateDiffFormatStyles(id)
 		a.updatePresenterState()
 		a.changeCh <- struct{}{}
 		return nil
@@ -156,11 +169,11 @@ func (a *app) watchDiffFormatChange(id string) error {
 	if element.IsNull() {
 		return fmt.Errorf("id %v not found", id)
 	}
-	element.Call("addEventListener", "change", js.FuncOf(listener))
+	element.Call("addEventListener", "click", js.FuncOf(listener))
 	return nil
 }
 
-func (a *app) watchArrayChange(id string) error {
+func (a *app) watchOptionsChange(id string) error {
 	listener := func(_ js.Value, _ []js.Value) interface{} {
 		defer a.catchPanic()
 		a.mux.Lock()
@@ -173,7 +186,52 @@ func (a *app) watchArrayChange(id string) error {
 	if element.IsNull() {
 		return fmt.Errorf("id %v not found", id)
 	}
-	element.Call("addEventListener", "change", js.FuncOf(listener))
+	element.Call("addEventListener", "input", js.FuncOf(listener))
+	return nil
+}
+
+func (a *app) setupExampleButtons() error {
+	examples := map[string]string{
+		"example-set":            `["SET"]`,
+		"example-multiset":       `["MULTISET"]`,
+		"example-precision":      `[{"precision": 0.1}]`,
+		"example-setkeys":        `[{"setkeys": ["id", "name"]}]`,
+		"example-path-set":       `[{"@": ["users"], "^": ["SET"]}]`,
+		"example-path-precision": `[{"@": ["scores", 0], "^": [{"precision": 0.01}]}]`,
+		"example-selective-diff": `["DIFF_OFF", {"@": ["important"], "^": ["DIFF_ON"]}, {"@": ["metadata", "timestamps"], "^": ["DIFF_ON"]}]`,
+		"example-mixed":          `["SET", {"@": ["users"], "^": ["MULTISET"]}, {"@": ["temperature"], "^": [{"precision": 0.1}]}]`,
+		"example-clear":          `[]`,
+	}
+
+	for buttonId, jsonExample := range examples {
+		err := a.setupExampleButton(buttonId, jsonExample)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *app) setupExampleButton(buttonId, jsonExample string) error {
+	listener := func(_ js.Value, _ []js.Value) interface{} {
+		defer a.catchPanic()
+		a.mux.Lock()
+		defer a.mux.Unlock()
+
+		// Set the options JSON textarea value
+		a.view.SetTextarea(presenter.OptionsJsonId, jsonExample)
+
+		// Update presenter state
+		a.updatePresenterState()
+		a.changeCh <- struct{}{}
+		return nil
+	}
+
+	element := a.view.getElementById(buttonId)
+	if element.IsNull() {
+		return fmt.Errorf("example button id %v not found", buttonId)
+	}
+	element.Call("addEventListener", "click", js.FuncOf(listener))
 	return nil
 }
 
@@ -181,42 +239,71 @@ func (a *app) updatePresenterState() {
 	mode := a.getCurrentMode()
 	format := a.getCurrentFormat()
 	diffFormat := a.getCurrentDiffFormat()
-	array := a.getCurrentArray()
-	a.presenter.UpdateState(mode, format, diffFormat, array)
+	optionsJSON := a.view.GetValue(presenter.OptionsJsonId)
+	a.presenter.UpdateState(mode, format, diffFormat, optionsJSON)
+}
+
+func (a *app) updateModeStyles(selectedId string) {
+	// Reset all mode styles
+	a.view.getElementById(presenter.ModeDiffId).Set("style", "cursor: pointer; margin: 0 5px;")
+	a.view.getElementById(presenter.ModePatchId).Set("style", "cursor: pointer; margin: 0 5px;")
+
+	// Highlight selected
+	selectedElement := a.view.getElementById(selectedId)
+	selectedElement.Set("style", "cursor: pointer; color: #080; text-decoration: underline; margin: 0 5px;")
+}
+
+func (a *app) updateFormatStyles(selectedId string) {
+	// Reset all format styles
+	a.view.getElementById(presenter.FormatJsonId).Set("style", "cursor: pointer; margin: 0 5px;")
+	a.view.getElementById(presenter.FormatYamlId).Set("style", "cursor: pointer; margin: 0 5px;")
+
+	// Highlight selected
+	selectedElement := a.view.getElementById(selectedId)
+	selectedElement.Set("style", "cursor: pointer; color: #080; text-decoration: underline; margin: 0 5px;")
+}
+
+func (a *app) updateDiffFormatStyles(selectedId string) {
+	// Reset all diff format styles
+	a.view.getElementById(presenter.DiffFormatJdId).Set("style", "cursor: pointer; margin: 0 3px;")
+	a.view.getElementById(presenter.DiffFormatPatchId).Set("style", "cursor: pointer; margin: 0 3px;")
+	a.view.getElementById(presenter.DiffFormatMergeId).Set("style", "cursor: pointer; margin: 0 3px;")
+
+	// Highlight selected
+	selectedElement := a.view.getElementById(selectedId)
+	selectedElement.Set("style", "cursor: pointer; color: #080; text-decoration: underline; margin: 0 3px;")
 }
 
 func (a *app) getCurrentMode() presenter.Mode {
-	if a.view.IsChecked(presenter.ModeDiffId) {
+	// Check which mode element has the underline style (is selected)
+	diffElement := a.view.getElementById(presenter.ModeDiffId)
+	if diffElement.Get("style").Get("textDecoration").String() == "underline" {
 		return presenter.ModeDiff
 	}
 	return presenter.ModePatch
 }
 
 func (a *app) getCurrentFormat() presenter.Format {
-	if a.view.IsChecked(presenter.FormatJsonId) {
+	// Check which format element has the underline style (is selected)
+	jsonElement := a.view.getElementById(presenter.FormatJsonId)
+	if jsonElement.Get("style").Get("textDecoration").String() == "underline" {
 		return presenter.FormatJSON
 	}
 	return presenter.FormatYAML
 }
 
 func (a *app) getCurrentDiffFormat() presenter.DiffFormat {
-	if a.view.IsChecked(presenter.DiffFormatJdId) {
+	// Check which diff format element has the underline style (is selected)
+	jdElement := a.view.getElementById(presenter.DiffFormatJdId)
+	patchElement := a.view.getElementById(presenter.DiffFormatPatchId)
+
+	if jdElement.Get("style").Get("textDecoration").String() == "underline" {
 		return presenter.DiffFormatJd
 	}
-	if a.view.IsChecked(presenter.DiffFormatPatchId) {
+	if patchElement.Get("style").Get("textDecoration").String() == "underline" {
 		return presenter.DiffFormatPatch
 	}
 	return presenter.DiffFormatMerge
-}
-
-func (a *app) getCurrentArray() presenter.ArrayType {
-	if a.view.IsChecked(presenter.ArrayListId) {
-		return presenter.ArrayList
-	}
-	if a.view.IsChecked(presenter.ArraySetId) {
-		return presenter.ArraySet
-	}
-	return presenter.ArrayMset
 }
 
 func (a *app) handleChange() {
