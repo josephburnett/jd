@@ -48,12 +48,12 @@ go-fmt :
 
 .PHONY : pack-web
 pack-web : build-web validate-toolchain
-	cd v2 ; go run web/pack/main.go
+	cd v2 ; go run internal/web/pack/main.go
 
 .PHONY : build-web
 build-web : validate-toolchain
-	cd v2 ; curl -fsSL https://raw.githubusercontent.com/golang/go/go1.23.12/misc/wasm/wasm_exec.js -o web/assets/wasm_exec.js
-	cd v2 ; GOOS=js GOARCH=wasm go build -o web/assets/jd.wasm ./web/ui/main.go
+	cd v2 ; curl -fsSL https://raw.githubusercontent.com/golang/go/go1.23.12/misc/wasm/wasm_exec.js -o internal/web/assets/wasm_exec.js
+	cd v2 ; GOOS=js GOARCH=wasm go build -o internal/web/assets/jd.wasm ./internal/web/ui
 
 .PHONY : serve
 serve : pack-web validate-toolchain
@@ -102,7 +102,7 @@ push-github : check-env
 
 .PHONY : deploy
 deploy : test build-web
-	gsutil -m cp -r v2/web/assets/* gs://play.jd-tool.io
+	gsutil -m cp -r v2/internal/web/assets/* gs://play.jd-tool.io
 
 .PHONY : release-notes
 release-notes : check-env

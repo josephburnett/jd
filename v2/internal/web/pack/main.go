@@ -19,7 +19,7 @@ func main() {
 	pack += "\n"
 	pack += "var base64EncodedFiles = map[string]string{\n"
 	for _, f := range files {
-		b, err := ioutil.ReadFile(fmt.Sprintf("web/assets/%v", f))
+		b, err := ioutil.ReadFile(fmt.Sprintf("internal/web/assets/%v", f))
 		if err != nil {
 			panic(err)
 		}
@@ -27,7 +27,7 @@ func main() {
 		pack += fmt.Sprintf("\t%q: %q,\n", f, s)
 	}
 	pack += "}"
-	err := ioutil.WriteFile("web/serve/files.go", []byte(pack), 0644)
+	err := ioutil.WriteFile("internal/web/serve/files.go", []byte(pack), 0644)
 	if err != nil {
 		panic(err)
 	}

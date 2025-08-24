@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/josephburnett/jd/v2"
-	"github.com/josephburnett/jd/v2/web/serve"
+	"github.com/josephburnett/jd/v2/internal/web/serve"
 )
 
 const version = "HEAD"

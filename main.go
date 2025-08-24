@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,7 +15,6 @@ import (
 
 	jd "github.com/josephburnett/jd/lib"
 	v2 "github.com/josephburnett/jd/v2"
-	"github.com/josephburnett/jd/v2/web/serve"
 )
 
 // WARNING: this is the v1 main.go. It is no longer being developed.
@@ -31,7 +29,6 @@ var (
 	mset          = flag.Bool("mset", false, "Arrays as multisets")
 	output        = flag.String("o", "", "Output file")
 	patch         = flag.Bool("p", false, "Patch mode")
-	port          = flag.Int("port", 0, "Serve web UI on port")
 	precision     = flag.Float64("precision", 0, "Maximum absolute difference for numbers to be equal")
 	set           = flag.Bool("set", false, "Arrays as sets")
 	setkeys       = flag.String("setkeys", "", "Keys to identify set objects")
@@ -50,16 +47,6 @@ func main() {
 	flag.Parse()
 	if *ver {
 		fmt.Printf("jd version %v\n", version)
-		return
-	}
-	if *port != 0 {
-		if len(flag.Args()) > 0 {
-			errorfAndExit("The web UI (-port) does not support arguments")
-		}
-		err := serveWeb(strconv.Itoa(*port))
-		if err != nil {
-			errorAndExit(err)
-		}
 		return
 	}
 	var (
@@ -146,14 +133,6 @@ const (
 	translateMode mode = "trans"
 )
 
-func serveWeb(port string) error {
-	if serve.Handle == nil {
-		return fmt.Errorf("the web UI wasn't include in this build: use `make build` to include it")
-	}
-	http.HandleFunc("/", serve.Handle)
-	log.Printf("Listening on http://localhost:%v...", port)
-	return http.ListenAndServe(":"+port, nil)
-}
 
 func parseMetadata() ([]jd.Metadata, error) {
 	if *precision != 0.0 && (*set || *mset) {
@@ -233,7 +212,6 @@ func printUsageAndExit() {
 		`  -mset        Treat arrays as multisets (bags).`,
 		`  -setkeys     Keys to identify set objects`,
 		`  -yaml        Read and write YAML instead of JSON.`,
-		`  -port=N      Serve web UI on port N`,
 		`  -precision=N Maximum absolute difference for numbers to be equal.`,
 		`               Example: -precision=0.00001`,
 		`  -f=FORMAT    Read and write diff in FORMAT "jd" (default), "patch" (RFC 6902) or`,
