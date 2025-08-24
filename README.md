@@ -507,7 +507,7 @@ kubectl edit deployment example
 # change cpu resource from 100m to 200m
 kubectl get deployment example -oyaml | jd -yaml a.yaml
 ```
-output:
+output (showing all changes):
 ```diff
 @ ["metadata","annotations","deployment.kubernetes.io/revision"]
 - "2"
@@ -531,9 +531,36 @@ output:
 - 2
 + 3
 ```
-apply these change to another deployment:
+
+Focus only on spec changes by ignoring metadata and status:
 ```bash
-# edit file "patch" to contain only the hunk updating cpu request
-kubectl patch deployment example2 --type json --patch "$(jd -t jd2patch ~/patch)"
+kubectl get deployment example -oyaml | jd -yaml -opts='[
+  {"@":["metadata"],"^":["DIFF_OFF"]},
+  {"@":["status"],"^":["DIFF_OFF"]}
+]' a.yaml
+```
+output (spec changes only):
+```diff
+@ ["spec","template","spec","containers",0,"resources","requests","cpu"]
+- "100m"
++ "200m"
+```
+
+Allow-list approach - ignore everything except spec:
+```bash
+kubectl get deployment example -oyaml | jd -yaml -opts='[
+  {"@":[],"^":["DIFF_OFF"]},
+  {"@":["spec"],"^":["DIFF_ON"]}
+]' a.yaml
+```
+
+Apply these changes to another deployment:
+```bash
+# Create a focused patch file containing only the CPU change
+kubectl get deployment example -oyaml | jd -yaml -opts='[
+  {"@":["metadata"],"^":["DIFF_OFF"]},
+  {"@":["status"],"^":["DIFF_OFF"]}
+]' a.yaml > cpu-patch
+kubectl patch deployment example2 --type json --patch "$(jd -t jd2patch cpu-patch)"
 ```
 
