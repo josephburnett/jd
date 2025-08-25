@@ -1,0 +1,192 @@
+[
+  {
+    "name": "simple_object_value_change",
+    "description": "Basic object property value change",
+    "category": "core",
+    "content_a": "{\"a\":1}",
+    "content_b": "{\"a\":2}",
+    "expected_diff": "@ [\"a\"]\n- 1\n+ 2\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "nested_object_value_change", 
+    "description": "Change value in nested object",
+    "category": "core",
+    "content_a": "{\"a\":{\"b\":1}}",
+    "content_b": "{\"a\":{\"b\":2}}",
+    "expected_diff": "@ [\"a\",\"b\"]\n- 1\n+ 2\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "array_element_change",
+    "description": "Change array element with context",
+    "category": "core", 
+    "content_a": "{\"foo\":[\"bar\",\"baz\"]}",
+    "content_b": "{\"foo\":[\"bar\",\"boom\"]}",
+    "expected_diff": "@ [\"foo\",1]\n  \"bar\"\n- \"baz\"\n+ \"boom\"\n]\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "string_value_change",
+    "description": "Simple string property change",
+    "category": "core",
+    "content_a": "{\"a\":\"bar\"}",
+    "content_b": "{\"a\":\"baz\"}",
+    "expected_diff": "@ [\"a\"]\n- \"bar\"\n+ \"baz\"\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "object_to_null",
+    "description": "Replace object with null",
+    "category": "core",
+    "content_a": "{\"a\":1}",
+    "content_b": "null",
+    "expected_diff": "@ []\n- {\"a\":1}\n+ null\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "null_to_object",
+    "description": "Replace null with object", 
+    "category": "core",
+    "content_a": "null",
+    "content_b": "{\"a\":1}",
+    "expected_diff": "@ []\n- null\n+ {\"a\":1}\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "object_to_array",
+    "description": "Replace object with array",
+    "category": "core",
+    "content_a": "{\"a\":1}",
+    "content_b": "[1]",
+    "expected_diff": "@ []\n- {\"a\":1}\n+ [1]\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "array_to_object", 
+    "description": "Replace array with object",
+    "category": "core",
+    "content_a": "[1]",
+    "content_b": "{\"a\":1}",
+    "expected_diff": "@ []\n- [1]\n+ {\"a\":1}\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "boolean_to_number",
+    "description": "Type change from boolean to number",
+    "category": "core", 
+    "content_a": "true",
+    "content_b": "1",
+    "expected_diff": "@ []\n- true\n+ 1\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "string_to_boolean",
+    "description": "Type change from string to boolean",
+    "category": "core",
+    "content_a": "\"true\"",
+    "content_b": "true",
+    "expected_diff": "@ []\n- \"true\"\n+ true\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "identical_documents",
+    "description": "No differences between identical documents",
+    "category": "core",
+    "content_a": "{\"a\":1,\"b\":2}",
+    "content_b": "{\"a\":1,\"b\":2}",
+    "expected_diff": "",
+    "expected_exit": 0,
+    "compliance_level": "core"
+  },
+  {
+    "name": "array_append",
+    "description": "Add element to end of array",
+    "category": "core",
+    "content_a": "[1,2]",
+    "content_b": "[1,2,3]",
+    "expected_diff": "@ [2]\n  2\n+ 3\n]\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "array_prepend",
+    "description": "Add element to beginning of array", 
+    "category": "core",
+    "content_a": "[2,3]",
+    "content_b": "[1,2,3]",
+    "expected_diff": "@ [0]\n[\n+ 1\n  2\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "object_key_addition",
+    "description": "Add new property to object",
+    "category": "core",
+    "content_a": "{\"a\":1}",
+    "content_b": "{\"a\":1,\"b\":2}",
+    "expected_diff": "@ [\"b\"]\n+ 2\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "object_key_removal",
+    "description": "Remove property from object",
+    "category": "core",
+    "content_a": "{\"a\":1,\"b\":2}",
+    "content_b": "{\"a\":1}",
+    "expected_diff": "@ [\"b\"]\n- 2\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "unicode_strings",
+    "description": "Handle Unicode strings properly",
+    "category": "core",
+    "content_a": "{\"text\":\"こんにちは\"}",
+    "content_b": "{\"text\":\"さようなら\"}",
+    "expected_diff": "@ [\"text\"]\n- \"こんにちは\"\n+ \"さようなら\"\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "empty_to_value",
+    "description": "Add value from empty/void state",
+    "category": "core",
+    "content_a": "",
+    "content_b": "42",
+    "expected_diff": "@ []\n+ 42\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "value_to_empty",
+    "description": "Remove value to empty/void state",
+    "category": "core",
+    "content_a": "42",
+    "content_b": "",
+    "expected_diff": "@ []\n- 42\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  },
+  {
+    "name": "complex_array_context",
+    "description": "Array changes with proper context preservation",
+    "category": "core",
+    "content_a": "[\"apple\",\"banana\",\"cherry\",\"date\"]",
+    "content_b": "[\"apple\",\"blueberry\",\"cranberry\",\"date\"]",
+    "expected_diff": "@ [1]\n  \"apple\"\n- \"banana\"\n- \"cherry\"\n+ \"blueberry\"\n+ \"cranberry\"\n  \"date\"\n",
+    "expected_exit": 1,
+    "compliance_level": "core"
+  }
+]

@@ -1,0 +1,189 @@
+[
+  {
+    "name": "set_option_basic",
+    "description": "Array treated as set ignoring order",
+    "category": "options",
+    "content_a": "{\"tags\":[1,2,3]}",
+    "content_b": "{\"tags\":[3,1,2]}",
+    "args": ["-set"],
+    "expected_diff": "",
+    "expected_exit": 0,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "set_option_with_changes",
+    "description": "Set operations show additions and removals",
+    "category": "options",
+    "content_a": "{\"tags\":[\"red\",\"blue\",\"green\"]}",
+    "content_b": "{\"tags\":[\"red\",\"blue\",\"yellow\"]}",
+    "args": ["-set"],
+    "expected_diff": "^ \"SET\"\n@ [\"tags\",{}]\n- \"green\"\n+ \"yellow\"\n",
+    "expected_exit": 1,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "multiset_option",
+    "description": "Array treated as multiset counting duplicates",
+    "category": "options", 
+    "content_a": "{\"items\":[1,1,2,3]}",
+    "content_b": "{\"items\":[1,2,2,4]}",
+    "args": ["-mset"],
+    "expected_diff": "^ \"MULTISET\"\n@ [\"items\",[]]\n- 1\n- 3\n+ 2\n+ 4\n",
+    "expected_exit": 1,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "precision_option",
+    "description": "Numeric precision tolerance",
+    "category": "options",
+    "content_a": "{\"value\":10.1}",
+    "content_b": "{\"value\":10.15}",
+    "args": ["-precision=0.1"],
+    "expected_diff": "",
+    "expected_exit": 0,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "precision_option_exceeded",
+    "description": "Precision tolerance exceeded shows difference",
+    "category": "options",
+    "content_a": "{\"value\":10.0}",
+    "content_b": "{\"value\":10.2}",
+    "args": ["-precision=0.1"],
+    "expected_diff": "^ {\"precision\":0.1}\n@ [\"value\"]\n- 10\n+ 10.2\n",
+    "expected_exit": 1,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "setkeys_option",
+    "description": "Object matching by specified keys",
+    "category": "options",
+    "content_a": "{\"users\":[{\"id\":1,\"name\":\"Alice\",\"age\":25}]}",
+    "content_b": "{\"users\":[{\"id\":1,\"name\":\"Alice\",\"age\":26}]}",
+    "args": ["-setkeys=id"],
+    "expected_diff": "^ {\"setkeys\":[\"id\"]}\n@ [\"users\",{\"id\":1},\"age\"]\n- 25\n+ 26\n",
+    "expected_exit": 1,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "multiple_setkeys",
+    "description": "Object matching by multiple keys",
+    "category": "options",
+    "content_a": "{\"items\":[{\"type\":\"fruit\",\"id\":\"apple\",\"color\":\"red\"}]}",
+    "content_b": "{\"items\":[{\"type\":\"fruit\",\"id\":\"apple\",\"color\":\"green\"}]}",
+    "args": ["-setkeys=type,id"],
+    "expected_diff": "^ {\"setkeys\":[\"type\",\"id\"]}\n@ [\"items\",{\"id\":\"apple\",\"type\":\"fruit\"},\"color\"]\n- \"red\"\n+ \"green\"\n",
+    "expected_exit": 1,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "color_option",
+    "description": "Color output adds color option header",
+    "category": "options",
+    "content_a": "{\"a\":1}",
+    "content_b": "{\"a\":2}",
+    "args": ["-color"],
+    "expected_diff": "^ \"COLOR\"\n@ [\"a\"]\n- 1\n+ 2\n",
+    "expected_exit": 1,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "yaml_mode",
+    "description": "YAML input and output mode",
+    "category": "options",
+    "content_a": "name: Alice\nage: 25",
+    "content_b": "name: Alice\nage: 26", 
+    "args": ["-yaml"],
+    "expected_diff": "@ [\"age\"]\n- 25\n+ 26\n",
+    "expected_exit": 1,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "opts_json_set",
+    "description": "JSON options array with SET",
+    "category": "options",
+    "content_a": "{\"items\":[1,2,3]}",
+    "content_b": "{\"items\":[3,1,2]}",
+    "args": ["-opts=[\"SET\"]"],
+    "expected_diff": "",
+    "expected_exit": 0,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "opts_precision",
+    "description": "JSON options with precision object",
+    "category": "options",
+    "content_a": "{\"temp\":20.1}",
+    "content_b": "{\"temp\":20.15}",
+    "args": ["-opts=[{\"precision\":0.1}]"],
+    "expected_diff": "",
+    "expected_exit": 0,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "path_options_set",
+    "description": "PathOptions targeting specific path with SET",
+    "category": "path_options",
+    "content_a": "{\"tags\":[\"a\",\"b\"],\"items\":[1,2]}",
+    "content_b": "{\"tags\":[\"b\",\"a\"],\"items\":[2,1]}",
+    "args": ["-opts=[{\"@\":[\"tags\"],\"^\":[\"SET\"]}]"],
+    "expected_diff": "^ {\"@\":[\"tags\"],\"^\":[\"SET\"]}\n@ [\"items\",0]\n[\n- 1\n- 2\n+ 2\n+ 1\n]\n",
+    "expected_exit": 1,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "path_options_precision",
+    "description": "PathOptions with precision on specific field",
+    "category": "path_options",
+    "content_a": "{\"temp\":20.12,\"pressure\":1013.25}",
+    "content_b": "{\"temp\":20.15,\"pressure\":1013.30}",
+    "args": ["-opts=[{\"@\":[\"temp\"],\"^\":[{\"precision\":0.1}]}]"],
+    "expected_diff": "^ {\"@\":[\"temp\"],\"^\":[{\"precision\":0.1}]}\n@ [\"pressure\"]\n- 1013.25\n+ 1013.3\n",
+    "expected_exit": 1,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "path_options_nested",
+    "description": "PathOptions on nested paths",
+    "category": "path_options",
+    "content_a": "{\"data\":{\"values\":[3,1,2]}}",
+    "content_b": "{\"data\":{\"values\":[1,2,3]}}",
+    "args": ["-opts=[{\"@\":[\"data\",\"values\"],\"^\":[\"SET\"]}]"],
+    "expected_diff": "",
+    "expected_exit": 0,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "multiple_path_options",
+    "description": "Multiple PathOptions in single command",
+    "category": "path_options",
+    "content_a": "{\"tags\":[\"x\",\"y\"],\"scores\":[85.1,92.05]}",
+    "content_b": "{\"tags\":[\"y\",\"x\"],\"scores\":[85.15,92.1]}",
+    "args": ["-opts=[{\"@\":[\"tags\"],\"^\":[\"SET\"]},{\"@\":[\"scores\"],\"^\":[{\"precision\":0.1}]}]"],
+    "expected_diff": "",
+    "expected_exit": 0,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "diff_off_option",
+    "description": "DIFF_OFF ignores changes at specified path",
+    "category": "path_options",
+    "content_a": "{\"data\":\"important\",\"timestamp\":\"2023-01-01\"}",
+    "content_b": "{\"data\":\"important\",\"timestamp\":\"2023-01-02\"}",
+    "args": ["-opts=[{\"@\":[\"timestamp\"],\"^\":[\"DIFF_OFF\"]}]"],
+    "expected_diff": "",
+    "expected_exit": 0,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "diff_on_allowlist",
+    "description": "Allow-list approach with DIFF_OFF root and DIFF_ON specific",
+    "category": "path_options",
+    "content_a": "{\"important\":\"data\",\"ignore1\":\"x\",\"ignore2\":\"y\"}",
+    "content_b": "{\"important\":\"changed\",\"ignore1\":\"z\",\"ignore2\":\"w\"}",
+    "args": ["-opts=[{\"@\":[],\"^\":[\"DIFF_OFF\"]},{\"@\":[\"important\"],\"^\":[\"DIFF_ON\"]}]"],
+    "expected_diff": "^ {\"@\":[],\"^\":[\"DIFF_OFF\"]}\n^ {\"@\":[\"important\"],\"^\":[\"DIFF_ON\"]}\n@ [\"important\"]\n- \"data\"\n+ \"changed\"\n",
+    "expected_exit": 1,
+    "compliance_level": "extended"
+  }
+]

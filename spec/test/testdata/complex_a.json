@@ -1,0 +1,18 @@
+{
+  "users": [
+    {"id": 1, "name": "Alice", "roles": ["admin", "user"]},
+    {"id": 2, "name": "Bob", "roles": ["user"]}
+  ],
+  "config": {
+    "timeout": 30,
+    "debug": false,
+    "features": {
+      "feature_a": true,
+      "feature_b": false
+    }
+  },
+  "metadata": {
+    "created": "2023-01-01",
+    "version": "1.0.0"
+  }
+}

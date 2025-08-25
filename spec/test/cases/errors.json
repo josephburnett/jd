@@ -1,0 +1,202 @@
+[
+  {
+    "name": "invalid_json_input",
+    "description": "Malformed JSON input should cause error",
+    "category": "errors",
+    "content_a": "{\"invalid\": json}",
+    "content_b": "{}",
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "core"
+  },
+  {
+    "name": "invalid_json_second_input",
+    "description": "Malformed JSON in second input",
+    "category": "errors",
+    "content_a": "{}",
+    "content_b": "{\"invalid\": syntax",
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "core"
+  },
+  {
+    "name": "precision_with_set_conflict",
+    "description": "Precision option conflicts with set option",
+    "category": "errors",
+    "content_a": "[1,2,3]",
+    "content_b": "[1,2,4]",
+    "args": ["-set", "-precision=0.1"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "precision_with_multiset_conflict",
+    "description": "Precision option conflicts with multiset option",
+    "category": "errors",
+    "content_a": "[1,2,3]",
+    "content_b": "[1,2,4]",
+    "args": ["-mset", "-precision=0.1"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "invalid_setkeys_empty",
+    "description": "Empty setkey should cause error",
+    "category": "errors",
+    "content_a": "[{\"id\":1}]",
+    "content_b": "[{\"id\":2}]",
+    "args": ["-setkeys="],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "invalid_setkeys_whitespace",
+    "description": "Whitespace-only setkey should cause error",
+    "category": "errors",
+    "content_a": "[{\"id\":1}]",
+    "content_b": "[{\"id\":2}]",
+    "args": ["-setkeys= , "],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "invalid_opts_json",
+    "description": "Malformed JSON in -opts parameter",
+    "category": "errors",
+    "content_a": "{}",
+    "content_b": "{}",
+    "args": ["-opts={invalid json}"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "patch_and_translate_conflict",
+    "description": "Cannot use patch and translate modes together",
+    "category": "errors",
+    "content_a": "{}",
+    "content_b": "{}",
+    "args": ["-p", "-t=jd2patch"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "format"
+  },
+  {
+    "name": "invalid_translation_format",
+    "description": "Invalid format specification for translation",
+    "category": "errors",
+    "content_a": "{}",
+    "args": ["-t=invalid2format"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "format"
+  },
+  {
+    "name": "invalid_diff_format",
+    "description": "Invalid diff format specification",
+    "category": "errors",
+    "content_a": "{}",
+    "content_b": "{}",
+    "args": ["-f=invalid"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "format"
+  },
+  {
+    "name": "too_many_arguments_diff",
+    "description": "Too many arguments in diff mode",
+    "category": "errors",
+    "content_a": "{}",
+    "args": ["file1.json", "file2.json", "file3.json"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "core"
+  },
+  {
+    "name": "too_many_arguments_translate",
+    "description": "Too many arguments in translate mode",
+    "category": "errors",
+    "content_a": "{}",
+    "args": ["-t=json2yaml", "file1.json", "file2.json"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "format"
+  },
+  {
+    "name": "nonexistent_file",
+    "description": "Error when input file does not exist",
+    "category": "errors",
+    "args": ["/nonexistent/file.json"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "core"
+  },
+  {
+    "name": "malformed_diff_syntax",
+    "description": "Malformed diff format in patch mode",
+    "category": "errors",
+    "content_a": "@ [invalid path syntax\n+ value\n",
+    "content_b": "{}",
+    "args": ["-p"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "format"
+  },
+  {
+    "name": "invalid_path_element",
+    "description": "Invalid path element in diff",
+    "category": "errors",
+    "content_a": "@ [123invalid]\n+ value\n",
+    "content_b": "{}",
+    "args": ["-p"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "format"
+  },
+  {
+    "name": "patch_context_mismatch",
+    "description": "Context mismatch during patch application",
+    "category": "errors",
+    "content_a": "@ [0]\n[\n  \"expected\"\n- \"remove\"\n+ \"add\"\n]\n",
+    "content_b": "[\"actual\",\"remove\"]",
+    "args": ["-p"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "format"
+  },
+  {
+    "name": "invalid_yaml_input",
+    "description": "Malformed YAML input",
+    "category": "errors",
+    "content_a": "key: value\n  invalid: indentation\n",
+    "content_b": "key: value",
+    "args": ["-yaml"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "negative_precision",
+    "description": "Negative precision value should cause error",
+    "category": "errors",
+    "content_a": "1.0",
+    "content_b": "1.1",
+    "args": ["-precision=-0.1"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "extended"
+  },
+  {
+    "name": "invalid_port_number",
+    "description": "Invalid port number for web UI",
+    "category": "errors",
+    "args": ["-port=invalid"],
+    "should_error": true,
+    "expected_exit": 2,
+    "compliance_level": "extended"
+  }
+]
