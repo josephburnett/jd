@@ -174,7 +174,7 @@ Libraries should use appropriate error handling mechanisms for their language:
 
 ### 1. Graceful Degradation
 
-When possible, implementations should continue operation with reduced functionality:
+When possible, implementations should continue operation with limited functionality:
 
 - **Unknown options**: Ignore and warn, continue processing
 - **Unsupported path elements**: Fall back to string comparison
@@ -228,7 +228,7 @@ Include in error reports:
 1. **Validate early**: Check inputs before processing
 2. **Provide context**: Include location and surrounding data
 3. **Use specific codes**: Enable programmatic error handling
-4. **Log appropriately**: Balance verbosity with usefulness
+4. **Log selectively**: Balance verbosity with usefulness
 5. **Test error paths**: Ensure error handling works correctly
 
 ### Error Message Localization
@@ -243,7 +243,7 @@ Include in error reports:
 - **Lazy error collection**: Don't compute expensive error details unless needed
 - **Error caching**: Cache repeated error condition checks
 - **Resource cleanup**: Ensure errors don't leak resources
-- **Graceful shutdown**: Handle interruption during error states
+- **Controlled shutdown**: Handle interruption during error states
 
 ### Security Considerations
 
@@ -271,4 +271,4 @@ Implementations MUST test:
 - **Option conflicts**: Incompatible option combinations
 - **Context validation**: Mismatched patch contexts
 
-This error specification ensures consistent, debuggable error handling across all structural format implementations while providing clear guidance for both implementors and users.
+This error specification ensures consistent, debuggable error handling across all structural format implementations while providing specific guidance for both implementors and users.

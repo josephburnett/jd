@@ -27,15 +27,15 @@ The structural format is a human-readable diff format for JSON and YAML document
 
 The structural format addresses limitations in existing JSON diff formats:
 
-- **Human Readability**: Unlike RFC 6902 (JSON Patch), the structural format provides unified diff-style output that is easily understood by humans
-- **Context Preservation**: Shows surrounding elements in arrays to provide better understanding of changes
-- **Flexible Semantics**: Supports set/multiset semantics, precision-based numeric comparison, and targeted comparison options
+- **Human Readability**: Unlike RFC 6902 (JSON Patch), the structural format provides unified diff-style output with familiar syntax
+- **Context Preservation**: Shows surrounding elements in arrays to clarify change locations
+- **Flexible Semantics**: Supports set/multiset semantics, precision-based numeric comparison, and path-specific comparison options
 - **Format Interoperability**: Translates to and from standard patch formats (RFC 6902, RFC 7386)
 
 ### 1.2 Scope
 
 This specification defines:
-- Complete syntax grammar for parsing and generation
+- Full syntax grammar for parsing and generation
 - Semantic behavior for diff generation and patch application  
 - Options system for controlling comparison behavior
 - Error conditions and handling procedures
@@ -150,7 +150,7 @@ Paths navigate document structure using these rules:
 **Default behavior** uses Longest Common Subsequence (LCS) algorithm:
 1. Find longest sequence of unchanged elements
 2. Generate minimal insertions/deletions
-3. Preserve context around changes
+3. Show context around changes
 4. Maintain array order semantics
 
 **Set behavior** (when `{}` marker or SET option used):
@@ -173,7 +173,7 @@ For array modifications:
    - `[` only when showing changes at/near array beginning
    - `]` only when showing changes at/near array end
 3. **Formatting**: Context lines indented with two spaces, changes with one space after `+`/`-`
-4. **Scalability**: Consistent minimal approach for arrays of any size
+4. **Consistency**: Same minimal approach for all array sizes
 
 ### 4.4 Value Comparison
 
@@ -280,7 +280,7 @@ Complete error specifications are provided in [errors.md](errors.md). Key catego
 
 ### 7.2 Performance Requirements
 
-- **LCS Algorithm**: O(m×n) time complexity acceptable for reasonable array sizes
+- **LCS Algorithm**: O(m×n) time complexity for arrays of size m and n
 - **Memory Usage**: Implementations SHOULD handle documents up to 100MB
 - **Nesting Depth**: SHOULD support at least 1000 levels of nesting
 - **Path Length**: SHOULD support paths with at least 1000 elements
@@ -340,9 +340,9 @@ Implementations SHOULD auto-detect input formats:
 
 ### 9.1 Resource Exhaustion
 
-- **Large Documents**: Implement size limits (recommended: 100MB)
-- **Deep Nesting**: Limit recursion depth (recommended: 1000 levels)
-- **Long Paths**: Limit path element count (recommended: 1000 elements)
+- **Large Documents**: Implement size limits (suggested: 100MB maximum)
+- **Deep Nesting**: Limit recursion depth (suggested: 1000 levels maximum)
+- **Long Paths**: Limit path element count (suggested: 1000 elements maximum)
 - **Memory Usage**: Use streaming parsers when possible
 
 ### 9.2 Input Validation

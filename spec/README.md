@@ -1,6 +1,6 @@
 # Structural Format Specification
 
-This directory contains the formal specification for the structural JSON diff format, designed to enable independent implementations across programming languages.
+This directory contains the formal specification for the structural JSON diff format, providing the complete syntax, semantics, and behavior definitions needed for implementation across programming languages.
 
 ## Documents
 
@@ -11,10 +11,10 @@ This directory contains the formal specification for the structural JSON diff fo
 - **[errors.md](errors.md)** - Error handling procedures and taxonomy
 
 ### Reference Materials
-- **[examples.md](examples.md)** - Comprehensive examples covering all features and edge cases
+- **[examples.md](examples.md)** - Complete examples covering all features and edge cases
 
 ### Test Suite
-- **[test/](test/)** - Blackbox compliance test suite for validating implementations
+- **[test/](test/)** - Blackbox compliance test suite for implementation validation
 
 ## Implementation Guide
 
@@ -44,7 +44,7 @@ To implement the structural format:
 
 ## Testing Your Implementation
 
-The test suite in `test/` provides comprehensive validation:
+The test suite in `test/` provides complete validation:
 
 ```bash
 cd test
@@ -56,12 +56,12 @@ Exit code 0 indicates full compliance. Non-zero indicates failures with detailed
 
 ## About the Structural Format
 
-The structural format is a human-readable diff format for JSON and YAML data. Key features:
+The structural format is a human-readable diff format for JSON and YAML data with these features:
 
 - **Human-readable**: Unified diff-style output
-- **Context-aware**: Shows surrounding elements for better understanding  
+- **Context-aware**: Shows surrounding elements for change location clarity  
 - **Set semantics**: Treats arrays as sets or multisets when order doesn't matter
-- **Precise**: Configurable numeric precision for floating-point comparisons
+- **Configurable**: Supports numeric precision tolerance for floating-point comparisons
 - **Flexible**: PathOptions enable fine-grained comparison control
 - **Interoperable**: Converts to/from standard patch formats
 

@@ -1,6 +1,6 @@
 # Structural Format Examples
 
-This document provides comprehensive examples of the structural diff format, demonstrating all features and edge cases to aid implementors.
+This document provides complete examples of the structural diff format, demonstrating all features and edge cases for implementors.
 
 ## Basic Examples
 
@@ -728,4 +728,4 @@ This document provides comprehensive examples of the structural diff format, dem
 + {"id":3,"last_login":"2023-01-02T10:00:00Z","name":"Charlie"}
 ```
 
-These examples demonstrate the full range of the structural format's capabilities and should provide implementors with comprehensive understanding of expected behavior across all scenarios.
+These examples demonstrate the full range of the structural format's capabilities and should provide implementors with complete understanding of expected behavior across all scenarios.

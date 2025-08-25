@@ -1,6 +1,6 @@
 # jd Blackbox Test Suite
 
-This directory contains a comprehensive test suite for validating jd format implementations. The tests are designed to be run against any jd-compatible binary to ensure compliance with the specification.
+This directory contains a complete test suite for validating jd format implementations. The tests are designed to be run against any jd-compatible binary to ensure compliance with the specification.
 
 ## Quick Start
 
@@ -228,7 +228,7 @@ The test runner includes timeout protection (default 30s per test) to catch perf
 ## Extending the Test Suite
 
 The test suite is designed to grow. Consider adding:
-- More edge cases as they're discovered
+- Additional edge cases as they're discovered
 - Performance regression tests  
 - Memory usage validation
 - Compatibility tests with other JSON diff tools

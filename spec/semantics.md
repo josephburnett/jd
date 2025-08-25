@@ -58,7 +58,7 @@ Paths are sequences of path elements that navigate the document tree:
 
 ### Context Preservation
 
-For array modifications, the structural format preserves minimal but sufficient surrounding context:
+For array modifications, the structural format shows minimal surrounding context:
 
 ```
 Original: ["a", "b", "c", "d"]
@@ -81,7 +81,7 @@ Diff:
    - `]` appears only when showing changes at/near array end
    - Middle changes don't need brackets (array indices provide context)
 3. **Formatting**: Context elements use two-space indentation, changes use `+`/`-` with single space
-4. **Scalability**: Same minimal context for 3-element or 3000-element arrays
+4. **Consistency**: Same minimal context approach for all array sizes
 
 ## Options Processing
 
@@ -327,7 +327,7 @@ When MERGE option is present:
 
 ### Performance Characteristics
 
-- **LCS Algorithm**: O(m×n) time complexity for arrays of size m,n
+- **LCS Algorithm**: O(m×n) time complexity for arrays of size m and n
 - **Hash-based sets**: O(n) expected time for set operations
 - **Deep recursion**: May require stack management for deeply nested structures
 
@@ -343,4 +343,4 @@ When MERGE option is present:
 - **Unicode normalization**: Should handle equivalent Unicode representations
 - **JSON canonicalization**: Numbers should be normalized (e.g., 1.0 → 1)
 
-This semantic specification defines the complete behavior of jd diff operations. Implementations following these semantics will produce consistent, interoperable results.
+This semantic specification defines the full behavior of jd diff operations. Implementations following these semantics will produce consistent, interoperable results.

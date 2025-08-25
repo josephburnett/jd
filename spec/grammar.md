@@ -1,6 +1,6 @@
 # Structural Format Grammar
 
-This document provides the formal ABNF grammar specification for the structural JSON diff format.
+This document provides the ABNF grammar specification for the structural JSON diff format.
 
 ## Overview
 
@@ -188,8 +188,8 @@ When `COLOR` option is present, implementations MAY add ANSI color codes to chan
 ## Implementation Notes
 
 1. **Parser Requirements**: Must handle UTF-8 encoded text
-2. **Memory Limits**: Implementations MAY impose reasonable limits on nesting depth and value sizes
+2. **Memory Limits**: Implementations MAY impose limits on nesting depth and value sizes (suggested: 1000 levels maximum)
 3. **Error Handling**: Syntax errors SHOULD provide line and column information
 4. **Extensibility**: Unknown options SHOULD be preserved but ignored during processing
 
-This grammar provides the complete syntactic specification for parsing and generating structural diff format. For semantic interpretations of these constructs, see [semantics.md](semantics.md).
+This grammar provides the full syntactic specification for parsing and generating structural diff format. For semantic interpretations of these constructs, see [semantics.md](semantics.md).
