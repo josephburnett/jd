@@ -74,6 +74,7 @@ build-all : test pack-web validate-toolchain
 	cd v2/jd ; GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-arm64-linux main.go
 	cd v2/jd ; GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-arm64-darwin main.go
 	cd v2/jd ; GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-arm64-windows.exe main.go
+	cd v2/jd ; GOOS=linux GOARCH=riscv64 CGO_ENABLED=0 go build -tags include_web -o ../../release/jd-riscv64-linux main.go
 
 .PHONY : build-docker
 build-docker : check-env test
