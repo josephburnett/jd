@@ -14,7 +14,7 @@ outputs:
     description: 'The exit code of the jd command'
 runs:
   using: 'docker'
-  image: 'docker://josephburnett/jd:v2.3.0'
+  image: 'docker://josephburnett/jd:v2.3.1'
   entrypoint: '/jd-github-action'
   args:
     - ${{ inputs.args }}
