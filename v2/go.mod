@@ -7,7 +7,6 @@ toolchain go1.23.12
 require (
 	github.com/go-openapi/jsonpointer v0.21.0
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 	gopkg.in/yaml.v3 v3.0.1
 )
 
