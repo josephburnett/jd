@@ -7,7 +7,7 @@ toolchain go1.23.12
 require (
 	github.com/go-openapi/jsonpointer v0.21.0
 	github.com/josephburnett/jd/v2 v2.0.0-20240818191833-6125a15c637a
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -15,7 +15,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/josephburnett/jd/v2 => ./v2
