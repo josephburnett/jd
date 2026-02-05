@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -239,7 +239,7 @@ func printDiff(a, b string, options []jd.Option) {
 	if *output == "" {
 		fmt.Print(str)
 	} else {
-		ioutil.WriteFile(*output, []byte(str), 0644)
+		os.WriteFile(*output, []byte(str), 0644)
 	}
 	if haveDiff {
 		os.Exit(1)
@@ -414,7 +414,7 @@ func printTranslation(a string) {
 	if *output == "" {
 		fmt.Print(out)
 	} else {
-		ioutil.WriteFile(*output, []byte(out), 0644)
+		os.WriteFile(*output, []byte(out), 0644)
 	}
 	os.Exit(0)
 }
@@ -429,7 +429,7 @@ func errorfAndExit(msg string, args ...interface{}) {
 }
 
 func readFile(filename string) string {
-	bytes, err := ioutil.ReadFile(filename)
+	bytes, err := os.ReadFile(filename)
 	if err != nil {
 		log.Print(err.Error())
 		os.Exit(2)
@@ -439,7 +439,7 @@ func readFile(filename string) string {
 
 func readStdin() string {
 	r := bufio.NewReader(os.Stdin)
-	bytes, err := ioutil.ReadAll(r)
+	bytes, err := io.ReadAll(r)
 	if err != nil {
 		log.Print(err.Error())
 		os.Exit(2)

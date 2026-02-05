@@ -3,13 +3,13 @@ package jd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
 // ReadDiffFile reads a file in native jd format.
 func ReadDiffFile(filename string) (Diff, error) {
-	bytes, err := ioutil.ReadFile(filename)
+	bytes, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func errorfAt(lineZeroIndex int, err string, i ...interface{}) (Diff, error) {
 // ReadPatchFile reads a JSON Patch (RFC 6902) from a file. It is subject
 // to the same restrictions as ReadPatchString.
 func ReadPatchFile(filename string) (Diff, error) {
-	bytes, err := ioutil.ReadFile(filename)
+	bytes, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -485,7 +485,7 @@ func readPatchDiffElement(patch []patchElement) (DiffElement, []patchElement, er
 
 // ReadMergeFile reads a JSON Merge Patch (RFC 7386) from a file.
 func ReadMergeFile(filename string) (Diff, error) {
-	bytes, err := ioutil.ReadFile(filename)
+	bytes, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}

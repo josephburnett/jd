@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -133,7 +133,6 @@ const (
 	translateMode mode = "trans"
 )
 
-
 func parseMetadata() ([]jd.Metadata, error) {
 	if *precision != 0.0 && (*set || *mset) {
 		return nil, fmt.Errorf("-precision cannot be used with -set or -mset because they use hashcodes")
@@ -246,7 +245,7 @@ func printDiff(a, b string, metadata []jd.Metadata) {
 	if *output == "" {
 		fmt.Print(str)
 	} else {
-		ioutil.WriteFile(*output, []byte(str), 0644)
+		os.WriteFile(*output, []byte(str), 0644)
 	}
 	if haveDiff {
 		os.Exit(1)
@@ -262,7 +261,7 @@ func printDiffV2(a, b string, options []v2.Option) {
 	if *output == "" {
 		fmt.Print(str)
 	} else {
-		ioutil.WriteFile(*output, []byte(str), 0644)
+		os.WriteFile(*output, []byte(str), 0644)
 	}
 	if haveDiff {
 		os.Exit(1)
@@ -435,7 +434,7 @@ func printPatch(p, a string, metadata []jd.Metadata) {
 	if *output == "" {
 		fmt.Print(out)
 	} else {
-		ioutil.WriteFile(*output, []byte(out), 0644)
+		os.WriteFile(*output, []byte(out), 0644)
 	}
 	os.Exit(0)
 }
@@ -478,7 +477,7 @@ func printPatchV2(p, a string, options []v2.Option) {
 	if *output == "" {
 		fmt.Print(out)
 	} else {
-		ioutil.WriteFile(*output, []byte(out), 0644)
+		os.WriteFile(*output, []byte(out), 0644)
 	}
 	os.Exit(0)
 }
@@ -534,7 +533,7 @@ func printTranslation(a string) {
 	if *output == "" {
 		fmt.Print(out)
 	} else {
-		ioutil.WriteFile(*output, []byte(out), 0644)
+		os.WriteFile(*output, []byte(out), 0644)
 	}
 	os.Exit(0)
 }
@@ -590,7 +589,7 @@ func printTranslationV2(a string) {
 	if *output == "" {
 		fmt.Print(out)
 	} else {
-		ioutil.WriteFile(*output, []byte(out), 0644)
+		os.WriteFile(*output, []byte(out), 0644)
 	}
 	os.Exit(0)
 }
@@ -605,7 +604,7 @@ func errorfAndExit(msg string, args ...interface{}) {
 }
 
 func readFile(filename string) string {
-	bytes, err := ioutil.ReadFile(filename)
+	bytes, err := os.ReadFile(filename)
 	if err != nil {
 		log.Print(err.Error())
 		os.Exit(2)
@@ -615,7 +614,7 @@ func readFile(filename string) string {
 
 func readStdin() string {
 	r := bufio.NewReader(os.Stdin)
-	bytes, err := ioutil.ReadAll(r)
+	bytes, err := io.ReadAll(r)
 	if err != nil {
 		log.Print(err.Error())
 		os.Exit(2)
