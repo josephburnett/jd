@@ -85,10 +85,10 @@ func (d DiffElement) Render(opts ...Option) string {
 	b.WriteString("\n")
 
 	// Check if this is a single string diff. If so, compute the common sequence for a character
-	// level diff.
+	// level diff. If colored output is disabled, we can skip this step.
 	var commonSequence []JsonNode
 	isSingleStringDiff := false
-	if len(d.Remove) == 1 && len(d.Add) == 1 {
+	if isColor && len(d.Remove) == 1 && len(d.Add) == 1 {
 		oldStr, oldOk := d.Remove[0].(jsonString)
 		newStr, newOk := d.Add[0].(jsonString)
 		if oldOk && newOk {
