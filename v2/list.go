@@ -1030,7 +1030,7 @@ func buildMyersEdits(a, b jsonList, trace [][]int, opts *options) []myersEdit {
 
 	// Backtrack through the trace
 	for D := len(trace) - 1; D > 0; D-- {
-		prevV := trace[D-1]
+		prevV := trace[D]
 
 		k := x - y
 
