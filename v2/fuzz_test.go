@@ -58,6 +58,11 @@ var corpus = []string{
 	`{"mixed":[null,true,false,0,1,-1,""]}`,
 	`{"unicode":"测试","emoji":"🔧"}`,
 	`{"empty_string":"","null_value":null,"empty_array":[],"empty_object":{}}`,
+
+	// >10 element arrays to exercise Myers diff code path
+	`[1,2,3,4,5,6,7,8,9,10,11,12]`,
+	`{"data":[1,2,3,4,5,6,7,8,9,10,11,12]}`,
+	`[1,2,3,4,5,6,7,8,9,10,11,99]`,
 }
 
 func FuzzJd(f *testing.F) {

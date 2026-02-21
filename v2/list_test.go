@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -321,6 +322,121 @@ func TestListDiff(t *testing.T) {
 			`+ 4`,
 			`  5`,
 		),
+	},
+	// >10 element arrays to exercise Myers diff code path.
+	{
+		// Single substitution at end (the #112 case).
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[1,2,3,4,5,6,7,8,9,10,99]`,
+		diff: ss(
+			`@ [10]`,
+			`  10`,
+			`- 11`,
+			`+ 99`,
+			`]`,
+		),
+	}, {
+		// Single substitution at beginning.
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[99,2,3,4,5,6,7,8,9,10,11]`,
+		diff: ss(
+			`@ [0]`,
+			`[`,
+			`- 1`,
+			`+ 99`,
+			`  2`,
+		),
+	}, {
+		// Single substitution in middle.
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[1,2,3,4,5,99,7,8,9,10,11]`,
+		diff: ss(
+			`@ [5]`,
+			`  5`,
+			`- 6`,
+			`+ 99`,
+			`  7`,
+		),
+	}, {
+		// Multiple scattered substitutions.
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[1,99,3,4,5,6,7,98,9,10,97]`,
+		diff: ss(
+			`@ [1]`,
+			`  1`,
+			`- 2`,
+			`+ 99`,
+			`  3`,
+			`@ [7]`,
+			`  7`,
+			`- 8`,
+			`+ 98`,
+			`  9`,
+			`@ [10]`,
+			`  10`,
+			`- 11`,
+			`+ 97`,
+			`]`,
+		),
+	}, {
+		// Deletion from end.
+		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+		b: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		diff: ss(
+			`@ [11]`,
+			`  11`,
+			`- 12`,
+			`]`,
+		),
+	}, {
+		// Deletion from beginning.
+		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+		b: `[2,3,4,5,6,7,8,9,10,11,12]`,
+		diff: ss(
+			`@ [0]`,
+			`[`,
+			`- 1`,
+			`  2`,
+		),
+	}, {
+		// Insertion at end.
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+		diff: ss(
+			`@ [11]`,
+			`  11`,
+			`+ 12`,
+			`]`,
+		),
+	}, {
+		// Insertion at beginning.
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[0,1,2,3,4,5,6,7,8,9,10,11]`,
+		diff: ss(
+			`@ [0]`,
+			`[`,
+			`+ 0`,
+			`  1`,
+		),
+	}, {
+		// Mixed insert + delete (different lengths).
+		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+		b: `[1,3,4,5,6,7,8,9,10,11,12,13]`,
+		diff: ss(
+			`@ [1]`,
+			`  1`,
+			`- 2`,
+			`  3`,
+			`@ [11]`,
+			`  12`,
+			`+ 13`,
+			`]`,
+		),
+	}, {
+		// Identical arrays (no diff expected).
+		a:    `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b:    `[1,2,3,4,5,6,7,8,9,10,11]`,
+		diff: ss(),
 	}}
 
 	for _, tt := range tests {
@@ -619,6 +735,111 @@ func TestListPatch(t *testing.T) {
 			`+ 4`,
 			`  5`,
 		),
+	},
+	// >10 element arrays to exercise Myers diff code path.
+	{
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[1,2,3,4,5,6,7,8,9,10,99]`,
+		diff: ss(
+			`@ [10]`,
+			`  10`,
+			`- 11`,
+			`+ 99`,
+			`]`,
+		),
+	}, {
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[99,2,3,4,5,6,7,8,9,10,11]`,
+		diff: ss(
+			`@ [0]`,
+			`[`,
+			`- 1`,
+			`+ 99`,
+			`  2`,
+		),
+	}, {
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[1,2,3,4,5,99,7,8,9,10,11]`,
+		diff: ss(
+			`@ [5]`,
+			`  5`,
+			`- 6`,
+			`+ 99`,
+			`  7`,
+		),
+	}, {
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[1,99,3,4,5,6,7,98,9,10,97]`,
+		diff: ss(
+			`@ [1]`,
+			`  1`,
+			`- 2`,
+			`+ 99`,
+			`  3`,
+			`@ [7]`,
+			`  7`,
+			`- 8`,
+			`+ 98`,
+			`  9`,
+			`@ [10]`,
+			`  10`,
+			`- 11`,
+			`+ 97`,
+			`]`,
+		),
+	}, {
+		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+		b: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		diff: ss(
+			`@ [11]`,
+			`  11`,
+			`- 12`,
+			`]`,
+		),
+	}, {
+		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+		b: `[2,3,4,5,6,7,8,9,10,11,12]`,
+		diff: ss(
+			`@ [0]`,
+			`[`,
+			`- 1`,
+			`  2`,
+		),
+	}, {
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+		diff: ss(
+			`@ [11]`,
+			`  11`,
+			`+ 12`,
+			`]`,
+		),
+	}, {
+		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b: `[0,1,2,3,4,5,6,7,8,9,10,11]`,
+		diff: ss(
+			`@ [0]`,
+			`[`,
+			`+ 0`,
+			`  1`,
+		),
+	}, {
+		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+		b: `[1,3,4,5,6,7,8,9,10,11,12,13]`,
+		diff: ss(
+			`@ [1]`,
+			`  1`,
+			`- 2`,
+			`  3`,
+			`@ [11]`,
+			`  12`,
+			`+ 13`,
+			`]`,
+		),
+	}, {
+		a:    `[1,2,3,4,5,6,7,8,9,10,11]`,
+		b:    `[1,2,3,4,5,6,7,8,9,10,11]`,
+		diff: ss(),
 	}}
 
 	for _, tt := range tests {
@@ -748,6 +969,162 @@ func TestListPatchError(t *testing.T) {
 		t.Run(tt.a, func(t *testing.T) {
 			ctx := newTestContext(t)
 			checkPatchError(ctx, tt.a, tt.diff...)
+		})
+	}
+}
+
+func TestMyersRoundtrip(t *testing.T) {
+	// makeArray builds a jsonList of sequential numbers [1, 2, ..., n].
+	makeArray := func(n int) jsonList {
+		a := make(jsonList, n)
+		for i := range a {
+			a[i] = jsonNumber(i + 1)
+		}
+		return a
+	}
+
+	// copyArray returns a shallow copy of a jsonList.
+	copyArray := func(a jsonList) jsonList {
+		c := make(jsonList, len(a))
+		copy(c, a)
+		return c
+	}
+
+	type scenario struct {
+		name string
+		a, b jsonList
+	}
+
+	var scenarios []scenario
+
+	for _, size := range []int{11, 25, 50, 100} {
+		base := makeArray(size)
+
+		// Identical arrays.
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("identical_%d", size),
+			a:    base,
+			b:    copyArray(base),
+		})
+
+		// Single substitution at end.
+		b := copyArray(base)
+		b[size-1] = jsonNumber(-1)
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("sub_end_%d", size),
+			a:    base,
+			b:    b,
+		})
+
+		// Single substitution at beginning.
+		b = copyArray(base)
+		b[0] = jsonNumber(-1)
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("sub_begin_%d", size),
+			a:    base,
+			b:    b,
+		})
+
+		// Single substitution in middle.
+		b = copyArray(base)
+		b[size/2] = jsonNumber(-1)
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("sub_mid_%d", size),
+			a:    base,
+			b:    b,
+		})
+
+		// 10% scattered substitutions.
+		b = copyArray(base)
+		for i := 0; i < size; i += 10 {
+			b[i] = jsonNumber(-i)
+		}
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("sub_10pct_%d", size),
+			a:    base,
+			b:    b,
+		})
+
+		// 50% scattered substitutions.
+		b = copyArray(base)
+		for i := 0; i < size; i += 2 {
+			b[i] = jsonNumber(-i)
+		}
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("sub_50pct_%d", size),
+			a:    base,
+			b:    b,
+		})
+
+		// Deletion from end.
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("del_end_%d", size),
+			a:    base,
+			b:    copyArray(base[:size-1]),
+		})
+
+		// Deletion from beginning.
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("del_begin_%d", size),
+			a:    base,
+			b:    copyArray(base[1:]),
+		})
+
+		// Deletion from middle.
+		b = append(copyArray(base[:size/2]), base[size/2+1:]...)
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("del_mid_%d", size),
+			a:    base,
+			b:    b,
+		})
+
+		// Insertion at end.
+		b = append(copyArray(base), jsonNumber(-1))
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("ins_end_%d", size),
+			a:    base,
+			b:    b,
+		})
+
+		// Insertion at beginning.
+		b = append(jsonList{jsonNumber(-1)}, base...)
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("ins_begin_%d", size),
+			a:    base,
+			b:    b,
+		})
+
+		// Insertion in middle.
+		b = make(jsonList, 0, size+1)
+		b = append(b, base[:size/2]...)
+		b = append(b, jsonNumber(-1))
+		b = append(b, base[size/2:]...)
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("ins_mid_%d", size),
+			a:    base,
+			b:    b,
+		})
+
+		// Mixed: delete from beginning, insert at end.
+		b = append(copyArray(base[1:]), jsonNumber(-1))
+		scenarios = append(scenarios, scenario{
+			name: fmt.Sprintf("mixed_%d", size),
+			a:    base,
+			b:    b,
+		})
+	}
+
+	for _, sc := range scenarios {
+		t.Run(sc.name, func(t *testing.T) {
+			d := sc.a.Diff(sc.b)
+			patched, err := sc.a.Patch(d)
+			if err != nil {
+				t.Fatalf("patch failed: %v", err)
+			}
+			if !patched.Equals(sc.b) {
+				t.Errorf("roundtrip failed: got %v, want %v",
+					renderJson(patched), renderJson(sc.b))
+			}
 		})
 	}
 }
