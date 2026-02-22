@@ -1,5 +1,5 @@
 # Enforce strict toolchain usage - matches toolchain directive in go.mod
-export GOTOOLCHAIN=go1.23.12
+export GOTOOLCHAIN=go1.24.13
 
 # Toolchain validation target
 .PHONY : validate-toolchain
