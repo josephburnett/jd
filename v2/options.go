@@ -42,6 +42,8 @@ func NewOption(a any) (Option, error) {
 			return MULTISET, nil
 		case "COLOR":
 			return COLOR, nil
+		case "COLOR_WORDS":
+			return COLOR_WORDS, nil
 		case "DIFF_ON":
 			return DIFF_ON, nil
 		case "DIFF_OFF":
@@ -178,6 +180,18 @@ func (o colorOption) MarshalJSON() ([]byte, error) {
 }
 func (o colorOption) UnmarshalJSON(b []byte) error {
 	return unmarshalAsString("COLOR", b)
+}
+
+type colorWordsOption struct{}
+
+var COLOR_WORDS = colorWordsOption{}
+
+func (o colorWordsOption) isOption() {}
+func (o colorWordsOption) MarshalJSON() ([]byte, error) {
+	return json.Marshal("COLOR_WORDS")
+}
+func (o colorWordsOption) UnmarshalJSON(b []byte) error {
+	return unmarshalAsString("COLOR_WORDS", b)
 }
 
 type diffOnOption struct{}
@@ -370,7 +384,7 @@ func refine(o *options, p PathElement) *options {
 	for _, o := range o.retain {
 		switch o := o.(type) {
 		// Global options always to every path.
-		case mergeOption, setOption, multisetOption, colorOption, precisionOption, setKeysOption, diffOnOption, diffOffOption:
+		case mergeOption, setOption, multisetOption, colorOption, colorWordsOption, precisionOption, setKeysOption, diffOnOption, diffOffOption:
 			apply = append(apply, o)
 			retain = append(retain, o)
 			// Update diffing state based on DIFF_ON/DIFF_OFF options

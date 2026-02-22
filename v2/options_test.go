@@ -41,6 +41,9 @@ func TestOptionJSON(t *testing.T) {
 		json:   `[{"@":["foo"],"^":[{"@":["bar"],"^":["SET"]}]}]`,
 		option: PathOption(Path{PathKey("foo")}, PathOption(Path{PathKey("bar")}, SET)),
 	}, {
+		json:   `["COLOR_WORDS"]`,
+		option: COLOR_WORDS,
+	}, {
 		json:   `["DIFF_ON"]`,
 		option: DIFF_ON,
 	}, {

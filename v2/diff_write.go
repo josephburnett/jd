@@ -51,7 +51,8 @@ func colorStringMarshal(str jsonString, commonSequence []JsonNode, colorCode str
 
 func (d DiffElement) Render(opts ...Option) string {
 	o := refine(&options{retain: opts}, nil)
-	isColor := checkOption[colorOption](o)
+	isColorWords := checkOption[colorWordsOption](o)
+	isColor := checkOption[colorOption](o) || isColorWords
 	isMerge := checkOption[mergeOption](o) || d.Metadata.Merge
 	b := bytes.NewBuffer(nil)
 	// Render options from the Options field if present, otherwise fall back to metadata
@@ -83,11 +84,12 @@ func (d DiffElement) Render(opts ...Option) string {
 	b.Write([]byte(d.Path.JsonNode().Json()))
 	b.WriteString("\n")
 
-	// Check if this is a single string diff. If so, compute the common sequence for a character
-	// level diff.
+	// Check if this is a single string diff. If COLOR_WORDS is set, compute the common
+	// sequence for a character-level diff. This LCS is O(n^2) in time and memory so it
+	// is only performed when explicitly requested.
 	var commonSequence []JsonNode
 	isSingleStringDiff := false
-	if len(d.Remove) == 1 && len(d.Add) == 1 {
+	if isColorWords && len(d.Remove) == 1 && len(d.Add) == 1 {
 		oldStr, oldOk := d.Remove[0].(jsonString)
 		newStr, newOk := d.Add[0].(jsonString)
 		if oldOk && newOk {

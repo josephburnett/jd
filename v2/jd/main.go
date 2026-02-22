@@ -22,6 +22,7 @@ const version = "HEAD"
 
 var (
 	color         = flag.Bool("color", false, "Print color diff")
+	colorWords    = flag.Bool("color-words", false, "Print color diff with character-level highlighting")
 	format        = flag.String("f", "", "Diff format (jd, patch, merge)")
 	gitDiffDriver = flag.Bool("git-diff-driver", false, "Use jd as a git diff driver.")
 	mset          = flag.Bool("mset", false, "Arrays as multisets")
@@ -191,6 +192,7 @@ func printUsageAndExit() {
 		``,
 		`Options:`,
 		`  -color       Print color diff.`,
+		`  -color-words Print color diff with character-level highlighting.`,
 		`  -p           Apply patch FILE1 to FILE2 or STDIN.`,
 		`  -o=FILE3     Write to FILE3 instead of STDOUT.`,
 		`  -opts='[]'   JSON array of options. Supports global options and PathOptions.`,
@@ -285,7 +287,9 @@ func diff(a, b string, options []jd.Option) (string, bool, error) {
 	var renderOptions []jd.Option
 	// Include all the original options to show in the header
 	renderOptions = append(renderOptions, options...)
-	if *color {
+	if *colorWords {
+		renderOptions = append(renderOptions, jd.COLOR_WORDS)
+	} else if *color {
 		renderOptions = append(renderOptions, jd.COLOR)
 	}
 	var (

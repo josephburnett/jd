@@ -247,7 +247,7 @@ func checkDiffRender(t *testing.T, a, b string, diffLines ...string) {
 		t.Errorf("%v.diff(%v) = %v. Want %v.", a, b, d, diff)
 	}
 
-	// Test with color
+	// Test with color (line-level only, no character-level LCS)
 	coloredDiff := aJson.diff(bJson, nil, newOptions([]Option{}), strictPatchStrategy).Render(COLOR)
 	strippedDiff := stripAnsiCodes(coloredDiff)
 	expectedDiffWithColorHeader := `^ "COLOR"` + "\n" + diff
@@ -255,8 +255,10 @@ func checkDiffRender(t *testing.T, a, b string, diffLines ...string) {
 		t.Errorf("%v.diff(%v) with color (stripped) = %v. Want %v.", a, b, strippedDiff, expectedDiffWithColorHeader)
 	}
 
-	// Verify that uncolored parts in string diffs match between + and - lines
-	lines := strings.Split(coloredDiff, "\n")
+	// Test with color-words (character-level diff).
+	// Verify that uncolored parts in string diffs match between + and - lines.
+	colorWordsDiff := aJson.diff(bJson, nil, newOptions([]Option{}), strictPatchStrategy).Render(COLOR_WORDS)
+	lines := strings.Split(colorWordsDiff, "\n")
 	var minusLine, plusLine string
 	for i, line := range lines {
 		if len(line) == 0 {
@@ -300,6 +302,72 @@ func removeColoredParts(s string) string {
 		}
 	}
 	return result.String()
+}
+
+func TestDiffRenderColorNoCharDiff(t *testing.T) {
+	// COLOR alone should produce line-level red/green coloring without
+	// character-level ANSI codes inside the string values.
+	a, _ := ReadJsonString(`{"a":"foobar"}`)
+	b, _ := ReadJsonString(`{"a":"foobaz"}`)
+	d := a.Diff(b)
+	rendered := d.Render(COLOR)
+
+	lines := strings.Split(rendered, "\n")
+	for _, line := range lines {
+		if len(line) == 0 {
+			continue
+		}
+		if line[0] == '-' && strings.Contains(line, `"foo`) {
+			// The minus line should be wrapped in red at the line level,
+			// not contain inline color codes within the quoted string.
+			// With line-level coloring: \033[31m- "foobar"\n\033[0m
+			// Character-level would have color codes between individual chars.
+			stripped := stripAnsiCodes(line)
+			if stripped != `- "foobar"` {
+				t.Errorf("COLOR minus line stripped = %q, want %q", stripped, `- "foobar"`)
+			}
+			// Should NOT have color codes inside the quotes (character-level)
+			quoteStart := strings.Index(line, `"`)
+			quoteEnd := strings.LastIndex(line, `"`)
+			if quoteStart >= 0 && quoteEnd > quoteStart {
+				inside := line[quoteStart : quoteEnd+1]
+				if strings.Contains(inside, "\033[31m") || strings.Contains(inside, "\033[32m") {
+					t.Errorf("COLOR should not have character-level coloring inside strings, got: %q", inside)
+				}
+			}
+		}
+	}
+}
+
+func TestDiffRenderColorWordsCharDiff(t *testing.T) {
+	// COLOR_WORDS should produce character-level ANSI highlighting inside
+	// the string values.
+	a, _ := ReadJsonString(`{"a":"foobar"}`)
+	b, _ := ReadJsonString(`{"a":"foobaz"}`)
+	d := a.Diff(b)
+	rendered := d.Render(COLOR_WORDS)
+
+	lines := strings.Split(rendered, "\n")
+	foundCharLevel := false
+	for _, line := range lines {
+		if len(line) == 0 {
+			continue
+		}
+		if line[0] == '-' && strings.Contains(line, "foo") {
+			// Should have color codes inside the string (character-level diff)
+			quoteStart := strings.Index(line, `"`)
+			quoteEnd := strings.LastIndex(line, `"`)
+			if quoteStart >= 0 && quoteEnd > quoteStart {
+				inside := line[quoteStart : quoteEnd+1]
+				if strings.Contains(inside, "\033[31m") {
+					foundCharLevel = true
+				}
+			}
+		}
+	}
+	if !foundCharLevel {
+		t.Errorf("COLOR_WORDS should produce character-level coloring inside strings, got:\n%s", rendered)
+	}
 }
 
 func TestDiffRenderPatch(t *testing.T) {
