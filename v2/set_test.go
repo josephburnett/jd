@@ -324,9 +324,22 @@ func TestSetDiff(t *testing.T) {
 		a: `{"apiVersion":"v1","kind":"Pod","metadata":{"name":"nginx"},"spec":{"containers":[{"name":"nginx","image":"nginx:1.14.2","ports":[{"containerPort":80}]}]}}`,
 		b: `{"apiVersion":"v1","kind":"Pod","metadata":{"name":"nginx"},"spec":{"containers":[{"name":"nginx","image":"nginx:1.14.2","ports":[{"containerPort":8080}]}]}}`,
 		want: ss(
-			`@ ["spec","containers",{"name":"nginx"},"ports",{"name":null},"containerPort"]`,
-			`- 80`,
-			`+ 8080`,
+			`@ ["spec","containers",{"name":"nginx"},"ports",{}]`,
+			`- {"containerPort":80}`,
+			`+ {"containerPort":8080}`,
+		),
+	}, {
+		name: "objects missing all setkeys fields are distinct",
+		options: m(
+			setOption{},
+			SetKeys("id"),
+		),
+		a: `[]`,
+		b: `[{},{"":"0"}]`,
+		want: ss(
+			`@ [{}]`,
+			`+ {}`,
+			`+ {"":"0"}`,
 		),
 	}, {
 		name: "complex set key diff",

@@ -94,7 +94,7 @@ func (o jsonObject) ident(opts *options) [8]byte {
 			hashes = append(hashes, v.hashCode(opts))
 		}
 	}
-	if len(hashes) == 0 {
+	if len(hashes) == 1 {
 		return o.hashCode(opts)
 	}
 	return hashes.combine()
