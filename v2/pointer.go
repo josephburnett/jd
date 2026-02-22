@@ -55,6 +55,8 @@ func writePointer(path []JsonNode) (string, error) {
 			}
 			s := jsonpointer.Escape(string(e))
 			b.WriteString(s)
+		case jsonObject:
+			return "", fmt.Errorf("JSON Pointer does not support set-based paths. Use jd format instead of patch")
 		case jsonArray:
 			return "", fmt.Errorf("JSON Pointer does not support jd metadata")
 		default:

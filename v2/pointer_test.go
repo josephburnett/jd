@@ -1,6 +1,9 @@
 package jd
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestReadPointer(t *testing.T) {
 	tests := []struct {
@@ -107,5 +110,23 @@ func TestReadPointer(t *testing.T) {
 				t.Errorf("Wanted %q. Got %q", tt.input, back)
 			}
 		})
+	}
+}
+
+func TestWritePointerSetPathError(t *testing.T) {
+	// Set-based paths contain jsonObject elements which cannot be
+	// expressed as JSON Pointers (RFC 6901).
+	path := jsonArray{
+		jsonString("moves"),
+		jsonObject{
+			"move": jsonObject{"name": jsonString("mimic")},
+		},
+	}
+	_, err := writePointer(path)
+	if err == nil {
+		t.Fatal("Wanted err for set-based path. Got nil")
+	}
+	if !strings.Contains(err.Error(), "set-based paths") {
+		t.Errorf("Wanted set-based path error. Got %v", err)
 	}
 }
