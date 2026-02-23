@@ -18,7 +18,7 @@ import (
 	"github.com/josephburnett/jd/v2/internal/web/serve"
 )
 
-const version = "HEAD"
+const version = "2.5.0"
 
 var (
 	color         = flag.Bool("color", false, "Print color diff")
