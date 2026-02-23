@@ -360,6 +360,47 @@ func TestSetDiff(t *testing.T) {
 			`- 6`,
 			`+ 7`,
 		),
+	}, {
+		name: "partial setkeys: one key present one missing",
+		options: m(
+			setOption{},
+			SetKeys("id", "name"),
+		),
+		a: `[{"id":"foo","x":1}]`,
+		b: `[{"id":"foo","x":2}]`,
+		want: ss(
+			`@ [{"id":"foo","name":null},"x"]`,
+			`- 1`,
+			`+ 2`,
+		),
+	}, {
+		name: "multiple objects all missing setkeys with different content",
+		options: m(
+			setOption{},
+			SetKeys("id"),
+		),
+		a: `[{"x":1},{"x":2}]`,
+		b: `[{"x":3},{"x":4}]`,
+		want: ss(
+			`@ [{}]`,
+			`- {"x":1}`,
+			`- {"x":2}`,
+			`+ {"x":4}`,
+			`+ {"x":3}`,
+		),
+	}, {
+		name: "setkeys value null vs key missing are same identity",
+		options: m(
+			setOption{},
+			SetKeys("id"),
+		),
+		a: `[{"id":null,"x":1}]`,
+		b: `[{"x":2}]`,
+		want: ss(
+			`@ [{}]`,
+			`- {"id":null,"x":1}`,
+			`+ {"x":2}`,
+		),
 	}}
 
 	for _, c := range cases {
@@ -520,6 +561,32 @@ func TestSetPatch(t *testing.T) {
 	}
 }
 
+func TestNewPathSetKeysMissingKey(t *testing.T) {
+	// When setkeys includes a key not in the object, it should fill null
+	obj := jsonObject{"a": jsonNumber(1)}
+	opts := refine(newOptions([]Option{SetKeys("a", "b")}), PathKey("x"))
+	pk := newPathSetKeys(obj, opts)
+	// "a" should have value 1, "b" should have null
+	if _, ok := pk["a"]; !ok {
+		t.Error("expected key 'a'")
+	}
+	if v, ok := pk["b"]; !ok {
+		t.Error("expected key 'b'")
+	} else if _, isNull := v.(jsonNull); !isNull {
+		t.Errorf("expected jsonNull for missing key, got %T", v)
+	}
+}
+
+func TestSetDiffOff(t *testing.T) {
+	// DIFF_OFF disables set diffing
+	a, _ := ReadJsonString(`{"items":[1,2,3]}`)
+	b, _ := ReadJsonString(`{"items":[1,3,4]}`)
+	d := a.Diff(b, SET, PathOption(Path{PathKey("items")}, DIFF_OFF))
+	if len(d) != 0 {
+		t.Errorf("expected empty diff with DIFF_OFF, got: %v", d.Render())
+	}
+}
+
 func TestSetPatchError(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -566,5 +633,81 @@ func TestSetPatchError(t *testing.T) {
 				withOptions(setOption{})
 			checkPatchError(ctx, c.given, c.patch...)
 		})
+	}
+}
+
+func TestSetPatchErrorPaths(t *testing.T) {
+	tests := []struct {
+		name string
+		node jsonSet
+		diff Diff
+	}{
+		{
+			name: "invalid path element",
+			node: jsonSet{jsonNumber(1)},
+			diff: Diff{{
+				Path:   Path{PathIndex(0)},
+				Remove: []JsonNode{jsonNumber(1)},
+				Add:    []JsonNode{jsonNumber(2)},
+			}},
+		},
+		{
+			name: "setkeys no match",
+			node: jsonSet{jsonObject{"x": jsonNumber(1)}},
+			diff: Diff{{
+				Path:   Path{PathSetKeys{"y": jsonNumber(99)}, PathKey("z")},
+				Remove: []JsonNode{jsonNumber(1)},
+				Add:    []JsonNode{jsonNumber(2)},
+			}},
+		},
+		{
+			name: "identity mismatch",
+			node: jsonSet{jsonNumber(1)},
+			diff: Diff{{
+				Path:   Path{PathSet{}},
+				Remove: []JsonNode{jsonNumber(99)},
+			}},
+		},
+		{
+			name: "multiple values at root",
+			node: jsonSet{jsonNumber(1)},
+			diff: Diff{{
+				Path:   Path{},
+				Remove: []JsonNode{jsonNumber(1), jsonNumber(2)},
+			}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := tt.node.Patch(tt.diff)
+			if err == nil {
+				t.Fatal("expected error")
+			}
+		})
+	}
+}
+
+func TestSetPatchBaseCases(t *testing.T) {
+	// Base case: single value replace at root
+	s := jsonSet{jsonNumber(1), jsonNumber(2)}
+	result, err := s.patch(nil, Path{}, nil,
+		[]JsonNode{s},
+		[]JsonNode{jsonSet{jsonNumber(3)}},
+		nil, strictPatchStrategy)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	expected := jsonSet{jsonNumber(3)}
+	if !result.Equals(expected) {
+		t.Errorf("got %v, want %v", result.Json(), expected.Json())
+	}
+	// Base case: old value mismatch
+	s2 := jsonSet{jsonNumber(1)}
+	_, err = s2.patch(nil, Path{}, nil,
+		[]JsonNode{jsonSet{jsonNumber(99)}},
+		[]JsonNode{jsonSet{jsonNumber(2)}},
+		nil, strictPatchStrategy)
+	if err == nil {
+		t.Fatal("expected error for old value mismatch")
 	}
 }

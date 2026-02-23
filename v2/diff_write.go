@@ -249,7 +249,7 @@ func (d Diff) RenderPatch() (string, error) {
 			prevPath := element.Path.clone()
 			prevPath[len(prevPath)-1] = prevIndex
 			prevPathStr, err := writePointer(prevPath.JsonNode().(jsonArray))
-			if err != nil {
+			if err != nil { //jd:nocover — path was already validated
 				return "", err
 			}
 			patch = append(patch, patchElement{
@@ -277,7 +277,7 @@ func (d Diff) RenderPatch() (string, error) {
 			nextPath := element.Path.clone()
 			nextPath[len(nextPath)-1] = nextIndex
 			nextPathStr, err := writePointer(nextPath.JsonNode().(jsonArray))
-			if err != nil {
+			if err != nil { //jd:nocover — path was already validated
 				return "", err
 			}
 			patch = append(patch, patchElement{
@@ -315,7 +315,7 @@ func (d Diff) RenderPatch() (string, error) {
 		}
 	}
 	patchJson, err := json.Marshal(patch)
-	if err != nil {
+	if err != nil { //jd:nocover — patchElement fields are all JSON-safe types
 		return "", err
 	}
 	return string(patchJson), nil

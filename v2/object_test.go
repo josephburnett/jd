@@ -732,6 +732,20 @@ func TestObjectPatch(t *testing.T) {
 	}
 }
 
+func TestObjectPatchMerge(t *testing.T) {
+	// Merge strategy at base case
+	a, _ := ReadJsonString(`{"a":1,"b":2}`)
+	b, _ := ReadJsonString(`{"a":1,"b":3}`)
+	d := a.Diff(b, MERGE)
+	result, err := a.Patch(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.Equals(b) {
+		t.Errorf("merge patch failed: got %v", result.Json())
+	}
+}
+
 func TestObjectPatchError(t *testing.T) {
 	tests := []struct {
 		name    string

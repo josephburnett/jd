@@ -27,5 +27,8 @@ jobs:
     - name: Test
       run: make test
 
+    - name: Coverage
+      run: make cover
+
     - name: Fuzz
       run: make fuzz

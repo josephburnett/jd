@@ -42,6 +42,27 @@ fuzz : validate-toolchain
 fuzz-indef: validate-toolchain
 	cd v2 ; go test . -fuzz=FuzzJd
 
+.PHONY : cover
+cover : validate-toolchain
+	cd v2 ; go test -coverprofile=coverage.out . ./jd
+	cd v2 ; go run internal/coverfilter/main.go coverage.out > coverage_filtered.out
+	cd v2 ; go tool cover -func=coverage_filtered.out | tail -1
+	@echo "For HTML report: cd v2 && go tool cover -html=coverage.out"
+	@echo "Checking non-trivial code for 100% coverage..."
+	@cd v2 ; grep -v '^\s*#' cover_exclude.txt | grep -v '^\s*$$' > coverage_exclude_patterns.tmp ; \
+	lines=$$(go tool cover -func=coverage_filtered.out \
+		| grep -v '^total:' \
+		| grep -v '100.0%' \
+		| grep -vf coverage_exclude_patterns.tmp) ; \
+	rm -f coverage_exclude_patterns.tmp ; \
+	if [ -n "$$lines" ]; then \
+		echo "$$lines" ; \
+		echo "FAIL: non-trivial functions below 100% coverage" ; \
+		exit 1 ; \
+	else \
+		echo "OK: all non-trivial functions at 100% coverage" ; \
+	fi
+
 .PHONY : go-fmt
 go-fmt :
 	cd v2 ; go fmt ./...

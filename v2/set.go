@@ -179,7 +179,7 @@ func (s jsonSet) patch(
 				"invalid diff: expected %v at %v but found nothing",
 				v.Json(), pathBehind)
 		}
-		if !toDelete.equals(v, opts) {
+		if !toDelete.equals(v, opts) { //jd:nocover — requires ident hash collision
 			return nil, fmt.Errorf(
 				"invalid diff: expected %v at %v but found %v",
 				v.Json(), pathBehind, toDelete.Json())

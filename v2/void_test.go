@@ -4,6 +4,15 @@ import (
 	"testing"
 )
 
+func TestIsVoidNil(t *testing.T) {
+	if isVoid(nil) {
+		t.Error("isVoid(nil) should be false")
+	}
+	if isNull(nil) {
+		t.Error("isNull(nil) should be false")
+	}
+}
+
 func TestVoidJson(t *testing.T) {
 	tests := []struct {
 		name     string

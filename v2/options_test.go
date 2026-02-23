@@ -7,6 +7,130 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestReadOptionsStringErrors(t *testing.T) {
+	// Invalid JSON
+	_, err := ReadOptionsString("not json")
+	if err == nil {
+		t.Fatal("expected error for invalid JSON")
+	}
+	// Not an array
+	_, err = ReadOptionsString(`"string"`)
+	if err == nil {
+		t.Fatal("expected error for non-array")
+	}
+	// Unknown option in array
+	_, err = ReadOptionsString(`["UNKNOWN"]`)
+	if err == nil {
+		t.Fatal("expected error for unknown option")
+	}
+}
+
+func TestNewOptionEdgeCases(t *testing.T) {
+	// Unrecognized string
+	_, err := NewOption("UNKNOWN")
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	// precision with wrong type
+	_, err = NewOption(map[string]any{"precision": "not a number"})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	// setkeys with wrong type
+	_, err = NewOption(map[string]any{"setkeys": "not an array"})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	// setkeys with non-string element
+	_, err = NewOption(map[string]any{"setkeys": []any{42}})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	// Merge: true
+	opt, err := NewOption(map[string]any{"Merge": true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := opt.(mergeOption); !ok {
+		t.Errorf("expected mergeOption, got %T", opt)
+	}
+	// Merge: false
+	_, err = NewOption(map[string]any{"Merge": false})
+	if err == nil {
+		t.Fatal("expected error for Merge:false")
+	}
+	// Merge: wrong type
+	_, err = NewOption(map[string]any{"Merge": "yes"})
+	if err == nil {
+		t.Fatal("expected error for Merge with wrong type")
+	}
+	// Unknown single-key object
+	_, err = NewOption(map[string]any{"unknown": 1})
+	if err == nil {
+		t.Fatal("expected error for unknown key")
+	}
+	// 2-key object with bad ^ type
+	_, err = NewOption(map[string]any{"@": []any{"a"}, "^": "not array"})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	// 2-key object with bad option in ^
+	_, err = NewOption(map[string]any{"@": []any{"a"}, "^": []any{"UNKNOWN"}})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	// 2-key object with unknown key
+	_, err = NewOption(map[string]any{"@": []any{"a"}, "x": "y"})
+	if err == nil {
+		t.Fatal("expected error for unknown key in 2-key object")
+	}
+	// 3-key object
+	_, err = NewOption(map[string]any{"a": 1, "b": 2, "c": 3})
+	if err == nil {
+		t.Fatal("expected error for 3-key object")
+	}
+	// Unsupported base type
+	_, err = NewOption(42.0)
+	if err == nil {
+		t.Fatal("expected error for float64 type")
+	}
+	// Valid 2-key PathOption
+	opt, err = NewOption(map[string]any{"@": []any{"users"}, "^": []any{"SET"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := opt.(pathOption); !ok {
+		t.Errorf("expected pathOption, got %T", opt)
+	}
+}
+
+func TestRefineDiffOnOff(t *testing.T) {
+	// Global DIFF_OFF
+	opts := newOptions([]Option{DIFF_OFF})
+	refined := refine(opts, PathKey("anything"))
+	if refined.diffingOn {
+		t.Error("DIFF_OFF should set diffingOn to false")
+	}
+	// Global DIFF_ON
+	opts = newOptions([]Option{DIFF_OFF, DIFF_ON})
+	refined = refine(opts, PathKey("anything"))
+	if !refined.diffingOn {
+		t.Error("DIFF_ON should set diffingOn back to true")
+	}
+	// PathOption with DIFF_OFF in Then
+	opts = newOptions([]Option{PathOption(Path{PathKey("a")}, DIFF_OFF)})
+	refined = refine(opts, PathKey("a"))
+	if refined.diffingOn {
+		t.Error("PathOption DIFF_OFF should set diffingOn to false")
+	}
+	// PathOption with DIFF_ON in Then
+	opts = newOptions([]Option{DIFF_OFF, PathOption(Path{PathKey("a")}, DIFF_ON)})
+	refined = refine(opts, PathKey("a"))
+	if !refined.diffingOn {
+		t.Error("PathOption DIFF_ON should set diffingOn back to true")
+	}
+}
+
 // strPtr returns a pointer to a string literal
 func strPtr(s string) *string {
 	return &s
@@ -415,5 +539,24 @@ func TestDiffOnOffOption(t *testing.T) {
 				require.NotEmpty(t, diff, "Expected non-empty diff")
 			}
 		})
+	}
+}
+
+func TestRefinePathMultiset(t *testing.T) {
+	// PathOption ending in PathMultiset should infer MULTISET
+	opts := newOptions([]Option{PathOption(Path{PathKey("foo"), PathMultiset{}})})
+	refined := refine(opts, PathKey("foo"))
+	_, found := getOption[multisetOption](refined)
+	if !found {
+		t.Error("expected multisetOption to be applied for PathMultiset")
+	}
+}
+
+func TestRefineEmptyAt(t *testing.T) {
+	// PathOption with empty At and non-nil path element should be skipped
+	opts := newOptions([]Option{PathOption(Path{}, SET)})
+	refined := refine(opts, PathKey("foo"))
+	if checkOption[setOption](refined) {
+		t.Error("expected setOption to NOT be applied for empty At with non-nil path")
 	}
 }

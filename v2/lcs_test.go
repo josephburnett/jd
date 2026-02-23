@@ -110,6 +110,28 @@ func TestLCS(t *testing.T) {
 	}
 }
 
+func TestLCSContextCancellation(t *testing.T) {
+	left := []JsonNode{jsonString("a"), jsonString("b"), jsonString("c")}
+	right := []JsonNode{jsonString("b"), jsonString("c"), jsonString("d")}
+
+	lcs := newLcs(left, right)
+
+	// Pre-cancelled context
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := lcs.IndexPairsContext(ctx)
+	if err == nil {
+		t.Fatal("expected error from cancelled context")
+	}
+
+	lcs2 := newLcs(left, right)
+	_, err = lcs2.ValuesContext(ctx)
+	if err == nil {
+		t.Fatal("expected error from cancelled context")
+	}
+}
+
 func TestContextCancel(t *testing.T) {
 	leftRaw := make([]interface{}, 100000) // takes over 1 sec
 	rightRaw := make([]interface{}, 100000)
@@ -129,5 +151,21 @@ func TestContextCancel(t *testing.T) {
 	_, err := lcs.LengthContext(ctx)
 	if err != context.Canceled {
 		t.Fatalf("unexpected err: %s", err)
+	}
+}
+
+func TestLCSValuesCached(t *testing.T) {
+	a := []JsonNode{jsonString("a"), jsonString("b"), jsonString("c")}
+	b := []JsonNode{jsonString("b"), jsonString("c"), jsonString("d")}
+	l := newLcs(a, b)
+	v1 := l.Values()
+	v2 := l.Values()
+	if len(v1) != len(v2) {
+		t.Fatalf("cached values length mismatch: %d vs %d", len(v1), len(v2))
+	}
+	for i := range v1 {
+		if !v1[i].Equals(v2[i]) {
+			t.Errorf("cached value mismatch at index %d", i)
+		}
 	}
 }

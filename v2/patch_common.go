@@ -44,7 +44,7 @@ func patch(
 		}
 		return o, nil
 	}
-	if len(oldValues) > 1 || len(newValues) > 1 {
+	if len(oldValues) > 1 || len(newValues) > 1 { //jd:nocover — merge patches produce single values
 		return patchErrNonSetDiff(oldValues, newValues, pathBehind)
 	}
 	oldValue := singleValue(oldValues)
@@ -58,7 +58,7 @@ func patch(
 		if !node.Equals(oldValue) {
 			return patchErrExpectValue(oldValue, node, pathBehind)
 		}
-	default:
+	default: //jd:nocover — closed enum
 		return patchErrUnsupportedPatchStrategy(pathBehind, strategy)
 	}
 	return newValue, nil

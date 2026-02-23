@@ -323,121 +323,121 @@ func TestListDiff(t *testing.T) {
 			`  5`,
 		),
 	},
-	// >10 element arrays to exercise Myers diff code path.
-	{
-		// Single substitution at end (the #112 case).
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[1,2,3,4,5,6,7,8,9,10,99]`,
-		diff: ss(
-			`@ [10]`,
-			`  10`,
-			`- 11`,
-			`+ 99`,
-			`]`,
-		),
-	}, {
-		// Single substitution at beginning.
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[99,2,3,4,5,6,7,8,9,10,11]`,
-		diff: ss(
-			`@ [0]`,
-			`[`,
-			`- 1`,
-			`+ 99`,
-			`  2`,
-		),
-	}, {
-		// Single substitution in middle.
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[1,2,3,4,5,99,7,8,9,10,11]`,
-		diff: ss(
-			`@ [5]`,
-			`  5`,
-			`- 6`,
-			`+ 99`,
-			`  7`,
-		),
-	}, {
-		// Multiple scattered substitutions.
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[1,99,3,4,5,6,7,98,9,10,97]`,
-		diff: ss(
-			`@ [1]`,
-			`  1`,
-			`- 2`,
-			`+ 99`,
-			`  3`,
-			`@ [7]`,
-			`  7`,
-			`- 8`,
-			`+ 98`,
-			`  9`,
-			`@ [10]`,
-			`  10`,
-			`- 11`,
-			`+ 97`,
-			`]`,
-		),
-	}, {
-		// Deletion from end.
-		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
-		b: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		diff: ss(
-			`@ [11]`,
-			`  11`,
-			`- 12`,
-			`]`,
-		),
-	}, {
-		// Deletion from beginning.
-		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
-		b: `[2,3,4,5,6,7,8,9,10,11,12]`,
-		diff: ss(
-			`@ [0]`,
-			`[`,
-			`- 1`,
-			`  2`,
-		),
-	}, {
-		// Insertion at end.
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
-		diff: ss(
-			`@ [11]`,
-			`  11`,
-			`+ 12`,
-			`]`,
-		),
-	}, {
-		// Insertion at beginning.
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[0,1,2,3,4,5,6,7,8,9,10,11]`,
-		diff: ss(
-			`@ [0]`,
-			`[`,
-			`+ 0`,
-			`  1`,
-		),
-	}, {
-		// Mixed insert + delete (different lengths).
-		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
-		b: `[1,3,4,5,6,7,8,9,10,11,12,13]`,
-		diff: ss(
-			`@ [1]`,
-			`  1`,
-			`- 2`,
-			`  3`,
-			`@ [11]`,
-			`  12`,
-			`+ 13`,
-			`]`,
-		),
-	}, {
-		// Identical arrays (no diff expected).
-		a:    `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b:    `[1,2,3,4,5,6,7,8,9,10,11]`,
-		diff: ss(),
-	}}
+		// >10 element arrays to exercise Myers diff code path.
+		{
+			// Single substitution at end (the #112 case).
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[1,2,3,4,5,6,7,8,9,10,99]`,
+			diff: ss(
+				`@ [10]`,
+				`  10`,
+				`- 11`,
+				`+ 99`,
+				`]`,
+			),
+		}, {
+			// Single substitution at beginning.
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[99,2,3,4,5,6,7,8,9,10,11]`,
+			diff: ss(
+				`@ [0]`,
+				`[`,
+				`- 1`,
+				`+ 99`,
+				`  2`,
+			),
+		}, {
+			// Single substitution in middle.
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[1,2,3,4,5,99,7,8,9,10,11]`,
+			diff: ss(
+				`@ [5]`,
+				`  5`,
+				`- 6`,
+				`+ 99`,
+				`  7`,
+			),
+		}, {
+			// Multiple scattered substitutions.
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[1,99,3,4,5,6,7,98,9,10,97]`,
+			diff: ss(
+				`@ [1]`,
+				`  1`,
+				`- 2`,
+				`+ 99`,
+				`  3`,
+				`@ [7]`,
+				`  7`,
+				`- 8`,
+				`+ 98`,
+				`  9`,
+				`@ [10]`,
+				`  10`,
+				`- 11`,
+				`+ 97`,
+				`]`,
+			),
+		}, {
+			// Deletion from end.
+			a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+			b: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			diff: ss(
+				`@ [11]`,
+				`  11`,
+				`- 12`,
+				`]`,
+			),
+		}, {
+			// Deletion from beginning.
+			a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+			b: `[2,3,4,5,6,7,8,9,10,11,12]`,
+			diff: ss(
+				`@ [0]`,
+				`[`,
+				`- 1`,
+				`  2`,
+			),
+		}, {
+			// Insertion at end.
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+			diff: ss(
+				`@ [11]`,
+				`  11`,
+				`+ 12`,
+				`]`,
+			),
+		}, {
+			// Insertion at beginning.
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[0,1,2,3,4,5,6,7,8,9,10,11]`,
+			diff: ss(
+				`@ [0]`,
+				`[`,
+				`+ 0`,
+				`  1`,
+			),
+		}, {
+			// Mixed insert + delete (different lengths).
+			a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+			b: `[1,3,4,5,6,7,8,9,10,11,12,13]`,
+			diff: ss(
+				`@ [1]`,
+				`  1`,
+				`- 2`,
+				`  3`,
+				`@ [11]`,
+				`  12`,
+				`+ 13`,
+				`]`,
+			),
+		}, {
+			// Identical arrays (no diff expected).
+			a:    `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b:    `[1,2,3,4,5,6,7,8,9,10,11]`,
+			diff: ss(),
+		}}
 
 	for _, tt := range tests {
 		t.Run(tt.a+tt.b, func(t *testing.T) {
@@ -736,111 +736,111 @@ func TestListPatch(t *testing.T) {
 			`  5`,
 		),
 	},
-	// >10 element arrays to exercise Myers diff code path.
-	{
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[1,2,3,4,5,6,7,8,9,10,99]`,
-		diff: ss(
-			`@ [10]`,
-			`  10`,
-			`- 11`,
-			`+ 99`,
-			`]`,
-		),
-	}, {
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[99,2,3,4,5,6,7,8,9,10,11]`,
-		diff: ss(
-			`@ [0]`,
-			`[`,
-			`- 1`,
-			`+ 99`,
-			`  2`,
-		),
-	}, {
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[1,2,3,4,5,99,7,8,9,10,11]`,
-		diff: ss(
-			`@ [5]`,
-			`  5`,
-			`- 6`,
-			`+ 99`,
-			`  7`,
-		),
-	}, {
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[1,99,3,4,5,6,7,98,9,10,97]`,
-		diff: ss(
-			`@ [1]`,
-			`  1`,
-			`- 2`,
-			`+ 99`,
-			`  3`,
-			`@ [7]`,
-			`  7`,
-			`- 8`,
-			`+ 98`,
-			`  9`,
-			`@ [10]`,
-			`  10`,
-			`- 11`,
-			`+ 97`,
-			`]`,
-		),
-	}, {
-		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
-		b: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		diff: ss(
-			`@ [11]`,
-			`  11`,
-			`- 12`,
-			`]`,
-		),
-	}, {
-		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
-		b: `[2,3,4,5,6,7,8,9,10,11,12]`,
-		diff: ss(
-			`@ [0]`,
-			`[`,
-			`- 1`,
-			`  2`,
-		),
-	}, {
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
-		diff: ss(
-			`@ [11]`,
-			`  11`,
-			`+ 12`,
-			`]`,
-		),
-	}, {
-		a: `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b: `[0,1,2,3,4,5,6,7,8,9,10,11]`,
-		diff: ss(
-			`@ [0]`,
-			`[`,
-			`+ 0`,
-			`  1`,
-		),
-	}, {
-		a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
-		b: `[1,3,4,5,6,7,8,9,10,11,12,13]`,
-		diff: ss(
-			`@ [1]`,
-			`  1`,
-			`- 2`,
-			`  3`,
-			`@ [11]`,
-			`  12`,
-			`+ 13`,
-			`]`,
-		),
-	}, {
-		a:    `[1,2,3,4,5,6,7,8,9,10,11]`,
-		b:    `[1,2,3,4,5,6,7,8,9,10,11]`,
-		diff: ss(),
-	}}
+		// >10 element arrays to exercise Myers diff code path.
+		{
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[1,2,3,4,5,6,7,8,9,10,99]`,
+			diff: ss(
+				`@ [10]`,
+				`  10`,
+				`- 11`,
+				`+ 99`,
+				`]`,
+			),
+		}, {
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[99,2,3,4,5,6,7,8,9,10,11]`,
+			diff: ss(
+				`@ [0]`,
+				`[`,
+				`- 1`,
+				`+ 99`,
+				`  2`,
+			),
+		}, {
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[1,2,3,4,5,99,7,8,9,10,11]`,
+			diff: ss(
+				`@ [5]`,
+				`  5`,
+				`- 6`,
+				`+ 99`,
+				`  7`,
+			),
+		}, {
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[1,99,3,4,5,6,7,98,9,10,97]`,
+			diff: ss(
+				`@ [1]`,
+				`  1`,
+				`- 2`,
+				`+ 99`,
+				`  3`,
+				`@ [7]`,
+				`  7`,
+				`- 8`,
+				`+ 98`,
+				`  9`,
+				`@ [10]`,
+				`  10`,
+				`- 11`,
+				`+ 97`,
+				`]`,
+			),
+		}, {
+			a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+			b: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			diff: ss(
+				`@ [11]`,
+				`  11`,
+				`- 12`,
+				`]`,
+			),
+		}, {
+			a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+			b: `[2,3,4,5,6,7,8,9,10,11,12]`,
+			diff: ss(
+				`@ [0]`,
+				`[`,
+				`- 1`,
+				`  2`,
+			),
+		}, {
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+			diff: ss(
+				`@ [11]`,
+				`  11`,
+				`+ 12`,
+				`]`,
+			),
+		}, {
+			a: `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b: `[0,1,2,3,4,5,6,7,8,9,10,11]`,
+			diff: ss(
+				`@ [0]`,
+				`[`,
+				`+ 0`,
+				`  1`,
+			),
+		}, {
+			a: `[1,2,3,4,5,6,7,8,9,10,11,12]`,
+			b: `[1,3,4,5,6,7,8,9,10,11,12,13]`,
+			diff: ss(
+				`@ [1]`,
+				`  1`,
+				`- 2`,
+				`  3`,
+				`@ [11]`,
+				`  12`,
+				`+ 13`,
+				`]`,
+			),
+		}, {
+			a:    `[1,2,3,4,5,6,7,8,9,10,11]`,
+			b:    `[1,2,3,4,5,6,7,8,9,10,11]`,
+			diff: ss(),
+		}}
 
 	for _, tt := range tests {
 		t.Run(tt.a+tt.b, func(t *testing.T) {
@@ -970,6 +970,81 @@ func TestListPatchError(t *testing.T) {
 			ctx := newTestContext(t)
 			checkPatchError(ctx, tt.a, tt.diff...)
 		})
+	}
+}
+
+func TestListDiffLargeArraysNoCommon(t *testing.T) {
+	// Two large arrays (>100 elements) with no common elements
+	// This triggers shouldUseFastPath's large-array branch
+	aStr := "["
+	bStr := "["
+	for i := 0; i < 110; i++ {
+		if i > 0 {
+			aStr += ","
+			bStr += ","
+		}
+		aStr += fmt.Sprintf("%d", i)
+		bStr += fmt.Sprintf("%d", i+1000)
+	}
+	aStr += "]"
+	bStr += "]"
+	aNode, _ := ReadJsonString(aStr)
+	bNode, _ := ReadJsonString(bStr)
+	d := aNode.Diff(bNode)
+	// Should produce a diff (fast path: complete replacement)
+	if len(d) == 0 {
+		t.Fatal("expected non-empty diff for completely different large arrays")
+	}
+	// Verify round-trip: patch should produce b
+	result, err := aNode.Patch(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.Equals(bNode) {
+		t.Error("patch did not produce expected result")
+	}
+}
+
+func TestListDiffContainerAfterChange(t *testing.T) {
+	// Tests processcontainerDiffEvent: container diff after accumulated changes
+	// [1, {"a":1}] vs [2, {"a":2}]: 1->2 is a replacement, then {"a":1}->{"a":2} is a container diff
+	a, _ := ReadJsonString(`[1,{"a":1}]`)
+	b, _ := ReadJsonString(`[2,{"a":2}]`)
+	d := a.Diff(b)
+	if len(d) == 0 {
+		t.Fatal("expected non-empty diff")
+	}
+	result, err := a.Patch(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.Equals(b) {
+		t.Error("patch did not produce expected result")
+	}
+}
+
+func TestListDiffIdentical(t *testing.T) {
+	// Tests finalizeCurrentDiff when processor is idle (identical lists)
+	a, _ := ReadJsonString(`[1,2,3]`)
+	b, _ := ReadJsonString(`[1,2,3]`)
+	d := a.Diff(b)
+	if len(d) != 0 {
+		t.Errorf("expected empty diff for identical lists, got %v", d.Render())
+	}
+}
+
+func TestListMultisetSameContainerType(t *testing.T) {
+	// Triggers the multiset branch in sameContainerType
+	a, _ := ReadJsonString(`[[1,2],[3,4]]`)
+	b, _ := ReadJsonString(`[[1,3],[3,5]]`)
+	d := a.Diff(b, MULTISET)
+	// Should produce a diff
+	result, err := a.Patch(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.Equals(b, MULTISET) {
+		t.Error("multiset patch did not produce expected result")
 	}
 }
 
@@ -1126,5 +1201,127 @@ func TestMyersRoundtrip(t *testing.T) {
 					renderJson(patched), renderJson(sc.b))
 			}
 		})
+	}
+}
+
+func TestListPatchErrorPaths(t *testing.T) {
+	tests := []struct {
+		name string
+		node jsonList
+		diff Diff
+	}{
+		{
+			name: "multiple values for root replace",
+			node: jsonList{jsonNumber(1)},
+			diff: Diff{{
+				Path:   Path{},
+				Remove: []JsonNode{jsonNumber(1), jsonNumber(2)},
+			}},
+		},
+		{
+			name: "recursive index out of bounds",
+			node: jsonList{jsonNumber(1)},
+			diff: Diff{{
+				Path:   Path{PathIndex(5), PathIndex(0)},
+				Remove: []JsonNode{jsonNumber(1)},
+				Add:    []JsonNode{jsonNumber(2)},
+			}},
+		},
+		{
+			name: "no remove with strict strategy",
+			node: jsonList{jsonNumber(1)},
+			diff: Diff{{
+				Path: Path{},
+				Add:  []JsonNode{jsonNumber(2)},
+			}},
+		},
+		{
+			name: "recursive patch error",
+			node: jsonList{jsonList{jsonNumber(1)}},
+			diff: Diff{{
+				Path:   Path{PathIndex(0), PathIndex(99)},
+				Remove: []JsonNode{jsonNumber(1)},
+				Add:    []JsonNode{jsonNumber(2)},
+			}},
+		},
+		{
+			name: "remove with append index",
+			node: jsonList{jsonNumber(1)},
+			diff: Diff{{
+				Path:   Path{PathIndex(-1)},
+				Remove: []JsonNode{jsonNumber(1)},
+			}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := tt.node.Patch(tt.diff)
+			if err == nil {
+				t.Fatal("expected error")
+			}
+		})
+	}
+}
+
+func TestSameContainerTypeSet(t *testing.T) {
+	a, _ := ReadJsonString(`[1,2]`)
+	b, _ := ReadJsonString(`[3,4]`)
+	opts := refine(newOptions([]Option{SET}), nil)
+	if !sameContainerType(a, b, opts) {
+		t.Error("expected same container type for two arrays with SET")
+	}
+}
+
+func TestSameContainerTypeMultiset(t *testing.T) {
+	a, _ := ReadJsonString(`[1,2]`)
+	b, _ := ReadJsonString(`[3,4]`)
+	opts := refine(newOptions([]Option{MULTISET}), nil)
+	if !sameContainerType(a, b, opts) {
+		t.Error("expected same container type for two arrays with MULTISET")
+	}
+}
+
+func TestListPatchEdgeCases(t *testing.T) {
+	// Multiple remove/add at root path
+	l := jsonList{jsonNumber(1), jsonNumber(2)}
+	_, err := l.patch(nil, Path{}, nil,
+		[]JsonNode{jsonNumber(1), jsonNumber(2)},
+		[]JsonNode{jsonNumber(3), jsonNumber(4)},
+		nil, strictPatchStrategy)
+	if err == nil {
+		t.Fatal("expected error for multiple remove/add at root path")
+	}
+	// Before context with bIndex == -1 and void (should continue)
+	l2 := jsonList{jsonNumber(1), jsonNumber(2)}
+	result, err := l2.patch(nil, Path{PathIndex(0)}, []JsonNode{voidNode{}},
+		[]JsonNode{jsonNumber(1)},
+		[]JsonNode{jsonNumber(3)},
+		nil, strictPatchStrategy)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+	// After context with aIndex == len(l) and void (should continue)
+	l3 := jsonList{jsonNumber(1), jsonNumber(2)}
+	result, err = l3.patch(nil, Path{PathIndex(1)}, nil,
+		[]JsonNode{jsonNumber(2)},
+		nil,
+		[]JsonNode{voidNode{}}, strictPatchStrategy)
+	if err != nil {
+		t.Fatalf("unexpected error for after void context at end: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+	// After context out of bounds (non-void) should error
+	l4 := jsonList{jsonNumber(1)}
+	_, err = l4.patch(nil, Path{PathIndex(0)}, nil,
+		[]JsonNode{jsonNumber(1)},
+		nil,
+		[]JsonNode{jsonNumber(99)}, strictPatchStrategy)
+	if err == nil {
+		t.Fatal("expected error for after context out of bounds")
 	}
 }

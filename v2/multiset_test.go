@@ -366,6 +366,16 @@ func TestMultisetPatch(t *testing.T) {
 	}
 }
 
+func TestMultisetDiffOff(t *testing.T) {
+	// DIFF_OFF disables multiset diffing
+	a, _ := ReadJsonString(`{"items":[1,2,3]}`)
+	b, _ := ReadJsonString(`{"items":[1,3,4]}`)
+	d := a.Diff(b, MULTISET, PathOption(Path{PathKey("items")}, DIFF_OFF))
+	if len(d) != 0 {
+		t.Errorf("expected empty diff with DIFF_OFF, got: %v", d.Render())
+	}
+}
+
 func TestMultisetPatchError(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -401,5 +411,52 @@ func TestMultisetPatchError(t *testing.T) {
 				withOptions(multisetOption{})
 			checkPatchError(ctx, c.given, c.patch...)
 		})
+	}
+}
+
+func TestMultisetPatchMultipleValues(t *testing.T) {
+	// Multiple values at root triggers patchErrNonSetDiff
+	node := jsonMultiset{jsonNumber(1)}
+	d := Diff{{
+		Path:   Path{},
+		Remove: []JsonNode{jsonNumber(1), jsonNumber(2)},
+	}}
+	_, err := node.Patch(d)
+	if err == nil {
+		t.Fatal("expected error for multiple removals")
+	}
+}
+
+func TestMultisetPatchBaseCases(t *testing.T) {
+	// Base case: single value replace at root
+	ms := jsonMultiset{jsonNumber(1), jsonNumber(2)}
+	result, err := ms.patch(nil, Path{}, nil,
+		[]JsonNode{ms},
+		[]JsonNode{jsonMultiset{jsonNumber(3)}},
+		nil, strictPatchStrategy)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	expected := jsonMultiset{jsonNumber(3)}
+	if !result.Equals(expected) {
+		t.Errorf("got %v, want %v", result.Json(), expected.Json())
+	}
+	// Base case: old value mismatch
+	ms2 := jsonMultiset{jsonNumber(1)}
+	_, err = ms2.patch(nil, Path{}, nil,
+		[]JsonNode{jsonMultiset{jsonNumber(99)}},
+		[]JsonNode{jsonMultiset{jsonNumber(2)}},
+		nil, strictPatchStrategy)
+	if err == nil {
+		t.Fatal("expected error for old value mismatch")
+	}
+	// Non-PathMultiset path element error
+	ms3 := jsonMultiset{jsonNumber(1)}
+	_, err = ms3.patch(nil, Path{PathKey("x")}, nil,
+		[]JsonNode{jsonNumber(1)},
+		[]JsonNode{jsonNumber(2)},
+		nil, strictPatchStrategy)
+	if err == nil {
+		t.Fatal("expected error for non-PathMultiset path element")
 	}
 }

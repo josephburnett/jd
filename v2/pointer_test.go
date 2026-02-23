@@ -113,6 +113,36 @@ func TestReadPointer(t *testing.T) {
 	}
 }
 
+func TestWritePointerEdgeCases(t *testing.T) {
+	// -1 index -> "-"
+	path := jsonArray{jsonNumber(-1)}
+	s, err := writePointer(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s != "/-" {
+		t.Errorf("expected /-. got %v", s)
+	}
+	// Numeric string key -> error
+	path = jsonArray{jsonString("123")}
+	_, err = writePointer(path)
+	if err == nil {
+		t.Fatal("expected error for numeric string key")
+	}
+	// "-" string key -> error
+	path = jsonArray{jsonString("-")}
+	_, err = writePointer(path)
+	if err == nil {
+		t.Fatal("expected error for dash key")
+	}
+	// jsonArray in path -> error
+	path = jsonArray{jsonArray{}}
+	_, err = writePointer(path)
+	if err == nil {
+		t.Fatal("expected error for array in path")
+	}
+}
+
 func TestWritePointerSetPathError(t *testing.T) {
 	// Set-based paths contain jsonObject elements which cannot be
 	// expressed as JSON Pointers (RFC 6901).
@@ -128,5 +158,13 @@ func TestWritePointerSetPathError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "set-based paths") {
 		t.Errorf("Wanted set-based path error. Got %v", err)
+	}
+}
+
+func TestWritePointerDefaultType(t *testing.T) {
+	// unsupported type like jsonBool should error
+	_, err := writePointer(jsonArray{jsonBool(true)})
+	if err == nil {
+		t.Fatal("expected error for unsupported type in pointer path")
 	}
 }
