@@ -413,6 +413,25 @@ func TestReadDiffLegacyMetadata(t *testing.T) {
 	require.True(t, d[0].Metadata.Merge)
 }
 
+func TestReadDiffFileMetadata(t *testing.T) {
+	input := "^ {\"file\":\"example.json\"}\n@ [\"a\"]\n- 1\n+ 2\n"
+	d, err := ReadDiffString(input)
+	require.NoError(t, err)
+	require.Len(t, d, 1)
+	require.Len(t, d[0].Options, 1)
+	fo, ok := d[0].Options[0].(fileOption)
+	require.True(t, ok)
+	require.Equal(t, "example.json", fo.file)
+}
+
+func TestReadDiffUnknownMetadataSkipped(t *testing.T) {
+	input := "^ {\"unknown_key\":\"value\"}\n@ [\"a\"]\n- 1\n+ 2\n"
+	d, err := ReadDiffString(input)
+	require.NoError(t, err)
+	require.Len(t, d, 1)
+	// The unknown ^ line was silently skipped
+}
+
 func TestReadDiffDuplicateMergeOption(t *testing.T) {
 	// Duplicate MERGE option — exercises the isMerge check in duplicate detection
 	input := "^ \"MERGE\"\n^ \"MERGE\"\n@ [\"a\"]\n- 1\n+ 2\n"

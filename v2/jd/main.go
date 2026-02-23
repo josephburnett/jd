@@ -234,6 +234,7 @@ func printUsageAndExit() {
 }
 
 func printDiff(a, b string, options []jd.Option) {
+	options = append([]jd.Option{jd.File(flag.Arg(0))}, options...)
 	str, haveDiff, err := diff(a, b, options)
 	if err != nil {
 		errorAndExit(err)
@@ -253,6 +254,7 @@ func printGitDiffDriver(options []jd.Option) error {
 	if len(flag.Args()) != 7 {
 		return fmt.Errorf("Git diff driver expects exactly 7 arguments.")
 	}
+	options = append([]jd.Option{jd.File(flag.Arg(0))}, options...)
 	a := readFile(flag.Arg(1))
 	b := readFile(flag.Arg(4))
 	str, _, err := diff(a, b, options)

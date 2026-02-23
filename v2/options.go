@@ -78,6 +78,12 @@ func NewOption(a any) (Option, error) {
 						keys = append(keys, key)
 					}
 					return SetKeys(keys...), nil
+				case "file":
+					s, ok := v.(string)
+					if !ok {
+						return nil, fmt.Errorf("wanted string. got %T", v)
+					}
+					return File(s), nil
 				case "Merge":
 					b, ok := v.(bool)
 					if !ok {
@@ -251,6 +257,21 @@ func PathOption(at Path, then ...Option) Option {
 	return pathOption{at, then}
 }
 func (o pathOption) isOption() {}
+
+type fileOption struct {
+	file string
+}
+
+func File(path string) Option {
+	return fileOption{file: path}
+}
+
+func (o fileOption) isOption() {}
+func (o fileOption) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]string{
+		"file": o.file,
+	})
+}
 
 type setKeysOption []string
 

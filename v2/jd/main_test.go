@@ -25,12 +25,13 @@ func TestMain(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name     string
-		files    map[string]string
-		args     []string
-		exitCode int
-		out      *string
-		outFile  string
+		name           string
+		files          map[string]string
+		args           []string
+		exitCode       int
+		out            *string
+		outFile        string
+		wantFileHeader string // if set, verify output starts with ^ {"file":"...<this>"}
 	}{{
 		name: "no diff",
 		files: map[string]string{
@@ -52,7 +53,8 @@ func TestMain(t *testing.T) {
 			`- "bar"`,
 			`+ "baz"`,
 		)),
-		exitCode: 1,
+		exitCode:       1,
+		wantFileHeader: "a.json",
 	}, {
 		name: "no diff in patch mode",
 		files: map[string]string{
@@ -145,8 +147,24 @@ func TestMain(t *testing.T) {
 			cmd := exec.Command(os.Args[0], "-test.run", testName)
 			cmd.Env = append(os.Environ(), jdFlags+"="+strings.Join(args, " "))
 			out, _ := cmd.CombinedOutput()
-			if tc.out != nil && string(out) != *tc.out {
-				t.Errorf("wanted out %q. got %q", *tc.out, string(out))
+			outStr := string(out)
+			if tc.wantFileHeader != "" {
+				prefix := `^ {"file":"`
+				if !strings.HasPrefix(outStr, prefix) {
+					t.Errorf("wanted file header prefix %q. got %q", prefix, outStr)
+				} else {
+					headerEnd := strings.Index(outStr, "\n")
+					header := outStr[:headerEnd]
+					if !strings.HasSuffix(header, tc.wantFileHeader+`"}`) {
+						t.Errorf("wanted file header ending with %q. got %q", tc.wantFileHeader, header)
+					}
+					outStr = outStr[headerEnd+1:]
+				}
+			}
+			if tc.out != nil {
+				if outStr != *tc.out {
+					t.Errorf("wanted out %q. got %q", *tc.out, outStr)
+				}
 			}
 			if exitCode := cmd.ProcessState.ExitCode(); exitCode != tc.exitCode {
 				t.Errorf("wanted exit code %v. got %v", tc.exitCode, exitCode)

@@ -940,6 +940,23 @@ func TestRenderMergeVoidAdd(t *testing.T) {
 	}
 }
 
+func TestDiffRenderWithFileOption(t *testing.T) {
+	a, err := ReadJsonString(`{"a":1}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := ReadJsonString(`{"a":2}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := a.Diff(b)
+	rendered := d.Render(File("a.json"))
+	want := "^ {\"file\":\"a.json\"}\n@ [\"a\"]\n- 1\n+ 2\n"
+	if rendered != want {
+		t.Errorf("got %q, want %q", rendered, want)
+	}
+}
+
 func TestDiffRenderEmpty(t *testing.T) {
 	// Empty diff with options should produce no output
 	d := Diff{}

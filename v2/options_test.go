@@ -173,6 +173,9 @@ func TestOptionJSON(t *testing.T) {
 	}, {
 		json:   `["DIFF_OFF"]`,
 		option: DIFF_OFF,
+	}, {
+		json:   `[{"file":"example.json"}]`,
+		option: File("example.json"),
 	}}
 	for _, c := range cases {
 		t.Run(c.json, func(t *testing.T) {
@@ -550,6 +553,37 @@ func TestRefinePathMultiset(t *testing.T) {
 	if !found {
 		t.Error("expected multisetOption to be applied for PathMultiset")
 	}
+}
+
+func TestFileOption(t *testing.T) {
+	// NewOption recognizes {"file":"example.json"}
+	opt, err := NewOption(map[string]any{"file": "example.json"})
+	require.NoError(t, err)
+	fo, ok := opt.(fileOption)
+	require.True(t, ok)
+	require.Equal(t, "example.json", fo.file)
+
+	// MarshalJSON produces {"file":"example.json"}
+	b, err := json.Marshal(opt)
+	require.NoError(t, err)
+	require.Equal(t, `{"file":"example.json"}`, string(b))
+
+	// Round-trip: File() -> marshal -> unmarshal via NewOption -> equal
+	opt2 := File("a.json")
+	b2, err := json.Marshal(opt2)
+	require.NoError(t, err)
+	var raw any
+	err = json.Unmarshal(b2, &raw)
+	require.NoError(t, err)
+	opt3, err := NewOption(raw)
+	require.NoError(t, err)
+	fo3, ok := opt3.(fileOption)
+	require.True(t, ok)
+	require.Equal(t, "a.json", fo3.file)
+
+	// Wrong type for file value
+	_, err = NewOption(map[string]any{"file": 42})
+	require.Error(t, err)
 }
 
 func TestRefineEmptyAt(t *testing.T) {
