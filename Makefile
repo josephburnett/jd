@@ -74,7 +74,24 @@ cover : validate-toolchain
 
 .PHONY : go-fmt
 go-fmt :
+	go fmt ./...
 	cd v2 ; go fmt ./...
+
+.PHONY : check-fmt
+check-fmt : validate-toolchain
+	@unformatted=$$(gofmt -l . v2); \
+	if [ -n "$$unformatted" ]; then \
+		echo "Error: unformatted Go files:"; \
+		echo "$$unformatted"; \
+		echo "Run 'make go-fmt' to fix."; \
+		exit 1; \
+	fi; \
+	echo "✓ All Go files formatted"
+
+.PHONY : vet
+vet : validate-toolchain
+	go vet . ./lib
+	cd v2 ; go vet $$(go list ./... 2>/dev/null | grep -v internal/web/ui)
 
 .PHONY : pack-web
 pack-web : build-web validate-toolchain

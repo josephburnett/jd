@@ -21,6 +21,12 @@ jobs:
       with:
         go-version: '1.24'
 
+    - name: Format check
+      run: make check-fmt
+
+    - name: Vet
+      run: make vet
+
     - name: Test
       run: make test
 
