@@ -4,16 +4,13 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/go-openapi/jsonpointer"
 )
 
 func readPointer(s string) (Path, error) {
-	pointer, err := jsonpointer.New(s)
+	tokens, err := jsonPointerParse(s)
 	if err != nil {
 		return nil, err
 	}
-	tokens := pointer.DecodedTokens()
 	path := make(jsonArray, len(tokens))
 	for i, t := range tokens {
 		var element JsonNode
@@ -44,7 +41,7 @@ func writePointer(path []JsonNode) (string, error) {
 			if int(e) == -1 {
 				b.WriteString("-")
 			} else {
-				b.WriteString(jsonpointer.Escape(strconv.Itoa(int(e))))
+				b.WriteString(jsonPointerEscape(strconv.Itoa(int(e))))
 			}
 		case jsonString:
 			if _, err := strconv.Atoi(string(e)); err == nil {
@@ -53,7 +50,7 @@ func writePointer(path []JsonNode) (string, error) {
 			if string(e) == "-" {
 				return "", fmt.Errorf("JSON Pointer does not support object key '-'")
 			}
-			s := jsonpointer.Escape(string(e))
+			s := jsonPointerEscape(string(e))
 			b.WriteString(s)
 		case jsonObject:
 			return "", fmt.Errorf("JSON Pointer does not support set-based paths. Use jd format instead of patch")
@@ -64,4 +61,29 @@ func writePointer(path []JsonNode) (string, error) {
 		}
 	}
 	return b.String(), nil
+}
+
+var jsonPointerUnescaper = strings.NewReplacer("~1", "/", "~0", "~")
+var jsonPointerEscaper = strings.NewReplacer("~", "~0", "/", "~1")
+
+// jsonPointerParse validates and parses a JSON Pointer (RFC 6901) string
+// into decoded reference tokens.
+func jsonPointerParse(s string) ([]string, error) {
+	if s == "" {
+		return nil, nil
+	}
+	if s[0] != '/' {
+		return nil, fmt.Errorf("non-empty JSON pointer must start with '/'")
+	}
+	tokens := strings.Split(s[1:], "/")
+	for i, t := range tokens {
+		tokens[i] = jsonPointerUnescaper.Replace(t)
+	}
+	return tokens, nil
+}
+
+// jsonPointerEscape escapes a reference token per RFC 6901:
+// '~' → '~0', '/' → '~1'.
+func jsonPointerEscape(token string) string {
+	return jsonPointerEscaper.Replace(token)
 }

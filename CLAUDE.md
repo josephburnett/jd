@@ -31,6 +31,15 @@ It is focused on a human-readable diff format but has the ability to read and pr
 - `/lib` - Deprecated v1 library (read-only)
 - `main.go` - Deprecated v1 commandline (read-only)
 
+## Supply Chain Security
+
+- Dependencies MUST be minimal. Do not add new dependencies without justification.
+- GitHub Actions MUST be pinned to full commit SHA with version comment.
+- When bumping Go toolchain: update `GOTOOLCHAIN` in Makefile, `toolchain` in both go.mod
+  files, and `FROM golang:` in Dockerfile. `make validate-toolchain` checks all of these.
+- `wasm_exec.js` is copied from GOROOT at build time — no manual update needed.
+- Run `govulncheck ./...` periodically to check for stdlib and dependency vulns.
+
 ## Advice
 
 - Try and avoid creating temporary files and instead rely on modifying existing unit tests for debugging.

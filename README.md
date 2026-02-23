@@ -565,3 +565,10 @@ kubectl get deployment example -oyaml | jd -yaml -opts='[
 kubectl patch deployment example2 --type json --patch "$(jd -t jd2patch cpu-patch)"
 ```
 
+## Security
+
+To report a vulnerability, see [SECURITY.md](SECURITY.md).
+
+This project uses minimal dependencies, pinned GitHub Actions, and automated
+dependency updates via Dependabot.
+

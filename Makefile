@@ -20,6 +20,15 @@ validate-toolchain :
 		echo "  Please update GOTOOLCHAIN in Makefile to match go.mod"; \
 		exit 1; \
 	fi; \
+	GOMOD_VERSION=$$(grep '^go ' go.mod | awk '{print $$2}' | cut -d. -f1,2); \
+	DOCKER_VERSION=$$(grep '^FROM golang:' Dockerfile | head -1 | sed 's/FROM golang:\([0-9.]*\).*/\1/'); \
+	if [ "$$GOMOD_VERSION" != "$$DOCKER_VERSION" ]; then \
+		echo "Error: Dockerfile Go version does not match go.mod:"; \
+		echo "  Dockerfile: golang:$$DOCKER_VERSION"; \
+		echo "  go.mod go directive: $$GOMOD_VERSION"; \
+		echo "  Please update FROM golang: in Dockerfile to match go.mod"; \
+		exit 1; \
+	fi; \
 	echo "✓ Toolchain validation passed: $$ROOT_TOOLCHAIN"
 
 .PHONY : build
@@ -73,7 +82,7 @@ pack-web : build-web validate-toolchain
 
 .PHONY : build-web
 build-web : validate-toolchain
-	cd v2 ; curl -fsSL https://raw.githubusercontent.com/golang/go/go1.23.12/misc/wasm/wasm_exec.js -o internal/web/assets/wasm_exec.js
+	cp "$$(go env GOROOT)/lib/wasm/wasm_exec.js" v2/internal/web/assets/wasm_exec.js
 	cd v2 ; GOOS=js GOARCH=wasm go build -o internal/web/assets/jd.wasm ./internal/web/ui
 
 .PHONY : serve

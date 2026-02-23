@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // ReadJsonFile reads a file as JSON and constructs a JsonNode.
