@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -108,6 +109,12 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 		return l, nil
 	case jsonArray:
 		return t, nil
+	case json.Number:
+		f, err := t.Float64()
+		if err != nil {
+			return nil, err
+		}
+		return jsonNumber(f), nil
 	case float64:
 		return jsonNumber(t), nil
 	case int:

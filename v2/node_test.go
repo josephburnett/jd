@@ -1,6 +1,7 @@
 package jd
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -243,6 +244,26 @@ func TestNewJsonNode(t *testing.T) {
 			name:  "unicode string",
 			input: "héllo wørld",
 			want:  jsonString("héllo wørld"),
+		},
+		{
+			name:  "json.Number integer",
+			input: json.Number("42"),
+			want:  jsonNumber(42),
+		},
+		{
+			name:  "json.Number float",
+			input: json.Number("3.14"),
+			want:  jsonNumber(3.14),
+		},
+		{
+			name:  "json.Number negative",
+			input: json.Number("-1"),
+			want:  jsonNumber(-1),
+		},
+		{
+			name:    "json.Number invalid",
+			input:   json.Number("not-a-number"),
+			wantErr: true,
 		},
 	}
 
