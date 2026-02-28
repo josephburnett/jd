@@ -72,6 +72,13 @@ cover : validate-toolchain
 		echo "OK: all non-trivial functions at 100% coverage" ; \
 	fi
 
+.PHONY : spec-test
+spec-test : validate-toolchain
+	cd v2 ; go build -o ../spec/test/jd ./jd
+	cd spec/test ; go build -o test-runner .
+	cd spec/test ; ./test-runner -verbose -binary ./jd
+	rm -f spec/test/jd spec/test/test-runner
+
 .PHONY : go-fmt
 go-fmt :
 	go fmt ./...

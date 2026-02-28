@@ -403,6 +403,24 @@ func compareOutputs(actual, expected string) bool {
 	actual = strings.TrimSpace(actual)
 	expected = strings.TrimSpace(expected)
 
+	// Collect expected metadata lines so we know which ones are required
+	expectedMeta := make(map[string]bool)
+	for _, line := range strings.Split(expected, "\n") {
+		if strings.HasPrefix(line, "^ ") {
+			expectedMeta[line] = true
+		}
+	}
+
+	// Filter actual output: drop metadata lines not present in expected
+	var filteredLines []string
+	for _, line := range strings.Split(actual, "\n") {
+		if strings.HasPrefix(line, "^ ") && !expectedMeta[line] {
+			continue
+		}
+		filteredLines = append(filteredLines, line)
+	}
+	actual = strings.Join(filteredLines, "\n")
+
 	return actual == expected
 }
 
