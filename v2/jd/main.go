@@ -139,9 +139,6 @@ func serveWeb(port string) error {
 }
 
 func parseOptions() ([]jd.Option, error) {
-	if *precision != 0.0 && (*set || *mset) {
-		return nil, fmt.Errorf("-precision cannot be used with -set or -mset because they use hashcodes")
-	}
 	options, err := jd.ReadOptionsString(*opts)
 	if err != nil {
 		return nil, err
@@ -170,6 +167,9 @@ func parseOptions() ([]jd.Option, error) {
 	if *precision != 0.0 {
 		options = append(options, jd.Precision(*precision))
 	}
+	if err := jd.ValidateOptions(options); err != nil {
+		return nil, err
+	}
 	return options, nil
 }
 
@@ -187,7 +187,7 @@ func printUsageAndExit() {
 		`beginning of the diff output to show how the diff was produced:`,
 		`  ^ "SET"                     (arrays treated as sets)`,
 		`  ^ {"precision":0.001}       (number comparison precision)`,
-		`  ^ {"setkeys":["id"]}        (object matching keys)`,
+		`  ^ {"keys":["id"]}           (object matching keys)`,
 		`This helps understand diff behavior and enables reproducible results.`,
 		``,
 		`Options:`,
@@ -196,12 +196,12 @@ func printUsageAndExit() {
 		`  -p           Apply patch FILE1 to FILE2 or STDIN.`,
 		`  -o=FILE3     Write to FILE3 instead of STDOUT.`,
 		`  -opts='[]'   JSON array of options. Supports global options and PathOptions.`,
-		`               Global: ["SET"], ["MULTISET"], [{"precision":0.1}], [{"setkeys":["id"]}], ["DIFF_ON"], ["DIFF_OFF"]`,
+		`               Global: ["SET"], ["MULTISET"], [{"precision":0.1}], [{"keys":["id"]}], ["DIFF_ON"], ["DIFF_OFF"]`,
 		`               PathOptions target specific paths: [{"@":["path"],"^":["SET"]}]`,
 		`               Example: [{"@":["users"],"^":["SET"]},{"@":["scores",0],"^":[{"precision":0.1}]}]`,
 		`  -set         Treat arrays as sets. Same as -opts='["SET"]'.`,
 		`  -mset        Treat arrays as multisets (bags). Same as -opts='["MULTISET"]'.`,
-		`  -setkeys     Keys to identify set objects. Same as -opts='[{"setkeys":["key1","key2"]}]'.`,
+		`  -setkeys     Keys to identify set objects. Same as -opts='[{"keys":["key1","key2"]}]'.`,
 		`  -yaml        Read and write YAML instead of JSON.`,
 		`  -port=N      Serve web UI on port N`,
 		`  -precision=N Maximum absolute difference for numbers to be equal.`,

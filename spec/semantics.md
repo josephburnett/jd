@@ -123,9 +123,9 @@ Diff:
 - **Absolute difference**: `|a - b| <= precision`
 - Incompatible with SET/MULTISET (uses hashing)
 
-#### SetKeys
+#### Keys
 ```
-^ {"setkeys": ["id", "name"]}
+^ {"keys": ["id", "name"]}
 ```
 - Defines object matching keys for arrays
 - Objects with same key values are considered identical
@@ -240,12 +240,12 @@ Changes:
 + 4     (add new)
 ```
 
-## Object Matching with SetKeys
+## Object Matching with Keys
 
-For arrays containing objects, SetKeys enables object-level comparison:
+For arrays containing objects, Keys enables object-level comparison:
 
 ```
-^ {"setkeys": ["id"]}
+^ {"keys": ["id"]}
 
 A: [{"id": "user1", "name": "Alice", "age": 25}]
 B: [{"id": "user1", "name": "Alice", "age": 26}]
@@ -266,7 +266,7 @@ Result:
 
 ### Multiple Keys
 ```
-^ {"setkeys": ["type", "id"]}
+^ {"keys": ["type", "id"]}
 ```
 Objects match when ALL specified keys have equal values.
 
@@ -306,9 +306,14 @@ When MERGE option is present:
 - **Invalid JSON**: Malformed JSON values
 - **Type conflicts**: Cannot convert between incompatible types
 
-### Option Conflicts  
-- **Precision with sets**: Precision requires ordering, sets don't preserve order
-- **Conflicting PathOptions**: Multiple incompatible options on same path
+### Option Conflicts
+Options fall into two groups that are mutually exclusive:
+- **Equivalence modifiers**: Options that alter value equality (e.g., `precision`, future case insensitivity)
+- **Set semantics**: Options that use hash-based comparison (`SET`, `MULTISET`)
+
+Implementations MUST reject combinations across these groups because set operations require hash-stable equivalence. The `keys` option belongs to neither group and is compatible with both.
+
+Conflict detection within nested PathOptions is optional; implementations that return `(Diff, error)` can detect conflicts lazily during traversal.
 
 ### Context Errors
 - **Context mismatch**: Expected context doesn't match actual values

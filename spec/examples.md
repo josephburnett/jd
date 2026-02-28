@@ -206,9 +206,9 @@ This document provides complete examples of the structural diff format, demonstr
 + 65.489
 ```
 
-### SetKeys Option
+### Keys Option
 
-**Options:** `[{"setkeys": ["id"]}]`
+**Options:** `[{"keys": ["id"]}]`
 
 **Input A:**
 ```json
@@ -232,7 +232,7 @@ This document provides complete examples of the structural diff format, demonstr
 
 **Diff Output:**
 ```diff
-^ {"setkeys":["id"]}
+^ {"keys":["id"]}
 @ ["users",{"id":1},"status"]
 - "active"
 + "inactive"
@@ -403,11 +403,11 @@ This document provides complete examples of the structural diff format, demonstr
 }
 ```
 
-**Options:** `[{"setkeys": ["id"]}]`
+**Options:** `[{"keys": ["id"]}]`
 
 **Diff Output:**
 ```diff
-^ {"setkeys":["id"]}
+^ {"keys":["id"]}
 @ ["items",{"id":"apple"},"color"]
 - "red"
 + "green"
@@ -663,12 +663,12 @@ This document provides complete examples of the structural diff format, demonstr
 }
 ```
 
-**Options:** `[{"@":["metadata"],"^":["DIFF_OFF"]},{"@":["data","users"],"^":[{"setkeys":["id"]}]}]`
+**Options:** `[{"@":["metadata"],"^":["DIFF_OFF"]},{"@":["data","users"],"^":[{"keys":["id"]}]}]`
 
 **Diff Output:**
 ```diff
 ^ {"@":["metadata"],"^":["DIFF_OFF"]}
-^ {"@":["data","users"],"^":[{"setkeys":["id"]}]}
+^ {"@":["data","users"],"^":[{"keys":["id"]}]}
 @ ["data","total"]
 - 2
 + 3

@@ -621,9 +621,9 @@ func TestDiffElementOptionsRendering(t *testing.T) {
 			want:    `^ {"precision":0.01}` + "\n",
 		},
 		{
-			name:    "setkeys option",
+			name:    "keys option",
 			options: []Option{SetKeys("id", "name")},
-			want:    `^ {"setkeys":["id","name"]}` + "\n",
+			want:    `^ {"keys":["id","name"]}` + "\n",
 		},
 		{
 			name:    "multiple simple options",

@@ -50,22 +50,22 @@
     "expected_output": "^ {\"precision\":0.1}\n@ [\"value\"]\n- 10\n+ 10.2\n"
   },
   {
-    "name": "setkeys_option",
+    "name": "keys_option",
     "description": "Object matching by specified keys",
     "category": "options",
     "content_a": "{\"users\":[{\"id\":1,\"name\":\"Alice\",\"age\":25}]}",
     "content_b": "{\"users\":[{\"id\":1,\"name\":\"Alice\",\"age\":26}]}",
-    "options": [{"setkeys": ["id"]}],
-    "expected_output": "^ {\"setkeys\":[\"id\"]}\n@ [\"users\",{\"id\":1},\"age\"]\n- 25\n+ 26\n"
+    "options": [{"keys": ["id"]}],
+    "expected_output": "^ {\"keys\":[\"id\"]}\n@ [\"users\",{\"id\":1},\"age\"]\n- 25\n+ 26\n"
   },
   {
-    "name": "multiple_setkeys",
+    "name": "multiple_keys",
     "description": "Object matching by multiple keys",
     "category": "options",
     "content_a": "{\"items\":[{\"type\":\"fruit\",\"id\":\"apple\",\"color\":\"red\"}]}",
     "content_b": "{\"items\":[{\"type\":\"fruit\",\"id\":\"apple\",\"color\":\"green\"}]}",
-    "options": [{"setkeys": ["type", "id"]}],
-    "expected_output": "^ {\"setkeys\":[\"type\",\"id\"]}\n@ [\"items\",{\"id\":\"apple\",\"type\":\"fruit\"},\"color\"]\n- \"red\"\n+ \"green\"\n"
+    "options": [{"keys": ["type", "id"]}],
+    "expected_output": "^ {\"keys\":[\"type\",\"id\"]}\n@ [\"items\",{\"id\":\"apple\",\"type\":\"fruit\"},\"color\"]\n- \"red\"\n+ \"green\"\n"
   },
   {
     "name": "opts_json_set",
@@ -145,8 +145,8 @@
     "category": "options",
     "content_a": "[{\"id\": 1, \"name\": \"A\"}, {\"id\": 1, \"name\": \"B\"}]",
     "content_b": "[{\"id\": 1, \"name\": \"C\"}]",
-    "options": [{"setkeys": ["id"]}],
-    "expected_output": "^ {\"setkeys\":[\"id\"]}\n@ [{\"id\":1},\"name\"]\n- \"A\"\n+ \"C\"\n@ [1]\n- {\"id\":1,\"name\":\"B\"}\n"
+    "options": [{"keys": ["id"]}],
+    "expected_output": "^ {\"keys\":[\"id\"]}\n@ [{\"id\":1},\"name\"]\n- \"A\"\n+ \"C\"\n@ [1]\n- {\"id\":1,\"name\":\"B\"}\n"
   },
   {
     "name": "set_with_null_values",

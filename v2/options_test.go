@@ -36,18 +36,26 @@ func TestNewOptionEdgeCases(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	// setkeys with wrong type
-	_, err = NewOption(map[string]any{"setkeys": "not an array"})
+	// keys with wrong type
+	_, err = NewOption(map[string]any{"keys": "not an array"})
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	// setkeys with non-string element
-	_, err = NewOption(map[string]any{"setkeys": []any{42}})
+	// keys with non-string element
+	_, err = NewOption(map[string]any{"keys": []any{42}})
 	if err == nil {
 		t.Fatal("expected error")
+	}
+	// setkeys backward compat
+	opt, err := NewOption(map[string]any{"setkeys": []any{"id"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := opt.(setKeysOption); !ok {
+		t.Errorf("expected setKeysOption, got %T", opt)
 	}
 	// Merge: true
-	opt, err := NewOption(map[string]any{"Merge": true})
+	opt, err = NewOption(map[string]any{"Merge": true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +164,7 @@ func TestOptionJSON(t *testing.T) {
 		json:   `[{"precision":1.01}]`,
 		option: Precision(1.01),
 	}, {
-		json:   `[{"setkeys":["foo","bar"]}]`,
+		json:   `[{"keys":["foo","bar"]}]`,
 		option: SetKeys("foo", "bar"),
 	}, {
 		json:   `[{"@":["foo"],"^":["SET"]}]`,
@@ -294,13 +302,13 @@ func TestPathOption(t *testing.T) {
 		b:    `{"measurements":[10.0, 20.0, 30.44]}`, // index 2 within precision
 	}, {
 		// SetKeys option tests - for objects as sets with specific key matching
-		name: "SetKeys option with id field",
-		opts: `[{"@":["users"],"^":[{"setkeys":["id"]}]}]`,
+		name: "Keys option with id field",
+		opts: `[{"@":["users"],"^":[{"keys":["id"]}]}]`,
 		a:    `{"users":[{"id":"1","name":"Alice"},{"id":"2","name":"Bob"}]}`,
 		b:    `{"users":[{"id":"2","name":"Bob"},{"id":"1","name":"Alice"}]}`, // same objects by id, different order
 	}, {
-		name: "SetKeys option with multiple keys",
-		opts: `[{"@":["items"],"^":[{"setkeys":["type","id"]}]}]`,
+		name: "Keys option with multiple keys",
+		opts: `[{"@":["items"],"^":[{"keys":["type","id"]}]}]`,
 		a:    `{"items":[{"type":"A","id":"1","data":"x"},{"type":"B","id":"2","data":"y"}]}`,
 		b:    `{"items":[{"type":"B","id":"2","data":"y"},{"type":"A","id":"1","data":"x"}]}`, // same by type+id
 	}, {
@@ -584,6 +592,44 @@ func TestFileOption(t *testing.T) {
 	// Wrong type for file value
 	_, err = NewOption(map[string]any{"file": 42})
 	require.Error(t, err)
+}
+
+func TestValidateOptions(t *testing.T) {
+	cases := []struct {
+		name    string
+		opts    []Option
+		wantErr bool
+	}{{
+		name: "SET alone is valid",
+		opts: []Option{SET},
+	}, {
+		name: "precision alone is valid",
+		opts: []Option{Precision(0.01)},
+	}, {
+		name: "SET with SetKeys is valid",
+		opts: []Option{SET, SetKeys("id")},
+	}, {
+		name: "precision with SetKeys is valid",
+		opts: []Option{Precision(0.01), SetKeys("id")},
+	}, {
+		name:    "SET with precision is invalid",
+		opts:    []Option{SET, Precision(0.01)},
+		wantErr: true,
+	}, {
+		name:    "MULTISET with precision is invalid",
+		opts:    []Option{MULTISET, Precision(0.01)},
+		wantErr: true,
+	}}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			err := ValidateOptions(c.opts)
+			if c.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestRefineEmptyAt(t *testing.T) {

@@ -34,21 +34,21 @@
     "expect_error": true
   },
   {
-    "name": "invalid_setkeys_empty",
-    "description": "Empty setkey should cause error",
+    "name": "invalid_keys_empty",
+    "description": "Empty keys should cause error",
     "category": "errors",
     "content_a": "[{\"id\":1}]",
     "content_b": "[{\"id\":2}]",
-    "options": [{"setkeys": []}],
+    "options": [{"keys": []}],
     "expect_error": true
   },
   {
-    "name": "invalid_setkeys_whitespace",
-    "description": "Whitespace-only setkey should cause error",
+    "name": "invalid_keys_whitespace",
+    "description": "Whitespace-only keys should cause error",
     "category": "errors",
     "content_a": "[{\"id\":1}]",
     "content_b": "[{\"id\":2}]",
-    "options": [{"setkeys": [" ", " "]}],
+    "options": [{"keys": [" ", " "]}],
     "expect_error": true
   },
   {

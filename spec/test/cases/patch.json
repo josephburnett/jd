@@ -108,11 +108,11 @@
     "expected_output": "{\"value\":10.5}\n"
   },
   {
-    "name": "patch_setkeys_option",
-    "description": "Patch with SetKeys matches objects by key",
+    "name": "patch_keys_option",
+    "description": "Patch with Keys matches objects by key",
     "category": "patch",
     "operation": "patch",
-    "content_a": "^ {\"setkeys\":[\"id\"]}\n@ [{\"id\":1},\"name\"]\n- \"Alice\"\n+ \"Bob\"\n",
+    "content_a": "^ {\"keys\":[\"id\"]}\n@ [{\"id\":1},\"name\"]\n- \"Alice\"\n+ \"Bob\"\n",
     "content_b": "[{\"id\":1,\"name\":\"Alice\"}]",
     "expected_output": "[{\"id\":1,\"name\":\"Bob\"}]\n"
   },

@@ -64,7 +64,7 @@ func NewOption(a any) (Option, error) {
 					}
 					prec = f
 					return Precision(prec), nil
-				case "setkeys":
+				case "keys", "setkeys":
 					untypedKeys, ok := v.([]any)
 					if !ok {
 						return nil, fmt.Errorf("wanted []string. got %T", v)
@@ -281,11 +281,14 @@ func SetKeys(keys ...string) Option {
 func (o setKeysOption) isOption() {}
 func (o setKeysOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string][]string{
-		"setkeys": []string(o),
+		"keys": []string(o),
 	})
 }
 func (o setKeysOption) UnmarshalJSON(b []byte) error {
-	a, err := unmarshalObjectKeyAs[[]any](b, "setkeys")
+	a, err := unmarshalObjectKeyAs[[]any](b, "keys")
+	if err != nil {
+		a, err = unmarshalObjectKeyAs[[]any](b, "setkeys")
+	}
 	if err != nil {
 		return err
 	}
@@ -359,6 +362,23 @@ func getOption[T Option](opts *options) (*T, bool) {
 		}
 	}
 	return nil, false
+}
+
+func ValidateOptions(opts []Option) error {
+	hasEquivalenceModifier := false
+	hasSetSemantics := false
+	for _, o := range opts {
+		switch o.(type) {
+		case precisionOption:
+			hasEquivalenceModifier = true
+		case setOption, multisetOption:
+			hasSetSemantics = true
+		}
+	}
+	if hasEquivalenceModifier && hasSetSemantics {
+		return fmt.Errorf("precision option is incompatible with set/multiset options because they use hash-based comparison")
+	}
+	return nil
 }
 
 func getPatchStrategy(opts *options) patchStrategy {

@@ -190,7 +190,7 @@ Applied to entire diff operation:
 - **MULTISET**: `^ "MULTISET"` - All arrays treated as multisets (bags)
 - **MERGE**: `^ "MERGE"` - Use JSON Merge Patch semantics (RFC 7386)
 - **Precision**: `^ {"precision":N}` - Numbers within N absolute difference considered equal
-- **SetKeys**: `^ {"setkeys":["key1","key2"]}` - Object matching keys for arrays
+- **Keys**: `^ {"keys":["key1","key2"]}` - Object matching keys for arrays
 
 ### 5.2 PathOptions
 

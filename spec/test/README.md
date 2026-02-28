@@ -60,7 +60,7 @@ Basic diff generation covering all JSON types and structures:
 
 ### `options` and `path_options` (options.json)
 Options system tests:
-- SET, MULTISET, precision, setkeys global options
+- SET, MULTISET, precision, keys global options
 - PathOptions targeting specific paths
 - Multiple PathOptions combinations
 - DIFF_OFF/DIFF_ON filtering
