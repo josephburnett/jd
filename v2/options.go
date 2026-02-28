@@ -69,6 +69,9 @@ func NewOption(a any) (Option, error) {
 					if !ok {
 						return nil, fmt.Errorf("wanted []string. got %T", v)
 					}
+					if len(untypedKeys) == 0 {
+						return nil, fmt.Errorf("keys must not be empty")
+					}
 					keys := []string{}
 					for _, untypedKey := range untypedKeys {
 						key, ok := untypedKey.(string)

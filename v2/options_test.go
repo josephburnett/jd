@@ -46,6 +46,11 @@ func TestNewOptionEdgeCases(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
+	// empty keys
+	_, err = NewOption(map[string]any{"keys": []any{}})
+	if err == nil {
+		t.Fatal("expected error for empty keys")
+	}
 	// setkeys backward compat
 	opt, err := NewOption(map[string]any{"setkeys": []any{"id"}})
 	if err != nil {

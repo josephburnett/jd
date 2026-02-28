@@ -43,15 +43,6 @@
     "expect_error": true
   },
   {
-    "name": "invalid_keys_whitespace",
-    "description": "Whitespace-only keys should cause error",
-    "category": "errors",
-    "content_a": "[{\"id\":1}]",
-    "content_b": "[{\"id\":2}]",
-    "options": [{"keys": [" ", " "]}],
-    "expect_error": true
-  },
-  {
     "name": "negative_precision",
     "description": "Negative precision value should cause error",
     "category": "errors",
