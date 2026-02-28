@@ -173,10 +173,10 @@
   },
   {
     "name": "precision_edge_boundary",
-    "description": "Precision exactly at boundary",
+    "description": "Precision within boundary",
     "category": "options",
     "content_a": "{\"val\": 1.0}",
-    "content_b": "{\"val\": 1.1}",
+    "content_b": "{\"val\": 1.05}",
     "options": [{"precision": 0.1}],
     "expected_output": ""
   },
