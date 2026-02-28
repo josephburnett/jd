@@ -624,6 +624,10 @@ func TestValidateOptions(t *testing.T) {
 		name:    "MULTISET with precision is invalid",
 		opts:    []Option{MULTISET, Precision(0.01)},
 		wantErr: true,
+	}, {
+		name:    "negative precision is invalid",
+		opts:    []Option{Precision(-0.1)},
+		wantErr: true,
 	}}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

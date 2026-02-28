@@ -371,8 +371,11 @@ func ValidateOptions(opts []Option) error {
 	hasEquivalenceModifier := false
 	hasSetSemantics := false
 	for _, o := range opts {
-		switch o.(type) {
+		switch o := o.(type) {
 		case precisionOption:
+			if o.precision < 0 {
+				return fmt.Errorf("precision must not be negative")
+			}
 			hasEquivalenceModifier = true
 		case setOption, multisetOption:
 			hasSetSemantics = true
