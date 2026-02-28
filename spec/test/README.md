@@ -1,6 +1,6 @@
-# jd Blackbox Test Suite
+# jd Spec Test Suite
 
-This directory contains a test suite for validating jd format implementations. The tests are designed to be run against any jd-compatible binary to ensure conformance with the specification.
+This directory contains a test suite for validating jd format implementations. The tests are implementation-agnostic: test cases express format-level concepts (operations, options, expected output) and the test runner maps them to CLI flags for a given binary.
 
 ## Quick Start
 
@@ -36,7 +36,17 @@ Options:
         Timeout per test case (default 30s)
   -fail-fast
         Stop on first failure
+  -opts-flag string
+        Flag for passing options to binary (default "-opts")
+  -patch-flag string
+        Flag for invoking patch mode (default "-p")
+  -error-exit int
+        Exit code meaning error (default 2)
+  -diff-exit int
+        Exit code meaning differences found (default 1)
 ```
+
+The `-opts-flag`, `-patch-flag`, `-error-exit`, and `-diff-exit` flags allow adapting the runner to different CLI implementations that may use different flag names or exit codes.
 
 ## Test Categories
 
@@ -54,7 +64,6 @@ Options system tests:
 - PathOptions targeting specific paths
 - Multiple PathOptions combinations
 - DIFF_OFF/DIFF_ON filtering
-- YAML input mode
 - Edge cases (boundary precision, null values in sets, duplicate keys)
 
 ### `patch` (patch.json)
@@ -68,12 +77,11 @@ Patch application tests:
 - Error cases (context mismatch, invalid syntax)
 
 ### `errors` (errors.json)
-Error condition tests:
+Format-level error condition tests:
 - Malformed JSON input
 - Option conflicts (precision with set/multiset)
 - Invalid option values
 - Patch application failures
-- Resource and argument errors
 
 ## Test Data Structure
 
@@ -105,16 +113,39 @@ Test cases are defined in JSON files with this structure:
   "name": "test_case_name",
   "description": "Human readable description",
   "category": "test_category",
+  "operation": "diff",
   "content_a": "JSON content for input A",
   "content_b": "JSON content for input B",
-  "args": ["-set", "-precision=0.1"],
-  "expected_diff": "expected diff output",
-  "expected_exit": 1,
-  "should_error": false
+  "options": ["SET", {"precision": 0.1}],
+  "expected_output": "expected diff output",
+  "expect_error": false
 }
 ```
 
-Either `content_a`/`content_b` OR `file_a`/`file_b` should be specified, not both.
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Unique test case name |
+| `description` | string | Human readable description |
+| `category` | string | Test category (diff, options, path_options, patch, errors) |
+| `operation` | string | `"diff"` (default if omitted) or `"patch"` |
+| `content_a` | string | First input (JSON document for diff, diff text for patch) |
+| `content_b` | string | Second input (JSON document) |
+| `options` | array | Options using metadata line format (e.g. `["SET"]`, `[{"precision": 0.1}]`) |
+| `expected_output` | string | Expected output from the operation |
+| `accepted_lines` | array | Alternative to `expected_output` for order-insensitive matching |
+| `expect_error` | bool | Whether the operation should produce an error |
+
+Either `content_a`/`content_b` or `file_a`/`file_b` should be specified, not both.
+
+### Exit Code Derivation
+
+Exit codes are not specified in test cases. The runner derives them:
+- `expect_error: true` → expects the configured error exit code (default 2)
+- Diff with non-empty output → expects the configured diff exit code (default 1)
+- Diff with empty output → expects 0
+- Patch (non-error) → expects 0
 
 ## Exit Codes
 
@@ -131,21 +162,49 @@ To add new test cases:
 
 1. **Identify the category** (diff, options, patch, errors)
 2. **Add to appropriate JSON file** in `cases/`
-3. **Provide expected output** for positive test cases
-4. **Set should_error: true** for negative test cases
-5. **Test your test** by running it against the reference implementation
+3. **Set `operation`** to `"patch"` for patch tests (diff is default)
+4. **Use `options`** for format-level options (not CLI flags)
+5. **Provide `expected_output`** for positive test cases
+6. **Set `expect_error: true`** for negative test cases
+7. **Test your test** by running it against the reference implementation
 
-### Example Test Case
+### Example Test Cases
 
+Diff test:
 ```json
 {
-  "name": "my_new_test",
-  "description": "Tests a specific edge case I discovered",
+  "name": "my_diff_test",
+  "description": "Tests a specific edge case",
   "category": "diff",
   "content_a": "{\"test\": \"value\"}",
   "content_b": "{\"test\": \"modified\"}",
-  "expected_diff": "@ [\"test\"]\n- \"value\"\n+ \"modified\"\n",
-  "expected_exit": 1
+  "expected_output": "@ [\"test\"]\n- \"value\"\n+ \"modified\"\n"
+}
+```
+
+Options test:
+```json
+{
+  "name": "my_set_test",
+  "description": "Tests set comparison",
+  "category": "options",
+  "content_a": "[1, 2, 3]",
+  "content_b": "[3, 1, 2]",
+  "options": ["SET"],
+  "expected_output": ""
+}
+```
+
+Patch test:
+```json
+{
+  "name": "my_patch_test",
+  "description": "Tests patch application",
+  "category": "patch",
+  "operation": "patch",
+  "content_a": "@ [\"a\"]\n- 1\n+ 2\n",
+  "content_b": "{\"a\":1}",
+  "expected_output": "{\"a\":2}\n"
 }
 ```
 
@@ -159,7 +218,6 @@ Based on testing the reference implementation, watch out for:
 4. **Unicode handling** - Ensure proper UTF-8 encoding/decoding
 5. **Option conflicts** - Detect precision with set/multiset conflicts
 6. **Path resolution** - Handle edge cases in path element parsing
-7. **Error exit codes** - Use appropriate exit codes for different error types
 
 ## Performance Testing
 

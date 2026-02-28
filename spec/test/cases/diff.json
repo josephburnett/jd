@@ -5,376 +5,292 @@
     "category": "diff",
     "content_a": "{\"a\":1}",
     "content_b": "{\"a\":2}",
-    "expected_diff": "@ [\"a\"]\n- 1\n+ 2\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"a\"]\n- 1\n+ 2\n"  },
   {
     "name": "nested_object_value_change",
     "description": "Change value in nested object",
     "category": "diff",
     "content_a": "{\"a\":{\"b\":1}}",
     "content_b": "{\"a\":{\"b\":2}}",
-    "expected_diff": "@ [\"a\",\"b\"]\n- 1\n+ 2\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"a\",\"b\"]\n- 1\n+ 2\n"  },
   {
     "name": "array_element_change",
     "description": "Change array element with context",
     "category": "diff",
     "content_a": "{\"foo\":[\"bar\",\"baz\"]}",
     "content_b": "{\"foo\":[\"bar\",\"boom\"]}",
-    "expected_diff": "@ [\"foo\",1]\n  \"bar\"\n- \"baz\"\n+ \"boom\"\n]\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"foo\",1]\n  \"bar\"\n- \"baz\"\n+ \"boom\"\n]\n"  },
   {
     "name": "string_value_change",
     "description": "Simple string property change",
     "category": "diff",
     "content_a": "{\"a\":\"bar\"}",
     "content_b": "{\"a\":\"baz\"}",
-    "expected_diff": "@ [\"a\"]\n- \"bar\"\n+ \"baz\"\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"a\"]\n- \"bar\"\n+ \"baz\"\n"  },
   {
     "name": "object_to_null",
     "description": "Replace object with null",
     "category": "diff",
     "content_a": "{\"a\":1}",
     "content_b": "null",
-    "expected_diff": "@ []\n- {\"a\":1}\n+ null\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ []\n- {\"a\":1}\n+ null\n"  },
   {
     "name": "null_to_object",
     "description": "Replace null with object",
     "category": "diff",
     "content_a": "null",
     "content_b": "{\"a\":1}",
-    "expected_diff": "@ []\n- null\n+ {\"a\":1}\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ []\n- null\n+ {\"a\":1}\n"  },
   {
     "name": "object_to_array",
     "description": "Replace object with array",
     "category": "diff",
     "content_a": "{\"a\":1}",
     "content_b": "[1]",
-    "expected_diff": "@ []\n- {\"a\":1}\n+ [1]\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ []\n- {\"a\":1}\n+ [1]\n"  },
   {
     "name": "array_to_object",
     "description": "Replace array with object",
     "category": "diff",
     "content_a": "[1]",
     "content_b": "{\"a\":1}",
-    "expected_diff": "@ []\n- [1]\n+ {\"a\":1}\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ []\n- [1]\n+ {\"a\":1}\n"  },
   {
     "name": "boolean_to_number",
     "description": "Type change from boolean to number",
     "category": "diff",
     "content_a": "true",
     "content_b": "1",
-    "expected_diff": "@ []\n- true\n+ 1\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ []\n- true\n+ 1\n"  },
   {
     "name": "string_to_boolean",
     "description": "Type change from string to boolean",
     "category": "diff",
     "content_a": "\"true\"",
     "content_b": "true",
-    "expected_diff": "@ []\n- \"true\"\n+ true\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ []\n- \"true\"\n+ true\n"  },
   {
     "name": "identical_documents",
     "description": "No differences between identical documents",
     "category": "diff",
     "content_a": "{\"a\":1,\"b\":2}",
     "content_b": "{\"a\":1,\"b\":2}",
-    "expected_diff": "",
-    "expected_exit": 0
-  },
+    "expected_output": ""  },
   {
     "name": "array_append",
     "description": "Add element to end of array",
     "category": "diff",
     "content_a": "[1,2]",
     "content_b": "[1,2,3]",
-    "expected_diff": "@ [2]\n  2\n+ 3\n]\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [2]\n  2\n+ 3\n]\n"  },
   {
     "name": "array_prepend",
     "description": "Add element to beginning of array",
     "category": "diff",
     "content_a": "[2,3]",
     "content_b": "[1,2,3]",
-    "expected_diff": "@ [0]\n[\n+ 1\n  2\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [0]\n[\n+ 1\n  2\n"  },
   {
     "name": "object_key_addition",
     "description": "Add new property to object",
     "category": "diff",
     "content_a": "{\"a\":1}",
     "content_b": "{\"a\":1,\"b\":2}",
-    "expected_diff": "@ [\"b\"]\n+ 2\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"b\"]\n+ 2\n"  },
   {
     "name": "object_key_removal",
     "description": "Remove property from object",
     "category": "diff",
     "content_a": "{\"a\":1,\"b\":2}",
     "content_b": "{\"a\":1}",
-    "expected_diff": "@ [\"b\"]\n- 2\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"b\"]\n- 2\n"  },
   {
     "name": "unicode_strings",
     "description": "Handle Unicode strings properly",
     "category": "diff",
     "content_a": "{\"text\":\"\u3053\u3093\u306b\u3061\u306f\"}",
     "content_b": "{\"text\":\"\u3055\u3088\u3046\u306a\u3089\"}",
-    "expected_diff": "@ [\"text\"]\n- \"\u3053\u3093\u306b\u3061\u306f\"\n+ \"\u3055\u3088\u3046\u306a\u3089\"\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"text\"]\n- \"\u3053\u3093\u306b\u3061\u306f\"\n+ \"\u3055\u3088\u3046\u306a\u3089\"\n"  },
   {
     "name": "empty_to_value",
     "description": "Add value from empty/void state",
     "category": "diff",
     "content_a": "",
     "content_b": "42",
-    "expected_diff": "@ []\n+ 42\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ []\n+ 42\n"  },
   {
     "name": "value_to_empty",
     "description": "Remove value to empty/void state",
     "category": "diff",
     "content_a": "42",
     "content_b": "",
-    "expected_diff": "@ []\n- 42\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ []\n- 42\n"  },
   {
     "name": "complex_array_context",
     "description": "Array changes with proper context preservation",
     "category": "diff",
     "content_a": "[\"apple\",\"banana\",\"cherry\",\"date\"]",
     "content_b": "[\"apple\",\"blueberry\",\"cranberry\",\"date\"]",
-    "expected_diff": "@ [1]\n  \"apple\"\n- \"banana\"\n- \"cherry\"\n+ \"blueberry\"\n+ \"cranberry\"\n  \"date\"\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [1]\n  \"apple\"\n- \"banana\"\n- \"cherry\"\n+ \"blueberry\"\n+ \"cranberry\"\n  \"date\"\n"  },
   {
     "name": "empty_objects",
     "description": "Diff between empty objects",
     "category": "diff",
     "content_a": "{}",
     "content_b": "{}",
-    "expected_diff": "",
-    "expected_exit": 0
-  },
+    "expected_output": ""  },
   {
     "name": "empty_arrays",
     "description": "Diff between empty arrays",
     "category": "diff",
     "content_a": "[]",
     "content_b": "[]",
-    "expected_diff": "",
-    "expected_exit": 0
-  },
+    "expected_output": ""  },
   {
     "name": "null_values",
     "description": "Diff with null values",
     "category": "diff",
     "content_a": "{\"a\": null}",
     "content_b": "{\"a\": null}",
-    "expected_diff": "",
-    "expected_exit": 0
-  },
+    "expected_output": ""  },
   {
     "name": "null_to_value",
     "description": "Change null to actual value",
     "category": "diff",
     "content_a": "{\"a\": null}",
     "content_b": "{\"a\": \"value\"}",
-    "expected_diff": "@ [\"a\"]\n- null\n+ \"value\"\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"a\"]\n- null\n+ \"value\"\n"  },
   {
     "name": "value_to_null",
     "description": "Change value to null",
     "category": "diff",
     "content_a": "{\"a\": \"value\"}",
     "content_b": "{\"a\": null}",
-    "expected_diff": "@ [\"a\"]\n- \"value\"\n+ null\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"a\"]\n- \"value\"\n+ null\n"  },
   {
     "name": "deeply_nested",
     "description": "Deeply nested structure changes",
     "category": "diff",
     "content_a": "{\"a\":{\"b\":{\"c\":{\"d\":{\"e\":\"old\"}}}}}",
     "content_b": "{\"a\":{\"b\":{\"c\":{\"d\":{\"e\":\"new\"}}}}}",
-    "expected_diff": "@ [\"a\",\"b\",\"c\",\"d\",\"e\"]\n- \"old\"\n+ \"new\"\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"a\",\"b\",\"c\",\"d\",\"e\"]\n- \"old\"\n+ \"new\"\n"  },
   {
     "name": "special_characters_keys",
     "description": "Object keys with special characters",
     "category": "diff",
     "content_a": "{\"key with spaces\": 1, \"key/with/slashes\": 2}",
     "content_b": "{\"key with spaces\": 2, \"key/with/slashes\": 2}",
-    "expected_diff": "@ [\"key with spaces\"]\n- 1\n+ 2\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"key with spaces\"]\n- 1\n+ 2\n"  },
   {
     "name": "unicode_keys",
     "description": "Unicode characters in object keys",
     "category": "diff",
     "content_a": "{\"\ud0a4\": \"\uac121\"}",
     "content_b": "{\"\ud0a4\": \"\uac122\"}",
-    "expected_diff": "@ [\"\ud0a4\"]\n- \"\uac121\"\n+ \"\uac122\"\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"\ud0a4\"]\n- \"\uac121\"\n+ \"\uac122\"\n"  },
   {
     "name": "large_numbers",
     "description": "Very large number values",
     "category": "diff",
     "content_a": "{\"big\": 9007199254740991}",
     "content_b": "{\"big\": 9007199254740992}",
-    "expected_diff": "@ [\"big\"]\n- 9007199254740991\n+ 9007199254740992\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"big\"]\n- 9007199254740991\n+ 9007199254740992\n"  },
   {
     "name": "scientific_notation",
     "description": "Numbers in scientific notation",
     "category": "diff",
     "content_a": "{\"sci\": 1e10}",
     "content_b": "{\"sci\": 2e10}",
-    "expected_diff": "@ [\"sci\"]\n- 10000000000\n+ 20000000000\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"sci\"]\n- 10000000000\n+ 20000000000\n"  },
   {
     "name": "floating_point_precision",
     "description": "Floating point precision edge case - these numbers are equal due to floating point representation",
     "category": "diff",
     "content_a": "{\"float\": 0.1}",
     "content_b": "{\"float\": 0.10000000000000001}",
-    "expected_diff": "",
-    "expected_exit": 0
-  },
+    "expected_output": ""  },
   {
     "name": "zero_variants",
     "description": "Different representations of zero",
     "category": "diff",
     "content_a": "{\"zero\": 0}",
     "content_b": "{\"zero\": 0.0}",
-    "expected_diff": "",
-    "expected_exit": 0
-  },
+    "expected_output": ""  },
   {
     "name": "negative_zero",
     "description": "Negative zero handling",
     "category": "diff",
     "content_a": "{\"nz\": 0}",
     "content_b": "{\"nz\": -0}",
-    "expected_diff": "",
-    "expected_exit": 0
-  },
+    "expected_output": ""  },
   {
     "name": "escaped_strings",
     "description": "Strings with escape sequences",
     "category": "diff",
     "content_a": "{\"escaped\": \"line1\\nline2\\ttab\"}",
     "content_b": "{\"escaped\": \"line1\\nline2\\tmodified\"}",
-    "expected_diff": "@ [\"escaped\"]\n- \"line1\\nline2\\ttab\"\n+ \"line1\\nline2\\tmodified\"\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"escaped\"]\n- \"line1\\nline2\\ttab\"\n+ \"line1\\nline2\\tmodified\"\n"  },
   {
     "name": "unicode_escape",
     "description": "Unicode escape sequences",
     "category": "diff",
     "content_a": "{\"unicode\": \"\\u0048\\u0065\\u006c\\u006c\\u006f\"}",
     "content_b": "{\"unicode\": \"Hello\"}",
-    "expected_diff": "",
-    "expected_exit": 0
-  },
+    "expected_output": ""  },
   {
     "name": "mixed_array_types",
     "description": "Array with mixed value types",
     "category": "diff",
     "content_a": "[1, \"string\", true, null, {\"obj\": \"val\"}]",
     "content_b": "[1, \"string\", false, null, {\"obj\": \"val\"}]",
-    "expected_diff": "@ [2]\n  \"string\"\n- true\n+ false\n  null\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [2]\n  \"string\"\n- true\n+ false\n  null\n"  },
   {
     "name": "array_index_beyond_bounds",
     "description": "Array operations beyond current bounds",
     "category": "diff",
     "content_a": "[1, 2]",
     "content_b": "[1, 2, 3, 4, 5]",
-    "expected_diff": "@ [2]\n  2\n+ 3\n+ 4\n+ 5\n]\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [2]\n  2\n+ 3\n+ 4\n+ 5\n]\n"  },
   {
     "name": "empty_string_key",
     "description": "Object with empty string as key",
     "category": "diff",
     "content_a": "{\"\": \"empty_key\"}",
     "content_b": "{\"\": \"modified_empty_key\"}",
-    "expected_diff": "@ [\"\"]\n- \"empty_key\"\n+ \"modified_empty_key\"\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"\"]\n- \"empty_key\"\n+ \"modified_empty_key\"\n"  },
   {
     "name": "single_element_array",
     "description": "Array with single element modification",
     "category": "diff",
     "content_a": "[\"only\"]",
     "content_b": "[\"changed\"]",
-    "expected_diff": "@ [0]\n[\n- \"only\"\n+ \"changed\"\n]\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [0]\n[\n- \"only\"\n+ \"changed\"\n]\n"  },
   {
     "name": "array_to_empty",
     "description": "Array becomes empty",
     "category": "diff",
     "content_a": "[1, 2, 3]",
     "content_b": "[]",
-    "expected_diff": "@ [0]\n[\n- 1\n- 2\n- 3\n]\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [0]\n[\n- 1\n- 2\n- 3\n]\n"  },
   {
     "name": "empty_to_array",
     "description": "Empty array gets elements",
     "category": "diff",
     "content_a": "[]",
     "content_b": "[1, 2, 3]",
-    "expected_diff": "@ [0]\n[\n+ 1\n+ 2\n+ 3\n]\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [0]\n[\n+ 1\n+ 2\n+ 3\n]\n"  },
   {
     "name": "very_long_string",
     "description": "Very long string values",
     "category": "diff",
     "content_a": "{\"long\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}",
     "content_b": "{\"long\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}",
-    "expected_diff": "@ [\"long\"]\n- \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\n+ \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"\n",
-    "expected_exit": 1
-  },
+    "expected_output": "@ [\"long\"]\n- \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\n+ \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"\n"  },
   {
     "name": "object_key_with_quotes",
     "description": "Object keys containing quote characters",
     "category": "diff",
     "content_a": "{\"key\\\"with\\\"quotes\": 1}",
     "content_b": "{\"key\\\"with\\\"quotes\": 2}",
-    "expected_diff": "@ [\"key\\\"with\\\"quotes\"]\n- 1\n+ 2\n",
-    "expected_exit": 1
-  }
+    "expected_output": "@ [\"key\\\"with\\\"quotes\"]\n- 1\n+ 2\n"  }
 ]

@@ -14,19 +14,19 @@ import (
 
 // Test case structure for JSON serialization
 type TestCase struct {
-	Name          string     `json:"name"`
-	Description   string     `json:"description"`
-	Category      string     `json:"category"`
-	FileA         string     `json:"file_a,omitempty"`
-	FileB         string     `json:"file_b,omitempty"`
-	FileDiff      string     `json:"file_diff,omitempty"`
-	ContentA      string     `json:"content_a,omitempty"`
-	ContentB      string     `json:"content_b,omitempty"`
-	ExpectedDiff  string     `json:"expected_diff,omitempty"`
-	AcceptedLines [][]string `json:"accepted_lines,omitempty"`
-	Args          []string   `json:"args,omitempty"`
-	ExpectedExit  int        `json:"expected_exit"`
-	ShouldError   bool       `json:"should_error"`
+	Name           string          `json:"name"`
+	Description    string          `json:"description"`
+	Category       string          `json:"category"`
+	FileA          string          `json:"file_a,omitempty"`
+	FileB          string          `json:"file_b,omitempty"`
+	FileDiff       string          `json:"file_diff,omitempty"`
+	ContentA       string          `json:"content_a,omitempty"`
+	ContentB       string          `json:"content_b,omitempty"`
+	Operation      string          `json:"operation,omitempty"`
+	Options        json.RawMessage `json:"options,omitempty"`
+	ExpectedOutput string          `json:"expected_output,omitempty"`
+	AcceptedLines  [][]string      `json:"accepted_lines,omitempty"`
+	ExpectError    bool            `json:"expect_error,omitempty"`
 }
 
 // Test results
@@ -47,6 +47,10 @@ type Config struct {
 	CategoryFilter string
 	Timeout        time.Duration
 	FailFast       bool
+	OptsFlag       string
+	PatchFlag      string
+	ErrorExit      int
+	DiffExit       int
 }
 
 func main() {
@@ -58,6 +62,10 @@ func main() {
 	flag.StringVar(&config.CategoryFilter, "category", "", "Filter by test category")
 	flag.DurationVar(&config.Timeout, "timeout", 30*time.Second, "Timeout per test case")
 	flag.BoolVar(&config.FailFast, "fail-fast", false, "Stop on first failure")
+	flag.StringVar(&config.OptsFlag, "opts-flag", "-opts", "Flag for passing options to binary")
+	flag.StringVar(&config.PatchFlag, "patch-flag", "-p", "Flag for invoking patch mode")
+	flag.IntVar(&config.ErrorExit, "error-exit", 2, "Exit code meaning error")
+	flag.IntVar(&config.DiffExit, "diff-exit", 1, "Exit code meaning differences found")
 
 	flag.Parse()
 
@@ -245,6 +253,20 @@ func filterTestCases(testCases []TestCase, config Config) []TestCase {
 	return filtered
 }
 
+func expectedExitCode(tc TestCase, config Config) int {
+	if tc.ExpectError {
+		return config.ErrorExit
+	}
+	if tc.Operation == "patch" {
+		return 0
+	}
+	// diff operation (default)
+	if tc.ExpectedOutput != "" || len(tc.AcceptedLines) > 0 {
+		return config.DiffExit
+	}
+	return 0
+}
+
 func runTestCase(testCase TestCase, config Config) TestResult {
 	start := time.Now()
 	result := TestResult{
@@ -254,7 +276,16 @@ func runTestCase(testCase TestCase, config Config) TestResult {
 
 	// Build command arguments
 	args := make([]string, 0)
-	args = append(args, testCase.Args...)
+
+	// Add options if present
+	if testCase.Options != nil {
+		args = append(args, fmt.Sprintf("%s=%s", config.OptsFlag, string(testCase.Options)))
+	}
+
+	// Add patch flag if operation is patch
+	if testCase.Operation == "patch" {
+		args = append(args, config.PatchFlag)
+	}
 
 	// Add input files or content
 	var inputFiles []string
@@ -309,15 +340,16 @@ func runTestCase(testCase TestCase, config Config) TestResult {
 	result.ActualDiff = string(output)
 
 	// Check exit code
-	if result.ActualExit != testCase.ExpectedExit {
+	expectedExit := expectedExitCode(testCase, config)
+	if result.ActualExit != expectedExit {
 		result.Error = fmt.Sprintf("exit code mismatch: expected %d, got %d",
-			testCase.ExpectedExit, result.ActualExit)
+			expectedExit, result.ActualExit)
 		return result
 	}
 
-	// Check for expected errors
-	if testCase.ShouldError && result.ActualExit == 0 {
-		result.Error = "expected error but command succeeded"
+	// For error cases, exit code match is sufficient
+	if testCase.ExpectError {
+		result.Passed = true
 		return result
 	}
 
@@ -328,10 +360,10 @@ func runTestCase(testCase TestCase, config Config) TestResult {
 				err, result.ActualDiff)
 			return result
 		}
-	} else if testCase.ExpectedDiff != "" {
-		if !compareOutputs(result.ActualDiff, testCase.ExpectedDiff) {
+	} else if testCase.ExpectedOutput != "" {
+		if !compareOutputs(result.ActualDiff, testCase.ExpectedOutput) {
 			result.Error = fmt.Sprintf("output mismatch:\nExpected:\n%s\nActual:\n%s",
-				testCase.ExpectedDiff, result.ActualDiff)
+				testCase.ExpectedOutput, result.ActualDiff)
 			return result
 		}
 	}

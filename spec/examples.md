@@ -140,7 +140,7 @@ This document provides complete examples of the structural diff format, demonstr
 
 ### SET Option
 
-**Command:** `jd -set a.json b.json`
+**Options:** `["SET"]`
 
 **Input A:**
 ```json
@@ -162,7 +162,7 @@ This document provides complete examples of the structural diff format, demonstr
 
 ### MULTISET Option
 
-**Command:** `jd -mset a.json b.json`
+**Options:** `["MULTISET"]`
 
 **Input A:**
 ```json
@@ -186,7 +186,7 @@ This document provides complete examples of the structural diff format, demonstr
 
 ### Precision Option
 
-**Command:** `jd -precision=0.01 a.json b.json`
+**Options:** `[{"precision": 0.01}]`
 
 **Input A:**
 ```json
@@ -208,7 +208,7 @@ This document provides complete examples of the structural diff format, demonstr
 
 ### SetKeys Option
 
-**Command:** `jd -setkeys=id a.json b.json`
+**Options:** `[{"setkeys": ["id"]}]`
 
 **Input A:**
 ```json
@@ -245,7 +245,7 @@ This document provides complete examples of the structural diff format, demonstr
 
 ### Targeted SET Operation
 
-**Command:** `jd -opts='[{"@":["tags"],"^":["SET"]}]' a.json b.json`
+**Options:** `[{"@":["tags"],"^":["SET"]}]`
 
 **Input A:**
 ```json
@@ -258,7 +258,7 @@ This document provides complete examples of the structural diff format, demonstr
 **Input B:**
 ```json
 {
-  "tags": ["green", "red", "blue"], 
+  "tags": ["green", "red", "blue"],
   "items": [3, 2, 1]
 }
 ```
@@ -279,7 +279,7 @@ This document provides complete examples of the structural diff format, demonstr
 
 ### Multiple PathOptions
 
-**Command:** `jd -opts='[{"@":["coords"],"^":[{"precision":0.1}]},{"@":["labels"],"^":["SET"]}]' a.json b.json`
+**Options:** `[{"@":["coords"],"^":[{"precision":0.1}]},{"@":["labels"],"^":["SET"]}]`
 
 **Input A:**
 ```json
@@ -316,7 +316,7 @@ This document provides complete examples of the structural diff format, demonstr
 
 ### DIFF_OFF Example
 
-**Command:** `jd -opts='[{"@":["metadata"],"^":["DIFF_OFF"]}]' a.json b.json`
+**Options:** `[{"@":["metadata"],"^":["DIFF_OFF"]}]`
 
 **Input A:**
 ```json
@@ -350,7 +350,7 @@ This document provides complete examples of the structural diff format, demonstr
 
 ### Allow-list with DIFF_OFF/DIFF_ON
 
-**Command:** `jd -opts='[{"@":[],"^":["DIFF_OFF"]},{"@":["userdata"],"^":["DIFF_ON"]}]' a.json b.json`
+**Options:** `[{"@":[],"^":["DIFF_OFF"]},{"@":["userdata"],"^":["DIFF_ON"]}]`
 
 **Input A:**
 ```json
@@ -403,7 +403,7 @@ This document provides complete examples of the structural diff format, demonstr
 }
 ```
 
-**Command:** `jd -setkeys=id a.json b.json`
+**Options:** `[{"setkeys": ["id"]}]`
 
 **Diff Output:**
 ```diff
@@ -440,7 +440,7 @@ This document provides complete examples of the structural diff format, demonstr
 }
 ```
 
-**Command:** `jd -opts='[{"@":["events"],"^":["MULTISET"]}]' a.json b.json`
+**Options:** `[{"@":["events"],"^":["MULTISET"]}]`
 
 **Diff Output:**
 ```diff
@@ -590,7 +590,7 @@ This document provides complete examples of the structural diff format, demonstr
 }
 ```
 
-**Command:** `jd -opts='[{"@":["features","feature_flags"],"^":["SET"]}]' a.json b.json`
+**Options:** `[{"@":["features","feature_flags"],"^":["SET"]}]`
 
 **Diff Output:**
 ```diff
@@ -663,7 +663,7 @@ This document provides complete examples of the structural diff format, demonstr
 }
 ```
 
-**Command:** `jd -opts='[{"@":["metadata"],"^":["DIFF_OFF"]},{"@":["data","users"],"^":[{"setkeys":["id"]}]}]' a.json b.json`
+**Options:** `[{"@":["metadata"],"^":["DIFF_OFF"]},{"@":["data","users"],"^":[{"setkeys":["id"]}]}]`
 
 **Diff Output:**
 ```diff

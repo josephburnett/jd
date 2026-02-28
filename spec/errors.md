@@ -151,7 +151,9 @@ PATCH_CONTEXT_MISMATCH: Context validation failed
 
 ## Exit Codes
 
-### Command-line Tool Exit Codes
+### Recommended CLI Exit Codes
+
+CLI implementations are recommended to use the following exit codes, though the specific values may vary by implementation:
 
 | Exit Code | Meaning | Description |
 |-----------|---------|-------------|
@@ -159,7 +161,7 @@ PATCH_CONTEXT_MISMATCH: Context validation failed
 | 1 | Differences found | Normal diff operation found differences between inputs |
 | 2 | Error occurred | Any error condition (parsing, file access, option conflicts, etc.) |
 
-**Rationale**: The structural format uses a simplified exit code scheme rather than Unix-style codes. This provides sufficient information for automation while remaining simple and consistent.
+These exit codes are not part of the format specification. They are a convention used by the reference implementation and recommended for CLI tools.
 
 ### Library Error Codes
 

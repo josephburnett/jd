@@ -334,4 +334,4 @@ When MERGE option is present:
 - **Unicode normalization**: Should handle equivalent Unicode representations
 - **JSON canonicalization**: Numbers should be normalized (e.g., 1.0 → 1)
 
-This semantic specification defines the full behavior of jd diff operations. Implementations following these semantics will produce consistent, interoperable results.
+This semantic specification defines the full behavior of structural diff operations. Implementations following these semantics will produce consistent, interoperable results.

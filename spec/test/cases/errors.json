@@ -5,8 +5,7 @@
     "category": "errors",
     "content_a": "{\"invalid\": json}",
     "content_b": "{}",
-    "should_error": true,
-    "expected_exit": 2
+    "expect_error": true
   },
   {
     "name": "invalid_json_second_input",
@@ -14,8 +13,7 @@
     "category": "errors",
     "content_a": "{}",
     "content_b": "{\"invalid\": syntax",
-    "should_error": true,
-    "expected_exit": 2
+    "expect_error": true
   },
   {
     "name": "precision_with_set_conflict",
@@ -23,9 +21,8 @@
     "category": "errors",
     "content_a": "[1,2,3]",
     "content_b": "[1,2,4]",
-    "args": ["-set", "-precision=0.1"],
-    "should_error": true,
-    "expected_exit": 2
+    "options": ["SET", {"precision": 0.1}],
+    "expect_error": true
   },
   {
     "name": "precision_with_multiset_conflict",
@@ -33,9 +30,8 @@
     "category": "errors",
     "content_a": "[1,2,3]",
     "content_b": "[1,2,4]",
-    "args": ["-mset", "-precision=0.1"],
-    "should_error": true,
-    "expected_exit": 2
+    "options": ["MULTISET", {"precision": 0.1}],
+    "expect_error": true
   },
   {
     "name": "invalid_setkeys_empty",
@@ -43,9 +39,8 @@
     "category": "errors",
     "content_a": "[{\"id\":1}]",
     "content_b": "[{\"id\":2}]",
-    "args": ["-setkeys="],
-    "should_error": true,
-    "expected_exit": 2
+    "options": [{"setkeys": []}],
+    "expect_error": true
   },
   {
     "name": "invalid_setkeys_whitespace",
@@ -53,86 +48,8 @@
     "category": "errors",
     "content_a": "[{\"id\":1}]",
     "content_b": "[{\"id\":2}]",
-    "args": ["-setkeys= , "],
-    "should_error": true,
-    "expected_exit": 2
-  },
-  {
-    "name": "invalid_opts_json",
-    "description": "Malformed JSON in -opts parameter",
-    "category": "errors",
-    "content_a": "{}",
-    "content_b": "{}",
-    "args": ["-opts={invalid json}"],
-    "should_error": true,
-    "expected_exit": 2
-  },
-  {
-    "name": "invalid_diff_format",
-    "description": "Invalid diff format specification",
-    "category": "errors",
-    "content_a": "{}",
-    "content_b": "{}",
-    "args": ["-f=invalid"],
-    "should_error": true,
-    "expected_exit": 2
-  },
-  {
-    "name": "too_many_arguments_diff",
-    "description": "Too many arguments in diff mode",
-    "category": "errors",
-    "content_a": "{}",
-    "args": ["file1.json", "file2.json", "file3.json"],
-    "should_error": true,
-    "expected_exit": 2
-  },
-  {
-    "name": "nonexistent_file",
-    "description": "Error when input file does not exist",
-    "category": "errors",
-    "args": ["/nonexistent/file.json"],
-    "should_error": true,
-    "expected_exit": 2
-  },
-  {
-    "name": "malformed_diff_syntax",
-    "description": "Malformed diff format in patch mode",
-    "category": "errors",
-    "content_a": "@ [invalid path syntax\n+ value\n",
-    "content_b": "{}",
-    "args": ["-p"],
-    "should_error": true,
-    "expected_exit": 2
-  },
-  {
-    "name": "invalid_path_element",
-    "description": "Invalid path element in diff",
-    "category": "errors",
-    "content_a": "@ [123invalid]\n+ value\n",
-    "content_b": "{}",
-    "args": ["-p"],
-    "should_error": true,
-    "expected_exit": 2
-  },
-  {
-    "name": "patch_context_mismatch",
-    "description": "Context mismatch during patch application",
-    "category": "errors",
-    "content_a": "@ [0]\n[\n  \"expected\"\n- \"remove\"\n+ \"add\"\n]\n",
-    "content_b": "[\"actual\",\"remove\"]",
-    "args": ["-p"],
-    "should_error": true,
-    "expected_exit": 2
-  },
-  {
-    "name": "invalid_yaml_input",
-    "description": "Malformed YAML input",
-    "category": "errors",
-    "content_a": "key: value\n  invalid: indentation\n",
-    "content_b": "key: value",
-    "args": ["-yaml"],
-    "should_error": true,
-    "expected_exit": 2
+    "options": [{"setkeys": [" ", " "]}],
+    "expect_error": true
   },
   {
     "name": "negative_precision",
@@ -140,16 +57,34 @@
     "category": "errors",
     "content_a": "1.0",
     "content_b": "1.1",
-    "args": ["-precision=-0.1"],
-    "should_error": true,
-    "expected_exit": 2
+    "options": [{"precision": -0.1}],
+    "expect_error": true
   },
   {
-    "name": "invalid_port_number",
-    "description": "Invalid port number for web UI",
+    "name": "malformed_diff_syntax",
+    "description": "Malformed diff format in patch mode",
     "category": "errors",
-    "args": ["-port=invalid"],
-    "should_error": true,
-    "expected_exit": 2
+    "operation": "patch",
+    "content_a": "@ [invalid path syntax\n+ value\n",
+    "content_b": "{}",
+    "expect_error": true
+  },
+  {
+    "name": "invalid_path_element",
+    "description": "Invalid path element in diff",
+    "category": "errors",
+    "operation": "patch",
+    "content_a": "@ [123invalid]\n+ value\n",
+    "content_b": "{}",
+    "expect_error": true
+  },
+  {
+    "name": "patch_context_mismatch",
+    "description": "Context mismatch during patch application",
+    "category": "errors",
+    "operation": "patch",
+    "content_a": "@ [0]\n[\n  \"expected\"\n- \"remove\"\n+ \"add\"\n]\n",
+    "content_b": "[\"actual\",\"remove\"]",
+    "expect_error": true
   }
 ]
