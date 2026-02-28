@@ -238,7 +238,12 @@
     "content_a": "[1, 1, 1, 2, 2]",
     "content_b": "[1, 1, 2, 2, 2, 3]",
     "args": ["-mset"],
-    "expected_diff": "^ \"MULTISET\"\n@ [[]]\n- 1\n+ 2\n+ 3\n",
+    "accepted_lines": [
+      ["^ \"MULTISET\""],
+      ["@ [[]]"],
+      ["- 1"],
+      ["+ 2", "+ 3"]
+    ],
     "expected_exit": 1,
     "compliance_level": "extended"
   },

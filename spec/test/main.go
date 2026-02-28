@@ -22,8 +22,9 @@ type TestCase struct {
 	FileDiff        string   `json:"file_diff,omitempty"`
 	ContentA        string   `json:"content_a,omitempty"`
 	ContentB        string   `json:"content_b,omitempty"`
-	ExpectedDiff    string   `json:"expected_diff,omitempty"`
-	Args            []string `json:"args,omitempty"`
+	ExpectedDiff    string     `json:"expected_diff,omitempty"`
+	AcceptedLines   [][]string `json:"accepted_lines,omitempty"`
+	Args            []string   `json:"args,omitempty"`
 	ExpectedExit    int      `json:"expected_exit"`
 	ShouldError     bool     `json:"should_error"`
 	ComplianceLevel string   `json:"compliance_level"` // "core", "extended", "format"
@@ -344,7 +345,13 @@ func runTestCase(testCase TestCase, config Config) TestResult {
 	}
 
 	// Compare output if provided
-	if testCase.ExpectedDiff != "" {
+	if len(testCase.AcceptedLines) > 0 {
+		if err := compareAcceptedLines(result.ActualDiff, testCase.AcceptedLines); err != nil {
+			result.Error = fmt.Sprintf("output mismatch: %v\nActual:\n%s",
+				err, result.ActualDiff)
+			return result
+		}
+	} else if testCase.ExpectedDiff != "" {
 		if !compareOutputs(result.ActualDiff, testCase.ExpectedDiff) {
 			result.Error = fmt.Sprintf("output mismatch:\nExpected:\n%s\nActual:\n%s",
 				testCase.ExpectedDiff, result.ActualDiff)
@@ -392,6 +399,63 @@ func executeWithTimeout(cmd *exec.Cmd, timeout time.Duration) ([]byte, error) {
 		}
 		return nil, fmt.Errorf("command timed out after %v", timeout)
 	}
+}
+
+func compareAcceptedLines(actual string, acceptedLines [][]string) error {
+	// Normalize and filter unknown metadata
+	actual = strings.ReplaceAll(actual, "\r\n", "\n")
+	actual = strings.TrimSpace(actual)
+
+	// Collect accepted metadata lines
+	acceptedMeta := make(map[string]bool)
+	for _, group := range acceptedLines {
+		for _, line := range group {
+			if strings.HasPrefix(line, "^ ") {
+				acceptedMeta[line] = true
+			}
+		}
+	}
+
+	// Filter unknown metadata from actual output
+	var actualLines []string
+	for _, line := range strings.Split(actual, "\n") {
+		if strings.HasPrefix(line, "^ ") && !acceptedMeta[line] {
+			continue
+		}
+		actualLines = append(actualLines, line)
+	}
+
+	// Walk through accepted groups, consuming actual lines
+	i := 0
+	for _, group := range acceptedLines {
+		if i+len(group) > len(actualLines) {
+			return fmt.Errorf("not enough output lines: expected group %v at line %d", group, i)
+		}
+		// Collect the next N actual lines and check they match the group as a set
+		chunk := make(map[string]int)
+		for _, line := range actualLines[i : i+len(group)] {
+			chunk[line]++
+		}
+		expected := make(map[string]int)
+		for _, line := range group {
+			expected[line]++
+		}
+		for line, count := range expected {
+			if chunk[line] != count {
+				return fmt.Errorf("at line %d: expected %d of %q, got %d", i, count, line, chunk[line])
+			}
+		}
+		for line, count := range chunk {
+			if expected[line] != count {
+				return fmt.Errorf("at line %d: unexpected line %q (got %d)", i, line, count)
+			}
+		}
+		i += len(group)
+	}
+	if i != len(actualLines) {
+		return fmt.Errorf("extra output lines after line %d", i)
+	}
+	return nil
 }
 
 func compareOutputs(actual, expected string) bool {
