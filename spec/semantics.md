@@ -114,15 +114,6 @@ Diff:
 - **Objects merge** recursively
 - **Arrays replace** entirely
 
-#### COLOR
-```
-^ "COLOR"
-```
-- Adds ANSI color codes to output
-- **Red** for removals (- lines)
-- **Green** for additions (+ lines)  
-- **Unchanged** context lines remain uncolored
-
 #### Precision
 ```
 ^ {"precision": 0.001}

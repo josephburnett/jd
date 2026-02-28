@@ -84,7 +84,6 @@ Interoperability with other patch formats:
 - `multiset_option_*` - MULTISET option behavior  
 - `precision_option_*` - Numeric precision tolerance
 - `setkeys_option_*` - Object matching by keys
-- `color_option` - Color output formatting
 
 ### `path_options/`
 - `path_options_set` - Targeted SET operations

@@ -77,17 +77,6 @@
     "compliance_level": "extended"
   },
   {
-    "name": "color_option",
-    "description": "Color output adds color option header",
-    "category": "options",
-    "content_a": "{\"a\":1}",
-    "content_b": "{\"a\":2}",
-    "args": ["-color"],
-    "expected_diff": "^ \"COLOR\"\n@ [\"a\"]\n- 1\n+ 2\n",
-    "expected_exit": 1,
-    "compliance_level": "extended"
-  },
-  {
     "name": "yaml_mode",
     "description": "YAML input and output mode",
     "category": "options",

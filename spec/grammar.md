@@ -85,7 +85,7 @@ Metadata lines provide options and configuration for the diff:
 MetadataOption = SimpleOption / ObjectOption / PathOption
 
 ; Simple string options
-SimpleOption = %s"SET" / %s"MULTISET" / %s"MERGE" / %s"COLOR" / %s"DIFF_ON" / %s"DIFF_OFF"
+SimpleOption = %s"SET" / %s"MULTISET" / %s"MERGE" / %s"DIFF_ON" / %s"DIFF_OFF"
 
 ; Complex object options  
 ObjectOption = PrecisionOption / SetKeysOption / LegacyMergeOption
@@ -170,9 +170,6 @@ ArrayClose = "]" CRLF    ; Only when showing array end as context
 4. **Unicode**: Full Unicode support with proper JSON string escaping
 
 ## Grammar Extensions
-
-### Color Support
-When `COLOR` option is present, implementations MAY add ANSI color codes to change lines while preserving the grammar structure.
 
 ### Legacy Compatibility  
 - `{"Merge":true}` metadata is equivalent to `"MERGE"` option
