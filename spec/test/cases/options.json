@@ -92,7 +92,7 @@
     "content_a": "{\"tags\":[\"a\",\"b\"],\"items\":[1,2]}",
     "content_b": "{\"tags\":[\"b\",\"a\"],\"items\":[2,1]}",
     "options": [{"@":["tags"],"^":["SET"]}],
-    "expected_output": "^ {\"@\":[\"tags\"],\"^\":[\"SET\"]}\n@ [\"items\",0]\n[\n- 1\n- 2\n+ 2\n+ 1\n]\n"
+    "expected_output": "^ {\"@\":[\"tags\"],\"^\":[\"SET\"]}\n@ [\"items\",0]\n[\n+ 2\n  1\n@ [\"items\",2]\n  1\n- 2\n]\n"
   },
   {
     "name": "path_options_precision",
