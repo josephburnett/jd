@@ -7,8 +7,7 @@
     "content_b": "{\"tags\":[3,1,2]}",
     "args": ["-set"],
     "expected_diff": "",
-    "expected_exit": 0,
-    "compliance_level": "extended"
+    "expected_exit": 0
   },
   {
     "name": "set_option_with_changes",
@@ -18,8 +17,7 @@
     "content_b": "{\"tags\":[\"red\",\"blue\",\"yellow\"]}",
     "args": ["-set"],
     "expected_diff": "^ \"SET\"\n@ [\"tags\",{}]\n- \"green\"\n+ \"yellow\"\n",
-    "expected_exit": 1,
-    "compliance_level": "extended"
+    "expected_exit": 1
   },
   {
     "name": "multiset_option",
@@ -34,8 +32,7 @@
       ["- 1", "- 3"],
       ["+ 2", "+ 4"]
     ],
-    "expected_exit": 1,
-    "compliance_level": "extended"
+    "expected_exit": 1
   },
   {
     "name": "precision_option",
@@ -45,8 +42,7 @@
     "content_b": "{\"value\":10.15}",
     "args": ["-precision=0.1"],
     "expected_diff": "",
-    "expected_exit": 0,
-    "compliance_level": "extended"
+    "expected_exit": 0
   },
   {
     "name": "precision_option_exceeded",
@@ -56,8 +52,7 @@
     "content_b": "{\"value\":10.2}",
     "args": ["-precision=0.1"],
     "expected_diff": "^ {\"precision\":0.1}\n@ [\"value\"]\n- 10\n+ 10.2\n",
-    "expected_exit": 1,
-    "compliance_level": "extended"
+    "expected_exit": 1
   },
   {
     "name": "setkeys_option",
@@ -67,8 +62,7 @@
     "content_b": "{\"users\":[{\"id\":1,\"name\":\"Alice\",\"age\":26}]}",
     "args": ["-setkeys=id"],
     "expected_diff": "^ {\"setkeys\":[\"id\"]}\n@ [\"users\",{\"id\":1},\"age\"]\n- 25\n+ 26\n",
-    "expected_exit": 1,
-    "compliance_level": "extended"
+    "expected_exit": 1
   },
   {
     "name": "multiple_setkeys",
@@ -78,19 +72,17 @@
     "content_b": "{\"items\":[{\"type\":\"fruit\",\"id\":\"apple\",\"color\":\"green\"}]}",
     "args": ["-setkeys=type,id"],
     "expected_diff": "^ {\"setkeys\":[\"type\",\"id\"]}\n@ [\"items\",{\"id\":\"apple\",\"type\":\"fruit\"},\"color\"]\n- \"red\"\n+ \"green\"\n",
-    "expected_exit": 1,
-    "compliance_level": "extended"
+    "expected_exit": 1
   },
   {
     "name": "yaml_mode",
     "description": "YAML input and output mode",
     "category": "options",
     "content_a": "name: Alice\nage: 25",
-    "content_b": "name: Alice\nage: 26", 
+    "content_b": "name: Alice\nage: 26",
     "args": ["-yaml"],
     "expected_diff": "@ [\"age\"]\n- 25\n+ 26\n",
-    "expected_exit": 1,
-    "compliance_level": "extended"
+    "expected_exit": 1
   },
   {
     "name": "opts_json_set",
@@ -100,8 +92,7 @@
     "content_b": "{\"items\":[3,1,2]}",
     "args": ["-opts=[\"SET\"]"],
     "expected_diff": "",
-    "expected_exit": 0,
-    "compliance_level": "extended"
+    "expected_exit": 0
   },
   {
     "name": "opts_precision",
@@ -111,8 +102,7 @@
     "content_b": "{\"temp\":20.15}",
     "args": ["-opts=[{\"precision\":0.1}]"],
     "expected_diff": "",
-    "expected_exit": 0,
-    "compliance_level": "extended"
+    "expected_exit": 0
   },
   {
     "name": "path_options_set",
@@ -122,8 +112,7 @@
     "content_b": "{\"tags\":[\"b\",\"a\"],\"items\":[2,1]}",
     "args": ["-opts=[{\"@\":[\"tags\"],\"^\":[\"SET\"]}]"],
     "expected_diff": "^ {\"@\":[\"tags\"],\"^\":[\"SET\"]}\n@ [\"items\",0]\n[\n- 1\n- 2\n+ 2\n+ 1\n]\n",
-    "expected_exit": 1,
-    "compliance_level": "extended"
+    "expected_exit": 1
   },
   {
     "name": "path_options_precision",
@@ -133,8 +122,7 @@
     "content_b": "{\"temp\":20.15,\"pressure\":1013.30}",
     "args": ["-opts=[{\"@\":[\"temp\"],\"^\":[{\"precision\":0.1}]}]"],
     "expected_diff": "^ {\"@\":[\"temp\"],\"^\":[{\"precision\":0.1}]}\n@ [\"pressure\"]\n- 1013.25\n+ 1013.3\n",
-    "expected_exit": 1,
-    "compliance_level": "extended"
+    "expected_exit": 1
   },
   {
     "name": "path_options_nested",
@@ -144,8 +132,7 @@
     "content_b": "{\"data\":{\"values\":[1,2,3]}}",
     "args": ["-opts=[{\"@\":[\"data\",\"values\"],\"^\":[\"SET\"]}]"],
     "expected_diff": "",
-    "expected_exit": 0,
-    "compliance_level": "extended"
+    "expected_exit": 0
   },
   {
     "name": "multiple_path_options",
@@ -155,8 +142,7 @@
     "content_b": "{\"tags\":[\"y\",\"x\"],\"scores\":[85.15,92.1]}",
     "args": ["-opts=[{\"@\":[\"tags\"],\"^\":[\"SET\"]},{\"@\":[\"scores\"],\"^\":[{\"precision\":0.1}]}]"],
     "expected_diff": "",
-    "expected_exit": 0,
-    "compliance_level": "extended"
+    "expected_exit": 0
   },
   {
     "name": "diff_off_option",
@@ -166,8 +152,7 @@
     "content_b": "{\"data\":\"important\",\"timestamp\":\"2023-01-02\"}",
     "args": ["-opts=[{\"@\":[\"timestamp\"],\"^\":[\"DIFF_OFF\"]}]"],
     "expected_diff": "",
-    "expected_exit": 0,
-    "compliance_level": "extended"
+    "expected_exit": 0
   },
   {
     "name": "diff_on_allowlist",
@@ -177,7 +162,61 @@
     "content_b": "{\"important\":\"changed\",\"ignore1\":\"z\",\"ignore2\":\"w\"}",
     "args": ["-opts=[{\"@\":[],\"^\":[\"DIFF_OFF\"]},{\"@\":[\"important\"],\"^\":[\"DIFF_ON\"]}]"],
     "expected_diff": "^ {\"@\":[],\"^\":[\"DIFF_OFF\"]}\n^ {\"@\":[\"important\"],\"^\":[\"DIFF_ON\"]}\n@ [\"important\"]\n- \"data\"\n+ \"changed\"\n",
-    "expected_exit": 1,
-    "compliance_level": "extended"
+    "expected_exit": 1
+  },
+  {
+    "name": "duplicate_object_keys_set",
+    "description": "Objects with duplicate keys in set mode",
+    "category": "options",
+    "content_a": "[{\"id\": 1, \"name\": \"A\"}, {\"id\": 1, \"name\": \"B\"}]",
+    "content_b": "[{\"id\": 1, \"name\": \"C\"}]",
+    "args": ["-setkeys=id"],
+    "expected_diff": "^ {\"setkeys\":[\"id\"]}\n@ [{\"id\":1},\"name\"]\n- \"A\"\n+ \"C\"\n@ [1]\n- {\"id\":1,\"name\":\"B\"}\n",
+    "expected_exit": 1
+  },
+  {
+    "name": "set_with_null_values",
+    "description": "Set operations with null values",
+    "category": "options",
+    "content_a": "[null, 1, null, 2]",
+    "content_b": "[1, null, 3]",
+    "args": ["-set"],
+    "expected_diff": "^ \"SET\"\n@ [{}]\n- 2\n+ 3\n",
+    "expected_exit": 1
+  },
+  {
+    "name": "multiset_duplicate_counting",
+    "description": "Multiset properly counts duplicates",
+    "category": "options",
+    "content_a": "[1, 1, 1, 2, 2]",
+    "content_b": "[1, 1, 2, 2, 2, 3]",
+    "args": ["-mset"],
+    "accepted_lines": [
+      ["^ \"MULTISET\""],
+      ["@ [[]]"],
+      ["- 1"],
+      ["+ 2", "+ 3"]
+    ],
+    "expected_exit": 1
+  },
+  {
+    "name": "precision_edge_boundary",
+    "description": "Precision exactly at boundary",
+    "category": "options",
+    "content_a": "{\"val\": 1.0}",
+    "content_b": "{\"val\": 1.1}",
+    "args": ["-precision=0.1"],
+    "expected_diff": "",
+    "expected_exit": 0
+  },
+  {
+    "name": "precision_just_over_boundary",
+    "description": "Precision just over boundary",
+    "category": "options",
+    "content_a": "{\"val\": 1.0}",
+    "content_b": "{\"val\": 1.10001}",
+    "args": ["-precision=0.1"],
+    "expected_diff": "^ {\"precision\":0.1}\n@ [\"val\"]\n- 1\n+ 1.10001\n",
+    "expected_exit": 1
   }
 ]

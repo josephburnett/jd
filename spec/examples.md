@@ -548,55 +548,6 @@ This document provides complete examples of the structural diff format, demonstr
 + "C:\\Users\\Bob\\Documents"
 ```
 
-## Format Translation Examples
-
-### Structural to JSON Patch
-
-**Structural Input:**
-```diff
-@ ["name"]
-- "Alice"
-+ "Bob"
-@ ["age"]
-+ 30
-```
-
-**Command:** `jd -t=structural2patch input.structural`
-
-**JSON Patch Output:**
-```json
-[
-  {"op": "test", "path": "/name", "value": "Alice"},
-  {"op": "remove", "path": "/name", "value": "Alice"},
-  {"op": "add", "path": "/name", "value": "Bob"},
-  {"op": "add", "path": "/age", "value": 30}
-]
-```
-
-### Structural to JSON Merge Patch
-
-**Structural Input:**
-```diff
-^ "MERGE"
-@ ["name"]
-+ "Bob"
-@ ["age"]
-+ 30
-@ ["old_field"]
-+
-```
-
-**Command:** `jd -t=structural2merge input.structural`
-
-**JSON Merge Patch Output:**
-```json
-{
-  "name": "Bob",
-  "age": 30,
-  "old_field": null
-}
-```
-
 ## Complex Real-World Examples
 
 ### Configuration File Update

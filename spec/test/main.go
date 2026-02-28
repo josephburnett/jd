@@ -14,20 +14,19 @@ import (
 
 // Test case structure for JSON serialization
 type TestCase struct {
-	Name            string   `json:"name"`
-	Description     string   `json:"description"`
-	Category        string   `json:"category"`
-	FileA           string   `json:"file_a,omitempty"`
-	FileB           string   `json:"file_b,omitempty"`
-	FileDiff        string   `json:"file_diff,omitempty"`
-	ContentA        string   `json:"content_a,omitempty"`
-	ContentB        string   `json:"content_b,omitempty"`
-	ExpectedDiff    string     `json:"expected_diff,omitempty"`
-	AcceptedLines   [][]string `json:"accepted_lines,omitempty"`
-	Args            []string   `json:"args,omitempty"`
-	ExpectedExit    int      `json:"expected_exit"`
-	ShouldError     bool     `json:"should_error"`
-	ComplianceLevel string   `json:"compliance_level"` // "core", "extended", "format"
+	Name          string     `json:"name"`
+	Description   string     `json:"description"`
+	Category      string     `json:"category"`
+	FileA         string     `json:"file_a,omitempty"`
+	FileB         string     `json:"file_b,omitempty"`
+	FileDiff      string     `json:"file_diff,omitempty"`
+	ContentA      string     `json:"content_a,omitempty"`
+	ContentB      string     `json:"content_b,omitempty"`
+	ExpectedDiff  string     `json:"expected_diff,omitempty"`
+	AcceptedLines [][]string `json:"accepted_lines,omitempty"`
+	Args          []string   `json:"args,omitempty"`
+	ExpectedExit  int        `json:"expected_exit"`
+	ShouldError   bool       `json:"should_error"`
 }
 
 // Test results
@@ -45,9 +44,6 @@ type Config struct {
 	BinaryPath     string
 	TestDataDir    string
 	Verbose        bool
-	CoreOnly       bool
-	ExtendedOnly   bool
-	FormatOnly     bool
 	CategoryFilter string
 	Timeout        time.Duration
 	FailFast       bool
@@ -59,9 +55,6 @@ func main() {
 	flag.StringVar(&config.BinaryPath, "binary", "", "Path to jd binary to test (required)")
 	flag.StringVar(&config.TestDataDir, "testdata", "./testdata", "Path to test data directory")
 	flag.BoolVar(&config.Verbose, "verbose", false, "Verbose output")
-	flag.BoolVar(&config.CoreOnly, "core-only", false, "Test core compliance only")
-	flag.BoolVar(&config.ExtendedOnly, "extended-only", false, "Test extended compliance only")
-	flag.BoolVar(&config.FormatOnly, "format-only", false, "Test format compliance only")
 	flag.StringVar(&config.CategoryFilter, "category", "", "Filter by test category")
 	flag.DurationVar(&config.Timeout, "timeout", 30*time.Second, "Timeout per test case")
 	flag.BoolVar(&config.FailFast, "fail-fast", false, "Stop on first failure")
@@ -234,11 +227,6 @@ func resolveTestCase(testCase *TestCase, testDataDir string) error {
 		testCase.FileDiff = filepath.Join(testDataDir, testCase.FileDiff)
 	}
 
-	// Set default compliance level
-	if testCase.ComplianceLevel == "" {
-		testCase.ComplianceLevel = "core"
-	}
-
 	return nil
 }
 
@@ -246,17 +234,6 @@ func filterTestCases(testCases []TestCase, config Config) []TestCase {
 	filtered := make([]TestCase, 0)
 
 	for _, testCase := range testCases {
-		// Filter by compliance level
-		if config.CoreOnly && testCase.ComplianceLevel != "core" {
-			continue
-		}
-		if config.ExtendedOnly && testCase.ComplianceLevel != "extended" {
-			continue
-		}
-		if config.FormatOnly && testCase.ComplianceLevel != "format" {
-			continue
-		}
-
 		// Filter by category
 		if config.CategoryFilter != "" && testCase.Category != config.CategoryFilter {
 			continue

@@ -14,7 +14,7 @@ This directory contains the formal specification for the structural JSON diff fo
 - **[examples.md](examples.md)** - Complete examples covering all features and edge cases
 
 ### Test Suite
-- **[test/](test/)** - Blackbox compliance test suite for implementation validation
+- **[test/](test/)** - Blackbox test suite for implementation validation
 
 ## Implementation Guide
 
@@ -26,25 +26,9 @@ To implement the structural format:
 4. **Handle [errors.md](errors.md)** - Implement proper error handling
 5. **Test with [test/](test/)** - Validate your implementation
 
-## Compliance Levels
-
-### Core Compliance
-- Basic diff generation and patch application
-- Simple path navigation (object keys, array indices)
-- Context preservation in array diffs
-
-### Extended Compliance  
-- Options support (SET, MULTISET, precision, setkeys)
-- PathOptions for targeted comparisons
-- Options header rendering
-
-### Format Compliance
-- Translation between jd, RFC6902 (JSON Patch), and RFC7386 (JSON Merge Patch)
-- Preservation of semantic equivalence across formats
-
 ## Testing Your Implementation
 
-The test suite in `test/` provides complete validation:
+The test suite in `test/` provides validation across all features:
 
 ```bash
 cd test
@@ -52,18 +36,23 @@ go build -o test-runner .
 ./test-runner /path/to/your/structural/binary
 ```
 
-Exit code 0 indicates full compliance. Non-zero indicates failures with detailed reporting.
+Test cases are organized by feature:
+- **diff.json** - Diff generation tests
+- **options.json** - Options and PathOptions tests
+- **patch.json** - Patch application tests
+- **errors.json** - Error handling tests
+
+Exit code 0 indicates all tests passed. Non-zero indicates failures with detailed reporting.
 
 ## About the Structural Format
 
 The structural format is a human-readable diff format for JSON and YAML data with these features:
 
 - **Human-readable**: Unified diff-style output
-- **Context-aware**: Shows surrounding elements for change location clarity  
+- **Context-aware**: Shows surrounding elements for change location clarity
 - **Set semantics**: Treats arrays as sets or multisets when order doesn't matter
 - **Configurable**: Supports numeric precision tolerance for floating-point comparisons
 - **Flexible**: PathOptions enable fine-grained comparison control
-- **Interoperable**: Converts to/from standard patch formats
 
 ## Version
 
