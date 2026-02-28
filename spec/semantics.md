@@ -270,6 +270,10 @@ Result:
 ```
 Objects match when ALL specified keys have equal values.
 
+### Duplicate Identity Keys
+
+When multiple objects in the same array share the same identity key values under set semantics, the behavior is undefined. Implementations MAY reject this as an error, silently pick one object, or handle it in any other way. Users should ensure identity keys are unique within each array.
+
 ## Patch Application
 
 ### Application Algorithm

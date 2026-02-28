@@ -140,15 +140,6 @@
     "expected_output": "^ {\"@\":[],\"^\":[\"DIFF_OFF\"]}\n^ {\"@\":[\"important\"],\"^\":[\"DIFF_ON\"]}\n@ [\"important\"]\n- \"data\"\n+ \"changed\"\n"
   },
   {
-    "name": "duplicate_object_keys_set",
-    "description": "Objects with duplicate keys in set mode",
-    "category": "options",
-    "content_a": "[{\"id\": 1, \"name\": \"A\"}, {\"id\": 1, \"name\": \"B\"}]",
-    "content_b": "[{\"id\": 1, \"name\": \"C\"}]",
-    "options": [{"keys": ["id"]}],
-    "expected_output": "^ {\"keys\":[\"id\"]}\n@ [{\"id\":1},\"name\"]\n- \"A\"\n+ \"C\"\n@ [1]\n- {\"id\":1,\"name\":\"B\"}\n"
-  },
-  {
     "name": "set_with_null_values",
     "description": "Set operations with null values",
     "category": "options",
