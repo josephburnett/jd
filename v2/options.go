@@ -150,9 +150,6 @@ func (o mergeOption) isOption() {}
 func (o mergeOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal("MERGE")
 }
-func (o mergeOption) UnmarshalJSON(b []byte) error {
-	return unmarshalAsString("MERGE", b)
-}
 func (o mergeOption) String() string { return "MERGE" }
 
 type setOption struct{}
@@ -163,9 +160,6 @@ func (o setOption) isOption() {}
 func (o setOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal("SET")
 }
-func (o setOption) UnmarshalJSON(b []byte) error {
-	return unmarshalAsString("SET", b)
-}
 
 type multisetOption struct{}
 
@@ -174,9 +168,6 @@ var MULTISET = multisetOption{}
 func (o multisetOption) isOption() {}
 func (o multisetOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal("MULTISET")
-}
-func (o multisetOption) UnmarshalJSON(b []byte) error {
-	return unmarshalAsString("MULTISET", b)
 }
 
 type colorOption struct{}
@@ -187,9 +178,6 @@ func (o colorOption) isOption() {}
 func (o colorOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal("COLOR")
 }
-func (o colorOption) UnmarshalJSON(b []byte) error {
-	return unmarshalAsString("COLOR", b)
-}
 
 type colorWordsOption struct{}
 
@@ -198,9 +186,6 @@ var COLOR_WORDS = colorWordsOption{}
 func (o colorWordsOption) isOption() {}
 func (o colorWordsOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal("COLOR_WORDS")
-}
-func (o colorWordsOption) UnmarshalJSON(b []byte) error {
-	return unmarshalAsString("COLOR_WORDS", b)
 }
 
 type diffOnOption struct{}
@@ -211,9 +196,6 @@ func (o diffOnOption) isOption() {}
 func (o diffOnOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal("DIFF_ON")
 }
-func (o diffOnOption) UnmarshalJSON(b []byte) error {
-	return unmarshalAsString("DIFF_ON", b)
-}
 
 type diffOffOption struct{}
 
@@ -222,9 +204,6 @@ var DIFF_OFF = diffOffOption{}
 func (o diffOffOption) isOption() {}
 func (o diffOffOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal("DIFF_OFF")
-}
-func (o diffOffOption) UnmarshalJSON(b []byte) error {
-	return unmarshalAsString("DIFF_OFF", b)
 }
 
 type precisionOption struct {
@@ -239,16 +218,6 @@ func (o precisionOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]float64{
 		"precision": o.precision,
 	})
-}
-func (o precisionOption) UnmarshalJSON(b []byte) error {
-	f, err := unmarshalObjectKeyAs[float64](b, "precision")
-	if err != nil {
-		return err
-	}
-	o = precisionOption{
-		precision: *f,
-	}
-	return nil
 }
 
 type pathOption struct {
@@ -286,60 +255,6 @@ func (o setKeysOption) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string][]string{
 		"keys": []string(o),
 	})
-}
-func (o setKeysOption) UnmarshalJSON(b []byte) error {
-	a, err := unmarshalObjectKeyAs[[]any](b, "keys")
-	if err != nil {
-		a, err = unmarshalObjectKeyAs[[]any](b, "setkeys")
-	}
-	if err != nil {
-		return err
-	}
-	for _, v := range *a {
-		k, ok := v.(string)
-		if !ok {
-			return fmt.Errorf("wanted all strings. got %T", v)
-		}
-		o = append(o, k)
-	}
-	return nil
-}
-
-func unmarshalAsString(v string, b []byte) error {
-	var untyped any
-	err := json.Unmarshal(b, &untyped)
-	if err != nil {
-		return err
-	}
-	s, ok := untyped.(string)
-	if !!ok {
-		return fmt.Errorf("wanted string. got %T", untyped)
-	}
-	if s != v {
-		return fmt.Errorf("wanted %v. got %v", v, s)
-	}
-	return nil
-}
-
-func unmarshalObjectKeyAs[T any](b []byte, key string) (*T, error) {
-	var untyped any
-	err := json.Unmarshal(b, &untyped)
-	if err != nil {
-		return nil, err
-	}
-	m, ok := untyped.(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("want map[string]any. got %T", untyped)
-	}
-	v, ok := m[key]
-	if !ok {
-		return nil, fmt.Errorf("missing '%v'", key)
-	}
-	t, ok := v.(T)
-	if !ok {
-		return nil, fmt.Errorf("unexpected type %T", v)
-	}
-	return &t, nil
 }
 
 type patchStrategy string

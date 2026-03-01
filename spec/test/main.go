@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -195,7 +194,7 @@ func loadTestCases(testDataDir string) ([]TestCase, error) {
 			return nil
 		}
 
-		data, err := ioutil.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
@@ -369,11 +368,92 @@ func runTestCase(testCase TestCase, config Config) TestResult {
 	}
 
 	result.Passed = true
+
+	// Round-trip verification for diff tests
+	if result.Passed {
+		if err := roundTrip(testCase, result.ActualDiff, config); err != nil {
+			result.Passed = false
+			result.Error = fmt.Sprintf("round-trip failure: %v", err)
+		}
+	}
+
 	return result
 }
 
+// roundTrip verifies that patching content_a with the diff output produces content_b.
+// It is skipped for error tests and patch tests.
+func roundTrip(testCase TestCase, diffOutput string, config Config) error {
+	// Skip cases where round-trip doesn't apply
+	if testCase.ExpectError {
+		return nil
+	}
+	if testCase.Operation == "patch" {
+		return nil
+	}
+	if diffOutput == "" || strings.TrimSpace(diffOutput) == "" {
+		return nil
+	}
+
+	// Step 1: Write diff output to a temp file
+	diffFile, err := createTempFile(diffOutput)
+	if err != nil {
+		return fmt.Errorf("creating diff temp file: %v", err)
+	}
+	defer os.Remove(diffFile)
+
+	// Write content_a to a temp file
+	contentAFile, err := createTempFile(testCase.ContentA)
+	if err != nil {
+		return fmt.Errorf("creating content_a temp file: %v", err)
+	}
+	defer os.Remove(contentAFile)
+
+	// Run: binary -p <diff_file> <content_a_file> → patched result
+	patchArgs := []string{config.PatchFlag, diffFile, contentAFile}
+	patchCmd := exec.Command(config.BinaryPath, patchArgs...)
+	patchOutput, err := executeWithTimeout(patchCmd, config.Timeout)
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return fmt.Errorf("patch exited %d: %s", exitError.ExitCode(), string(exitError.Stderr))
+		}
+		return fmt.Errorf("patch execution: %v", err)
+	}
+
+	// Step 2: Write patched result to a temp file
+	patchedFile, err := createTempFile(string(patchOutput))
+	if err != nil {
+		return fmt.Errorf("creating patched temp file: %v", err)
+	}
+	defer os.Remove(patchedFile)
+
+	// Write content_b to a temp file
+	contentBFile, err := createTempFile(testCase.ContentB)
+	if err != nil {
+		return fmt.Errorf("creating content_b temp file: %v", err)
+	}
+	defer os.Remove(contentBFile)
+
+	// Run: binary -opts=<options> <patched_file> <content_b_file> → expect exit 0
+	verifyArgs := []string{}
+	if testCase.Options != nil {
+		verifyArgs = append(verifyArgs, fmt.Sprintf("%s=%s", config.OptsFlag, string(testCase.Options)))
+	}
+	verifyArgs = append(verifyArgs, patchedFile, contentBFile)
+	verifyCmd := exec.Command(config.BinaryPath, verifyArgs...)
+	verifyOutput, err := executeWithTimeout(verifyCmd, config.Timeout)
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return fmt.Errorf("patched result differs from content_b (exit %d):\n%s",
+				exitError.ExitCode(), string(verifyOutput))
+		}
+		return fmt.Errorf("verify execution: %v", err)
+	}
+
+	return nil
+}
+
 func createTempFile(content string) (string, error) {
-	tmpFile, err := ioutil.TempFile("", "jd-test-*.json")
+	tmpFile, err := os.CreateTemp("", "jd-test-*.json")
 	if err != nil {
 		return "", err
 	}
@@ -503,5 +583,5 @@ func generateReport(results []TestResult, filename string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(filename, data, 0644)
+	return os.WriteFile(filename, data, 0644)
 }

@@ -2,7 +2,7 @@
 
 
 **Status:** Draft Specification
-**Date:** 2025
+**Date:** 2025-2026
 
 ## Abstract
 
@@ -188,7 +188,6 @@ Applied to entire diff operation:
 
 - **SET**: `^ "SET"` - All arrays treated as mathematical sets
 - **MULTISET**: `^ "MULTISET"` - All arrays treated as multisets (bags)
-- **MERGE**: `^ "MERGE"` - Use JSON Merge Patch semantics (RFC 7386)
 - **Precision**: `^ {"precision":N}` - Numbers within N absolute difference considered equal
 - **Keys**: `^ {"keys":["key1","key2"]}` - Object matching keys for arrays
 
@@ -274,12 +273,7 @@ An implementation conforms to this specification if it correctly implements the 
 - **Unicode**: Full Unicode support with proper JSON string escaping
 - **Normalization**: Implementations MAY normalize equivalent Unicode representations
 
-### 7.4 Security Considerations
-
-- **Input Validation**: Thoroughly validate all JSON and diff inputs
-- **Resource Limits**: Implement reasonable limits to prevent DoS attacks
-- **Memory Management**: Handle large documents without unbounded memory growth
-- **Recursion Control**: Prevent stack overflow from deeply nested structures
+For security considerations, see [Section 8](#security-considerations).
 
 ## 8. Security Considerations
 
@@ -354,7 +348,6 @@ Implementations SHOULD document any extensions or limitations.
 
 - RFC 5234: Augmented BNF for Syntax Specifications
 - RFC 6902: JavaScript Object Notation (JSON) Patch
-- RFC 7386: JSON Merge Patch
 - RFC 7159: The JavaScript Object Notation (JSON) Data Interchange Format
 - RFC 3629: UTF-8, a transformation format of ISO 10646
 

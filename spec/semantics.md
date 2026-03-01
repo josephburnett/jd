@@ -105,15 +105,6 @@ Diff:
 - **Duplicates counted**: `[1,1,2]` differs from `[1,2]`
 - Tracks element frequency
 
-#### MERGE
-```
-^ "MERGE"
-```
-- Enables merge-patch semantics (RFC 7386)
-- **Null removes** object properties
-- **Objects merge** recursively
-- **Arrays replace** entirely
-
 #### Precision
 ```
 ^ {"precision": 0.001}
@@ -290,14 +281,6 @@ For array operations with context:
 - **Before context** must match elements preceding the change
 - **After context** must match elements following the change  
 - **Mismatched context** produces application error
-
-### Merge Semantics
-
-When MERGE option is present:
-- **Null values remove** object properties
-- **Objects merge recursively** rather than replacing
-- **Arrays replace entirely** (no element-wise merging)
-- **Void values** (empty +) set properties to null
 
 ## Error Conditions
 

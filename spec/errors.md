@@ -70,12 +70,12 @@ Document: ["a", "b", "c"]
 Diff:
 @ [1]
 [
-  "x"    <- Expected context "a", found "a" ✓
-- "y"    <- Expected "b", attempting to remove ✗
+  "x"    <- Expected context "x", found "a" ✗
+- "y"    <- Expected "b", attempting to remove
 + "z"
 ]
 
-Error: PATCH_CONTEXT_MISMATCH: Expected context "y" at path [0], found "a"
+Error: PATCH_CONTEXT_MISMATCH: Expected context "x" at path [0], found "a"
 ```
 
 ### 4. Option Processing Errors

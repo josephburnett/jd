@@ -102,9 +102,7 @@ This document provides complete examples of the structural diff format, demonstr
   1
 - 2
   3
-  4
-@ [4]
-  3
+@ [3]
   4
 - 5
 + 6
@@ -133,7 +131,6 @@ This document provides complete examples of the structural diff format, demonstr
 + "orange"
 + "magenta"
   "yellow"
-  "purple"
 ```
 
 ## Options Examples
@@ -448,6 +445,75 @@ This document provides complete examples of the structural diff format, demonstr
 @ ["events",[]]
 - {"count":5,"type":"click"}
 + {"count":1,"type":"scroll"}
+```
+
+## Patch Application Examples
+
+### Basic Object Patch
+
+Apply a diff to change a value in an object.
+
+**Input:**
+```json
+{"name": "Alice", "age": 25}
+```
+
+**Diff:**
+```diff
+@ ["name"]
+- "Alice"
++ "Bob"
+```
+
+**Patched Output:**
+```json
+{"age":25,"name":"Bob"}
+```
+
+### Array Patch with Context
+
+Apply a diff to an array using context for validation.
+
+**Input:**
+```json
+{"items": ["apple", "banana", "cherry"]}
+```
+
+**Diff:**
+```diff
+@ ["items",1]
+  "apple"
+- "banana"
++ "blueberry"
+  "cherry"
+]
+```
+
+**Patched Output:**
+```json
+{"items":["apple","blueberry","cherry"]}
+```
+
+### Patch with SET Option
+
+Apply a diff that was generated with SET semantics.
+
+**Input:**
+```json
+{"tags": ["urgent", "bug", "frontend"]}
+```
+
+**Diff:**
+```diff
+^ "SET"
+@ ["tags",{}]
+- "bug"
++ "enhancement"
+```
+
+**Patched Output:**
+```json
+{"tags":["frontend","urgent","enhancement"]}
 ```
 
 ## Type Conversion Examples

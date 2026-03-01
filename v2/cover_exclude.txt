@@ -17,11 +17,8 @@ ReadYamlFile
 # CLI — flag parsing, stdin, serve, usage, github action
 jd/main.go
 
-# Option interface boilerplate — empty marker methods and deserialization
+# Option interface boilerplate — empty marker methods
 	isOption
-	UnmarshalJSON
-unmarshalAsString
-unmarshalObjectKeyAs
 options.go:.*	String
 
 # Path interface markers — empty methods

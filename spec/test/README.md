@@ -71,7 +71,7 @@ Patch application tests:
 - Object key addition, removal, and value changes
 - Array element changes with context validation
 - Array append, prepend, and remove operations
-- Patching with SET, MULTISET, precision, and SetKeys options
+- Patching with SET, MULTISET, precision, and keys options
 - Deeply nested changes and multiple hunks
 - No-op patches, type changes, null handling
 - Error cases (context mismatch, invalid syntax)
@@ -95,13 +95,7 @@ test/
 │   ├── options.json     # Options and PathOptions tests
 │   ├── patch.json       # Patch application tests
 │   └── errors.json      # Error condition tests
-└── testdata/            # Test data files
-    ├── simple_a.json    # Simple test input A
-    ├── simple_b.json    # Simple test input B
-    ├── array_a.json     # Array test input A
-    ├── array_b.json     # Array test input B
-    ├── complex_a.json   # Complex test input A
-    └── complex_b.json   # Complex test input B
+└── testdata/            # Test data files (if needed)
 ```
 
 ## Test Case Format
