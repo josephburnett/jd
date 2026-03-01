@@ -41,6 +41,7 @@ type TestResult struct {
 // Test runner configuration
 type Config struct {
 	BinaryPath     string
+	CasesDir       string
 	TestDataDir    string
 	Verbose        bool
 	CategoryFilter string
@@ -56,6 +57,7 @@ func main() {
 	var config Config
 
 	flag.StringVar(&config.BinaryPath, "binary", "", "Path to jd binary to test (required)")
+	flag.StringVar(&config.CasesDir, "cases", "../cases", "Path to test cases directory")
 	flag.StringVar(&config.TestDataDir, "testdata", "./testdata", "Path to test data directory")
 	flag.BoolVar(&config.Verbose, "verbose", false, "Verbose output")
 	flag.StringVar(&config.CategoryFilter, "category", "", "Filter by test category")
@@ -85,7 +87,7 @@ func main() {
 	}
 
 	// Load test cases
-	testCases, err := loadTestCases(config.TestDataDir)
+	testCases, err := loadTestCases(config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading test cases: %v\n", err)
 		os.Exit(65) // EX_DATAERR
@@ -179,13 +181,10 @@ func validateBinary(path string) error {
 	return nil
 }
 
-func loadTestCases(testDataDir string) ([]TestCase, error) {
+func loadTestCases(config Config) ([]TestCase, error) {
 	testCases := make([]TestCase, 0)
 
-	// Load from cases directory
-	casesDir := filepath.Join(testDataDir, "../cases")
-
-	err := filepath.Walk(casesDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(config.CasesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -214,7 +213,7 @@ func loadTestCases(testDataDir string) ([]TestCase, error) {
 
 	// Validate and resolve file paths
 	for i := range testCases {
-		if err := resolveTestCase(&testCases[i], testDataDir); err != nil {
+		if err := resolveTestCase(&testCases[i], config.TestDataDir); err != nil {
 			return nil, fmt.Errorf("error in test case %s: %v", testCases[i].Name, err)
 		}
 	}

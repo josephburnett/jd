@@ -13,8 +13,26 @@ This directory contains the formal specification for the structural JSON diff fo
 ### Reference Materials
 - **[examples.md](examples.md)** - Complete examples covering all features and edge cases
 
-### Test Suite
-- **[test/](test/)** - Blackbox test suite for implementation validation
+### Test Data and Runner
+- **[cases/](cases/)** - Implementation-agnostic test data (JSON files describing inputs and expected outputs)
+- **[test/](test/)** - Reference test runner that executes test data against a CLI binary
+
+## Structure
+
+```
+spec/
+├── README.md
+├── jd-format.md, grammar.md, semantics.md, errors.md, examples.md
+├── cases/               # Test data (part of the spec)
+│   ├── README.md
+│   ├── diff.json
+│   ├── options.json
+│   └── errors.json
+└── test/                # Reference test runner (Go)
+    ├── main.go
+    ├── go.mod
+    └── README.md
+```
 
 ## Implementation Guide
 
@@ -24,25 +42,19 @@ To implement the structural format:
 2. **Study [grammar.md](grammar.md)** - Implement the parser using the ABNF grammar
 3. **Review [semantics.md](semantics.md)** - Understand operational semantics
 4. **Handle [errors.md](errors.md)** - Implement proper error handling
-5. **Test with [test/](test/)** - Validate your implementation
+5. **Validate with [cases/](cases/)** - Test your implementation against the test data
 
 ## Testing Your Implementation
 
-The test suite in `test/` provides validation across all features:
+The test data in `cases/` defines expected behavior independent of any CLI. The reference test runner in `test/` maps this data to CLI invocations:
 
 ```bash
 cd test
 go build -o test-runner .
-./test-runner /path/to/your/structural/binary
+./test-runner /path/to/your/binary
 ```
 
-Test cases are organized by feature:
-- **diff.json** - Diff generation tests
-- **options.json** - Options and PathOptions tests
-- **patch.json** - Patch application tests
-- **errors.json** - Error handling tests
-
-Exit code 0 indicates all tests passed. Non-zero indicates failures with detailed reporting.
+See [test/README.md](test/README.md) for runner flags and how to adapt it to different CLI interfaces.
 
 ## About the Structural Format
 
