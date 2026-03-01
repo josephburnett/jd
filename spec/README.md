@@ -25,7 +25,7 @@ spec/
 ├── jd-format.md, grammar.md, semantics.md, errors.md, examples.md
 ├── cases/               # Test data (part of the spec)
 │   ├── README.md
-│   ├── diff.json
+│   ├── core.json
 │   ├── options.json
 │   └── errors.json
 └── test/                # Reference test runner (Go)
@@ -46,7 +46,9 @@ To implement the structural format:
 
 ## Testing Your Implementation
 
-The test data in `cases/` defines expected behavior independent of any CLI. The reference test runner in `test/` maps this data to CLI invocations:
+The test data in `cases/` defines expected behavior independent of any CLI, library, or language. See [cases/README.md](cases/README.md) for the verification procedure — it describes how to use the test cases to validate both diff and patch operations.
+
+For CLI-based implementations, the reference test runner in `test/` automates this process:
 
 ```bash
 cd test
