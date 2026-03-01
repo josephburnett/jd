@@ -1,31 +1,54 @@
-# Project Overview
+# jd
 
-This project provides both a commandline, library and website for diffing and patching JSON and YAML values.
-It is focused on a human-readable diff format but has the ability to read and produce other diff formats.
+A commandline tool, Go library, and website for diffing and patching JSON and YAML.
+The JD diff format is human-readable and supports set semantics — things no other
+diff/patch format provides.
+
+## Design Principles
+
+1. **Spec and implementation are separate concerns.** The spec (`/spec`) defines
+   forward-looking behavior for any implementation. The reference implementation (`/v2`)
+   has its own backward compatibility and engineering concerns. Don't conflate the two.
+2. **Minimal surface area.** Applies to the API, dependencies, and what the spec covers.
+   Focus on what's uniquely valuable: human-readable diffs, set semantics, structured patching.
+3. **Correctness is mathematical.** Set semantics require equivalence relations (reflexive,
+   symmetric, transitive). Approximate equality (e.g. precision) breaks transitivity, so
+   it is fundamentally incompatible with set operations. Constraints like these aren't
+   arbitrary — they follow from the math.
+4. **Permissive input, strict output.** Unknown `^` metadata is silently skipped so
+   implementations can extend without breaking each other. But the spec is strict about
+   what it does define: static configuration errors (e.g. empty keys, negative precision)
+   MUST be rejected. Data-dependent runtime issues (e.g. duplicate identity keys) are
+   documented as undefined behavior.
 
 ## Key Commands
 
+Always use Makefile targets, not raw `go test`, `go vet`, etc. The Makefile handles
+WASM exclusions and other project-specific build concerns.
+
 - Test: `make test`
+- Vet: `make vet`
 - Format: `make go-fmt`
+- Coverage: `make cover` (enforces 100% on non-trivial code)
 - Fuzz: `make fuzz`
+- Spec tests: `make spec-test`
 
 ## Code Standards
 
 - MUST pass unit tests
 - MUST be go formatted
 - Add tests to existing table tests when possible
-- Public methods MUST not change (maintain API backward compatability) *
-- New public methods MUST NOT be created (do not expand the API) *
-
-  * Unless otherwise instructed
+- When bugs are found, always add unit tests covering the gap
+- Delete dead code rather than leaving it uncovered
+- API surface should be deliberate and minimal — do not add or change public methods
+  without instruction
 
 ## File Structure
 
-- `README.md` - Information about installation, usage and diff format
-- `Makefile` - Project commands
-- `/v2` - V2 library
-- `/v2/jd/main.go` - V2 commandline
-- `/v2/web` - Website and associated tools
+- `README.md` - Installation, usage, and diff format documentation
+- `Makefile` - All build, test, and validation targets
+- `/v2` - Reference implementation (Go library + CLI). See `/v2/CLAUDE.md`
+- `/spec` - Format specification and test data. See `/spec/CLAUDE.md`
 - `/action.yml` - GitHub Action
 - `/doc` - Plans and documents
 - `/lib` - Deprecated v1 library (read-only)
@@ -42,10 +65,10 @@ It is focused on a human-readable diff format but has the ability to read and pr
 
 ## Advice
 
-- Try and avoid creating temporary files and instead rely on modifying existing unit tests for debugging.
-  This will prevent you from getting stuck on asking for my approval. Try and use tools you don't need
-  to ask approval for so you can unblock yourself.
-- Don't use words like "comprehensive" or "robust" because they don't add anything to the specificity of
-  a sentence. Each layer of testing adds a layer of probability to catch a bug, but few things are truely
-  comprehensive. And robustness again is very relative and requires context, such as SLAs.
+- Try and avoid creating temporary files and instead rely on modifying existing unit tests
+  for debugging. This prevents getting stuck on tool approval. Use tools that don't need
+  approval to unblock yourself.
+- Don't use words like "comprehensive" or "robust" — they don't add specificity.
+- Read `~/joe-voice.md` before writing GitHub issues, PR comments, or anything on the
+  owner's behalf.
 - Documentation is in `README.md` and `v2/jd/main.go` (see usage).
