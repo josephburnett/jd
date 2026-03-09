@@ -2,7 +2,7 @@ package jd
 
 type jsonStringNumber string
 
-var _ JsonNode = jsonStringNumber("")
+var _ JsonNode = jsonStringNumber("0")
 
 func (s jsonStringNumber) Json(_ ...Option) string {
 	return string(s)
@@ -22,11 +22,15 @@ func (s1 jsonStringNumber) Equals(n JsonNode, opts ...Option) bool {
 }
 
 func (s1 jsonStringNumber) equals(n JsonNode, o *options) bool {
-	s2, ok := n.(jsonStringNumber)
-	if !ok {
+	switch t := n.(type) {
+	case jsonStringNumber:
+		return s1 == t
+	case jsonNumber:
+		s2 := t.Json(nil)
+		return string(s1) == s2
+	default:
 		return false
 	}
-	return s1 == s2
 }
 
 func (s jsonStringNumber) hashCode(_ *options) [8]byte {

@@ -34,11 +34,16 @@ func (n1 jsonNumber) equals(node JsonNode, o *options) bool {
 	}
 
 	n2, ok := node.(jsonNumber)
-	if !ok {
-		return false
+	if ok {
+		return math.Abs(float64(n1)-float64(n2)) <= precision
 	}
 
-	return math.Abs(float64(n1)-float64(n2)) <= precision
+	sn2, ok := node.(jsonStringNumber)
+	if ok {
+		return sn2.equals(n1, o)
+	}
+
+	return false
 }
 
 func (n jsonNumber) hashCode(opts *options) [8]byte {
