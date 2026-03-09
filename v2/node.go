@@ -133,6 +133,8 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 		return jsonNull(nil), nil
 	case jsonNull:
 		return t, nil
+	case JsonNode:
+		return t, nil
 	default:
 		return nil, fmt.Errorf("unsupported type %T", t)
 	}
