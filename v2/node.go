@@ -110,11 +110,7 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 	case jsonArray:
 		return t, nil
 	case json.Number:
-		f, err := t.Float64()
-		if err != nil {
-			return nil, err
-		}
-		return jsonNumber(f), nil
+		return jsonStringNumber(t), nil
 	case float64:
 		return jsonNumber(t), nil
 	case int:
