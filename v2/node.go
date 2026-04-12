@@ -78,7 +78,7 @@ func NewJsonNode(n interface{}) (JsonNode, error) {
 		for k, v := range t {
 			s, ok := k.(string)
 			if !ok {
-				return nil, fmt.Errorf("unsupported key type %T", k)
+				s = fmt.Sprintf("%v", k)
 			}
 			n, ok := v.(JsonNode)
 			if !ok {

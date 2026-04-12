@@ -18,11 +18,14 @@ func TestNewJsonNodeTypes(t *testing.T) {
 		t.Errorf("got %v", n.Json())
 	}
 
-	// map[interface{}]interface{} with non-string key
-	badMap := map[interface{}]interface{}{42: "value"}
-	_, err = NewJsonNode(badMap)
-	if err == nil {
-		t.Fatal("expected error for non-string key")
+	// map[interface{}]interface{} with non-string key (converted to string)
+	intKeyMap := map[interface{}]interface{}{42: "value"}
+	n, err = NewJsonNode(intKeyMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n.Json() != `{"42":"value"}` {
+		t.Errorf("got %v", n.Json())
 	}
 
 	// Direct jsonObject passthrough

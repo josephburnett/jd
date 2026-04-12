@@ -96,6 +96,55 @@ no: rejected`,
 	}
 }
 
+func TestYamlIntegerKeys(t *testing.T) {
+	tests := []struct {
+		name     string
+		yaml     string
+		expected JsonNode
+	}{
+		{
+			name: "integer map key",
+			yaml: `100001:
+  name: hello`,
+			expected: jsonObject{
+				"100001": jsonObject{
+					"name": jsonString("hello"),
+				},
+			},
+		},
+		{
+			name: "nested integer keys",
+			yaml: `projectinfo:
+  projectSettingHashMap:
+    100001:
+      name: hello`,
+			expected: jsonObject{
+				"projectinfo": jsonObject{
+					"projectSettingHashMap": jsonObject{
+						"100001": jsonObject{
+							"name": jsonString("hello"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			node, err := ReadYamlString(tt.yaml)
+			if err != nil {
+				t.Errorf("ReadYamlString(%q) failed: %v", tt.yaml, err)
+				return
+			}
+
+			if !tt.expected.Equals(node) {
+				t.Errorf("ReadYamlString(%q) = %v, want %v", tt.yaml, node, tt.expected)
+			}
+		})
+	}
+}
+
 func checkUnmarshal(t *testing.T, s string, n JsonNode) {
 	node, err := ReadJsonString(s)
 	if err != nil {
